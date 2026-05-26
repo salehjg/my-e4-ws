@@ -1,4 +1,4 @@
-# Lattice Boltzmann Method — Lid-Driven Cavity
+# Lattice Boltzmann Method — Lid-Driven Cavity (CLAUDE GENERATED)
 
 ![](https://github.com/salehjg/my-e4-ws/blob/main/python/learn-lb-numpy/lbm_result.png?raw=true)
 
