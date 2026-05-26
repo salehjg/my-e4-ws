@@ -1,0 +1,6 @@
+[submodule "submodules/pystencils"]
+	path = submodules/pystencils
+	url = https://i10git.cs.fau.de/pycodegen/pystencils.git
+[submodule "submodules/walberla"]
+	path = submodules/walberla
+	url = https://i10git.cs.fau.de/walberla/walberla.git
