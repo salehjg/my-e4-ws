@@ -1,5 +1,7 @@
 # Lattice Boltzmann Method — Lid-Driven Cavity
 
+![](https://github.com/salehjg/my-e4-ws/blob/main/python/learn-lb-numpy/lbm_result.png?raw=true)
+
 A minimal 2D fluid simulation in plain NumPy using the Lattice Boltzmann Method (LBM).
 No external CFD libraries required.
 
