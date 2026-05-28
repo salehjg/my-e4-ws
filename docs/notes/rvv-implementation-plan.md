@@ -4,6 +4,7 @@ Companion to:
 - [`pystencils-cpu-backends.md`](pystencils-cpu-backends.md) — current ISA support landscape
 - [`walberla-codegen-flow.md`](walberla-codegen-flow.md) — how walberla invokes pystencils
 - [`sve-strategy-for-scalable-vectors.md`](sve-strategy-for-scalable-vectors.md) — the template this plan follows
+- [`rvv-isa-primer.md`](rvv-isa-primer.md) — RVV terminology, LMUL/VLEN/SEW, VLA vs VLS, and the 0.7 → 1.0 deltas
 
 All submodule source-file links resolve to the pinned commits:
 pystencils `20d7dcf0…`, walberla `0c8ed8c9…`.
