@@ -37,6 +37,200 @@ similar to ARM [SVE](#sve) (scalable width).
   [LMUL](#lmul) (see below). Grouped registers must be aligned
   (`v0,v1`, `v4,v5,v6,v7`, …).
 
+### Register-file dimensions, for an HDL reader
+
+If "[VLEN](#vlen) bits wide" is unclear, the [RVV](#rvv) register file maps
+directly onto a Verilog register-file declaration. Start from the scalar
+integer file you already know — 32 registers, each `XLEN` (= 64 on rv64)
+bits:
+
+```verilog
+reg [63:0] x [0:31];      // depth = 32 entries, width = 64 bits per entry
+```
+
+Two dimensions: **depth** = 32 (addressed by the 5-bit register number in
+the instruction) and **width** = 64 bits (the physical flip-flop width of
+one row). "64 bits wide" *is* that `[63:0]`. The vector file is the same
+array, only much wider:
+
+```verilog
+reg [VLEN-1:0] v [0:31];  // depth still 32, width = VLEN bits per entry
+```
+
+- **Depth is fixed at 32** (`v0`–`v31`, still a 5-bit index) — the spec
+  never changes this per SoC.
+- **Width = [VLEN](#vlen) bits** is the *only* dimension the silicon
+  designer picks. "[VLEN](#vlen) = 256" literally means each entry is
+  `reg [255:0]` — a 256-bit bank of flip-flops, exactly analogous to the
+  `[63:0]` on a scalar register. Total architectural vector state is just
+  `32 × VLEN` bits (1 KB at [VLEN](#vlen)=256).
+
+```
+                 width = VLEN bits   (the "XX bits wide" number)
+              ◄────────────────────────────►
+        v0   │ b(VLEN-1) ........... b1  b0 │
+        v1   │                             │
+        ...  │                             │   depth = 32 entries (fixed by spec)
+        v31  │                             │
+              ◄────────────────────────────►
+```
+
+That declaration is the *entire* register file. [SEW](#sew), [LMUL](#lmul)
+and [`vl`](#vl) add **zero** flip-flops — they only change how the datapath
+slices and addresses these same bits:
+
+- **[SEW](#sew) bit-slices the width into [lanes](#lane)** — a packed-array
+  reinterpretation (`+:` part-select). Same bits, different lane
+  boundaries; lane count = `VLEN / SEW`:
+
+  ```verilog
+  // VLEN = 256, SEW = 32  ->  256/32 = 8 lanes
+  wire [31:0] lane [0:7];
+  genvar i;
+  for (i = 0; i < 8; i = i + 1)
+      assign lane[i] = v[r][32*i +: 32];   // re-slice the SAME 256 bits
+  ```
+
+- **[LMUL](#lmul) changes how many register-file rows back one logical
+  operand.** [SEW](#sew) slices *within* a row; [LMUL](#lmul) changes *how
+  many rows* (or what fraction of a row) the operand spans. The two compose:
+  the lane count of an operation is always
+  [VLMAX](#vlmax) = `VLEN × LMUL / SEW`. Detail for both directions below.
+
+- **[`vl`](#vl) is a dynamic active-[lane](#lane) count** — effectively a
+  per-lane write-enable / loop bound, so one instruction handles a partial
+  final chunk without a cleanup path:
+
+  ```verilog
+  for (i = 0; i < VLMAX; i = i + 1)
+      if (i < vl)
+          v[rd][SEW*i +: SEW] <= alu_result[i];   // active lane commits
+      // else: tail lane -> undisturbed or all-ones, per vta
+  ```
+
+#### [LMUL](#lmul) in detail — the HDL view
+
+Hold [VLEN](#vlen) = 128 and [SEW](#sew) = 32 fixed for all of the diagrams
+below, so one physical register holds `128/32 = 4` elements. [LMUL](#lmul)
+only changes how many of those 4-element rows (or what slice of one row)
+form the operand the instruction sees. The element index runs **low-to-high
+across the concatenation**, and the register-number field in the
+instruction names the *first* (lowest-numbered) register of the group.
+
+**[LMUL](#lmul) = 1 — the baseline.** One row, one operand, 4 [lanes](#lane):
+
+```
+                       VLEN = 128 bits  ->  4 lanes of SEW=32
+                    ◄────────────────────────────────────►
+   v4   (LMUL=1)    │  e3   │  e2   │  e1   │  e0   │        VLMAX = 128*1/32 = 4
+                    └───────┴───────┴───────┴───────┘
+   instruction says "v4"; operand = v4 alone
+```
+
+```verilog
+// LMUL = 1 : operand is exactly one row
+wire [127:0] op = v[4];                       // lanes e0..e3 via [32*i +: 32]
+```
+
+**[LMUL](#lmul) > 1 — gang adjacent rows (more lanes per instruction).**
+LMUL=2 concatenates two aligned rows into one 256-bit operand of 8 lanes;
+LMUL=4 → four rows, 16 lanes; LMUL=8 → eight rows, 32 lanes. The group must
+be **aligned** to its size (LMUL=2 groups start at even register numbers,
+LMUL=4 at multiples of 4, LMUL=8 only at v0/v8/v16/v24):
+
+```
+   LMUL = 2 : operand spans v4,v5  ->  2*VLEN = 256 bits = 8 lanes
+                              v5 (high half)              v4 (low half)
+              ◄──────────────────────────────►◄──────────────────────────────►
+              │ e7 │ e6 │ e5 │ e4 │            │ e3 │ e2 │ e1 │ e0 │
+              └────┴────┴────┴────┘            └────┴────┴────┴────┘
+              instruction says "v4"; operand = {v5, v4}      VLMAX = 128*2/32 = 8
+
+   LMUL = 4 : operand spans v4,v5,v6,v7  ->  4*VLEN = 512 bits = 16 lanes
+              {        v7      |      v6      |      v5      |      v4        }
+              │ e15..e12 │ e11..e8 │ e7..e4 │ e3..e0 │            VLMAX = 16
+```
+
+```verilog
+// LMUL = 2 : two aligned rows make one wide operand
+wire [255:0] op = { v[5], v[4] };             // 8 lanes: e0..e3 in v4, e4..e7 in v5
+
+// LMUL = 4 : four aligned rows
+wire [511:0] op = { v[7], v[6], v[5], v[4] }; // 16 lanes
+```
+
+Cost: a wide group **consumes that many architectural registers**. With
+only 32 rows total, LMUL=8 leaves you just 4 independent operands
+(`v0`, `v8`, `v16`, `v24`). That register pressure is the whole tradeoff —
+big LMUL means fewer instructions for a given array but fewer live vectors.
+
+**[LMUL](#lmul) < 1 (fractional, [RVV](#rvv) 1.0 only) — use only part of
+one row (fewer lanes).** The operand occupies a *fraction* of a single
+register; the upper bits of that register are unused by the op. LMUL=1/2
+uses half a row (2 lanes at SEW=32), 1/4 a quarter (1 lane), 1/8 an eighth:
+
+```
+   LMUL = 1/2 : operand = low half of v4  ->  VLEN/2 = 64 bits = 2 lanes
+                    ┌ ─ ─ ─ ─ ─ ─ ─ ┬───────┬───────┐
+   v4               │   unused      │  e1   │  e0   │   VLMAX = 128*(1/2)/32 = 2
+                    └ ─ ─ ─ ─ ─ ─ ─ ┴───────┴───────┘
+                     ◄── top 64 b ──►◄──── used 64 b ───►
+
+   LMUL = 1/4 : operand = low quarter of v4  ->  32 bits = 1 lane
+                    ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┬───────┐
+   v4               │           unused            │  e0   │   VLMAX = 1
+                    └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┴───────┘
+```
+
+```verilog
+// LMUL = 1/2 : only the low VLEN/2 bits of one row participate
+wire [63:0] op = v[4][63:0];                  // 2 lanes; v4[127:64] untouched
+
+// LMUL = 1/4 : low VLEN/4 bits
+wire [31:0] op = v[4][31:0];                  // 1 lane
+```
+
+Why fractional [LMUL](#lmul) exists: **mixed-width** kernels. When you widen
+`int8 → int32` (SEW goes ×4), the result needs 4× the bits per element. If
+you hold the *element count* constant, the narrow source should occupy
+[LMUL](#lmul)=1/4 while the wide destination is [LMUL](#lmul)=1 — both then
+have the same lane count and you don't waste registers padding the narrow
+side up to a full row. This is the [EMUL](#emul) relationship (eq 4 in §4):
+`EMUL = (EEW/SEW) × LMUL`.
+
+**One table, [VLEN](#vlen)=128, [SEW](#sew)=32 throughout:**
+
+| [LMUL](#lmul) | rows used / fraction | operand width | [VLMAX](#vlmax) (lanes) | aligned start | usable groups |
+|---------------|----------------------|---------------|-------------------------|---------------|---------------|
+| 1/8           | 1/8 of one row       | 16 b          | —¹                      | any           | 32            |
+| 1/4           | 1/4 of one row       | 32 b          | 1                       | any           | 32            |
+| 1/2           | 1/2 of one row       | 64 b          | 2                       | any           | 32            |
+| 1             | 1 row                | 128 b         | 4                       | any           | 32            |
+| 2             | 2 rows               | 256 b         | 8                       | even          | 16            |
+| 4             | 4 rows               | 512 b         | 16                      | mult. of 4    | 8             |
+| 8             | 8 rows               | 1024 b        | 32                      | v0/v8/v16/v24 | 4             |
+
+¹ At SEW=32, LMUL=1/8 gives `128/8 = 16 b < SEW`, i.e. VLMAX = 0 — illegal
+(it sets [`vill`](#vill)). Fractional [LMUL](#lmul) only makes sense when
+`VLEN × LMUL ≥ SEW`; at SEW=8 on this core, LMUL=1/8 would be legal with
+VLMAX=2.
+
+Summary of which dimension is what, and who fixes it:
+
+| Concept                | HDL analogue                                          | Who fixes it                |
+|------------------------|-------------------------------------------------------|-----------------------------|
+| **32 registers**       | array depth `v[0:31]`, 5-bit index                    | spec (always 32)            |
+| **[VLEN](#vlen)** ("XX bits wide") | entry width `reg [VLEN-1:0]`              | **silicon** (per SoC)       |
+| **[SEW](#sew)**        | part-select stride `[SEW*i +: SEW]` → `VLEN/SEW` lanes | software (`vtype`), per op  |
+| **[LMUL](#lmul)**      | concatenation depth `{v[r+1],v[r]}` → `VLEN×LMUL` wide | software (`vtype`), per op  |
+| **[VLMAX](#vlmax)**    | derived lane count `VLEN×LMUL/SEW`                    | derived                     |
+| **[`vl`](#vl)**        | per-lane write-enable / loop bound                    | dynamic ([`vsetvl`](#vsetvl)) |
+
+The one thing physically baked into the silicon about the register file is
+**[VLEN](#vlen)** — the bit-width of each of the 32 rows. [SEW](#sew) and
+[LMUL](#lmul) re-slice and gang those rows; [`vl`](#vl) gates how many
+[lanes](#lane) fire.
+
 ### Control [CSRs](#csr)
 
 | [CSR](#csr) | Purpose                                                                            |
@@ -104,7 +298,138 @@ can request for a given ([SEW](#sew), [LMUL](#lmul)) configuration.
 Worked example: [VLEN](#vlen)=256, [SEW](#sew)=32, [LMUL](#lmul)=m2 ⇒
 [VLMAX](#vlmax) = 256·2/32 = 16 i32 [lanes](#lane).
 
-## 4. [EEW](#eew) and [EMUL](#emul) — for memory ops
+## 4. Practical: what the silicon bakes in vs. what you compute
+
+This is the part you need straight before writing [intrinsics](#intrinsic).
+Some parameters are fixed in the hardware; everything else you derive from
+them at codegen / coding time.
+
+### 4.1 Baked into the silicon (you cannot change these)
+
+For a given RISC-V SoC / core, these are fixed properties of the
+implementation. Read them from the core's datasheet, its `riscv,isa`
+device-tree string, or `/proc/cpuinfo`:
+
+| Parameter                       | What it is                                                            | How to find it                                                        |
+|---------------------------------|-----------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [VLEN](#vlen)                   | Physical vector register width in bits (power of two)                 | Datasheet, or at runtime: [`vlenb`](#vlenb) CSR × 8, or `__riscv_vsetvlmax_e8m1()` |
+| [ELEN](#elen)                   | Max supported [SEW](#sew) (usually 64, sometimes 32)                  | Datasheet / advertised [Zve*](#zve) extension                         |
+| [RVV](#rvv) version             | 0.7.1 (T-Head) vs 1.0 (ratified)                                      | Datasheet; `_xthead*` token in [ISA](#isa) string ⇒ 0.7-era           |
+| [Zvl](#zvl)* guarantee          | Minimum [VLEN](#vlen) the binary may assume (`Zvl128b`, `Zvl256b`, …) | [ISA](#isa) string                                                    |
+| [Zve](#zve)* subset             | Which element widths / FP types the vector unit supports              | [ISA](#isa) string (`Zve32f`, `Zve64d`, …)                            |
+| FP support ([Zvfh](#zve), etc.) | Whether [FP16](#fp16)/BF16 vector ops exist                           | [ISA](#isa) string                                                    |
+| Number of vector registers      | Always **32** (`v0`–`v31`) — architectural, not per-SoC              | Fixed by the spec                                                     |
+
+Concrete examples of `(VLEN, ELEN, version)` for real parts:
+
+| SoC / core                       | [VLEN](#vlen) | [ELEN](#elen) | [RVV](#rvv) version |
+|----------------------------------|---------------|---------------|---------------------|
+| Allwinner D1 / T-Head C906       | 128           | 64            | 0.7.1               |
+| T-Head C908                      | 128 or 256    | 64            | 1.0                 |
+| SpacemiT K1 (BPI-F3)             | 256           | 64            | 1.0                 |
+| SiFive P670 / X280               | 128 / 512     | 64            | 1.0                 |
+| Andes AX45MPV                    | 512           | 64            | 1.0                 |
+
+### 4.2 What you choose (per kernel)
+
+Two free choices drive everything downstream:
+
+- **[SEW](#sew)** — Selected Element Width. Dictated by your data type:
+  `float`→32, `double`→64, `int16_t`→16, etc. Must satisfy
+  **[SEW](#sew) ≤ [ELEN](#elen)**.
+- **[LMUL](#lmul)** — Length Multiplier. A tuning knob: larger
+  [LMUL](#lmul) ⇒ more elements per instruction (fewer instructions, more
+  throughput) but more register pressure (you have only 32 registers, and a
+  group of [LMUL](#lmul)=8 eats 8 of them). Default to `m1`; raise to `m2`/`m4`
+  for simple streaming kernels; use fractional ([RVV](#rvv) 1.0 only) for
+  mixed-width.
+
+### 4.3 The formulas
+
+Everything else is derived. These hold for both 0.7 and 1.0 (fractional
+[LMUL](#lmul) is 1.0-only):
+
+```
+                         VLEN × LMUL
+(1)   VLMAX        =  ───────────────────         (elements per vector op)
+                            SEW
+
+(2)   vlenb        =  VLEN / 8                      (bytes per register, CSR)
+
+(3)   regs_in_group =  max(1, ceil(LMUL))           (architectural registers used;
+                                                     fractional LMUL ⇒ 1)
+
+(4)   EMUL         =  (EEW / SEW) × LMUL            (effective LMUL for a memory op)
+       constraint:    1/8 ≤ EMUL ≤ 8   AND   EMUL is a representable LMUL
+
+(5)   elems_per_reg =  VLEN / SEW                   (= VLMAX when LMUL = 1)
+
+(6)   byte_stride  =  elem_stride × (SEW / 8)       (for vlse*/vsse* strided ops)
+
+(7)   byte_index[i] =  elem_index[i] × (SEW / 8)    (RVV 1.0 indexed gather/scatter;
+                                                     RVV 0.7 indices are in ELEMENTS,
+                                                     so this multiply is 1.0-only)
+```
+
+**The [`vl`](#vl) rule** — what [`vsetvl`](#vsetvl) actually returns for a
+requested [AVL](#avl):
+
+```
+(8)   if  AVL ≤ VLMAX        →  vl = AVL
+      if  AVL ≥ 2 × VLMAX    →  vl = VLMAX
+      if  VLMAX < AVL < 2×VLMAX
+                             →  vl = implementation-defined,
+                                 but  ceil(AVL/2) ≤ vl ≤ VLMAX
+                                 (and both halves come out roughly equal)
+```
+
+> **Practical rule:** never hard-code the result of (8) in the transition
+> band — always use the value [`vsetvl`](#vsetvl) *returns*. In the common
+> stripmining loop you simply pass the remaining count as [AVL](#avl) each
+> iteration and trust the returned [`vl`](#vl). (RVV 0.7 and 1.0 differ in
+> the exact transition-band behaviour, which is another reason to read the
+> return value rather than compute it.)
+
+### 4.4 Worked example
+
+Target: SpacemiT K1, processing a `float` (f32) array of `N = 1000`.
+
+```
+Silicon:   VLEN = 256,  ELEN = 64,  RVV 1.0
+Choose:    SEW  = 32  (float),  LMUL = m1
+Derive:    VLMAX        = 256 × 1 / 32      = 8 elements per op      [eq 1]
+           vlenb        = 256 / 8           = 32 bytes              [eq 2]
+           elems_per_reg= 256 / 32          = 8                     [eq 5]
+Loop:      iteration 1..125 → AVL=1000,992,…,8 each returns vl=8    [eq 8]
+           last full chunk leaves 1000 mod 8 = 0 → no tail here;
+           had N=1003, final AVL=3 → vl=3, only 3 lanes active
+Strided:   to read every 3rd float, byte_stride = 3 × (32/8) = 12   [eq 6]
+```
+
+Bump to `LMUL = m4` on the same hardware: `VLMAX = 256 × 4 / 32 = 32`
+elements per op (4 registers per group, 8 groups available) — a quarter as
+many loop iterations, at 4× the register footprint.
+
+### 4.5 The pre-flight checklist (before you write any [intrinsic](#intrinsic))
+
+1. **Know the silicon**: [VLEN](#vlen), [ELEN](#elen), [RVV](#rvv) version,
+   [Zve](#zve)/[Zvl](#zvl) extensions (§4.1).
+2. **Pick [SEW](#sew)** from your data type; assert [SEW](#sew) ≤
+   [ELEN](#elen).
+3. **Pick [LMUL](#lmul)** (start at `m1`; only go fractional on 1.0).
+4. **Compute [VLMAX](#vlmax)** with eq (1) — this is your max chunk size.
+5. **Decide [VLA](#vla) or [VLS](#vls)** (§7): [VLA](#vla) ⇒ stripmining
+   loop reading the returned [`vl`](#vl); [VLS](#vls) ⇒ pin [VLEN](#vlen)
+   at compile time and treat [VLMAX](#vlmax) as constant.
+6. **For mixed-width / indexed ops**: compute [EEW](#eew) and check
+   [EMUL](#emul) with eq (4) stays in `[1/8, 8]`.
+7. **For strided / indexed memory**: convert element strides/indices to
+   **bytes** with eq (6)/(7) — remembering eq (7) applies to [RVV](#rvv)
+   1.0 only (0.7 is element-indexed).
+8. **Set the tail/[mask](#mask) policy** ([`vta`](#vta)/[`vma`](#vma),
+   1.0 only — §6); 0.7 is always tail-undisturbed.
+
+## 5. [EEW](#eew) and [EMUL](#emul) — for memory ops
 
 Memory instructions (loads, stores, indexed ops) can specify their own
 **Effective Element Width** and **Effective [LMUL](#lmul)** independent of
@@ -119,7 +444,7 @@ The [intrinsic](#intrinsic) spec encodes [EEW](#eew) in the mnemonic:
 `vluxei16_v_*` uses a 16-bit index vector with whatever the data
 [SEW](#sew) is.
 
-## 5. [`vsetvl{i}`](#vsetvl) — the only way to change [`vl`](#vl) and [`vtype`](#vtype)
+## 6. [`vsetvl{i}`](#vsetvl) — the only way to change [`vl`](#vl) and [`vtype`](#vtype)
 
 Three forms:
 
@@ -138,7 +463,7 @@ range (the "[stripmining](#stripmining)" tail behaviour).
 If the requested [`vtype`](#vtype) is unsupported, hardware sets
 [`vill`](#vill)=1; subsequent vector ops then trap.
 
-## 6. Tail and [mask](#mask) policies — [`vta`](#vta), [`vma`](#vma)
+## 7. Tail and [mask](#mask) policies — [`vta`](#vta), [`vma`](#vma)
 
 Each vector op writes to **active** elements ([mask](#mask)=1 AND index <
 [`vl`](#vl)) and may leave **inactive** elements ([mask](#mask)=0) and
@@ -161,7 +486,7 @@ Unsuffixed [intrinsics](#intrinsic) (no policy) historically defaulted to
 `tama` but the spec now warns against the unsuffixed forms — explicit
 policy suffixes are the recommended style.
 
-## 7. [VLA](#vla) vs [VLS](#vls) — the two programming models
+## 8. [VLA](#vla) vs [VLS](#vls) — the two programming models
 
 These terms are used loosely; the precise meanings:
 
@@ -217,7 +542,7 @@ time and generates [predicates](#predicate) against it. The same approach
 for [RVV](#rvv) is straightforward; true [VLA](#vla) codegen would require
 a [stripmining](#stripmining) loop construct in pystencils' [IR](#ir).
 
-## 8. Memory operations — taxonomy
+## 9. Memory operations — taxonomy
 
 The mnemonic prefix tells you what kind of access it is. Worth memorizing:
 
@@ -242,7 +567,7 @@ The mnemonic prefix tells you what kind of access it is. Worth memorizing:
 frequent porting pitfall coming from architectures that use element
 indices.
 
-## 9. [RVV](#rvv)-0.7.1 vs [RVV](#rvv)-1.0 — what actually changed
+## 10. [RVV](#rvv)-0.7.1 vs [RVV](#rvv)-1.0 — what actually changed
 
 [RVV](#rvv)-0.7.1 (December 2019) was the last pre-ratification draft and
 is the version T-Head implemented in the C906/C910 (Allwinner D1, Sipeed
@@ -336,7 +661,7 @@ This is what you actually see when porting C code.
 The [intrinsic](#intrinsic) header included is `<riscv_vector.h>` in all
 three cases — the header content differs by compiler.
 
-## 10. Toolchain support matrix
+## 11. Toolchain support matrix
 
 | Compiler                              | [RVV](#rvv)-0.7.1 path                                  | [RVV](#rvv)-1.0 path                                  |
 |---------------------------------------|---------------------------------------------------------|-------------------------------------------------------|
@@ -354,7 +679,7 @@ against bare T-Head [intrinsics](#intrinsic) won't build on LLVM and vice
 versa. This is the source of the "pick a 0.7 toolchain" decision called
 out in [`rvv-implementation-plan.md`](rvv-implementation-plan.md).
 
-## 11. Implications for the pystencils [RVV](#rvv) backend
+## 12. Implications for the pystencils [RVV](#rvv) backend
 
 Summary of how the terminology above maps onto the implementation plan:
 
@@ -518,6 +843,26 @@ Causes subsequent vector ops to trap. Added in [RVV](#rvv) 1.0.
 **CSR** — *Control and Status Register*. RISC-V register for system-level
 state. [RVV](#rvv) adds [`vl`](#vl), [`vtype`](#vtype), [`vstart`](#vstart),
 [`vxrm`](#vxrm), [`vxsat`](#vxsat), [`vcsr`](#vcsr), [`vlenb`](#vlenb).
+
+<a id="zvl"></a>
+**Zvl\*** — *Minimum [VLEN](#vlen)* sub-extensions (`Zvl32b`, `Zvl64b`,
+`Zvl128b`, `Zvl256b`, …, `Zvl65536b`). Each guarantees [VLEN](#vlen) is
+*at least* that many bits, letting a binary assume a floor without pinning
+the exact width. Part of the [ISA](#isa) string. [RVV](#rvv) 1.0 concept.
+
+<a id="zve"></a>
+**Zve\*** — *Embedded Vector* subsets (`Zve32x`, `Zve32f`, `Zve64x`,
+`Zve64f`, `Zve64d`) plus FP add-ons (`Zvfh`, `Zvfhmin`, `Zvfbfmin`). They
+specify which [SEW](#sew) values and floating-point element types the
+vector unit actually implements — e.g. `Zve32f` = up to 32-bit incl. f32
+but no f64; `Zve64d` = up to 64-bit incl. f64; `Zvfh` adds [FP16](#fp16).
+Determines the effective [ELEN](#elen) and legal element types. [RVV](#rvv)
+1.0 concept.
+
+<a id="fp16"></a>
+**FP16** — *16-bit Floating Point* (IEEE 754 binary16), half precision. In
+[RVV](#rvv), vector [FP16](#fp16) ops are provided by the [Zvfh](#zve)
+sub-extension (`Zvfhmin` for the conversion-only subset).
 
 <a id="vla"></a>
 **VLA** — *Vector Length Agnostic*. Code that produces a correct result

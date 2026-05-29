@@ -159,6 +159,14 @@ AArch64. Targeted via `Target.ARM_NEON` / `Target.ARM_NEON_FP16`.
 [SVE](#sve). Not currently supported by pystencils 2.0b1's codegen
 pipeline.
 
+<a id="vla"></a>
+**VLA** — *Vector Length Agnostic*. Code that stays correct for any
+hardware vector width, the [SVE](#sve)/[RVV](#rvv) programming model.
+pystencils does **not** generate [VLA](#vla) code today — its [SVE](#sve)
+backend picks a fixed [lane](#lane) count at codegen time. See
+[`rvv-isa-primer.md`](rvv-isa-primer.md) for the full [VLA](#vla)-vs-VLS
+distinction.
+
 <a id="fp16"></a>
 **FP16** — *16-bit Floating Point* (IEEE 754 binary16). Half-precision
 float format. Supported on [AVX-512](#avx-512) via the AVX512-FP16
