@@ -470,3 +470,239 @@ wrong here). f64 cannot go below m1 at VLEN=256 (fractional LMUL requires SEW �
 
 Deferred (documented, with clear errors where reachable): masked/predicated conditionals,
 vectorized transcendentals, f64 & VLA RNG, RVV-0.7. FP16 (Zvfh) is a noted roadmap item.
+
+---
+
+# Performance track — beat scalar on the K1 (executing `rvv-performance-plan-fable.md`)
+
+Goal: RVV ≥ scalar on the K1. Baseline (from WP8 above): full D2Q9 step generic 3.17 vs
+rvv 1.96 MLUP/s; isolated collide scalar 8.49 vs best-RVV/m2 4.22. The prior "hardware
+ceiling" verdict was reached **without** the plan's levers (vector-bits, Clang, perf
+counters, f32). This track exercises them, measurement-first. Decisions locked with the
+user: measure **both f64 and f32**; f32 is a valid deliverable (report accuracy); beat
+scalar wherever achievable + document ceilings honestly; keep changes in harness/scripts,
+promote to the backend only if a lever is decisive. Benchmark of record = **full D2Q9 step**.
+
+## Phase 0 — instrumentation (DONE) + diagnosis (board, next)
+
+### Harness/probe instrumentation (implemented, x86-validated)
+
+- `python/learn-lb-pystencil/lb-pystencils.py`: added `--dtype {f64,f32}`,
+  `--compiler {gcc,clang}`, `--vector-bits/--no-vector-bits`, `--unroll`,
+  `--extra-cxxflags`. Field dtype parametrized (`_fields_decl()`), arrays allocated at the
+  configured precision, `omega` passed at matching precision. **The crux:** every kernel's
+  `cfg.jit` is now wired to a custom `CompilerInfo` via `_make_jit()` so the RVV config
+  actually reaches the compiler — `GccInfo/ClangInfo(target=RISCV_RVV, rvv_vlen=…,
+  rvv_fixed_length=(mode==fixed and vector_bits), extra_cxxflags=…)`. Previously
+  `.compile()` used the default `CompilerInfo(CurrentCPU, rvv_fixed_length=False)`, so
+  `-mrvv-vector-bits=zvl` was silently off in every past benchmark.
+- `scripts/rvv_perf_probe.py` (new): per-config probe. Builds the D2Q9 collide or
+  pull-stream kernel for {target,mode,dtype,compiler,vector-bits}, times it (MLUP/s),
+  disassembles the freshly compiled `.so` (pinned to an arch-qualified per-config objcache
+  so exactly one `module_*.so` exists) and prints an op/real-spill histogram (FMA, `.vf/.vx`
+  scalar-op, `vfmv.v.f`, `vmv[124]r.v`, `vle/vse`, `vlse/vsse`, whole-register `vl*r.v/vs*r.v`
+  spills, `fld/fsd`, `vset*`). `--perf` re-execs the timed loop under `perf stat`
+  (`cycles,instructions`, falls back to default events).
+- `scripts/rvv_roofline.py` (new): compute-bound micro-kernel (NACC=8 independent Horner
+  chains, CHAIN=8 → 128 flops/elem, AI≈8) measuring vector-vs-scalar GFLOP/s for f64 and
+  f32 → confirms datapath width (≈2×/4× ⇒ 128-bit; ≈4×/8× ⇒ 256-bit).
+- `scripts/lbm_rvv_check.py`: now checks **both** f64 and f32 collide correctness
+  (RVV-fixed & RVV-vla vs generic at the same precision), f32 tol rtol=1e-4/atol=1e-5.
+
+### x86 validation (before board)
+
+- f64 full step 100×100×200 reproduces the logged baseline **exactly** (`rel_l2=0.0338124`,
+  speed max `0.138736`) → harness changes are non-regressive for f64.
+- Both probe scripts build/time/objdump cleanly for the generic target on x86 (RVV
+  mnemonics 0 in x86 disasm, as expected — they populate on the board).
+
+### FINDING — f32 full-step is unstable *in the lb-pystencils scheme*, not inherently
+
+`lb-pystencils.py --dtype f32` (100×100, ω=1.25) blows up fast: rho→8 by step 10, ±2400 by
+step 30, NaN by ~150. **But a pure-NumPy f32 BGK of the same cavity is perfectly stable**
+(rho ∈ [0.648, 1.0] at 200 steps, tracking f64). So f32 is viable here; the divergence is
+specific to the harness's two-buffer pull-collide + separate interior/boundary-stream +
+NumPy-bounce-back scheme (already 3.4% off the clean NumPy ref in f64 — that inconsistency
+tips into instability at f32 precision). f64 is unaffected (exact baseline match), and there
+was no prior f32 path, so this is **not a regression** — it's a harness scheme fragility.
+**Consequence:** f32 *performance* is measured on the isolated collide/stream kernels
+(perf_probe), which don't accumulate and are stability-independent; the f32 *full-step
+accuracy* number is deferred to Phase 2, where the scheme fix (a consistent/fused update, or
+the deviation `f_i−w_i` formulation that also improves f32 conditioning) is the natural home.
+
+### Diagnosis (board, 2026-07-05) — DONE. The premise was wrong; the levers are different.
+
+All numbers native on the K1 (VLEN=256), `rvv_perf_probe.py`/`lb-pystencils.py`.
+`true scalar` = generic + `-fno-tree-vectorize`; `autovec` = generic default (which on this
+board means `-march=<cpuinfo incl. v>` ⇒ **GCC auto-vectorizes with RVV**); `our-rvv` = the
+explicit backend, VLS fixed, `-mrvv-vector-bits=zvl` on unless noted.
+
+**Collide (compute-bound), MLUP/s, 200×200:**
+
+| dtype (LMUL) | true scalar | GCC autovec | our-rvv GCC | our-rvv **Clang** |
+|--------------|-------------|-------------|-------------|-------------------|
+| f64 (m1)     | 4.88        | **8.38**    | 3.40        | 6.41              |
+| f32 (m1)     | 7.44        | 7.01        | 7.24        | **14.42**         |
+
+**Stream (memory-bound), f64, 200×200:** true scalar 20.46, autovec 20.39,
+our-rvv GCC 12.42, our-rvv Clang 12.37.
+
+**Full step, f64, 100×100×200 (benchmark of record), MLUP/s** (all rel_l2=0.0338124 ✓):
+true scalar 2.85, GCC autovec 3.25, our-rvv GCC m1 1.96 / m2 2.30, our-rvv **Clang m1 2.69**
+/ m2 2.62.
+
+**Roofline (compute ceiling, GFLOP/s, GCC):** f64 autovec 13.4 vs our-rvv 5.0; f32 autovec
+32.0 vs our-rvv 11.3. (NB the "generic" here is autovectorized, so these are
+our-rvv/**autovec**, not vs true scalar.)
+
+**perf stat (collide f64, 300 iters):** our-rvv 77.7e9 cyc / 31.1e9 insn / **IPC 0.40**;
+autovec 50.8e9 cyc / 21.0e9 insn / **IPC 0.41**. (Board `cycles` looks like a fixed-freq
+counter — absolute values unreliable, but relative + IPC are valid.)
+
+#### Decision gate — dominant-cost classification
+
+- **NOT a latency/stall ceiling:** our-rvv and autovec have **identical IPC (0.40)**.
+- **NOT the 128-bit-datapath "2× f64 ceiling" the plan assumed:** the compute-bound roofline
+  shows our-rvv at **0.37× autovec** — a *code-quality* gap, not a hardware cap. (The
+  datapath does bound the absolute vector advantage, but that is not what is costing us.)
+- **Collide = instruction-count / code-quality bound.** Same IPC ⇒ the 2.46× MLUP gap to
+  autovec is ~all instruction count: our backend emits **123 `vle/vse` vs autovec's 43**
+  (3× the vector memory ops — it reloads operands instead of keeping them live) and 30
+  `vset*` vs 20. Clang roughly halves this disadvantage (3.40→6.41 f64; 7.24→14.42 f32).
+- **Stream = memory-bandwidth bound + `vsetvl` overhead.** autovec == true scalar (20.4);
+  our-rvv is *worse* (12.4, 33 `vset*`) — vectorizing a pure copy adds `vsetvl` overhead on
+  an in-order core for no bandwidth gain. Compiler-independent (Clang == GCC here).
+
+#### KEY FINDINGS (these reshape the whole performance plan)
+
+1. **Every prior "scalar" baseline was GCC-auto-vectorized RVV, not true scalar.** The
+   progress-log "scalar 8.49 collide" was GCC autovec. True scalar is 4.88 (f64 collide).
+2. **Clang is the decisive lever for the explicit backend** — f64 collide +88% (3.40→6.41),
+   f32 collide +99% (7.24→14.42). This alone makes our backend beat true scalar on collide
+   (f64 6.41 = 1.31×; f32 14.42 = 1.94×). The plan never tried Clang; it is the big win.
+3. **`-mrvv-vector-bits=zvl` is essentially neutral** (GCC f64 collide 3.43 no-vbits vs 3.40
+   vbits). The plan's "single most likely quick win" is **not** the lever. Keep it on (it
+   trims a few `vset*`, never hurts), but it is not where the speed is.
+4. **f32 + Clang is the genuine "beat scalar" win the plan predicted:** f32 collide
+   **14.42 = 1.94× f32-scalar and 2.95× f64-scalar.** GCC (auto or ours) does *not* get
+   there (~7); only the explicit backend + Clang does. f32 is where RVV shines here.
+5. **The full step is a poor RVV showcase and dilutes the win:** it is dominated by the
+   memory-bound stream (RVV ties/loses) + four tiny boundary-stream kernels (RVV per-call
+   `vsetvl`/guard overhead on ~100-element rows) + a target-independent NumPy bounce-back.
+   Best full step so far is GCC-autovec-everything (3.25 > true scalar 2.85 = **1.14×**);
+   our-rvv-clang full step (2.69) is ~true-scalar because the slow rvv stream drags it.
+
+#### Consequences for the plan (reprioritized)
+
+- **Beating scalar on the *collide* is already done** with the explicit backend + Clang
+  (f64 1.31×, f32 1.94×). f32+Clang is the flagship number.
+- **Beating scalar on the *full step*** needs the memory side fixed, not more collide
+  tuning. Highest-value levers now: (a) **f32 throughout** (halves stream bandwidth too;
+  collide already ~3× — but first fix the harness's f32 full-step instability, Phase 2);
+  (b) **fuse collide+stream** (Phase 3b) so the compute win isn't diluted and PDF traffic is
+  cut; (c) **hybrid targeting** (rvv-clang collide + autovec stream) as a cheap upper bound.
+- **Promote-to-backend candidate (decisive lever):** default the RVV JIT to Clang. It is a
+  compiler-selection policy (`CompilerInfo.get_default` returns GCC first), not a codegen
+  change; the backend already supports `ClangInfo`. Recommend + optionally auto-wire.
+- **Vector-bits auto-wiring:** de-prioritized (neutral here), though still correct to wire so
+  VLS users get fixed-length semantics.
+
+### Larger grid + f32 correctness (2026-07-05)
+
+- **Full step 300×300×100** (less Python/NumPy per-cell overhead): true scalar 4.59, GCC
+  autovec 5.17 (**1.13×**), rvv-clang-m1 4.01. Verdict unchanged from 100×100: autovec (=
+  rvv-1.0) beats true scalar; the explicit backend loses on the full step because GCC autovec
+  dominates it on **both** collide (8.38 vs 6.41) and stream (20.4 vs 12.4), and the
+  memory-bound stream + boundary + NumPy dominate the step.
+- **f32 collide correctness (board, `lbm_rvv_check.py`):** RVV fixed & VLA match generic f32
+  to `max_abs_err = 7.15e-7` (f32 eps). The f32 collide win (14.42 MLUP/s = 1.94× f32-scalar,
+  2.95× f64-scalar) is numerically correct on real silicon. f64 still 1.78e-15.
+
+### Root cause of the f32 full-step instability (harness scheme, pre-existing)
+
+The `lb-pystencils.py` step applies **four boundary-stream kernels** (`top/bottom/left/right`)
+that pull `g[i][-cx,-cy]` on a 1-cell boundary slice; on the outer edge some directions pull
+**out of bounds** (e.g. top row, south-moving populations read `y=NY`), then the NumPy
+bounce-back only resets the *incoming* populations, leaving the OOB-contaminated ones. In f64
+this shows as the 3.4% `rel_l2` gap vs the clean NumPy reference (stable-but-wrong); in f32 it
+amplifies to divergence. **A pure-NumPy f32 BGK of the same cavity is stable** (rho∈[0.65,1.0]
+@200 steps) — so f32 is viable; the harness scheme is the culprit. Fixing it (a consistent
+boundary/streaming scheme, or a fused collide-stream that matches the reference) is LBM-app
+work, and is the prerequisite to a *meaningful* f32 full-step number.
+
+### Status / where the "beat scalar" goal stands
+
+- **Compute kernel (collide): RVV-1.0 beats scalar — validated.** Explicit backend + Clang:
+  f64 **1.31×**, f32 **1.94×** (2.95× vs f64-scalar). This is the flagship, correct result.
+- **Full step (benchmark of record): not yet with the explicit backend.** GCC autovec (which
+  *is* rvv-1.0) beats true scalar 1.13–1.14×; the explicit backend is memory/overhead-bound
+  here. A genuine explicit-backend full-step win needs the f32 track (fix scheme stability)
+  and/or collide+stream fusion — both LBM-app changes.
+- **Decisive lever to land:** Clang for the RVV JIT (harness already supports `--compiler
+  clang`; backend default is a `CompilerInfo.get_default` policy question).
+
+## Phase 3 — collide+stream fusion (2026-07-05): the full-step win
+
+Per the user's choice ("fuse collide+stream, both dtypes"), added a fused **pull**
+collide-stream kernel (`build_fused_collide_stream_kernel`) that gathers the streamed
+pre-collision PDFs from neighbours (`f[i]` from `x−c_i`), collides once, writes `g` — one
+pass, half the PDF traffic, and every PDF stays live across the collision (where RVV wins).
+Two harness modes:
+
+- **`--periodic` (Taylor-Green vortex):** wrap-around ghosts ⇒ the fused kernel is
+  *exactly* a correct periodic LBM step, no wall-BC approximation. **This is the validated
+  benchmark.**
+- **`--fused` (lid cavity):** momentum-ghost bounce-back. Stable and mass-bounded but the
+  wall BCs are *approximate* for the pull formulation (a proper wet-node/Zou-He treatment is
+  future LBM work — three boundary variants were tried; getting cavity walls exactly right
+  in a stream-then-collide pull scheme is genuine LBM-numerics, orthogonal to the RVV
+  backend). The **non-fused** path remains the accurate cavity solver.
+
+### PERIODIC full step, 200×200×100 (board) — the headline, with rvv==generic proof
+
+| dtype | true scalar | GCC autovec | **rvv-clang (fused)** |
+|-------|-------------|-------------|-----------------------|
+| f64   | 5.70        | 6.47        | 5.58                  |
+| f32   | 5.13        | 5.05        | **8.54**              |
+
+Checksums identical across backends (correctness): f64 rvv-clang `sum_f=4.0000000000e4`,
+`max|momx|=0.0385219` — **bit-equal to scalar**; f32 agrees to f32 precision
+(`4.0000052e4` vs `4.0000027e4`, `momx=0.038522`). Mass conserved, TG vortex decays
+physically, finite at all step counts.
+
+- **f32 rvv-clang fused = 8.54 MLUP/s = 1.66× f32-scalar and 1.50× f64-scalar.** ✅
+  **RVV-1.0 beats scalar on a correct, validated full-step LBM.**
+- f64 rvv-clang (5.58) ≈ f64 scalar (5.70) — the explicit backend ties scalar in f64;
+  autovec (6.47, also rvv-1.0) is best for f64.
+
+### Cavity `--fused` full step, 200×200×100 (board, earlier run, approximate BCs)
+
+f64: scalar 4.71, autovec 5.60, rvv-clang 4.84 (1.03× scalar). f32: scalar 5.32, autovec
+4.62, rvv-gcc 5.24, **rvv-clang 7.90 (1.49× f32-scalar, 1.68× f64-scalar)**. Same story as
+periodic — fusion + f32 + Clang is the win; f64 explicit backend ~ties scalar.
+
+## CONCLUSION — "beat scalar with RVV-1.0" (Phase 4)
+
+**Achieved.** Two independent, validated demonstrations:
+
+1. **Compute kernel (collide):** explicit backend + Clang — f32 **2.95× f64-scalar** /
+   1.94× f32-scalar; f64 1.31×. rvv==generic to 7e-7 (f32) / 2e-15 (f64).
+2. **Correct full step (periodic Taylor-Green):** explicit backend + Clang + fusion —
+   f32 **1.50× f64-scalar** / 1.66× f32-scalar. rvv checksum == scalar checksum.
+
+**The winning recipe: explicit RVV backend + Clang + f32 + collide-stream fusion.** The
+plan's hypothesized levers were wrong: `-mrvv-vector-bits` is neutral, the "128-bit datapath
+2× ceiling" was a mis-diagnosis (the real gap was our backend's instruction count vs GCC
+autovec, same IPC), and LMUL is compiler-dependent. The levers that actually moved the
+needle were found by measurement: **Clang (+88–99% over GCC), f32 (2× lanes where autovec
+fails), and fusion (removes the bandwidth-bound stream).**
+
+**Honest caveats:** (a) f64 compute is bounded (explicit backend ~ties true scalar on the
+full step; GCC autovec, itself rvv-1.0, is best for f64 at 1.13–1.14× scalar). (b) The
+un-fused memory-bound stream cannot beat scalar (bandwidth). (c) The lid-cavity fused wall
+BCs are approximate; the periodic benchmark is the validated correctness+perf gate. (d) All
+numbers native on the K1; QEMU is not perf data.
+
+**Recommended follow-ups (not blocking the result):** default the RVV JIT to Clang
+(decisive, harness already supports it); wet-node cavity BCs for the fused pull scheme;
+`vfrec7` reciprocal; OpenMP scaling across the 8× X60.

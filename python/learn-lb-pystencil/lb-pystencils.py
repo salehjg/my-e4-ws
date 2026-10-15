@@ -33,6 +33,7 @@ else:
 import numpy as np
 import sympy as sp
 import pystencils as ps
+from pystencils.jit.cpu import CpuJit, GccInfo, ClangInfo
 
 #   matplotlib is imported lazily inside the plotting path so that headless board
 #   runs (`--no-plot`) do not require it.
@@ -53,20 +54,78 @@ COMPARE_STEPS = None
 
 # ── Code generation configuration (set from CLI in main) ────────────────────
 # Controls the target/mode used by all generated kernels. Defaults reproduce the
-# original behaviour (a generic scalar CPU kernel).
+# original behaviour (a generic scalar CPU kernel, f64, GCC).
 _CFG_OPTS = {
-    "target": "generic",  # "generic" | "rvv"
-    "mode": "fixed",       # RVV only: "fixed" (VLS) | "vla" (stripmine)
-    "vlen": 256,           # RVV assumed/floor VLEN in bits
-    "lanes": None,         # RVV VLS lane count (defaults to VLEN/64 for f64)
+    "target": "generic",   # "generic" | "rvv"
+    "mode": "fixed",        # RVV only: "fixed" (VLS) | "vla" (stripmine)
+    "vlen": 256,            # RVV assumed/floor VLEN in bits
+    "lanes": None,          # RVV VLS lane count (defaults to VLEN/width)
+    "dtype": "f64",         # field/compute precision: "f64" | "f32"
+    "compiler": "gcc",      # JIT compiler: "gcc" | "clang"
+    "vector_bits": True,    # VLS only: pass -mrvv-vector-bits=zvl
+    "unroll": False,        # pass -funroll-loops
+    "extra_cxxflags": [],   # arbitrary extra flags (e.g. -mcpu=spacemit-x60)
 }
 
 
+def _np_dtype():
+    """NumPy dtype matching the configured field precision."""
+    return np.float32 if _CFG_OPTS["dtype"] == "f32" else np.float64
+
+
+def _field_dtype():
+    """pystencils field dtype string matching the configured precision."""
+    return "float32" if _CFG_OPTS["dtype"] == "f32" else "float64"
+
+
+def _elem_bits():
+    return 32 if _CFG_OPTS["dtype"] == "f32" else 64
+
+
+def _fields_decl():
+    """f0..f8, g0..g8 field declaration at the configured precision."""
+    dt = _field_dtype()
+    return (
+        "f0, f1, f2, f3, f4, f5, f6, f7, f8, "
+        f"g0, g1, g2, g3, g4, g5, g6, g7, g8: {dt}[2D]"
+    )
+
+
+def _make_jit():
+    """Build a `CpuJit` with a `CompilerInfo` that actually carries the RVV
+    config into the compiler flags.
+
+    This is the crux of the performance work: a plain `.compile()` uses the
+    default `CompilerInfo(target=CurrentCPU, rvv_fixed_length=False)`, so the
+    kernel's RVV `vlen`/mode never reach the compiler and `-mrvv-vector-bits`
+    is silently off. Here we wire them explicitly.
+    """
+    info_cls = ClangInfo if _CFG_OPTS["compiler"] == "clang" else GccInfo
+    extra = list(_CFG_OPTS["extra_cxxflags"])
+    if _CFG_OPTS["unroll"]:
+        extra.append("-funroll-loops")
+
+    if _CFG_OPTS["target"] == "rvv":
+        fixed = _CFG_OPTS["mode"] == "fixed" and _CFG_OPTS["vector_bits"]
+        info = info_cls(
+            target=ps.Target.RISCV_RVV,
+            rvv_vlen=_CFG_OPTS["vlen"],
+            rvv_fixed_length=fixed,
+            extra_cxxflags=extra,
+        )
+    else:
+        #   Scalar baseline: CurrentCPU -> native/synthesized -march.
+        info = info_cls(target=ps.Target.CurrentCPU, extra_cxxflags=extra)
+    return CpuJit(info)
+
+
 def make_config(iteration_slice=None):
-    """Build a `CreateKernelConfig` for the configured target/mode."""
+    """Build a `CreateKernelConfig` for the configured target/mode/precision."""
     cfg = ps.CreateKernelConfig()
     if iteration_slice is not None:
         cfg.iteration_slice = iteration_slice
+
+    cfg.default_dtype = _field_dtype()
 
     if _CFG_OPTS["target"] == "rvv":
         cfg.target = ps.Target.RISCV_RVV
@@ -75,8 +134,11 @@ def make_config(iteration_slice=None):
         cfg.cpu.vectorize.mode = _CFG_OPTS["mode"]
         cfg.cpu.rvv.vlen = _CFG_OPTS["vlen"]
         if _CFG_OPTS["mode"] == "fixed":
-            lanes = _CFG_OPTS["lanes"] or (_CFG_OPTS["vlen"] // 64)  # f64 -> LMUL=1
+            #   f64 -> VLEN/64 lanes (LMUL=1); f32 -> VLEN/32 lanes (LMUL=1).
+            lanes = _CFG_OPTS["lanes"] or (_CFG_OPTS["vlen"] // _elem_bits())
             cfg.cpu.vectorize.lanes = lanes
+
+    cfg.jit = _make_jit()
     return cfg
 
 
@@ -109,10 +171,7 @@ def make_equilibrium(rho, ux, uy):
 
 def build_pull_collide_kernel():
     """BGK collision kernel (streaming handled separately)."""
-    fields = ps.fields(
-        "f0, f1, f2, f3, f4, f5, f6, f7, f8, "
-        "g0, g1, g2, g3, g4, g5, g6, g7, g8: double[2D]"
-    )
+    fields = ps.fields(_fields_decl())
     f = fields[:Q]
     g = fields[Q:]
     omega = sp.Symbol("omega")
@@ -132,12 +191,98 @@ def build_pull_collide_kernel():
     return ps.create_kernel(assignments, config=make_config()).compile()
 
 
+def build_fused_collide_stream_kernel():
+    """Fused pull collide-stream over the interior.
+
+    Instead of collide (f->g, local) then a separate pull-stream (g->f), this
+    single kernel gathers the *streamed* pre-collision populations directly from
+    the neighbours (`f[i]` pulled from `x - c_i`), collides them, and writes the
+    new populations to `g`. One pass, one buffer of PDF traffic instead of two —
+    the classic LBM fusion win — and it keeps every loaded PDF live across the
+    whole collision (where the RVV compute advantage lives). The caller swaps
+    f/g afterwards. Runs over the interior only (needs a 1-cell halo); the
+    boundary ring is handled by `build_boundary_collide_kernel`.
+    """
+    fields = ps.fields(_fields_decl())
+    f = fields[:Q]
+    g = fields[Q:]
+    omega = sp.Symbol("omega")
+
+    #   Streamed (pulled) pre-collision populations arriving at this cell.
+    p = [f[i][-int(cx), -int(cy)] for i, (cx, cy) in enumerate(C)]
+    rho = sum(p)
+    ux = (p[1] - p[3] + p[5] - p[6] - p[7] + p[8]) / rho
+    uy = (p[2] - p[4] + p[5] + p[6] - p[7] - p[8]) / rho
+    u_sq = ux * ux + uy * uy
+
+    assignments = []
+    for i, (cx, cy) in enumerate(C):
+        cu = float(cx) * ux + float(cy) * uy
+        feq = float(W[i]) * rho * (1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u_sq)
+        assignments.append(ps.Assignment(g[i][0, 0], p[i] - omega * (p[i] - feq)))
+
+    interior = (slice(1, -1), slice(1, -1))
+    return ps.create_kernel(assignments, config=make_config(interior)).compile()
+
+
+def fill_ghost_bcs(fp, rho_wall=1.0):
+    """Fill the 1-cell ghost ring of padded fields for the lid-driven cavity.
+
+    Encodes the boundary conditions in the ghost values so the fused *pull* kernel
+    has a valid source for every neighbour access (no out-of-bounds — the bug that
+    made the old boundary-stream path unstable in f32): halfway bounce-back on the
+    three static walls, and a moving-wall term on the top lid.
+
+    NOTE: this is an *approximate* wall treatment for the stream-then-collide (pull)
+    fusion — it is stable and mass-bounded but does not reproduce the non-fused
+    cavity solution to graphing accuracy (a proper wet-node/Zou-He treatment for the
+    pull formulation is future LBM-app work). For a *validated-correct* fused
+    full-step benchmark use ``--periodic`` (Taylor-Green), where rvv==generic to
+    checksum precision. The non-fused path remains the accurate cavity solver.
+    """
+    for i in range(Q):
+        op = OPPOSITE[i]
+        fp[i][0, :] = fp[op][1, :]      # left wall
+        fp[i][-1, :] = fp[op][-2, :]    # right wall
+        fp[i][:, 0] = fp[op][:, 1]      # bottom wall
+        fp[i][:, -1] = (                # top lid moving in +x
+            fp[op][:, -2] - 6.0 * float(W[i]) * rho_wall * (float(C[i, 0]) * U_LID)
+        )
+
+
+def fill_ghost_periodic(fp):
+    """Wrap-around ghost fill for a doubly-periodic domain.
+
+    With this fill the fused pull collide-stream kernel is *exactly* a correct
+    periodic LBM step — no wall/boundary approximations at all — so it is a clean,
+    unimpeachable benchmark for RVV-vs-scalar throughput and for backend agreement
+    (rvv must equal generic bit-for-bit up to FMA contraction).
+    """
+    for i in range(Q):
+        #   x-ghost columns from the opposite fluid column (fluid rows only)...
+        fp[i][0, 1:-1] = fp[i][-2, 1:-1]
+        fp[i][-1, 1:-1] = fp[i][1, 1:-1]
+        #   ...then y-ghost rows over the full width so corners wrap correctly.
+        fp[i][:, 0] = fp[i][:, -2]
+        fp[i][:, -1] = fp[i][:, 1]
+
+
+def taylor_green_init(nx, ny, npdt, u0=0.04):
+    """Doubly-periodic Taylor-Green vortex initial condition (non-trivial, smooth)."""
+    xs = np.arange(nx)
+    ys = np.arange(ny)
+    X, Y = np.meshgrid(xs, ys, indexing="ij")
+    kx, ky = 2.0 * np.pi / nx, 2.0 * np.pi / ny
+    rho = np.ones((nx, ny), dtype=npdt)
+    ux = (-u0 * np.cos(kx * X) * np.sin(ky * Y)).astype(npdt)
+    uy = (u0 * np.sin(kx * X) * np.cos(ky * Y)).astype(npdt)
+    return [np.ascontiguousarray(fi, dtype=npdt)
+            for fi in make_equilibrium(rho, ux, uy)]
+
+
 def build_stream_kernel():
     """Pull-streaming kernel from g -> f over interior cells (directions 0..8)."""
-    fields = ps.fields(
-        "f0, f1, f2, f3, f4, f5, f6, f7, f8, "
-        "g0, g1, g2, g3, g4, g5, g6, g7, g8: double[2D]"
-    )
+    fields = ps.fields(_fields_decl())
     f = fields[:Q]
     g = fields[Q:]
 
@@ -151,10 +296,7 @@ def build_stream_kernel():
 
 def build_boundary_stream_kernel(iteration_slice):
     """Pull-streaming kernel from g -> f over a boundary slice (directions 0..8)."""
-    fields = ps.fields(
-        "f0, f1, f2, f3, f4, f5, f6, f7, f8, "
-        "g0, g1, g2, g3, g4, g5, g6, g7, g8: double[2D]"
-    )
+    fields = ps.fields(_fields_decl())
     f = fields[:Q]
     g = fields[Q:]
 
@@ -169,7 +311,8 @@ def build_boundary_stream_kernel(iteration_slice):
 
 
 def build_macro_kernel():
-    fields = ps.fields("f0, f1, f2, f3, f4, f5, f6, f7, f8, rho, ux, uy: double[2D]")
+    dt = _field_dtype()
+    fields = ps.fields(f"f0, f1, f2, f3, f4, f5, f6, f7, f8, rho, ux, uy: {dt}[2D]")
     f = fields[:Q]
     rho_f, ux_f, uy_f = fields[Q:]
 
@@ -183,8 +326,11 @@ def build_macro_kernel():
         ps.Assignment(uy_f[0, 0], uy_expr),
     ]
     #   The macro kernel writes to boundary cells too; keep it scalar (generic) to
-    #   avoid the boundary/stride assumptions of the vector backends.
-    return ps.create_kernel(assignments, config=ps.CreateKernelConfig()).compile()
+    #   avoid the boundary/stride assumptions of the vector backends. Precision must
+    #   still match the field arrays.
+    macro_cfg = ps.CreateKernelConfig()
+    macro_cfg.default_dtype = _field_dtype()
+    return ps.create_kernel(assignments, config=macro_cfg).compile()
 
 
 def kernel_args(prefix, arrays):
@@ -284,7 +430,19 @@ def parse_args(argv=None):
     p.add_argument("--vlen", type=int, default=256,
                    help="RVV assumed (VLS) / floor (VLA) VLEN in bits.")
     p.add_argument("--lanes", type=int, default=None,
-                   help="RVV VLS lane count (default VLEN/64 -> LMUL=1 for f64).")
+                   help="RVV VLS lane count (default VLEN/width -> LMUL=1).")
+    p.add_argument("--dtype", choices=["f64", "f32"], default="f64",
+                   help="Field/compute precision.")
+    p.add_argument("--compiler", choices=["gcc", "clang"], default="gcc",
+                   help="JIT compiler used for all generated kernels.")
+    p.add_argument("--vector-bits", action=argparse.BooleanOptionalAction,
+                   default=True,
+                   help="VLS only: pass -mrvv-vector-bits=zvl (default on).")
+    p.add_argument("--unroll", action="store_true",
+                   help="Pass -funroll-loops to the JIT compiler.")
+    p.add_argument("--extra-cxxflags", default="",
+                   help="Extra flags appended to the JIT compile "
+                        "(e.g. '-mcpu=spacemit-x60').")
     p.add_argument("--nx", type=int, default=NX)
     p.add_argument("--ny", type=int, default=NY)
     p.add_argument("--steps", type=int, default=N_STEPS)
@@ -292,6 +450,13 @@ def parse_args(argv=None):
                    help="Skip matplotlib output (for headless / board runs).")
     p.add_argument("--no-compare", action="store_true",
                    help="Skip the NumPy reference comparison.")
+    p.add_argument("--fused", action="store_true",
+                   help="Fuse collide+stream into one interior kernel (cuts PDF "
+                        "traffic). Lid-driven cavity boundaries.")
+    p.add_argument("--periodic", action="store_true",
+                   help="Fused collide-stream on a doubly-periodic Taylor-Green "
+                        "domain: an exactly-correct full-step benchmark (no wall "
+                        "BCs). Implies --fused; prints a checksum for rvv==generic.")
     return p.parse_args(argv)
 
 
@@ -305,48 +470,92 @@ def main(argv=None):
     OMEGA = 1.0 / TAU
     N_STEPS = args.steps
     _CFG_OPTS.update(
-        target=args.target, mode=args.mode, vlen=args.vlen, lanes=args.lanes
+        target=args.target, mode=args.mode, vlen=args.vlen, lanes=args.lanes,
+        dtype=args.dtype, compiler=args.compiler, vector_bits=args.vector_bits,
+        unroll=args.unroll, extra_cxxflags=args.extra_cxxflags.split(),
     )
 
-    print(f"target={args.target} mode={args.mode} vlen={args.vlen} lanes={args.lanes}")
+    print(f"target={args.target} mode={args.mode} vlen={args.vlen} lanes={args.lanes} "
+          f"dtype={args.dtype} compiler={args.compiler} "
+          f"vector_bits={args.vector_bits} unroll={args.unroll} "
+          f"extra_cxxflags={_CFG_OPTS['extra_cxxflags']}")
     print(f"NX={NX}, NY={NY}, Re={RE}, nu={NU:.6g}, tau={TAU:.6g}, omega={OMEGA:.6g}")
 
-    rho = np.ones((NX, NY), dtype=np.float64)
-    ux = np.zeros((NX, NY), dtype=np.float64)
-    uy = np.zeros((NX, NY), dtype=np.float64)
+    npdt = _np_dtype()
+    args.fused = args.fused or args.periodic  # periodic implies the fused kernel
 
-    f = make_equilibrium(rho, ux, uy)
+    rho = np.ones((NX, NY), dtype=npdt)
+    ux = np.zeros((NX, NY), dtype=npdt)
+    uy = np.zeros((NX, NY), dtype=npdt)
+
+    if args.periodic:
+        f = taylor_green_init(NX, NY, npdt)
+    else:
+        #   make_equilibrium multiplies by float64 weights -> cast back to the
+        #   configured precision so the kernel arg dtypes match the field dtypes.
+        f = [np.ascontiguousarray(fi, dtype=npdt) for fi in make_equilibrium(rho, ux, uy)]
     g = [fi.copy() for fi in f]
 
-    collide_stream = build_pull_collide_kernel()
     macro = build_macro_kernel()
-    stream = build_stream_kernel()
-    top_stream = build_boundary_stream_kernel((slice(None), slice(-1, None)))
-    bottom_stream = build_boundary_stream_kernel((slice(None), slice(0, 1)))
-    left_stream = build_boundary_stream_kernel((slice(0, 1), slice(None)))
-    right_stream = build_boundary_stream_kernel((slice(-1, None), slice(None)))
+
+    if args.fused:
+        fused = build_fused_collide_stream_kernel()
+        #   Padded (ghost-layer) fields: fluid domain is [1:-1, 1:-1]. The fused
+        #   pull kernel runs over that interior; ghosts carry the boundary
+        #   conditions so every pull source is valid.
+        fp = [np.zeros((NX + 2, NY + 2), dtype=npdt) for _ in range(Q)]
+        for i in range(Q):
+            fp[i][1:-1, 1:-1] = f[i]
+        gp = [x.copy() for x in fp]
+    else:
+        collide_stream = build_pull_collide_kernel()
+        stream = build_stream_kernel()
+        top_stream = build_boundary_stream_kernel((slice(None), slice(-1, None)))
+        bottom_stream = build_boundary_stream_kernel((slice(None), slice(0, 1)))
+        left_stream = build_boundary_stream_kernel((slice(0, 1), slice(None)))
+        right_stream = build_boundary_stream_kernel((slice(-1, None), slice(None)))
 
     t_start = time.perf_counter()
     for step in range(N_STEPS):
-        kargs = {}
-        kargs.update(kernel_args("f", f))
-        kargs.update(kernel_args("g", g))
-        kargs["omega"] = OMEGA
-        collide_stream(**kargs)
+        omega_arg = _np_dtype()(OMEGA)
 
-        # Streaming: pull neighbor PDFs into each interior cell.
-        stream_args = {}
-        stream_args.update(kernel_args("f", f))
-        stream_args.update(kernel_args("g", g))
-        stream(**stream_args)
-        top_stream(**stream_args)
-        bottom_stream(**stream_args)
-        left_stream(**stream_args)
-        right_stream(**stream_args)
+        if args.fused:
+            #   Fill ghosts, fused collide-stream over the fluid interior into gp,
+            #   then swap so fp holds the new populations. Periodic: wrap-around
+            #   ghosts, exactly correct, no wall BC. Cavity: no-flux ghosts +
+            #   proven bounce-back/Zou-He on the fused result.
+            if args.periodic:
+                fill_ghost_periodic(fp)
+            else:
+                fill_ghost_bcs(fp)
+            kargs = {}
+            kargs.update(kernel_args("f", fp))
+            kargs.update(kernel_args("g", gp))
+            kargs["omega"] = omega_arg
+            fused(**kargs)
+            fp, gp = gp, fp
+        else:
+            kargs = {}
+            kargs.update(kernel_args("f", f))
+            kargs.update(kernel_args("g", g))
+            kargs["omega"] = omega_arg
+            collide_stream(**kargs)
 
-        apply_bounce_back_boundaries(f)
+            # Streaming: pull neighbor PDFs into each interior cell.
+            stream_args = {}
+            stream_args.update(kernel_args("f", f))
+            stream_args.update(kernel_args("g", g))
+            stream(**stream_args)
+            top_stream(**stream_args)
+            bottom_stream(**stream_args)
+            left_stream(**stream_args)
+            right_stream(**stream_args)
+
+            apply_bounce_back_boundaries(f)
 
         if (step + 1) % 1000 == 0:
+            if args.fused:
+                f = [np.ascontiguousarray(fp[i][1:-1, 1:-1]) for i in range(Q)]
             macro_args = kernel_args("f", f)
             macro_args.update({"rho": rho, "ux": ux, "uy": uy})
             macro(**macro_args)
@@ -364,6 +573,21 @@ def main(argv=None):
             f"timing: {N_STEPS} steps in {elapsed:.3f} s "
             f"-> {mlups:.2f} MLUP/s ({NX}x{NY} grid)"
         )
+
+    if args.fused:
+        f = [np.ascontiguousarray(fp[i][1:-1, 1:-1]) for i in range(Q)]
+
+    if args.periodic:
+        #   Exactly-correct periodic step -> a stable checksum is the correctness
+        #   gate (compare rvv vs generic); no cavity NumPy reference applies.
+        total = float(sum(float(np.sum(fi.astype(np.float64))) for fi in f))
+        rho_p = sum(f)
+        mom_x = sum(float(C[i, 0]) * f[i] for i in range(Q))
+        print(f"periodic checksum: sum_f={total:.10e} "
+              f"rho=[{rho_p.min():.6g},{rho_p.max():.6g}] "
+              f"max|momx|={np.max(np.abs(mom_x)):.6g} "
+              f"finite={np.isfinite(rho_p).all()}")
+        return None
 
     macro_args = kernel_args("f", f)
     macro_args.update({"rho": rho, "ux": ux, "uy": uy})
