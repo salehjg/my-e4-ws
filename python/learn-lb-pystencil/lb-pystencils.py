@@ -53,16 +53,12 @@ COMPARE_WITH_NUMPY = True
 COMPARE_STEPS = None
 
 # ── Code generation configuration (set from CLI in main) ────────────────────
-# Controls the target/mode used by all generated kernels. Defaults reproduce the
+# Controls the target/precision used by all generated kernels. Defaults reproduce the
 # original behaviour (a generic scalar CPU kernel, f64, GCC).
 _CFG_OPTS = {
-    "target": "generic",   # "generic" | "rvv"
-    "mode": "fixed",        # RVV only: "fixed" (VLS) | "vla" (stripmine)
-    "vlen": 256,            # RVV assumed/floor VLEN in bits
-    "lanes": None,          # RVV VLS lane count (defaults to VLEN/width)
+    "target": "generic",   # "generic" | "rvv" (RVV 1.0, VLS with VLEN = 256)
     "dtype": "f64",         # field/compute precision: "f64" | "f32"
     "compiler": "gcc",      # JIT compiler: "gcc" | "clang"
-    "vector_bits": True,    # VLS only: pass -mrvv-vector-bits=zvl
     "unroll": False,        # pass -funroll-loops
     "extra_cxxflags": [],   # arbitrary extra flags (e.g. -mcpu=spacemit-x60)
 }
@@ -78,10 +74,6 @@ def _field_dtype():
     return "float32" if _CFG_OPTS["dtype"] == "f32" else "float64"
 
 
-def _elem_bits():
-    return 32 if _CFG_OPTS["dtype"] == "f32" else 64
-
-
 def _fields_decl():
     """f0..f8, g0..g8 field declaration at the configured precision."""
     dt = _field_dtype()
@@ -92,35 +84,22 @@ def _fields_decl():
 
 
 def _make_jit():
-    """Build a `CpuJit` with a `CompilerInfo` that actually carries the RVV
-    config into the compiler flags.
+    """Build a `CpuJit` for the configured compiler and target.
 
-    This is the crux of the performance work: a plain `.compile()` uses the
-    default `CompilerInfo(target=CurrentCPU, rvv_fixed_length=False)`, so the
-    kernel's RVV `vlen`/mode never reach the compiler and `-mrvv-vector-bits`
-    is silently off. Here we wire them explicitly.
+    The `CompilerInfo` target sets `-march`: `RISCV_RVV` -> `rv64gcv_zvl256b`
+    (what the RVV backend requires), `CurrentCPU` -> the host CPU.
     """
     info_cls = ClangInfo if _CFG_OPTS["compiler"] == "clang" else GccInfo
     extra = list(_CFG_OPTS["extra_cxxflags"])
     if _CFG_OPTS["unroll"]:
         extra.append("-funroll-loops")
 
-    if _CFG_OPTS["target"] == "rvv":
-        fixed = _CFG_OPTS["mode"] == "fixed" and _CFG_OPTS["vector_bits"]
-        info = info_cls(
-            target=ps.Target.RISCV_RVV,
-            rvv_vlen=_CFG_OPTS["vlen"],
-            rvv_fixed_length=fixed,
-            extra_cxxflags=extra,
-        )
-    else:
-        #   Scalar baseline: CurrentCPU -> native/synthesized -march.
-        info = info_cls(target=ps.Target.CurrentCPU, extra_cxxflags=extra)
-    return CpuJit(info)
+    target = ps.Target.RISCV_RVV if _CFG_OPTS["target"] == "rvv" else ps.Target.CurrentCPU
+    return CpuJit(info_cls(target=target, extra_cxxflags=extra))
 
 
 def make_config(iteration_slice=None):
-    """Build a `CreateKernelConfig` for the configured target/mode/precision."""
+    """Build a `CreateKernelConfig` for the configured target/precision."""
     cfg = ps.CreateKernelConfig()
     if iteration_slice is not None:
         cfg.iteration_slice = iteration_slice
@@ -131,12 +110,7 @@ def make_config(iteration_slice=None):
         cfg.target = ps.Target.RISCV_RVV
         cfg.cpu.vectorize.enable = True
         cfg.cpu.vectorize.assume_inner_stride_one = True
-        cfg.cpu.vectorize.mode = _CFG_OPTS["mode"]
-        cfg.cpu.rvv.vlen = _CFG_OPTS["vlen"]
-        if _CFG_OPTS["mode"] == "fixed":
-            #   f64 -> VLEN/64 lanes (LMUL=1); f32 -> VLEN/32 lanes (LMUL=1).
-            lanes = _CFG_OPTS["lanes"] or (_CFG_OPTS["vlen"] // _elem_bits())
-            cfg.cpu.vectorize.lanes = lanes
+        #   Lanes default to one full 256-bit register: 4 x f64 or 8 x f32 (as on AVX).
 
     cfg.jit = _make_jit()
     return cfg
@@ -330,6 +304,9 @@ def build_macro_kernel():
     #   still match the field arrays.
     macro_cfg = ps.CreateKernelConfig()
     macro_cfg.default_dtype = _field_dtype()
+    #   ...but compile it with the configured compiler/flags like every other kernel, so
+    #   e.g. a `-march=rv64gc` scalar baseline really contains no vector code at all.
+    macro_cfg.jit = _make_jit()
     return ps.create_kernel(assignments, config=macro_cfg).compile()
 
 
@@ -425,19 +402,10 @@ def parse_args(argv=None):
     p = argparse.ArgumentParser(description="D2Q9 BGK lid-driven cavity (pystencils)")
     p.add_argument("--target", choices=["generic", "rvv"], default="generic",
                    help="Code generation target for the collide/stream kernels.")
-    p.add_argument("--mode", choices=["fixed", "vla"], default="fixed",
-                   help="RVV vectorization mode: fixed (VLS) or vla (stripmine).")
-    p.add_argument("--vlen", type=int, default=256,
-                   help="RVV assumed (VLS) / floor (VLA) VLEN in bits.")
-    p.add_argument("--lanes", type=int, default=None,
-                   help="RVV VLS lane count (default VLEN/width -> LMUL=1).")
     p.add_argument("--dtype", choices=["f64", "f32"], default="f64",
                    help="Field/compute precision.")
     p.add_argument("--compiler", choices=["gcc", "clang"], default="gcc",
                    help="JIT compiler used for all generated kernels.")
-    p.add_argument("--vector-bits", action=argparse.BooleanOptionalAction,
-                   default=True,
-                   help="VLS only: pass -mrvv-vector-bits=zvl (default on).")
     p.add_argument("--unroll", action="store_true",
                    help="Pass -funroll-loops to the JIT compiler.")
     p.add_argument("--extra-cxxflags", default="",
@@ -470,15 +438,12 @@ def main(argv=None):
     OMEGA = 1.0 / TAU
     N_STEPS = args.steps
     _CFG_OPTS.update(
-        target=args.target, mode=args.mode, vlen=args.vlen, lanes=args.lanes,
-        dtype=args.dtype, compiler=args.compiler, vector_bits=args.vector_bits,
+        target=args.target, dtype=args.dtype, compiler=args.compiler,
         unroll=args.unroll, extra_cxxflags=args.extra_cxxflags.split(),
     )
 
-    print(f"target={args.target} mode={args.mode} vlen={args.vlen} lanes={args.lanes} "
-          f"dtype={args.dtype} compiler={args.compiler} "
-          f"vector_bits={args.vector_bits} unroll={args.unroll} "
-          f"extra_cxxflags={_CFG_OPTS['extra_cxxflags']}")
+    print(f"target={args.target} dtype={args.dtype} compiler={args.compiler} "
+          f"unroll={args.unroll} extra_cxxflags={_CFG_OPTS['extra_cxxflags']}")
     print(f"NX={NX}, NY={NY}, Re={RE}, nu={NU:.6g}, tau={TAU:.6g}, omega={OMEGA:.6g}")
 
     npdt = _np_dtype()

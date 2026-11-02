@@ -1,7 +1,19 @@
 #!/usr/bin/env bash
+# Sync this workspace to a remote board with rsync.
+#
+# Usage:  bash push.to.sh <machine>
+#
+# Why rsync (and not the former zip + rm -rf + unzip):
+#   * incremental -- only changed files travel, so a push takes seconds;
+#   * the heavy local-only directories (.git, .venv-rvv, caches) are excluded,
+#     the old archive carried ~330 MB of them on every push;
+#   * `--delete` keeps the remote copy an exact mirror (same effect as the old
+#     wipe-and-unzip; `--delete-excluded` also drops excluded leftovers), but
+#     leaves the directory itself in place, so anything
+#     pointing into it (e.g. a walberla build dir) survives a push.
+#
+# The board is a SHARED machine: everything stays under REMOTE_PATHS[<machine>].
 set -euo pipefail
-
-# ─── Configuration ────────────────────────────────────────────────────────────
 
 VALID_MACHINES=( bananapi )
 
@@ -9,10 +21,7 @@ declare -A REMOTE_PATHS=(
     [bananapi]="/home/bananapi/saleh"
 )
 
-ARCHIVE="my-e4-ws.zip"
 SOURCE_DIR="my-e4-ws"
-
-# ─── Usage ────────────────────────────────────────────────────────────────────
 
 usage() {
     echo "Usage: $(basename "$0") <machine>"
@@ -24,66 +33,30 @@ usage() {
     exit 1
 }
 
-# ─── Argument validation ──────────────────────────────────────────────────────
-
 if [[ $# -lt 1 ]]; then
     echo "Error: machine name is required." >&2
-    echo
     usage
 fi
 
 MACHINE="$1"
-
-is_valid=false
-for m in "${VALID_MACHINES[@]}"; do
-    [[ "$MACHINE" == "$m" ]] && { is_valid=true; break; }
-done
-
-if ! $is_valid; then
+if [[ -z "${REMOTE_PATHS[$MACHINE]+x}" ]]; then
     echo "Error: '$MACHINE' is not a recognised machine." >&2
-    echo
     usage
 fi
-
 REMOTE_PATH="${REMOTE_PATHS[$MACHINE]}"
 
-# ─── Step 1: Create archive ───────────────────────────────────────────────────
+HERE="$(cd "$(dirname "$0")" && pwd)"
 
-PARENT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+echo "==> Syncing ${HERE}/ -> ${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR}/"
+# Trailing slashes matter: copy the *contents* of HERE into the remote dir.
+rsync -az --delete --delete-excluded \
+    --exclude '.git' \
+    --exclude '.venv-rvv' \
+    --exclude '.idea' \
+    --exclude '__pycache__' \
+    --exclude '.pytest_cache' \
+    --exclude 'scripts/.perfcache' \
+    --exclude '*.zip' \
+    "${HERE}/" "${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR}/"
 
-echo "==> Creating archive: ${ARCHIVE}"
-(
-    cd "$PARENT_DIR"
-    rm -f "$ARCHIVE"
-    zip -r "$ARCHIVE" "$SOURCE_DIR"
-)
-echo "    Done."
-
-# ─── Step 2: rsync with progress and speed report ────────────────────────────
-
-echo "==> Transferring to ${MACHINE}:${REMOTE_PATH}/"
-rsync \
-    --progress \
-    --stats \
-    --human-readable \
-    --compress \
-    "${PARENT_DIR}/${ARCHIVE}" \
-    "${MACHINE}:${REMOTE_PATH}/"
-echo "    Transfer complete."
-
-# ─── Step 3: Unzip on remote machine ─────────────────────────────────────────
-
-echo "==> Unpacking on ${MACHINE}..."
-ssh "$MACHINE" bash <<EOF
-    set -euo pipefail
-    cd "${REMOTE_PATH}"
-    rm -rf "${SOURCE_DIR}"
-    unzip -q "${ARCHIVE}"
-    echo "    Unpack complete."
-EOF
-
-# ─── Step 4: Success report ───────────────────────────────────────────────────
-
-printf "\n✓ Deployment successful.\n"
-printf "  Files are at  %s  →  %s:%s/%s\n" \
-    "$(pwd)/${SOURCE_DIR}" "$MACHINE" "$REMOTE_PATH" "$SOURCE_DIR"
+echo "✓ ${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR} is up to date."

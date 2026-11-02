@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""WP8 LBM backend check: verify the D2Q9 BGK collide and pull-stream kernels produce
-identical results on the RVV backend (VLS and VLA) as on the generic scalar backend.
+"""LBM backend check: verify the D2Q9 BGK collide kernel produces the same results on
+the RVV backend (VLS, VLEN = 256) as on the generic scalar backend, in f64 and f32.
 
 Runs on the Banana Pi board. Compares against the generic-CPU kernel output (the
 reference), isolating backend correctness from LBM stability.
@@ -25,18 +25,14 @@ W = np.array(
 Q = 9
 
 
-def make_config(target, mode, dtype="f64", vlen=256):
+def make_config(target, dtype="f64"):
     cfg = ps.CreateKernelConfig()
     cfg.default_dtype = "float32" if dtype == "f32" else "float64"
-    width = 32 if dtype == "f32" else 64
     if target == "rvv":
+        #   Default lanes: one 256-bit register (4 x f64 / 8 x f32), like AVX
         cfg.target = ps.Target.RISCV_RVV
         cfg.cpu.vectorize.enable = True
         cfg.cpu.vectorize.assume_inner_stride_one = True
-        cfg.cpu.vectorize.mode = mode
-        cfg.cpu.rvv.vlen = vlen
-        if mode == "fixed":
-            cfg.cpu.vectorize.lanes = vlen // width
     return cfg
 
 
@@ -74,7 +70,7 @@ _TOL = {"f64": dict(rtol=1e-12, atol=1e-14), "f32": dict(rtol=1e-4, atol=1e-5)}
 
 
 def main() -> int:
-    nx, ny = 16, 48
+    nx, ny = 16, 51  # 51: not a multiple of the lane count -> remainder loop runs too
     rng = np.random.default_rng(1234)
     rc = 0
     for dtype in ("f64", "f32"):
@@ -85,19 +81,17 @@ def main() -> int:
         tol = _TOL[dtype]
 
         #   Reference: generic scalar backend at the same precision.
-        kref = build_collide(make_config("generic", "fixed", dtype), dtype)
+        kref = build_collide(make_config("generic", dtype), dtype)
         g_ref = [np.zeros((nx, ny), dtype=npdt) for _ in range(Q)]
         run_collide(kref, f_ref, g_ref, omega)
 
-        for target, mode in [("rvv", "fixed"), ("rvv", "vla")]:
-            k = build_collide(make_config(target, mode, dtype), dtype)
-            g = [np.zeros((nx, ny), dtype=npdt) for _ in range(Q)]
-            run_collide(k, f_ref, g, omega)
-            ok = all(np.allclose(g[i], g_ref[i], **tol) for i in range(Q))
-            maxerr = max(float(np.max(np.abs(g[i] - g_ref[i]))) for i in range(Q))
-            print(f"collide {dtype} {target}/{mode}: match={ok} "
-                  f"max_abs_err={maxerr:.3e}")
-            rc |= 0 if ok else 1
+        k = build_collide(make_config("rvv", dtype), dtype)
+        g = [np.zeros((nx, ny), dtype=npdt) for _ in range(Q)]
+        run_collide(k, f_ref, g, omega)
+        ok = all(np.allclose(g[i], g_ref[i], **tol) for i in range(Q))
+        maxerr = max(float(np.max(np.abs(g[i] - g_ref[i]))) for i in range(Q))
+        print(f"collide {dtype} rvv: match={ok} max_abs_err={maxerr:.3e}")
+        rc |= 0 if ok else 1
 
     print("LBM RVV collide check:", "PASS" if rc == 0 else "FAIL")
     return rc
