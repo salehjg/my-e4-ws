@@ -475,3 +475,338 @@ Kernel experiment, runtime strides; details in `misc/rvv-vs-autovec/README.md`
 `backend/platforms/rvv.py`. It gives measurable gains on both compilers and removes Clang's
 spills. Whether to implement it is a decision for the user, because AVX has no analogue
 (x86 has no vector-scalar arithmetic).
+
+## waLBerla end-to-end benchmark (done; 2026-11-01, all jobs finished 16:36 board time)
+
+**Goal:** measure the speedup of our RVV backend in a real waLBerla LBM run, against scalar
+and auto-vectorized baselines, with GCC and Clang, in f64 and f32.
+
+### What was missing, and what was added
+
+- **lbmpy.** sweepgen's LBM support (`sweepgen.prefabs.LbmBulk`, boundaries, the
+  `LbmScenarios` tests) needs lbmpy, which was not installed. The git server sweepgen pins
+  (`i10git.cs.fau.de`) answered HTTP 500. **lbmpy 2.1.1 from PyPI** was installed with
+  `--no-deps` into the board venv (`/home/bananapi/saleh/venv`).
+  - Locally it was installed only into a scratchpad directory, so `.venv-rvv` is untouched.
+  - It works with our pinned pystencils (version `2.0b1+4.g9a989e16`), although it declares
+    `pystencils~=2.1`. A D3Q19 TRT update rule generates, and our RVV backend vectorizes it.
+- **sweepgen never enables vectorization.** `WalberlaBuildConfig.get_pystencils_config()`
+  sets `cfg.target` (`CurrentCPU` resolves to `RISCV_RVV` on the K1) but never
+  `cpu.vectorize.enable`. Without an explicit request, waLBerla-generated sweeps are scalar
+  on every platform, x86/AVX included. A generator script requests vectorization through the
+  `gen_config` argument of `Sweep` / `LbmBulk`. **No sweepgen change is needed.**
+- **New walberla app `apps/benchmarks/SweepgenLbmCPU/`** (in the fork, uncommitted), registered
+  in `apps/benchmarks/CMakeLists.txt` under `WALBERLA_ENABLE_SWEEPGEN`.
+  - It runs the `DoubleShearLayer` example's LBM: D3Q19 SRT compressible, fully periodic N³,
+    one block per process.
+  - It times stream-collide plus halo exchange, and prints MLUP/s and the final kinetic
+    energy as a checksum.
+  - Six executables:
+    - `scalar`: GenericCPU, `-march=rv64gc`, no V at all;
+    - `autovec`: GenericCPU, waLBerla's `-march=rv64gcv_zvl256b`;
+    - `explicit`: `CurrentCPU` = `RISCV_RVV`, vectorize on, `assume_inner_stride_one`;
+    - each also as `_cse`, with lbmpy `cse_global=True`.
+  - Details: the app's `README.md`.
+- **lbmpy's default leaves a lot of repetition** (`cse_global=False`, which `LbmBulk` uses).
+  For a D3Q19 TRT rule, per vector iteration of our RVV sweep:
+
+  | | `vfmul` | `vle64` |
+  |---|---|---|
+  | default | 228 | 147 |
+  | `cse_global=True` | 92 | 70 |
+
+  GCC does not remove repeated RVV intrinsic calls, which is why the `_cse` executables exist.
+- **Board scripts:**
+  - `scripts/walberla_lbm_bench.sh`: in one build dir, build the six targets (`-j2`, the
+    board has 3.7 GB RAM), count RVV instructions in each generated sweep object, run each
+    executable 3× pinned to core 2 (64³ cells, 200 steps + 10 warmup), and summarize.
+  - `scripts/walberla_bench_all.sh`:
+    - waits for a running GCC f64 job;
+    - then configures and runs `clang-f64`, `gcc-f32` and `clang-f32`, each in its own build
+      dir (`walberla-build-<config>`, only benchmarks enabled);
+    - then waLBerla's own `TestLbmScenarios_CXX` in the GCC f64 dir (the default
+      waLBerla-on-K1 path: `CurrentCPU` = `RISCV_RVV`, not vectorized);
+    - then a combined table from `scripts/walberla_bench_summary.py`.
+- All jobs run in detached `screen` sessions (`walberla-bench`, then `walberla-all`), so they
+  continue without the laptop.
+
+### Where the results land (board, `/home/bananapi/saleh/`)
+
+| log | content |
+|---|---|
+| `walberla-bench.log` | GCC f64 (build dir `walberla-build`, started 2026-11-01 09:57 board time) |
+| `walberla-bench-{clang-f64,gcc-f32,clang-f32}.log` | the other configurations |
+| `walberla-lbmscenarios.log` | waLBerla's LBM scenario tests |
+| `walberla-all.log` | chain progress plus the **combined summary** at the end (`== ALL DONE`) |
+| `walberla-followup.log` | the Clang reruns, the combined summary again, then the multi-core runs (`scripts/walberla_bench_mpi.sh`): every executable with 4 MPI processes (one cluster) and 8 (whole chip), 64³ per process, 100 steps, best of 2, summary per process count (`== FOLLOWUP DONE` at the end) |
+| `walberla-mpi-np{4,8}-<config>.log` | raw multi-core result lines |
+
+Per-target build logs are in `walberla-build*/build-<target>.log`.
+
+### Notes
+
+- **The board clock is about 46 h behind the laptop.** Pushed files carry future mtimes, so
+  `make` warns about clock skew and regenerates or rebuilds more than needed. That is
+  harmless: it can only cause extra rebuilds, never stale objects. It is a shared machine,
+  so its clock is left alone.
+- **The first GCC f64 target** (`SweepgenLbmCPU_scalar`) built in about 7.5 min. A 16³ smoke
+  run printed `energy=5.17904661397`.
+
+### Result: GCC f64 (done; 2026-11-01 10:43–11:00 board time)
+
+The run used 64³ cells, 200 steps plus 10 warmup, one core (pinned to core 2), best of 3.
+Raw log on the board: `/home/bananapi/saleh/walberla-bench.log`.
+
+| variant | MLUP/s | vs scalar | RVV insns in the generated sweep object |
+|---|---|---|---|
+| scalar | 0.90 | 1.00× | 0 |
+| scalar_cse | 0.96 | 1.06× | 0 |
+| autovec | 0.91 | 1.00× | 138 |
+| autovec_cse | 0.96 | 1.06× | 138 |
+| **explicit** | **1.14** | **1.26×** | 665 |
+| **explicit_cse** | **1.18** | **1.31×** | 608 |
+
+- **The checksum is identical to 12 digits for all six variants:** kinetic energy
+  3.775155682480e+02. Our RVV sweeps compute exactly what the scalar ones compute.
+- **GCC's auto-vectorizer gains nothing here** (0.91 vs 0.90). Only 138 vector instructions
+  appear in its sweep object, so GCC vectorized almost none of the D3Q19 sweep. That fits
+  the kernel experiment: with runtime strides, GCC would have to gather.
+- **The explicit RVV sweep gives 1.26×, and 1.31× with global CSE.** CSE helps every variant
+  by about 5%.
+- **The speedup is much smaller than in the 2D kernel experiment** (1.3–1.5× vs autovec at
+  kernel level).
+  - D3Q19 at 64³ is strongly memory-bound on one in-order X60 core: 0.9 MLUP/s is about
+    1.1 µs per cell.
+  - The pull stream reads 19 neighbor planes, about 2 MB per z-plane triple, which exceeds
+    the L2.
+  - Vectorizing the arithmetic cannot help much when the memory system is the limit.
+  - A smaller, cache-resident domain would show the compute-bound case (not run yet).
+  - Confirmed later by the bytes-per-second comparison of f64 and f32 in "Why the gain
+    shrinks" below.
+
+### Result: GCC f32 (done; 2026-11-01 13:02–13:12 board time)
+
+Same setup as GCC f64 (64³, 200 steps + 10 warmup, core 2, best of 3), built with
+`WALBERLA_DOUBLE_ACCURACY=OFF`. Raw log on the board: `/home/bananapi/saleh/walberla-bench-gcc-f32.log`.
+
+| variant | MLUP/s | vs scalar | RVV insns in the generated sweep object | kinetic energy |
+|---|---|---|---|---|
+| scalar | 1.39 | 1.00× | 0 | 3.775244759310e+02 |
+| scalar_cse | 1.56 | 1.12× | 0 | 3.775251445040e+02 |
+| autovec | 1.39 | 1.00× | 138 | 3.775244759310e+02 |
+| autovec_cse | 1.60 | 1.15× | 138 | 3.775251445040e+02 |
+| **explicit** | **2.37** | **1.70×** | 665 | 3.775233720630e+02 |
+| **explicit_cse** | **2.40** | **1.73×** | 608 | 3.775233908620e+02 |
+
+- **The explicit RVV sweep gives 1.70×, and 1.73× with global CSE.** Against the best
+  auto-vectorized build (autovec_cse, 1.60) it is **1.50×**.
+- **f32 gains more than f64** (1.73× vs 1.31×). A 256-bit register holds 8 floats instead of
+  4 doubles, and each cell moves half the bytes, so the sweep is less memory-bound.
+  - Scalar f32 vs scalar f64: 1.39 vs 0.90 MLUP/s (1.54×), roughly the ratio of bytes moved.
+  - Explicit f32 vs explicit f64: 2.40 vs 1.18 (2.03×).
+- **GCC's auto-vectorizer again gains nothing without CSE** (1.39 = scalar). With CSE it is
+  3% ahead of scalar_cse.
+- **Checksums.** The variants with the same expression structure agree exactly: scalar ==
+  autovec, and scalar_cse == autovec_cse. The groups differ from each other by at most
+  4.7e-6 relative.
+  - That is about 60 f32 ulps (the ulp at 377 is 3.1e-5) after 200 steps over 262144 cells.
+  - It is expected when the operation order differs: CSE reorders the arithmetic, and the
+    compiler may contract scalar code into FMAs, which it does not do for RVV intrinsics.
+  - In f64 the same differences stay below the 12 printed digits.
+- **Build time.** The first target in a fresh build dir took 41 min, because it builds the
+  waLBerla core libraries. Each later target took about 5 min. (The GCC f64 dir already had
+  the core libraries from the earlier `TestSweepGeneration` build.)
+
+### Result: Clang f64 and f32 (done; 2026-11-01 14:13–15:43 board time)
+
+Rerun by the follow-up chain after the two fixes below; same setup as GCC. Raw logs:
+`/home/bananapi/saleh/walberla-bench-clang-{f64,f32}.log`. Run-to-run spread of the 3 runs
+was at most 1.2% for every variant.
+
+| variant | clang-f64 MLUP/s | vs scalar | clang-f32 MLUP/s | vs scalar |
+|---|---|---|---|---|
+| scalar | 0.77 | 1.00× | 1.10 | 1.00× |
+| scalar_cse | 0.86 | 1.12× | 1.22 | 1.11× |
+| autovec | 0.77 | 1.00× | 1.11 | 1.01× |
+| autovec_cse | 0.87 | 1.12× | 1.24 | 1.12× |
+| **explicit** | **1.01** | **1.31×** | **2.11** | **1.92×** |
+| explicit_cse | 0.99 | 1.28× | 2.06 | 1.87× |
+
+RVV instructions in the sweep objects: autovec 55, explicit 592 (f64) / 590 (f32),
+explicit_cse 561.
+
+- **Clang's auto-vectorizer gains nothing either.** Only 55 vector instructions in the sweep
+  object, fewer than GCC's 138.
+- **Global CSE does not help Clang's explicit sweep.** It is 2–3% slower (above the noise).
+  That fits the kernel experiment: Clang already removes repeated RVV intrinsic calls itself,
+  while GCC does not.
+- **Clang is slower than GCC in every variant** (scalar f64 0.77 vs 0.90, explicit f64
+  1.01 vs 1.18). The speedup ratios are similar or larger only because Clang's scalar
+  baseline is slower.
+- **Checksums.**
+  - f64: all six variants agree to 12 digits, with each other and with GCC f64
+    (3.775155682480e+02).
+  - f32: the explicit sweeps give *exactly* the GCC f32 explicit checksums (3.775233720630e+02,
+    and 3.775233908620e+02 with CSE). The intrinsic code fixes the operation order and
+    neither compiler fuses or reorders it. The compiler-generated scalar code differs
+    between compilers. The spread within clang-f32 is 2.2e-6 relative.
+
+### Single-core summary: all four configurations
+
+Best MLUP/s of 3 runs, 64³ cells, one core. In parentheses: the speedup over the same
+configuration's plain scalar build.
+
+| variant | gcc-f64 | clang-f64 | gcc-f32 | clang-f32 |
+|---|---|---|---|---|
+| scalar | 0.90 (1.00×) | 0.77 (1.00×) | 1.39 (1.00×) | 1.10 (1.00×) |
+| scalar_cse | 0.96 (1.06×) | 0.86 (1.12×) | 1.56 (1.12×) | 1.22 (1.11×) |
+| autovec | 0.91 (1.00×) | 0.77 (1.00×) | 1.39 (1.00×) | 1.11 (1.01×) |
+| autovec_cse | 0.96 (1.06×) | 0.87 (1.12×) | 1.60 (1.15×) | 1.24 (1.12×) |
+| explicit | 1.14 (1.26×) | **1.01 (1.31×)** | 2.37 (1.70×) | **2.11 (1.92×)** |
+| explicit_cse | **1.18 (1.31×)** | 0.99 (1.28×) | **2.40 (1.73×)** | 2.06 (1.87×) |
+
+Our explicit RVV sweep against the best auto-vectorized build of the same configuration:
+
+| | gcc-f64 | clang-f64 | gcc-f32 | clang-f32 |
+|---|---|---|---|---|
+| best explicit / best autovec | 1.18 / 0.96 = **1.23×** | 1.01 / 0.87 = **1.16×** | 2.40 / 1.60 = **1.50×** | 2.11 / 1.24 = **1.70×** |
+
+- The fastest build overall is GCC with our RVV backend plus global CSE, in both precisions.
+- Neither compiler's auto-vectorizer vectorizes the waLBerla D3Q19 sweep in a useful way.
+  Before this backend, waLBerla LBM on the K1 effectively ran scalar.
+- f64 is memory-bound (see the GCC f64 notes), so the gain is 1.2–1.3×. f32 halves the
+  bytes and doubles the lanes, so the gain is 1.5–1.9×.
+
+### Result: multi-core (done; 2026-11-01 15:43–16:36 board time)
+
+`scripts/walberla_bench_mpi.sh`, run by the follow-up chain: each executable with
+`mpirun -np N --bind-to core --map-by core`, one 64³ block per process, 100 steps + 10 warmup,
+best of 2. Raw logs: `/home/bananapi/saleh/walberla-mpi-np{4,8}-<config>.log`.
+Run-to-run spread was at most 1.4% at 4 processes and at most 3.9% at 8.
+
+**4 processes (one cluster):** MLUP/s (speedup vs the same configuration's scalar)
+
+| variant | gcc-f64 | clang-f64 | gcc-f32 | clang-f32 |
+|---|---|---|---|---|
+| scalar | 3.30 (1.00×) | 2.82 (1.00×) | 5.25 (1.00×) | 4.31 (1.00×) |
+| scalar_cse | 3.49 (1.06×) | 3.11 (1.10×) | 5.61 (1.07×) | 4.78 (1.11×) |
+| autovec | 3.34 (1.01×) | 2.83 (1.00×) | 5.33 (1.01×) | 4.32 (1.00×) |
+| autovec_cse | 3.48 (1.05×) | 3.12 (1.11×) | 5.57 (1.06×) | 4.81 (1.12×) |
+| explicit | 3.84 (1.16×) | **3.56 (1.26×)** | 7.65 (1.46×) | **7.13 (1.66×)** |
+| explicit_cse | **3.89 (1.18×)** | 3.51 (1.24×) | **7.81 (1.49×)** | 6.96 (1.62×) |
+
+**8 processes (whole chip):**
+
+| variant | gcc-f64 | clang-f64 | gcc-f32 | clang-f32 |
+|---|---|---|---|---|
+| scalar | 4.90 (1.00×) | 4.48 (1.00×) | 8.55 (1.00×) | 7.50 (1.00×) |
+| scalar_cse | 5.01 (1.02×) | 4.78 (1.07×) | 8.84 (1.03×) | 8.03 (1.07×) |
+| autovec | 4.87 (0.99×) | 4.52 (1.01×) | 8.64 (1.01×) | 7.56 (1.01×) |
+| autovec_cse | 5.00 (1.02×) | 4.78 (1.07×) | 9.00 (1.05×) | 8.07 (1.08×) |
+| explicit | 5.24 (1.07×) | **5.07 (1.13×)** | 10.38 (1.21×) | **10.13 (1.35×)** |
+| explicit_cse | **5.26 (1.07×)** | 5.03 (1.12×) | **10.45 (1.22×)** | 9.95 (1.33×) |
+
+Best explicit vs best autovec of the same configuration:
+
+| processes | gcc-f64 | clang-f64 | gcc-f32 | clang-f32 |
+|---|---|---|---|---|
+| 1 | 1.23× | 1.16× | 1.50× | 1.70× |
+| 4 | 1.12× | 1.14× | 1.40× | 1.48× |
+| 8 | 1.05× | 1.06× | 1.16× | 1.26× |
+
+- **Checksums:** at 4 and 8 processes as well, all f64 variants of both compilers agree to
+  12 digits. The f32 spread is at most 2.5e-6 relative. The halo exchange between
+  processes therefore works with every variant.
+- **The gain shrinks as cores are added, because the chip runs out of memory bandwidth.**
+  The bandwidth table below shows it.
+
+### Why the gain shrinks: the sweep becomes bandwidth-bound
+
+The generated `StreamCollide` reads 19 PDFs and writes 19 PDFs (into `f_tmp`), plus density
+(1) and velocity (3). Counted from the stores in the generated source, that is 42 values per
+cell: 336 B in f64, 168 B in f32. Write-allocate traffic is not counted, so these are lower
+bounds. Bytes per second = MLUP/s × bytes per cell:
+
+| processes | explicit_cse GCC f64 | explicit_cse GCC f32 | explicit Clang f64 | explicit Clang f32 | scalar GCC f64 | scalar GCC f32 |
+|---|---|---|---|---|---|---|
+| 1 | 396 MB/s | 403 MB/s | 339 | 354 | 302 | 234 |
+| 4 | 1307 MB/s | 1312 MB/s | 1196 | 1198 | 1109 | 882 |
+| 8 | 1767 MB/s | 1756 MB/s | 1704 | 1702 | 1646 | 1436 |
+
+- **The explicit RVV sweeps move the same number of bytes per second in f64 and in f32**
+  (396 vs 403 MB/s on one core, 1307 vs 1312 at 4 processes, 1767 vs 1756 at 8). That is the
+  signature of a bandwidth limit: f32 runs twice as many cells per second only because each
+  cell is half the bytes.
+- **The scalar builds stay below that limit**, especially in f32, so vectorization helps
+  them. The more cores share the memory system, the closer scalar gets to the limit and the
+  less is left to gain.
+  - 8 processes, f64: scalar already reaches 1646 of the roughly 1770 MB/s.
+- **The second cluster adds little.** From 4 to 8 processes, explicit GCC f64 goes from 3.89
+  to 5.26 MLUP/s (1.35×).
+- **On one core, ~400 MB/s is a per-core limit, not the DRAM limit**: 4 cores reach 3.3× that.
+  The X60 is in order, so one core can keep only a few cache misses in flight.
+- **Conclusion:** the backend removes the compute bottleneck of the waLBerla LBM sweep on
+  the K1. Beyond that, the sweep is limited by memory bandwidth, which no code generator can
+  fix. Further gains would need less traffic per cell (in-place streaming such as AA or
+  esoteric twist, f32 storage, or kernel fusion), not better vector code.
+
+### Result: waLBerla's own LBM scenario tests (done; 2026-11-01 14:03–14:13 board time)
+
+- **`TestLbmScenarios_CXX` passes 9/9** in the GCC f64 build dir: FullyPeriodic,
+  MirroredHalfChannel and FreeSlipPipe, each with 1, 2 and 4 MPI processes. Log:
+  `/home/bananapi/saleh/walberla-lbmscenarios.log`.
+- This is the default waLBerla path on the K1: sweepgen with `CurrentCPU` (= `RISCV_RVV`),
+  without vectorization, using lbmpy 2.1.1 and our pystencils. It shows that the LBM stack
+  (lbmpy, sweepgen, boundaries, the v8 halo exchange over MPI) works on the board.
+- The main chain `walberla-all` ended at 14:12:57 (`== ALL DONE`). Its combined table has
+  only the GCC columns, because both Clang configurations failed (see below). The Clang
+  numbers come from the follow-up chain.
+
+### Clang 18 could not build waLBerla's v8 halo exchange (fixed in the fork)
+
+- **First clang-f64 pass: all six targets failed.** The generated sweeps compiled, with
+  561–592 RVV instructions in the explicit variants. The app TU did not:
+  `GenericFieldPackInfos.hpp` declares `const ConstFieldView srcView{ field_, srcBlock };`.
+  That deduces the template arguments of an *alias* template (C++20, P1814), which GCC
+  supports and Clang implements only from version 19. The board has Clang 17 and 18.
+- **Fix (walberla fork, uncommitted):** the four declarations use the explicit type
+  `memory::ConstFieldViewType< FieldType >` instead, which is the type deduction would
+  produce. Clang 18 then accepts the app; a syntax-only compile with the clang-f64 build
+  flags passed. This is a general Clang-compatibility fix, independent of RVV.
+- **clang-f32 then failed on a bug in the new benchmark app** (2026-11-01 13:14–14:03 board
+  time).
+  - `const real_t tau{ nu / (1. / 3.) };` and the `omega` line narrow a `double` expression
+    to `float` inside braces.
+  - GCC only warns about that, so the GCC f32 build passed. Clang rejects it
+    (`-Wc++11-narrowing` is an error).
+  - Fixed with `real_c(...)`. That is the same conversion GCC applied implicitly, so the
+    GCC f32 results stay valid. A syntax-only Clang compile with the clang-f32 flags passed.
+  - The generated sweeps had compiled fine. RVV instructions in the sweep objects: autovec 55,
+    explicit 590, explicit_cse 561. GCC f32 had 138, 665 and 608.
+- **Rerun of both Clang configurations:** `scripts/walberla_bench_followup.sh` (screen
+  `walberla-followup`, restarted 14:08 board time with `RERUN="clang-f64 clang-f32"`).
+  - It waits for `walberla-all`, then reruns both into `walberla-bench-clang-{f64,f32}.log`.
+    The build dirs are reused, so the core libraries are not rebuilt.
+  - It then prints the combined summary again and starts the multi-core runs
+    (`walberla_bench_mpi.sh`). Everything goes to `walberla-followup.log`.
+  - The separately queued `walberla-mpi` session was removed in favor of this chain.
+  - A 2-process smoke run (`mpirun -np 2 --bind-to core`, 16³ per process) of the GCC f64
+    explicit_cse executable worked, so the multi-core stage will not fail at launch.
+
+### Status at the end of the waLBerla benchmark (2026-11-03)
+
+- **Nothing is committed.** Uncommitted changes:
+  - walberla fork (`rvv-support`):
+    - new app `apps/benchmarks/SweepgenLbmCPU/` (generator, app, CMake, README);
+    - its registration in `apps/benchmarks/CMakeLists.txt`;
+    - the Clang 18 fix in `include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp`.
+  - outer repo: `scripts/walberla_{lbm_bench,bench_all,bench_followup,bench_mpi}.sh`,
+    `scripts/walberla_bench_summary.py`, and this log.
+  - pystencils: no change was needed for the waLBerla runs.
+- **Board:** no jobs are running. The four build dirs
+  (`/home/bananapi/saleh/walberla-build{,-clang-f64,-gcc-f32,-clang-f32}`, about 480 MB
+  together) and all logs are kept for reruns. The disk has 3.2 GB free.
+- **Open decision, for the user:** splat folding (`.vf` forms) in `backend/platforms/rvv.py`.
+  It helps Clang in the kernel experiment, but it goes beyond the AVX-parity design. Given
+  that the waLBerla sweep is bandwidth-bound beyond one core, its end-to-end value is
+  limited to the single-core case.
