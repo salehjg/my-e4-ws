@@ -53,7 +53,8 @@ def build_collide(cfg, dtype="f64"):
         cu = float(cx) * ux + float(cy) * uy
         feq = float(W[i]) * rho * (1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u_sq)
         asms.append(ps.Assignment(g[i][0, 0], p[i] - omega * (p[i] - feq)))
-    return ps.create_kernel(asms, config=cfg).compile()
+    #   CSE as in lb-pystencils.py: without it every g_i recomputes rho, 1/rho, u^2
+    return ps.create_kernel(ps.simp.sympy_cse(ps.AssignmentCollection(asms)), config=cfg).compile()
 
 
 def run_collide(kernel, f_arrs, g_arrs, omega):

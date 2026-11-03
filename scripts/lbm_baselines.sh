@@ -42,6 +42,9 @@ WORKLOADS=(
     "f32-periodic-200x200x100|--dtype f32 --periodic --nx 200 --ny 200 --steps 100"
 )
 
+#   Fresh caches: the instruction count below must only see this run's modules
+rm -rf "${CACHE_ROOT}"
+
 echo "== lbm baselines start $(date), reps=${REPS}"
 for cfg in "${CONFIGS[@]}"; do
     cname="${cfg%%|*}"; cargs="${cfg#*|}"

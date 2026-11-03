@@ -116,6 +116,16 @@ def make_config(iteration_slice=None):
     return cfg
 
 
+def _cse(assignments):
+    """Common-subexpression elimination before code generation.
+
+    `create_kernel` prints the assignments exactly as given; without CSE each of the 9
+    `g_i` statements recomputes rho, 1/rho and u^2. Compilers clean that up in scalar
+    code, but GCC does not for RVV intrinsics: 3x slower (misc/rvv-vs-autovec/README.md).
+    """
+    return ps.simp.sympy_cse(ps.AssignmentCollection(assignments))
+
+
 # Direction index: 0 rest, 1 E, 2 N, 3 W, 4 S, 5 NE, 6 NW, 7 SW, 8 SE
 C = np.array([
     [0, 0],
@@ -162,7 +172,7 @@ def build_pull_collide_kernel():
         feq = float(W[i]) * rho * (1.0 + 3.0 * cu + 4.5 * cu * cu - 1.5 * u_sq)
         assignments.append(ps.Assignment(g[i][0, 0], p[i] - omega * (p[i] - feq)))
 
-    return ps.create_kernel(assignments, config=make_config()).compile()
+    return ps.create_kernel(_cse(assignments), config=make_config()).compile()
 
 
 def build_fused_collide_stream_kernel():
@@ -196,7 +206,7 @@ def build_fused_collide_stream_kernel():
         assignments.append(ps.Assignment(g[i][0, 0], p[i] - omega * (p[i] - feq)))
 
     interior = (slice(1, -1), slice(1, -1))
-    return ps.create_kernel(assignments, config=make_config(interior)).compile()
+    return ps.create_kernel(_cse(assignments), config=make_config(interior)).compile()
 
 
 def fill_ghost_bcs(fp, rho_wall=1.0):
@@ -307,7 +317,7 @@ def build_macro_kernel():
     #   ...but compile it with the configured compiler/flags like every other kernel, so
     #   e.g. a `-march=rv64gc` scalar baseline really contains no vector code at all.
     macro_cfg.jit = _make_jit()
-    return ps.create_kernel(assignments, config=macro_cfg).compile()
+    return ps.create_kernel(_cse(assignments), config=macro_cfg).compile()
 
 
 def kernel_args(prefix, arrays):

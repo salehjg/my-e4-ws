@@ -313,3 +313,165 @@ mnemonic that starts with `v` is counted.
   timings above are unaffected.
 - The script's cache moved from `$HOME/.cache` to `/home/bananapi/saleh/.cache`, because the
   board is shared.
+
+## Why explicit RVV loses to autovec: kernel experiment (superseded, see "corrected" below)
+
+Out of tree in `misc/rvv-vs-autovec/`; see its README for the method, all tables and the
+hot-loop histograms. The LBM kernels were dumped as standalone C++ and built as
+scalar / autovec / rvv × GCC / Clang × f64 / f32. Each build was timed with cycle and
+instruction counters on the board. Every build agrees on the checksums.
+
+Fused kernel, f64, 200², MLUP/s:
+
+| kernel | GCC autovec | GCC rvv | Clang autovec | Clang rvv |
+|---|---|---|---|---|
+| fused, as the harness builds it | 10.3 | 3.5 | 8.6 | 6.4 |
+| fused + `sympy_cse` | 11.6 | 10.8 | 9.0 | 6.7 |
+
+Three causes, none of them in the VLS-256 design itself:
+
+1. **The harness never applies CSE.** GCC does not remove the repeated RVV intrinsic calls
+   (17 `vfdiv` per vector iteration instead of 2). With `ps.simp.sympy_cse`,
+   rvv GCC is 3× faster and within 7–8% of autovec at 200² in both f64 and f32. Clang was already
+   removing the repeats.
+2. **No FMAs, and `-1.0 * x` stays a multiply.** Neither compiler fuses or folds RVV
+   intrinsic calls, so the rvv loop has 157 vector mul/add/sub ops against 85 in autovec.
+   x86 intrinsics are plain vector arithmetic in the headers, so the AVX path never had to
+   care. When compute-bound (48²) GCC rvv needs 17–30% more cycles per cell than autovec in f64
+   and 7–13% more in f32, over the two runs.
+3. **Clang's rvv loop has low IPC (0.25 vs GCC's 0.36)** with nearly the same instructions.
+   Candidates are scheduling for the in-order X60 and spills: 7 whole-register loads/stores
+   plus `csrr vlenb` per iteration. Not yet explained.
+
+Follow-up:
+
+- **CSE:** `lb-pystencils.py` and `lbm_rvv_check.py` now apply `ps.simp.sympy_cse` (`_cse()`).
+  The baselines are being rerun with it.
+- **FMA:** checked by hand with `misc/rvv-vs-autovec/fma_rewrite.py`, which rewrote 49
+  FMAs and 22 negations into the generated source.
+  - With GCC: no gain. Instructions per cell drop 16%, but the cycles stay the same.
+  - With Clang: negation folding alone gains 13–17%, and FMAs on top are slower than that.
+  - So **no FMA step in the backend**; the plan's "out of scope" stands.
+- **Remaining gap** of 5–10% (GCC rvv vs GCC autovec): not the FP op count. Every vector
+  build sits at about 450–500 cycles per 4-cell f64 iteration. Leads: the 2 divides per
+  cell, since sympy CSE leaves `1/ρ²` as its own division, and GCC reloading 8 PDFs
+  (17 vs 9 `vle` per iteration).
+
+## Baselines with CSE in the harness (done)
+
+These are the same runs as "Baselines" above (`scripts/lbm_baselines.sh 3`, best of 3), now
+with `_cse()` in `lb-pystencils.py`. Raw log on the board: `lbm-baselines.log`. The
+pre-CSE log is `lbm-baselines-nocse.log`.
+
+| workload (MLUP/s) | scalar GCC | scalar Clang | autovec GCC | autovec Clang | rvv GCC | rvv Clang |
+|---|---|---|---|---|---|---|
+| f64 cavity 100×100×200 | 2.97 | 2.01 | **3.23** | 2.92 | 3.20 | 2.79 |
+| f64 periodic 200×200×100 | 5.90 | 3.57 | 6.66 | 6.87 | **7.85** | 5.79 |
+| f32 periodic 200×200×100 | 5.83 | 3.69 | 5.90 | 8.29 | **9.58** | 8.37 |
+
+**What changed vs no CSE:**
+
+- rvv GCC got 1.6×, 2.5× and 1.8× faster (from 2.02, 3.18 and 5.39).
+- rvv Clang gained about 4%.
+- Scalar and autovec are unchanged within noise, because their compilers already removed
+  the repeats.
+
+**Ranking:**
+
+- **rvv GCC is now the fastest build on both periodic (fused) workloads.**
+  - f64: 1.14× the best autovec (Clang), 1.18× autovec GCC, 1.33× scalar GCC.
+  - f32: 1.16× the best autovec (Clang), 1.62× autovec GCC, 1.64× scalar GCC.
+- On the non-fused cavity it ties autovec GCC (3.20 vs 3.23).
+
+**Correctness:** unchanged.
+
+- Every build gives `rel_l2 = 0.0338124` and f64 `sum_f = 4.0000000000e+04`.
+- f32 checksums agree to < 1e-6. rvv GCC and rvv Clang are bit-identical to each other.
+
+**RVV instruction counts:** scalar GCC 0, scalar Clang 0. The script now starts from an
+empty cache, and the counts cover every module built during the run, all reps included.
+
+## Kernel experiment, corrected: runtime strides (done)
+
+The kernel numbers in "Why explicit RVV loses to autovec" were biased. The experiment's
+wrapper was in the kernel's TU, so the compiler inlined the constant strides. That helped
+the generic (autovec) kernels. With the wrapper in its own TU, all sizes and strides are
+runtime values, as in the JIT, and the result flips. Details and disassembly:
+`misc/rvv-vs-autovec/README.md`, "Results with runtime strides".
+
+`fused_cse` kernel, MLUP/s:
+
+| | GCC autovec | Clang autovec | GCC rvv | Clang rvv |
+|---|---|---|---|---|
+| f64 200² | 7.85 | 8.12 | **10.60** | 6.84 |
+| f32 200² | 8.98 | 14.71 | **22.56** | 14.93 |
+
+Why, from the disassembly:
+
+- **Our backend assumes inner stride 1, like AVX**, so it emits plain `vle64`/`vse64`.
+- **GCC autovec** cannot assume this, so all 18 accesses become `vluxei64`/`vsuxei64`
+  gathers/scatters. The loop has 309 instructions, 78 per cell.
+- **Clang autovec** versions the loop on stride == 1 and runs at LMUL 2, with about 21
+  spills per iteration.
+
+**Conclusion:** with GCC, which is the JIT's default compiler, the generated RVV code is
+the fastest build: 1.24–1.31× (f64) and 1.35–1.53× (f32) over the best autovec build. This
+matches the full-step harness, 1.14–1.16× on the periodic workloads.
+
+**The one weak combination is Clang + our intrinsics.** Clang issues dependency chains back
+to back on the in-order X60, and keeps the constant splats live in vector registers, which
+forces spills.
+
+- The vendor Clang's `-mtune=spacemit-x60` gains 8–17%, but Clang rvv still stays 24–31%
+  behind GCC rvv.
+- Not added to the JIT, because the flag is vendor- and K1-specific.
+
+**FMA:** confirmed irrelevant with runtime strides too. GCC rvv measured 10.60, 10.46 and
+10.43 for the plain, negation-folded and FMA variants.
+
+## Why GCC rvv beats GCC autovec but Clang rvv trails Clang autovec (done)
+
+Kernel experiment, runtime strides; details in `misc/rvv-vs-autovec/README.md`
+("Splat folding" and "Summary").
+
+1. **GCC autovec gathers.** In the JIT the inner stride is a runtime value, so every field
+   access becomes `vluxei64`/`vsuxei64`. Our backend assumes inner stride 1, the AVX
+   contract, and uses `vle`/`vse`. That is the whole GCC story.
+2. **Clang autovec does not gather.** It versions the loop on stride == 1, then uses
+   unit-stride loads at **LMUL 2** with constants as `.vf` scalar operands
+   (32 insns/cell). So for Clang our stride contract gives no advantage. What decides is
+   code quality:
+   - **Constant splats in vector registers.** Our code emits `vfmv_v_f(c)` and `.vv` ops.
+     Both compilers hoist about 10 splats into vector registers, and Clang then spills.
+     The hand rewrite to `.vf` forms (`fused_cse_vf`, i.e. the fable branch's D14 broadcast
+     folding) removes all spills.
+     - Clang rvv gains 7–25%, and **in f32 it then matches or beats Clang autovec**
+       (18.15 vs 14.83 MLUP/s at 200²).
+     - GCC rvv gains 1.5–13%: f64 10.83, f32 23.30 at 200², still the fastest build overall.
+   - **Scheduling.** Clang has no X60 model by default and issues dependency chains back
+     to back. The vendor Clang's `-mtune=spacemit-x60` gives +8–17%.
+   - **LMUL is not the reason.** Forced to LMUL 1
+     (`-mllvm -riscv-v-register-bit-width-lmul=1`), Clang autovec gets *faster*: f64
+     8.70 → 10.10, f32 14.83 → 22.08 MLUP/s at 200². Its loop drops its 21 LMUL-2 spills.
+     This is now the best autovec build of all, and it is on par with GCC rvv: GCC rvv with
+     `.vf` is 1.08–1.12× ahead in f64 and 1.06–1.09× in f32.
+   - **What remains between Clang autovec and Clang rvv** is Clang's algebra on scalar IR
+     under `-ffast-math`: FMA, folded negations and `.vf` constants give 88 FP ops per
+     iteration against 157 in our intrinsic loop. RVV intrinsics are opaque to these passes.
+     Clang's default schedule exposes every extra op on the in-order X60. GCC's schedule
+     hides them, which is why FMA/negation folding helps Clang but not GCC.
+
+**Overall conclusion:**
+
+- **With default compiler settings,** our explicit RVV path, with GCC (the JIT default), is
+  clearly the fastest build.
+- **Against the best autovec we could produce** (Clang, hand-forced LMUL 1), it is on par to
+  slightly ahead.
+- **The explicit path's value is also predictability.** Autovec ranged from gathers (GCC) to
+  LMUL-2 spills (Clang default), while our code gives the same structure on both compilers.
+
+
+**Candidate for pystencils:** splat folding (`.vf` forms for constant operands) in
+`backend/platforms/rvv.py`. It gives measurable gains on both compilers and removes Clang's
+spills. Whether to implement it is a decision for the user, because AVX has no analogue
+(x86 has no vector-scalar arithmetic).
