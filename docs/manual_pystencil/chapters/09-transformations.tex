@@ -1,0 +1,191 @@
+\chapter{Transformations and Iteration Axes}\label{ch:transformations}
+
+After stage~1 the kernel body is a typed block of assignments, without any loops. This
+chapter explains how the iteration strategy is attached (stage~2), which optimizations
+follow (stage~3), and how the IR is lowered to plain C plus intrinsics (stage~4). It
+ends by running the whole pipeline by hand. All passes live in
+\file{backend/transformations/} and are called as \code{Pass(ctx)(ast)}.
+
+\section{Iteration axes}\label{sec:axes}
+
+\ps{} does not generate loops directly. It first represents the iteration space as an
+\term{axes cube}: a \cls{PsAxesCube} node with one \cls{PsAxisRange}
+\code{(counter, start, stop, step)} per dimension, in loop order, around the kernel body.
+An \term{expansion strategy} then takes the dimensions off the cube, one at a time from
+the outermost, and wraps the body in \term{iteration axes}:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Expansion} (\cls{AxisExpansion}) & \textbf{Axis node} & \textbf{Meaning}\\
+  \midrule
+  \code{loop()} & \cls{PsLoopAxis} & sequential loop\\
+  \code{parallel_loop(num_threads, schedule, collapse)} & \cls{PsParallelLoopAxis} & OpenMP work-sharing loop\\
+  \code{block_loop(k)}, \code{parallel_block_loop(k)} & loop axes & loop over blocks of $k$ iterations (loop blocking, SIMD blocks)\\
+  \code{peel_for_divisibility(k)} & -- & split the dimension into a part divisible by $k$ and a remainder; the next strategy entries are two lists, one per part\\
+  \code{simd(lanes)} & \cls{PsSimdAxis} & execute \code{lanes} iterations in one vector operation\\
+  \code{gpu_block}, \code{gpu_thread}, \code{gpu_block_x_thread} & GPU axes & map the dimension to \code{blockIdx}, \code{threadIdx} or both\\
+  \code{gridstrided_loop()} & loop axis & loop with the GPU grid size as stride\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+A strategy is written as a list, from the outermost to the innermost dimension, and
+compiled with \code{ae.create_strategy([...])}. The CPU strategy of the driver
+(\cls{DefaultCpuLoopStrategies}, \file{codegen/cpu_loop_strategies.py}) builds the
+following shapes, with \code{L} the number of vector lanes:
+\begin{plaincode}
+not vectorized:  [parallel_loop | loop, loop, ...]
+vectorized:      [parallel_loop | loop, loop, ...,
+                  peel_for_divisibility(L),
+                  [block_loop(L, assume_divisible=True), simd(L)],   # vector part
+                  [loop()]]                                          # remainder
+loop blocking:   [block loops for the blocked dimensions] + one of the above
+\end{plaincode}
+For a 1D kernel the block loop of the vector part itself becomes the parallel loop.
+Before the expansion, the CPU strategy applies \code{assume_inner_stride_one} by
+replacing the innermost buffer strides with the constant 1. Afterwards it runs
+\cls{HoistIterationInvariantDeclarations}. On the axes tree this moves declarations out
+of every axis whose \code{can_hoist} flag is set.
+
+The GPU strategy (\cls{GpuIndexMappingStrategy}, \file{codegen/gpu_indexing.py}) maps
+the indexing schemes of \cref{sec:gpu-options} onto these expansions:
+\code{Linear3D} uses \code{gpu_block_x_thread} for every dimension,
+\code{GridstridedLinear3D} wraps grid-strided loops around them, and
+\code{Blockwise4D} uses \code{gpu_block} for the slow dimensions and
+\code{gpu_thread("x")} for the fastest one.
+
+\section{Materializing the axes}
+
+\cls{MaterializeAxes} (\file{materialize_axes.py}) replaces every axis by real code:
+\begin{description}
+  \item[\cls{PsLoopAxis}] becomes a \cls{PsLoop}.
+  \item[\cls{PsParallelLoopAxis}] becomes
+    \code{#pragma omp parallel} (with \code{num_threads} and \code{reduction} clauses)
+    around a block that contains \code{#pragma omp for} (with \code{schedule} and
+    \code{collapse}) and the loop.
+  \item[\cls{PsSimdAxis}] is handed to the \cls{AstVectorizer}. Reduction accumulators
+    get a vector copy that is initialized by broadcasting the neutral element and is
+    combined into the scalar at the end with \cls{PsVecHorizontal}.
+  \item[GPU axes] become declarations of the counters from \code{blockIdx},
+    \code{blockDim} and \code{threadIdx}. All bounds checks are merged into one guard
+    \code{if}.
+\end{description}
+
+\paragraph{The vectorizer.}
+\cls{AstVectorizer} (\file{ast_vectorizer.py}) builds a SIMD copy of a scalar subtree.
+Memory accesses whose indices do not depend on the vectorized counter are
+\emph{lane-invariant} and are broadcast (\cls{PsVecBroadcast}). Accesses whose index is
+an affine function of the counter become \cls{PsVecMemAcc}, either contiguous or with a
+stride. Every symbol declared inside the subtree gets a vectorized copy. Anything else
+raises a \code{VectorizationError}. The vectorizer performs \emph{no legality checks}:
+it relies on the kernel analysis having ruled out loop-carried dependencies.
+
+\paragraph{Reductions.}
+\cls{ReductionsToMemory} completes the reduction pattern. It prepends
+\code{<sym>_local = <neutral element>} to the kernel and appends a write-back
+\code{<sym>[0] = op(<sym>[0], <sym>_local)}, which the platform lowers later
+(\code{resolve_reduction}: a plain update on CPUs, atomics on CUDA). Compare
+\cref{lst:reduction}.
+
+\section{Optimizations}
+
+\begin{description}
+  \item[\cls{CanonicalizeSymbols}] establishes the canonical form (\cref{sec:ast}). It
+    renames symbols that are declared more than once and makes every symbol that is never
+    updated \code{const}. It runs on the axes cube, after the iteration space is
+    materialized, and at the very end.
+  \item[\cls{EliminateConstants}] folds constant integer (and relational) expressions,
+    removes identities ($x\cdot 1$, $x+0$, $x\cdot 0$), and with
+    \code{extract_constant_exprs=True} moves constant subexpressions such as
+    $1.0/4.0$ into declarations \code{__c_...} at the top of the kernel. Floating-point
+    folding is off by default (\code{fold_floats=False}), so $1.0/4.0$ is still
+    computed, once, by the C code.
+  \item[\cls{HoistIterationInvariantDeclarations}] moves declarations whose value does
+    not depend on a loop counter (or on anything written in the loop) out of loops and
+    hoistable axes. This is how \code{ctr_1__rem_start} and the broadcast constants in
+    \cref{lst:avx} end up outside the loop nest.
+\end{description}
+
+\section{Lowering}
+
+\begin{description}
+  \item[\cls{SelectIntrinsics}] (vector CPU platforms only). Each vector platform
+    provides a subclass via \code{platform.get_intrinsic_selector()}. It maps vector types
+    to intrinsic types and vector operations, broadcasts, loads, stores, casts,
+    horizontal reductions and math functions to \code{CFunction} calls.
+    \Cref{sec:vector-platforms} describes the interface.
+  \item[\cls{LowerToC}] linearizes every \cls{PsBufferAcc} into a \cls{PsMemAcc} on the
+    base pointer, with index $\sum_i \text{idx}_i\cdot\text{stride}_i$. Anonymous struct
+    types are replaced by byte offsets on a \code{uint8_t} pointer (see the sparse kernel
+    in \cref{sec:sparse}).
+  \item[\cls{SelectFunctions}] replaces every remaining IR function call
+    (\code{exp}, \code{min}, $\pi$, GPU indices, RNG, reduction write-back) with the
+    platform's implementation (\code{platform.select_function(call)} and
+    \code{platform.resolve_reduction(...)}).
+\end{description}
+
+\section{Overview of all passes}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Pass} & \textbf{Module} & \textbf{Used by}\\
+  \midrule
+  \cls{CanonicalizeSymbols} & \file{canonicalize_symbols.py} & driver (stages 3 and 5), axis strategies\\
+  \cls{AxisExpansion} & \file{axis_expansion.py} & CPU and GPU axis strategies\\
+  \cls{HoistIterationInvariantDeclarations} & \file{hoist_iteration_invariant_decls.py} & axis strategies, stage 3\\
+  \cls{MaterializeAxes} & \file{materialize_axes.py} & stage 2\\
+  \cls{AstVectorizer} & \file{ast_vectorizer.py} & \cls{MaterializeAxes}\\
+  \cls{ReductionsToMemory} & \file{reductions_to_memory.py} & stage 2\\
+  \cls{EliminateConstants} & \file{eliminate_constants.py} & stage 3, many helpers\\
+  \cls{SelectIntrinsics} & \file{select_intrinsics.py} & stage 4 (vector CPUs)\\
+  \cls{LowerToC} & \file{lower_to_c.py} & stage 4, vectorizer\\
+  \cls{SelectFunctions} & \file{select_functions.py} & stage 4\\
+  \cls{CanonicalClone} & \file{canonical_clone.py} & peeling, loop reshaping\\
+  \midrule
+  \cls{EliminateBranches} & \file{eliminate_branches.py} & \emph{not used by the driver} (optional islpy analysis)\\
+  \cls{ReshapeLoops} & \file{reshape_loops.py} & \emph{not used by the driver} (peel, cut loops)\\
+  \cls{AddOpenMP}, \cls{InsertPragmasAtLoops} & \file{add_pragmas.py} & \emph{not used by the driver}; superseded by parallel loop axes\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Running the pipeline by hand}\label{sec:manual-pipeline}
+
+Because every stage is a callable object, the pipeline can be executed step by step.
+This is the best way to understand it, and the starting point for experiments with new
+passes. The following example is modelled on the upstream walkthrough
+(\file{docs/source/backend/backend_walkthrough.md}). It generates an OpenMP-parallel AVX
+kernel for $g = c\,f + 1$ on \code{fzyx} fields.
+
+\paragraph{1. Context, iteration space and parsing.}
+\pysnippet{ex11_pipeline.kernel}
+\pysnippet{ex11_pipeline.context}
+\irsnippet[nolol=false,caption={After parsing: a typed block without loops.}]{ex11_pipeline.s1-parsed}
+The driver's CPU strategy applies the unit-stride assumption at this point. Here it is
+done by hand:
+\pysnippet{ex11_pipeline.unit-stride}
+
+\paragraph{2. The axes cube.}
+\pysnippet{ex11_pipeline.axes}
+\irsnippet[nolol=false,caption={The iteration space as an axes cube (slowest dimension first).}]{ex11_pipeline.s2-cube}
+
+\paragraph{3. Axis expansion.}
+\pysnippet{ex11_pipeline.expand}
+\irsnippet[nolol=false,caption={The axes tree: a parallel loop over \texttt{ctr\_1}; \texttt{ctr\_0} split into SIMD blocks and a remainder.}]{ex11_pipeline.s3-axes}
+
+\paragraph{4. Materialization and optimization.}
+\pysnippet{ex11_pipeline.materialize}
+\irsnippet[nolol=false,caption={Loops, OpenMP pragmas and vector nodes (\texttt{vec\_memacc}, \texttt{vec\_broadcast}).}]{ex11_pipeline.s4-materialized}
+
+\paragraph{5. Lowering for x86 AVX.}
+\pysnippet{ex11_pipeline.lowering}
+\irsnippet[nolol=false,caption={After intrinsic selection, \texttt{LowerToC} and \texttt{SelectFunctions}.}]{ex11_pipeline.s5-lowered}
+
+\paragraph{6. Wrapping up.}
+\pysnippet{ex11_pipeline.finalize}
+\csnippet[nolol=false,caption={The hand-made kernel.}]{ex11_pipeline.final}
+The result is almost identical to what \code{create_kernel} produces for the equivalent
+configuration (\file{generated/ex11_pipeline.driver.c}). There are two differences:
+\code{_data_f} is not \code{const}, because \cls{KernelAnalysis} did not run and so did
+not mark the read-only field, and the \code{omp for} pragma lacks \code{schedule(static)},
+which the driver takes from \code{cpu.openmp.schedule}.

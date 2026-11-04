@@ -1,0 +1,61 @@
+\chapter{Source Map}\label{app:source-map}
+
+Paths are relative to \file{submodules/pystencils/src/pystencils/}.
+
+\begingroup\small
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.6cm} >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Content}\\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{File} & \textbf{Content}\\
+  \midrule
+  \endhead
+  \multicolumn{2}{@{}l}{\textit{Frontend}}\\
+  \file{__init__.py} & public API (\code{ps.*})\\
+  \file{field.py} & \code{Field}, \code{FieldType}, \code{fields()}, layouts, array helpers\\
+  \file{assignment.py} & \code{Assignment}, \code{assignment_from_stencil}\\
+  \file{defaults.py} & \code{DEFAULTS}: default types and naming conventions\\
+  \file{spatial_coordinates.py}, \file{slicing.py} & \code{x_}, \code{y_}, \code{z_}; \code{make_slice}\\
+  \file{sympyextensions/} & \code{TypedSymbol}, \code{tcast}, reductions, \code{random} (Philox), integer and fast math functions, \code{mem_acc}\\
+  \file{simp/} & \code{AssignmentCollection}, \code{sympy_cse}, simplification strategies\\
+  \file{fd/} & finite differences: \code{Diff}, \code{Discretization2ndOrder}, stencils\\
+  \file{flow/} & experimental flowgraph language\\
+  \file{kernel_decorator.py} & \code{@ps.kernel}\\
+  \file{inspection.py}, \file{display_utils.py} & \code{inspect}, \code{show_code} (deprecated), \code{to_dot}\\
+  \midrule
+  \multicolumn{2}{@{}l}{\textit{Code generation API}}\\
+  \file{codegen/driver.py} & \code{create_kernel}, \code{DefaultKernelCreationDriver}, \code{KernelFactory}\\
+  \file{codegen/config.py} & \code{CreateKernelConfig} and option categories\\
+  \file{codegen/target.py} & \code{Target}, host detection\\
+  \file{codegen/kernel.py}, \file{parameters.py}, \file{properties.py} & \code{Kernel}, \code{GpuKernel}, \code{Parameter}, parameter properties\\
+  \file{codegen/cpu_loop_strategies.py} & CPU axis strategies (OpenMP, SIMD, blocking)\\
+  \file{codegen/gpu_indexing.py}, \file{sycl_indexing.py} & GPU index mapping and launch configurations\\
+  \file{types/} & \code{PsType} hierarchy, \code{create_type}, quick aliases\\
+  \midrule
+  \multicolumn{2}{@{}l}{\textit{Backend}}\\
+  \file{backend/kernelcreation/context.py} & \code{KernelCreationContext}\\
+  \file{backend/kernelcreation/analysis.py} & \code{KernelAnalysis}\\
+  \file{backend/kernelcreation/iteration_space.py} & full and sparse iteration spaces, ghost-layer inference\\
+  \file{backend/kernelcreation/freeze.py}, \file{freeze_flowgraph.py} & SymPy and flowgraphs to IR\\
+  \file{backend/kernelcreation/typification.py} & \code{Typifier}, \code{TypeContext}\\
+  \file{backend/kernelcreation/ast_factory.py} & \code{AstFactory}\\
+  \file{backend/ast/} & IR nodes: structural, expressions, vector, axes; traversal and analysis\\
+  \file{backend/memory.py}, \file{constants.py}, \file{literals.py}, \file{functions.py} & symbols, buffers, constants, literals, IR and C functions\\
+  \file{backend/transformations/} & all passes (\cref{ch:transformations})\\
+  \file{backend/platforms/} & \code{GenericCpu}, \code{X86VectorCpu}, \code{NeonCpu}, \code{SveCpu}, \code{RvvCpu}, \code{CudaPlatform}, \code{HipPlatform}, \code{SyclPlatform}\\
+  \file{backend/emission/} & \code{CAstPrinter}, \code{IRAstPrinter}\\
+  \file{backend/extensions/} & experimental foreign expressions (\code{CppMethodCall})\\
+  \file{backend/exceptions.py} & backend exception classes\\
+  \midrule
+  \multicolumn{2}{@{}l}{\textit{Runtime}}\\
+  \file{jit/jit.py} & \code{JitBase}, \code{KernelWrapper}, \code{no_jit}\\
+  \file{jit/cpu/} & \code{CpuJit}, compiler infos, extension-module builder and template\\
+  \file{jit/gpu_cupy.py} & \code{CupyJit}, \code{CupyKernelWrapper}\\
+  \file{jit/sycl/} & \code{SYCLJit}\\
+  \file{include/} & C++ runtime headers\\
+  \file{datahandling/}, \file{boundaries/}, \file{runhelper/} & Python simulation helpers\\
+  \bottomrule
+\end{xltabular}
+\endgroup

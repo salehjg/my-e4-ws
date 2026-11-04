@@ -1,0 +1,24 @@
+# ---- LaTeX build output (./build.sh writes everything here) ----
+build/
+
+# ---- Stray auxiliary files, e.g. from running pdflatex/latexmk by hand ----
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lol
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.xdv
+/main.pdf
+
+# ---- Python (example scripts and the listing generator) ----
+__pycache__/
+*.pyc

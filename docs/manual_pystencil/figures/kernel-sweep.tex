@@ -1,0 +1,30 @@
+% How the generated Jacobi kernel traverses dst (default C layout: ctr_1 is contiguous).
+\begin{tikzpicture}[x=0.62cm,y=0.62cm,font=\footnotesize]
+  \fill[ghostcell] (0,0) rectangle (8,6);
+  \fill[activecell] (1,1) rectangle (7,5);
+  \draw[gridline] (0,0) grid (8,6);
+  \draw[domainline] (1,1) rectangle (7,5);
+  % inner loops (columns) and the jumps between them
+  \foreach \i in {1,...,6} {
+    \draw[-{Stealth[length=1.5mm]},thick,psblue!80!black] (\i+0.5,1.2) -- (\i+0.5,4.8);
+  }
+  \foreach \i in {1,...,5} {
+    \draw[dashed,psgray] (\i+0.5,4.8) -- (\i+1.5,1.2);
+  }
+  % ranges
+  \draw[decorate,decoration={brace,mirror,amplitude=4pt}] (1,-0.15) -- (7,-0.15)
+    node[midway,below=5pt,align=center,celltext]
+      {outer loop \texttt{ctr\_0 = 1 \dots{} \_size\_dst\_0 - 2} ($x$)};
+  \draw[decorate,decoration={brace,mirror,amplitude=4pt}] (8.15,1) -- (8.15,5)
+    node[midway,right=5pt,align=left,celltext]
+      {inner loop ($y$)\\\texttt{ctr\_1 = 1 \dots}\\\texttt{\_size\_dst\_1 - 2}\\[2pt]
+       (contiguous\\ in memory)};
+  \node[celltext,align=center] at (0.5,6.45) {ghost\\[-2pt]layer};
+  % the code
+  \node[anchor=west,draw=codeframe,fill=codebg,rounded corners=1pt,inner sep=5pt,
+        font=\ttfamily\scriptsize,align=left] at (11.5,3)
+    {for (ctr\_0 = 1; ctr\_0 < \_size\_dst\_0 - 1; ++ctr\_0)\\
+     \ \ for (ctr\_1 = 1; ctr\_1 < \_size\_dst\_1 - 1; ++ctr\_1)\\
+     \ \ \ \ dst(ctr\_0, ctr\_1) =\\
+     \ \ \ \ \ \ 1/4 * (src(ctr\_0+1, ctr\_1) + \dots);};
+\end{tikzpicture}

@@ -1,0 +1,144 @@
+\chapter{From SymPy to Typed IR}\label{ch:translation}
+
+The first stage of the driver checks the symbolic input, sets up the iteration space,
+and translates the SymPy assignments into a typed IR block. The classes involved live in
+\file{backend/kernelcreation/}. This chapter runs them by hand on a small example.
+
+\section{Kernel analysis}\label{sec:analysis}
+
+\cls{KernelAnalysis} (\file{analysis.py}) walks the assignments once, subexpressions
+first and then the main assignments. Within each assignment it visits the right-hand
+side before the left-hand side. It enforces the rules of \cref{sec:assignments}:
+\begin{itemize}
+  \item \textbf{SSA form}: a symbol is assigned at most once, and never after it has been
+        read;
+  \item \textbf{independence of writes}: a field entry is written at most once, and
+        each field (and index) is written at only one offset (switch off with
+        \code{allow_double_writes});
+  \item \textbf{independence of accesses}: a field read after a write must use the same
+        offset as the write (switch off with \code{skip_independence_check});
+  \item reduction symbols may only appear on the left of their reduction assignment.
+\end{itemize}
+Its second job is to collect knowledge. It registers every field in the context with
+\code{ctx.add_field(field, const=...)}, and fields that are never written become
+\code{const}. Because the right-hand side of an assignment is checked before its own
+store is recorded, an in-place update \texttt{f[0,0]}~$\leftarrow$~\texttt{f[1,0]} passes the check
+(\cref{sec:constraints}).
+
+\section{Iteration spaces}\label{sec:ispace}
+
+An iteration space (\file{iteration_space.py}) defines the counters of the kernel and
+the range of each counter.
+
+\paragraph{Full (dense) iteration spaces.}
+A \cls{FullIterationSpace} has one \code{Dimension(start, stop, step, counter)} per
+spatial coordinate, with the counters \code{ctr_0}, \code{ctr_1}, \code{ctr_2}. It is
+created with
+\begin{itemize}
+  \item \code{create_with_ghost_layers(ctx, ghost_layers, archetype_field)}, which
+        iterates \code{[gl_low, size - gl_high)} in every dimension, or
+  \item \code{create_from_slice(ctx, iteration_slice, archetype_field)}, which parses
+        the slice with \code{AstFactory.parse_slice} (negative bounds are relative to the
+        size).
+\end{itemize}
+The \term{archetype field} provides the sizes (\code{_size_g_0}, \dots) and the
+\code{loop_order}. The driver chooses it with \code{get_archetype_field}: all domain
+fields must agree in dimensionality and layout, and the first field in alphabetical
+order is used. With \code{ghost_layers=AUTO}, the function \code{infer_ghost_layers}
+takes the maximum \code{required_ghost_layers} over all domain field accesses.
+\pysnippet{ex17_translation.ispace}
+\outsnippet{ex17_translation.ispace}
+The loop order \code{(1, 0)} reflects the \code{fzyx} layout: \code{ctr_1} is the outer
+loop, and \code{ctr_0} (the contiguous $x$ coordinate) the inner loop.
+
+\paragraph{Sparse iteration spaces.}
+A \cls{SparseIterationSpace} iterates over an index list. Its single counter
+\code{sparse_idx} runs over the entries of the \code{INDEXED} field, and
+\code{get_spatial_counter_declarations} produces the declarations
+\code{ctr_i = index_list[sparse_idx].x/y/z} at the top of the loop body (see the sparse
+kernel in \cref{sec:sparse}).
+
+\section{Freezing: SymPy to IR}\label{sec:freeze}
+
+\cls{FreezeExpressions} (\file{freeze.py}) is a visitor over SymPy objects. For every
+node it looks up a method \code{map_<ClassName>} along the class's method resolution
+order and raises a \code{FreezeError} if none exists. The most important rules:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{SymPy input} & \textbf{IR output}\\
+  \midrule
+  \code{Assignment(symbol, rhs)} & \cls{PsDeclaration}\\
+  \code{Assignment(field_access, rhs)} & \cls{PsAssignment} to a \cls{PsBufferAcc}\\
+  \code{Field.Access} & \cls{PsBufferAcc} with indices \emph{counter + offset} for every spatial dimension, plus the index-dimension entries; \code{PsLookup} for struct members\\
+  \code{Symbol}, \code{TypedSymbol} & \cls{PsSymbolExpr} of the context's symbol of that name\\
+  \code{Integer}, \code{Float} & untyped \cls{PsConstantExpr}\\
+  \code{Rational(p, q)} & \code{p / q} (\cls{PsDiv})\\
+  \code{Add} & sum; terms of the form $-1\cdot t$ become \cls{PsSub}\\
+  \code{Pow(b, n/d)}, $d\le2$, $|n|\le8$ & \code{sqrt} if $d=2$, then pairwise products; \code{1 / (...)} for $n<0$\\
+  other \code{Pow} & \code{pow} (\cls{PsMathFunction})\\
+  \code{exp}, \code{sin}, \code{Abs}, \code{Min}, \dots & \cls{PsCall} of a \cls{PsMathFunction}\\
+  \code{pi}, \code{E}, \code{oo} & \cls{PsConstantFunction} calls\\
+  \code{Piecewise}, \code{ConditionalFieldAccess} & nested \cls{PsTernary}\\
+  \code{TypeCast} (\code{tcast}) & \cls{PsCast} (or a typed constant)\\
+  relations, \code{And}, \code{Or}, \code{Not} & \cls{PsRel} subclasses, \cls{PsAnd}, \cls{PsOr}, \cls{PsNot}\\
+  \code{int_div}, \code{int_rem}, bit operations & \cls{PsIntDiv}, \cls{PsRem}, shifts and bitwise nodes\\
+  \code{*ReductionAssignment} & update of a local accumulator \code{<sym>_local}; registered in the context\\
+  RNG invocation & \cls{PsRngEngineFunction} call\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+Here it is for an expression with powers, a rational, a square root, an exponential and
+a free symbol:
+\pysnippet{ex17_translation.freeze}
+\outsnippet{ex17_translation.sympy}
+\irsnippet[nolol=false,caption={After freezing: all constants are still untyped.}]{ex17_translation.frozen}
+$f_E^3$ became two multiplications, $1/3$ a division, and $-x/f_C$ a subtraction of
+\code{x * (1 / f_C)}. Every field access is now a buffer access with three indices: two
+spatial ones and the trivial index dimension of a scalar field.
+
+\section{Typification}\label{sec:typify}
+
+The \cls{Typifier} (\file{typification.py}) assigns a type to every symbol, constant
+and expression, and checks that all types fit together. It works with
+\term{type contexts} (\cls{TypeContext}). Each expression tree is typified within a
+context that has a \term{target type}:
+\begin{itemize}
+  \item The target type comes from the left-hand side of an assignment, from a typed
+        symbol or field access, from a function signature, or from the default for the
+        position (index expressions use \code{index_dtype}; conditions use \code{bool}).
+  \item Untyped constants simply take the target type (\code{interpret_as}). This is why
+        the literal \code{2} becomes \code{2.0f} in a \code{float} kernel.
+  \item An untyped symbol on the right-hand side gets \code{default_dtype}. An untyped
+        symbol on the left-hand side first tries to infer its type from the right-hand
+        side, and otherwise gets \code{default_dtype}.
+  \item A typed node whose type differs from the target type is an error. There are no
+        implicit conversions, so mixing \code{float32} and \code{float64}, or integers and
+        floats, raises a \code{TypificationError} that names the expression and both
+        types.
+  \item Each operator class declares which types it accepts (numeric, integer or
+        boolean operations). Relations yield \code{bool}, or a boolean vector for vector
+        operands.
+\end{itemize}
+\pysnippet{ex17_translation.typify}
+\irsnippet[nolol=false,caption={After typification: every constant is \texttt{float32} or \texttt{int64}.}]{ex17_translation.typed}
+The free symbol \code{x} was given the context's \code{default_dtype}, here
+\code{float32}.
+
+\section{The AST factory}
+
+\cls{AstFactory} (\file{ast_factory.py}) bundles these steps for code that constructs IR:
+\begin{itemize}
+  \item \code{parse_sympy(obj)}: freeze, then typify, for one expression or assignment;
+  \item \code{parse_index(idx)}: parse an expression in an \code{index_dtype} context;
+  \item \code{parse_slice(slice, normalize_to)}: turn a Python slice into start, stop
+        and step expressions;
+  \item \code{loop(ctr_name, slice, body)}, \code{loop_nest(...)},
+        \code{loops_from_ispace(ispace, body)}: build \cls{PsLoop} nodes;
+  \item \code{axes_cube(...)} and \code{cube_from_ispace(ispace, body)}: build the
+        iteration-axes representation used by the next stage (\cref{sec:axes}).
+\end{itemize}
+Transformations use the factory when they create new code, e.g.\ the remainder loop of a
+vectorized kernel. This guarantees that the new nodes are typed consistently.

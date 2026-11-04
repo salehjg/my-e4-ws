@@ -1,0 +1,7 @@
+x              : x: float64
+duplicate of x : x__0: float64
+buffer         : f, element type float32, dim 3
+base pointer   : _data_f: float * RESTRICT
+  properties   : ['BufferBasePtr']
+shape          : ['_size_f_0: int64', '_size_f_1: int64', '3: const int64']
+strides        : ['_stride_f_0: int64', '_stride_f_1: int64', '_stride_f_2: int64']

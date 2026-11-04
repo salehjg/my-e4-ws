@@ -1,0 +1,187 @@
+\chapter{Architecture Overview}\label{ch:architecture}
+
+Part~II looks inside the code generator. This chapter gives the big picture: the
+design principles, the package structure, and the driver that runs the compilation
+pipeline. The following chapters then look at the pieces: the intermediate
+representation (\cref{ch:ir}), the translation from SymPy (\cref{ch:translation}), the
+transformations (\cref{ch:transformations}), and the hardware platforms
+(\cref{ch:platforms,ch:rvv-backend}).
+
+\section{Design principles}
+
+\begin{description}
+  \item[Two languages.] Users write kernels in a \emph{mathematical} language: SymPy
+        expressions over fields, mostly untyped, with no notion of loops or memory. The
+        backend works on an \emph{imperative, typed} intermediate representation (IR): an
+        abstract syntax tree of C-like statements and expressions in which every node has
+        a data type. The translation between the two (``freeze'' and ``typify'')
+        happens once, at the beginning.
+  \item[Small, composable passes.] Every step of the compiler is a class whose
+        instances are called on an AST and return a new or modified AST:
+        \code{EliminateConstants(ctx)(ast)}, \code{LowerToC(ctx)(ast)}, \dots. The
+        driver is a short, readable sequence of such calls, and a developer can run any
+        subset by hand (\cref{sec:manual-pipeline}).
+  \item[A shared context.] All passes of one kernel share one
+        \cls{KernelCreationContext}. It owns the symbol table, the fields and their
+        memory buffers, the iteration space, the reductions and the required headers.
+  \item[Iteration strategies as data.] How the iteration space is traversed (loops,
+        OpenMP, SIMD blocks with remainder loops, GPU thread indices) is first expressed
+        as \emph{iteration axes} inside the AST. It is lowered to concrete loops only
+        afterwards. CPU and GPU kernels share this machinery and differ in the
+        strategy they choose (\cref{sec:axes}).
+  \item[Platforms encapsulate the hardware.] Everything that depends on the instruction
+        set (vector intrinsics, math function names, reductions, required headers) lives
+        in a \cls{Platform} class (\cref{ch:platforms}). A new architecture is added by
+        writing a new platform, not by changing the passes (\cref{sec:new-backend}).
+  \item[Self-describing results.] The output is a \code{Kernel} object with typed
+        parameters and semantic properties (\cref{sec:kernel-object}). Compiling it is
+        a separate concern, handled by the JIT or by external code generators.
+\end{description}
+
+\section{Package structure}
+
+\Cref{tab:packages} maps the packages under \file{src/pystencils/} to these roles.
+\Cref{app:source-map} gives a file-by-file map.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Main packages of \ps{} 2.0.}\label{tab:packages}
+  \begin{tabularx}{\linewidth}{@{}l >{\raggedright\arraybackslash}p{4.4cm} >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    \textbf{Layer} & \textbf{Package / module} & \textbf{Responsibility}\\
+    \midrule
+    \multirow{5}{*}{Frontend}
+      & \file{field.py} & \code{Field}, \code{Field.Access}, layouts\\
+      & \file{assignment.py}, \file{simp/} & assignments, collections, simplification\\
+      & \file{sympyextensions/} & typed symbols, casts, reductions, RNG, integer functions\\
+      & \file{fd/} & finite-difference discretization\\
+      & \file{flow/} & experimental flowgraph language\\
+    \midrule
+    \multirow{2}{*}{Codegen API}
+      & \file{codegen/} & \code{create_kernel}, driver, config, \code{Target}, \code{Kernel}, \code{Parameter}, GPU launch configurations\\
+      & \file{types/} & the type system (\code{PsType} hierarchy, \code{create_type})\\
+    \midrule
+    \multirow{5}{*}{Backend}
+      & \file{backend/kernelcreation/} & context, analysis, iteration spaces, freeze, typify, AST factory\\
+      & \file{backend/ast/} & IR node classes, traversal and analysis helpers\\
+      & \file{backend/transformations/} & optimization and lowering passes\\
+      & \file{backend/platforms/} & hardware platforms and intrinsic selection\\
+      & \file{backend/emission/} & C and IR printers\\
+    \midrule
+    \multirow{2}{*}{Runtime}
+      & \file{jit/} & \code{CpuJit}, \code{CupyJit}, \code{SYCLJit}, \code{no_jit}\\
+      & \file{include/} & C++ runtime headers (SIMD helpers, Philox, GPU support)\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{The kernel creation driver}\label{sec:driver}
+
+\code{create_kernel} creates a \cls{DefaultKernelCreationDriver}
+(\file{codegen/driver.py}) and calls it. The constructor
+\begin{enumerate}
+  \item checks that at most one of \code{ghost_layers}, \code{iteration_slice} and
+        \code{index_field} is set (and falls back to \code{ghost_layers=AUTO});
+  \item creates the \cls{KernelCreationContext} with the configured \code{default_dtype}
+        and \code{index_dtype};
+  \item resolves automatic targets (\code{CurrentCPU} becomes \code{auto_cpu()}), and for
+        GPU targets creates the GPU indexing object that later provides the launch
+        configuration;
+  \item selects the \cls{Platform} for the target (\cref{tab:platform-selection}).
+\end{enumerate}
+Its \code{__call__} method then runs the five stages of \cref{fig:pipeline}:
+\begin{pycode}
+def __call__(self, symbolic_kernel: SymbolicKernel) -> Kernel:
+    kernel_body = self.parse_kernel_body(symbolic_kernel)
+    kernel_ast = self._materialize_iteration_space(kernel_body)
+    kernel_ast = self._general_optimize(kernel_ast)
+    kernel_ast = self._lowering(kernel_ast)
+    return self._finalize(kernel_ast)
+\end{pycode}
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/pipeline}
+  \caption[The five stages of the kernel creation driver]{The five stages of \texttt{DefaultKernelCreationDriver} and the passes they run.}
+  \label{fig:pipeline}
+\end{figure}
+
+\paragraph{Stage 1: parse.}
+For assignment input, \code{parse_assignment_collection} wraps the input in an
+\code{AssignmentCollection}, runs \cls{KernelAnalysis} (constraint checks; registers all
+fields in the context and marks read-only fields \code{const}), creates the iteration
+space, and translates the assignments into a typed \code{PsBlock} with
+\cls{FreezeExpressions} and \cls{Typifier} (\cref{ch:translation}). Flowgraph input
+(\cref{sec:flow}) takes a separate path, \code{parse_flowgraph}: it registers the fields
+directly and uses \cls{FreezeFlowgraph}, which typifies each node on its own.
+\cls{KernelAnalysis} is not run on this path.
+
+\paragraph{Stage 2: materialize the iteration space.}
+For CPU and GPU platforms, a strategy object builds an \emph{axes tree} from the
+iteration space. For CPUs this is \cls{DefaultCpuLoopStrategies}
+(\file{codegen/cpu_loop_strategies.py}), which reads the OpenMP, vectorization and
+blocking options. For GPUs it is \cls{GpuIndexMappingStrategy}
+(\file{codegen/gpu_indexing.py}), which reads the indexing scheme. Then
+\cls{MaterializeAxes} turns the axes into loops, pragmas, vectorized bodies or GPU index
+computations, and \cls{ReductionsToMemory} adds the initialization and write-back of
+reduction variables (\cref{ch:transformations}). The SYCL platform still uses the older
+platform hook \code{materialize_iteration_space} instead.
+
+\paragraph{Stage 3: general optimizations.}
+\cls{CanonicalizeSymbols} renames duplicate declarations and makes read-only symbols
+\code{const}. \cls{EliminateConstants} folds constant expressions and extracts constant
+subexpressions into \code{__c_*} declarations. \cls{HoistIterationInvariantDeclarations}
+moves loop-invariant declarations out of loops. No option controls this stage.
+
+\paragraph{Stage 4: lowering.}
+For vector CPU platforms, the platform's \cls{SelectIntrinsics} pass replaces vector
+operations with intrinsic calls. \cls{LowerToC} linearizes multidimensional buffer
+accesses into pointer arithmetic, and \cls{SelectFunctions} asks the platform to replace
+abstract math functions (\code{exp}, \code{min}, $\pi$, \dots) with concrete C
+functions.
+
+\paragraph{Stage 5: finalize.}
+A last \cls{CanonicalizeSymbols} pass handles symbols introduced during lowering. Then
+\cls{KernelFactory} collects all symbols that are used but never defined; these become
+the parameters. It translates internal buffer properties into \code{FieldBasePtr} and
+collects headers from the types, the platform and the context. It also attaches the JIT,
+the context's metadata and, for GPU kernels, the launch configuration factory.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Platform selection in \texttt{DefaultKernelCreationDriver.\_get\_platform}.}
+  \label{tab:platform-selection}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Target} & \textbf{Platform class} (\file{backend/platforms/})\\
+    \midrule
+    \code{GenericCPU} & \cls{GenericCpu}\\
+    \code{X86_SSE}, \code{X86_AVX}, \code{X86_AVX512}(\code{_FP16}) & \cls{X86VectorCpu} with \code{X86VectorArch.<SSE|AVX|AVX512|...>}\\
+    \code{ARM_NEON}, \code{ARM_NEON_FP16} & \cls{NeonCpu}\\
+    \code{ARM_SVE} & \cls{SveCpu}\\
+    \code{RISCV_RVV} & \cls{RvvCpu} (fork only)\\
+    \code{CUDA}, \code{HIP} & \cls{CudaPlatform}, \cls{HipPlatform}\\
+    \code{SYCL} & \cls{SyclPlatform}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Errors}
+
+The backend reports problems through a small set of exception classes in
+\file{backend/exceptions.py}, plus \code{CodegenError} for driver-level errors:
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+  \toprule
+  \textbf{Exception} & \textbf{Raised when}\\
+  \midrule
+  \code{KernelConstraintsError} & the input violates SSA or independence rules\\
+  \code{FreezeError} & a SymPy construct cannot be translated\\
+  \code{TypificationError} & types do not match (no implicit casts)\\
+  \code{VectorizationError} & an expression cannot be vectorized\\
+  \code{MaterializationError} & the platform lacks an operation (e.g.\ \code{exp} in SIMD)\\
+  \code{CodegenError} & invalid combination of options (e.g.\ SIMD on \code{GenericCPU})\\
+  \code{PsInternalCompilerError} & a bug in \ps{} itself\\
+  \bottomrule
+\end{tabular}
+\end{center}

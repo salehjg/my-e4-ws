@@ -1,0 +1,7 @@
+target           sqrt      min    floor      exp      sum  strided
+X86_SSE           yes      yes      yes        -      yes        -
+X86_AVX           yes      yes      yes        -      yes        -
+X86_AVX512        yes      yes        -        -      yes      yes
+ARM_NEON          yes      yes        -        -      yes        -
+ARM_SVE           yes      yes        -        -      yes      yes
+RISCV_RVV         yes      yes        -        -      yes      yes

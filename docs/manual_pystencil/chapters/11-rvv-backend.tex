@@ -1,0 +1,193 @@
+\chapter{The RISC-V Vector Backend}\label{ch:rvv-backend}
+
+\begin{forkonly}
+  Everything in this chapter exists only on the \texttt{rvv-support} branch of the
+  \ps{} submodule in this workspace (commit \texttt{9a989e16}, ``rvv support opus5.5 VLS
+  only VLEN256''). The design and the full validation log are in
+  \file{docs/notes2/rvv-vls256-only-plan-opus5.5.md} and
+  \file{docs/notes2/rvv-vls256-only-progress-opus5.5.md}.
+\end{forkonly}
+
+The RISC-V \emph{V} extension (RVV~1.0)~\cite{rvv-spec} is a scalable vector ISA. The
+hardware register width VLEN is not fixed by the ISA, and code usually adapts to it at
+run time with \code{vsetvl}, an approach called \term{vector-length agnostic} (VLA)
+code. This backend deliberately does \emph{not} use that model. It treats RVV like AVX:
+as a fixed-width SIMD instruction set with \textbf{VLEN = 256 bits}, the register width
+of the SpacemiT~K1 (Banana~Pi BPI-F3) used in this project. The code it emits is
+\term{vector-length specific} (VLS).
+
+\section{Design: parity with AVX}
+
+The guiding rule was to copy the contract of the x86/AVX backend line by line, so that
+no new IR, loop strategies or configuration options were needed:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.7cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{AVX backend} & \textbf{RVV backend}\\
+  \midrule
+  256-bit \code{__m256d} / \code{__m256} & one register, LMUL \code{m1}: \code{vfloat64m1_t} (4 lanes), \code{vfloat32m1_t} (8 lanes)\\
+  128-bit \code{__m128} & half a register, LMUL \code{mf2} (only for elements of at most 32 bits)\\
+  wider vectors rejected & wider vectors rejected; no register groups (\code{m2}, \code{m4}, \dots)\\
+  peel + vector block loop + scalar remainder & identical (generic CPU strategy)\\
+  implicit vector length & every intrinsic gets the literal lane count as \code{vl} (e.g.\ \code{4uLL}), which equals VLMAX at VLEN 256\\
+  \code{_mm256_set_pd}, horizontal helpers in \file{x86.hpp} & \code{set_<sfx>} and \code{horizontal_<op>_<sfx>} in \file{rvv.hpp}\\
+  float and signed integer types & float and signed integer types\\
+  \code{-march=x86-64-v3} & \code{-march=rv64gcv_zvl256b}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The consequence is spelled out in the module docstring of \file{backend/platforms/rvv.py}:
+running the code on hardware with VLEN $<$ 256 is \emph{not supported}. Every operation
+would silently process fewer lanes. The runtime header therefore refuses to compile
+unless the compiler was told that VLEN $\geq$ 256:
+\begin{ccode}
+#if !defined(__riscv_v_min_vlen) || __riscv_v_min_vlen < 256
+#error "pystencils RVV kernels assume VLEN >= 256 bits: compile with -march=rv64gcv_zvl256b"
+#endif
+\end{ccode}
+
+\section{Integration points}
+
+The backend touches the same places any new vector target would
+(\cref{sec:new-backend}):
+\begin{description}[style=nextline]
+  \item[\file{codegen/target.py}] adds \code{Target.RISCV_RVV = _CPU | _VECTOR | _RISCV |
+    _RVV}. \code{default_vector_lanes} returns $256/\text{element width}$, like AVX.
+    \code{_riscv_has_rvv()} detects the extension on RISC-V hosts from the
+    \code{isa} line of \file{/proc/cpuinfo}: it looks for the single letter \code{v} in
+    the base ISA string. \code{_zve*} and \code{xtheadvector} do not count.
+  \item[\file{codegen/driver.py}] maps \code{Target.RISCV_RVV} to \cls{RvvCpu}.
+  \item[\file{backend/platforms/rvv.py}] contains the platform \cls{RvvCpu} and its
+    intrinsic selector \cls{SelectIntrinsicsRvv}.
+  \item[\file{include/pystencils_runtime/rvv.hpp}] provides the runtime helpers.
+  \item[\file{jit/cpu/compiler_info.py}] passes \code{-march=rv64gcv_zvl256b} for
+    \code{RISCV_RVV}, and synthesizes \code{-march} for \code{CurrentCPU} on RISC-V hosts,
+    because GCC rejects \code{-march=native} there. \code{-mrvv-vector-bits} is
+    deliberately not used.
+\end{description}
+
+\section{From IR to RVV intrinsics}
+
+\cls{SelectIntrinsicsRvv} assembles intrinsic names from a stem and a type suffix such
+as \code{f64m1} or \code{i32mf2}, following the RVV C intrinsics
+specification~\cite{rvv-intrinsics}:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{IR construct} & \textbf{Generated code}\\
+  \midrule
+  vector type & \code{vfloat64m1_t}, \code{vfloat32m1_t}, \code{vfloat32mf2_t}, \code{vint64m1_t}, \dots; tuples \code{vfloat32m1x4_t} for Philox\\
+  broadcast, uniform constant & \code{__riscv_vfmv_v_f_<sfx>(x, vl)}, \code{__riscv_vmv_v_x_<sfx>}\\
+  non-uniform constant & \code{pystencils::runtime::rvv::set_<sfx>(...)} (stack array + load)\\
+  \code{+ - * /} & \code{__riscv_vf{add,sub,mul,div}_vv_<sfx>}, integer \code{__riscv_v{add,...}_vv_<sfx>}\\
+  contiguous load / store & \code{__riscv_vle64_v_f64m1(&p[i], vl)}, \code{__riscv_vse64_v_f64m1(&p[i], v, vl)}\\
+  strided load / store & \code{__riscv_vlse64_v_f64m1}, \code{__riscv_vsse64_v_f64m1} with a \emph{byte} stride (\code{8LL * _stride_f_1})\\
+  casts & \code{vfcvt}, widening \code{vfwcvt}/\code{vsext}, narrowing \code{vfncvt}/\code{vncvt}; float-to-int always with \code{rtz} (truncation, like C)\\
+  \code{sqrt}, \code{abs}, \code{min}, \code{max} & \code{vfsqrt_v}, \code{vfabs_v}, \code{vfmin_vv}/\code{vfmax_vv}; integer abs as \code{vmax(x, vneg(x))}\\
+  horizontal reduction & \code{pystencils::runtime::rvv::horizontal_{add,mul,min,max}_<sfx>}\\
+  Philox RNG & \code{pystencils::runtime::rvv::random::philox_float32/64} returning vector tuples, read with \code{__riscv_vget_v_...}\\
+  \code{exp}, \code{sin}, \code{floor}, \dots & rejected with a \code{MaterializationError}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Using the backend}
+
+Configure it like any other vector target. The JIT selects the right \code{-march}
+automatically when it runs on an RVV host:
+\pysnippet{ex08_rvv.config}
+\outsnippet{ex08_rvv.headers}
+\csnippet[nolol=false,caption={Jacobi kernel, \texttt{float32}, OpenMP and RVV (8 lanes per vector).},label=lst:rvv-jacobi,basicstyle=\ttfamily\scriptsize]{ex08_rvv.jacobi}
+The structure matches the AVX kernel of \cref{lst:avx} exactly. Only the spelling
+differs: \code{vfloat32m1_t} instead of \code{__m256}, and an explicit \code{8uLL}
+vector length in every call. Reductions use a vector accumulator per thread, which is
+folded into the scalar at the end of the parallel region:
+\pysnippet{ex08_rvv.reduction}
+\csnippet[nolol=false,caption={A \texttt{float64} sum reduction for RVV.},label=lst:rvv-reduction]{ex08_rvv.reduction}
+Unlike x86 before AVX-512, RVV has native strided loads and stores. A kernel can
+therefore be vectorized along a non-contiguous axis:
+\pysnippet{ex08_rvv.strided}
+\csnippet[nolol=false,caption={Vectorization along a strided axis with \texttt{vlse64}/\texttt{vsse64}.}]{ex08_rvv.strided}
+
+\paragraph{Compiling for RVV on another machine.}
+Code generation works on any host. To compile a kernel for the K1 elsewhere, or to pick
+the compiler on the board, construct the compiler info with the target, as described in
+\cref{sec:jit}:
+\outsnippet[basicstyle=\ttfamily\scriptsize]{ex08_rvv.flags}
+On this laptop, the listings of this chapter were syntax-checked with the cross
+compiler, the same way the test \file{tests/nbackend/test_rvv_codegen.py} does:
+\outsnippet{ex08_rvv.syntax-check}
+
+\section{Limitations}
+\begin{itemize}
+  \item VLEN is fixed at 256 bits. There is no VLA mode, no stripmining, no LMUL $>1$
+        and no run-time check of the hardware's VLEN.
+  \item Element types: \code{float32}, \code{float64} and signed integers only. No
+        unsigned integers, no \code{float16}.
+  \item No transcendental functions and no \code{floor}/\code{ceil} in vector code. Such
+        kernels must use \code{GenericCPU} (and possibly the compiler's
+        auto-vectorizer).
+  \item Like AVX and the other vector targets, it relies on
+        \code{assume_inner_stride_one} for contiguous accesses. That assumption is not
+        checked at run time (\cref{app:pitfalls}).
+\end{itemize}
+
+\section{Validation and performance}
+
+The backend is covered by three test modules plus RVV cases in the shared vectorization
+tests:
+\begin{itemize}
+  \item \file{tests/nbackend/test_rvv_target.py}: target flags, ISA string detection and
+        JIT flags;
+  \item \file{tests/nbackend/test_rvv_codegen.py}: intrinsic selection by string
+        assertions, and cross-compiler syntax checks of representative kernels. These
+        run on x86;
+  \item \file{tests/nbackend/test_rvv_execution.py}: kernels executed on RVV hardware and
+        compared with NumPy and with \code{GenericCPU}, including bit-exact Philox and
+        truncating casts.
+\end{itemize}
+On the laptop the RVV modules give 77 passed and 7 skipped tests (the execution tests
+need hardware). On the Banana~Pi all 84 pass, as do the 39 tests of
+\file{test_vectorization.py}.
+
+\paragraph{Performance on the SpacemiT K1.}
+The progress log reports two end-to-end measurements. For the D2Q9 lattice Boltzmann
+harness \file{python/learn-lb-pystencil/lb-pystencils.py} (fused periodic step, with
+CSE), the explicit RVV backend compiled with GCC is the fastest build: 1.14$\times$ the
+best auto-vectorized build in \code{float64} and 1.16$\times$ in \code{float32}. For a
+waLBerla D3Q19 sweep generated through sweepgen (one core, $64^3$ cells), the best RVV
+build beats the best auto-vectorized build by 1.23$\times$ (GCC, \code{float64}) up to
+1.70$\times$ (Clang, \code{float32}). With 8 processes the gain shrinks to
+1.05--1.26$\times$, because the chip becomes memory-bandwidth bound. The \code{float64}
+checksums of all variants agree.
+
+\section{Recipe: adding a vector backend}\label{sec:new-backend}
+
+The RVV work suggests the following checklist for a new SIMD architecture:
+\begin{enumerate}
+  \item \textbf{Target.} Add feature bits and a public member to \code{Target}
+        (\file{codegen/target.py}). Extend \code{default_vector_lanes} and host
+        detection (\code{_available_vector_targets}).
+  \item \textbf{Platform.} Subclass \cls{GenericVectorCpu}: \code{required_headers}
+        (the generic CPU headers plus your runtime header) and
+        \code{get_intrinsic_selector()}.
+  \item \textbf{Intrinsic selector.} Subclass \cls{SelectIntrinsics} and implement
+        \code{type_intrinsic}, \code{constant_intrinsic}, \code{op_intrinsic},
+        \code{math_func_intrinsic}, \code{vector_load} and \code{vector_store}. Optionally
+        implement \code{rng_engine_intrinsic} (via \code{_common_rng_engine_intrinsic})
+        and \code{subscript_intrinsic}. Raise \code{MaterializationError} for anything
+        unsupported.
+  \item \textbf{Runtime header.} Add \file{include/pystencils_runtime/<isa>.hpp} with
+        vector set functions, horizontal reductions and, if wanted, vectorized Philox
+        (\file{bits/philox_rand.h}).
+  \item \textbf{Driver.} Map the target to the platform in
+        \code{DefaultKernelCreationDriver._get_platform}.
+  \item \textbf{JIT.} Teach \code{compiler_info.py} the \code{-march} flags for the
+        target, and for \code{CurrentCPU} on such hosts.
+  \item \textbf{Tests.} Add the target to the shared fixtures
+        (\file{tests/fixtures.py}, \file{test_vectorization.py}). Add codegen tests that
+        run anywhere (string checks, cross-compiler syntax checks) and execution tests
+        that run on the hardware.
+\end{enumerate}
+No change to the IR, the transformations or the loop strategies is necessary as long
+as the new target behaves like a fixed-width SIMD instruction set.

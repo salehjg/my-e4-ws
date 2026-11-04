@@ -1,0 +1,19 @@
+{
+   ctr_0__rem_start: int64 = _size_f_0 / [4: int64] * [4: int64];
+   parallel-loop-axis(range(ctr_1 : [[0: int64] : _size_f_1 - [0: int64] : [1: int64]]))
+   {
+      {
+         loop-axis(range(ctr_0__1 : [[0: int64] : ctr_0__rem_start : [4: int64]]))
+         {
+            simd-axis< 4 >(range(ctr_0 : [ctr_0__1 : ctr_0__1 + [4: int64] : [1: int64]]))
+            {
+               _data_g[ctr_0 + [0: int64], ctr_1 + [0: int64], [0: int64]] = [1.0: float64] + c * _data_f[ctr_0 + [0: int64], ctr_1 + [0: int64], [0: int64]];
+            }
+         }
+         loop-axis(range(ctr_0__0 : [ctr_0__rem_start : _size_f_0 - [0: int64] : [1: int64]]))
+         {
+            _data_g[ctr_0__0 + [0: int64], ctr_1 + [0: int64], [0: int64]] = [1.0: float64] + c * _data_f[ctr_0__0 + [0: int64], ctr_1 + [0: int64], [0: int64]];
+         }
+      }
+   }
+}

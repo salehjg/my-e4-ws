@@ -1,0 +1,25 @@
+% The PsType class hierarchy (src/pystencils/types/types.py)
+\begin{forest}
+  for tree={
+    font=\ttfamily\footnotesize, draw=psblue!60, fill=psblue!5, rounded corners=1.5pt,
+    inner sep=2.5pt, grow'=east, parent anchor=east, child anchor=west,
+    anchor=west, l sep=6mm, s sep=1.2mm, edge={draw=psgray},
+    edge path={\noexpand\path[\forestoption{edge}] (!u.parent anchor) -- +(2.5mm,0)
+      |- (.child anchor)\forestoption{edge label};},
+  }
+  [PsType
+    [PsCustomType]
+    [PsVoidType]
+    [PsStructType]
+    [PsDereferencableType
+      [PsPointerType]
+      [PsArrayType
+        [PsNamedArrayType [PsShortArrayType]]]]
+    [PsNumericType
+      [PsVectorType]
+      [PsScalarType
+        [PsBoolType]
+        [PsIntegerType [PsSignedIntegerType] [PsUnsignedIntegerType]]
+        [PsIeeeFloatType]]]
+  ]
+\end{forest}

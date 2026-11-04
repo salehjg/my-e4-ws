@@ -1,0 +1,2 @@
+GccInfo(target=RISCV_RVV).cxxflags()   = ['-DNDEBUG', '-std=c++17', '-fPIC', '-Ofast', '-fopenmp', '-march=rv64gcv_zvl256b']
+ClangInfo(target=RISCV_RVV).cxxflags() = ['-DNDEBUG', '-std=c++17', '-fPIC', '-fopenmp', '-march=rv64gcv_zvl256b', '-O3', '-ffast-math', '-fhonor-infinities']

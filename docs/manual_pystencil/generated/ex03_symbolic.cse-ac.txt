@@ -1,0 +1,10 @@
+Subexpressions:
+	xi_0 ← p_C^2 + p_C^3
+	xi_1 ← p_C^1 + xi_0
+	xi_2 ← 1/(p_C^0 + xi_1)
+	xi_3 ← p_C^0 + p_C^1
+Main Assignments:
+	q[0,0](0) ← p_C^0*xi_2 + xi_1**2
+	q[0,0](1) ← p_C^1*xi_2 + (-p_C^0 - xi_0)**2
+	q[0,0](2) ← p_C^2*xi_2 + (-p_C^3 - xi_3)**2
+	q[0,0](3) ← p_C^3*xi_2 + (-p_C^2 - xi_3)**2

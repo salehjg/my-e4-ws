@@ -1,0 +1,1 @@
+generic and vectorized kernels match the NumPy reference: OK

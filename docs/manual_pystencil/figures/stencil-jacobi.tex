@@ -1,0 +1,51 @@
+% One application of the 2D Jacobi stencil: read 4 neighbours in src, write 1 cell in dst.
+\begin{tikzpicture}[x=0.62cm,y=0.62cm,font=\footnotesize]
+  % ---- src -------------------------------------------------------------------
+  \fill[ghostcell] (0,0) rectangle (7,7);
+  \fill[white] (1,1) rectangle (6,6);
+  \cellfill[nbcell]{4}{3} \cellfill[nbcell]{2}{3}
+  \cellfill[nbcell]{3}{4} \cellfill[nbcell]{3}{2}
+  \fill[pattern=north east lines,pattern color=psblue!60] (3,3) rectangle ++(1,1);
+  \draw[gridline] (0,0) grid (7,7);
+  \draw[domainline] (1,1) rectangle (6,6);
+  \node[celltext] at (4.5,3.5) {E};  \node[celltext] at (2.5,3.5) {W};
+  \node[celltext] at (3.5,4.5) {N};  \node[celltext] at (3.5,2.5) {S};
+  \node[above,font=\small\bfseries] at (3.5,7) {\texttt{src}};
+  % callouts
+  \draw[psgray] (4,4.5) -- (7.4,4.5) node[right,celltext] {\texttt{src[0,1]}\,(N)};
+  \draw[psgray] (5,3.5) -- (7.4,3.5) node[right,celltext] {\texttt{src[1,0]}\,(E)};
+  \draw[psgray] (4,2.5) -- (7.4,2.5) node[right,celltext] {\texttt{src[0,-1]}\,(S)};
+  \draw[psgray] (2,3.5) -- (-0.4,3.5) node[left,celltext] {(W)\,\texttt{src[-1,0]}};
+  % axes
+  \draw[axisarrow] (0,-0.6) -- (2,-0.6) node[right,celltext] {$x$ (\texttt{ctr\_0})};
+  \draw[axisarrow] (-0.6,0) -- (-0.6,2) node[above,celltext] {$y$ (\texttt{ctr\_1})};
+
+  % ---- dst -------------------------------------------------------------------
+  \begin{scope}[shift={(12.5,0)}]
+    \fill[ghostcell] (0,0) rectangle (7,7);
+    \fill[white] (1,1) rectangle (6,6);
+    \cellfill[centercell]{3}{3}
+    \draw[gridline] (0,0) grid (7,7);
+    \draw[domainline] (1,1) rectangle (6,6);
+    \node[above,font=\small\bfseries] at (3.5,7) {\texttt{dst}};
+    \draw[psgray] (3.5,3) -- (3.5,-0.5) node[below,celltext] {\texttt{dst[0,0]} = \texttt{dst.center()}};
+  \end{scope}
+
+  % ---- the update ------------------------------------------------------------
+  \draw[flowarrow,psblue] (5.6,6.3) to[bend left=22]
+    node[above,align=center,font=\footnotesize,text=black]
+      {$\tfrac14\,(\text{E}+\text{W}+\text{N}+\text{S})$}
+    (15.6,3.9);
+
+  % ---- legend ----------------------------------------------------------------
+  \begin{scope}[shift={(0,-2.4)}]
+    \fill[ghostcell,draw=psgray!55] (0,0) rectangle ++(0.7,0.7);
+    \node[right,celltext] at (0.8,0.35) {ghost layer (only read)};
+    \fill[nbcell,draw=psgray!55] (7.6,0) rectangle ++(0.7,0.7);
+    \node[right,celltext] at (8.4,0.35) {cells read};
+    \fill[centercell,draw=psgray!55] (12.4,0) rectangle ++(0.7,0.7);
+    \node[right,celltext] at (13.2,0.35) {cell written};
+    \draw[domainline] (17.4,0) rectangle ++(0.7,0.7);
+    \node[right,celltext] at (18.2,0.35) {domain};
+  \end{scope}
+\end{tikzpicture}

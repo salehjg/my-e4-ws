@@ -1,0 +1,4 @@
+fn(f=a)                            -> KeyError: 'Missing kernel argument: g'
+fn(f=a, g=b.astype(np.float32))    -> TypeError: Invalid element type of array argument g
+fn(f=a, g=np.zeros((8, 9)))        -> ValueError: Incompatible shapes of array arguments: All domain field arrays must have the same spatial shape.
+fn(f=[[1.0]], g=b)                 -> TypeError: Invalid array argument

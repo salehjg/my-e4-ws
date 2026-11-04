@@ -1,0 +1,7 @@
+PsDeclaration
+  PsSymbolExpr  : float64
+  PsAdd  : float64
+    PsConstantExpr  : float64
+    PsMul  : float64
+      PsConstantExpr  : float64
+      PsSymbolExpr  : float64

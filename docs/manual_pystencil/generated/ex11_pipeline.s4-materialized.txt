@@ -1,0 +1,21 @@
+{
+   ctr_0__rem_start: const int64 = _size_f_0 / [4: int64] * [4: int64];
+   {
+      #pragma omp parallel
+      {
+         #pragma omp for
+         for(ctr_1: int64 = [0: int64]; ctr_1 < _size_f_1; ctr_1 += [1: int64])
+         {
+            for(ctr_0__1: int64 = [0: int64]; ctr_0__1 < ctr_0__rem_start; ctr_0__1 += [4: int64])
+            {
+               ctr_0: const int64 = ctr_0__1;
+               vec_memacc< 4 >(_data_g, ctr_0 + ctr_1 * _stride_g_1) = [[1. 1. 1. 1.]: float64<4>] + (vec_broadcast<4>(c)) * vec_memacc< 4 >(_data_f, ctr_0 + ctr_1 * _stride_f_1);
+            }
+            for(ctr_0__0: int64 = ctr_0__rem_start; ctr_0__0 < _size_f_0; ctr_0__0 += [1: int64])
+            {
+               _data_g[ctr_0__0, ctr_1, [0: int64]] = [1.0: float64] + c * _data_f[ctr_0__0, ctr_1, [0: int64]];
+            }
+         }
+      }
+   }
+}

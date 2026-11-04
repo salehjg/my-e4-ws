@@ -1,0 +1,139 @@
+\chapter{Getting Started}\label{ch:getting-started}
+
+This chapter installs \ps{} and walks through a complete first kernel: the Jacobi update
+of \cref{eq:jacobi}. The later chapters explain each step in detail.
+
+\section{Installation}
+
+\ps{} is a pure Python package that requires Python $\geq 3.10$. It is published on PyPI:
+\begin{shcode}
+pip install "pystencils~=2.0"            # core package
+pip install "pystencils[alltrafos]"      # + islpy, py-cpuinfo
+\end{shcode}
+The core dependencies are \code{sympy~=1.14}, \code{numpy}, \code{appdirs},
+\code{joblib}, \code{pyyaml} and \code{fasteners}. A few optional pieces matter in
+practice:
+\begin{itemize}
+  \item \textbf{A C++ compiler.} The just-in-time (JIT) compiler for CPU kernels calls
+        \texttt{g++} (the default on Linux) or \texttt{clang++}. It needs the Python and
+        NumPy development headers.
+  \item \textbf{\texttt{py-cpuinfo}} is needed to detect the SIMD capabilities of x86
+        and ARM Linux hosts (\code{Target.auto_cpu()}). Without it, \ps{} warns and falls
+        back to the generic CPU target.
+  \item \textbf{CuPy} is needed to \emph{run} CUDA or HIP kernels from Python. You
+        can \emph{generate} GPU code without it. \textbf{dpctl} plays the same role
+        for SYCL.
+  \item The extras \texttt{interactive} (matplotlib, Jupyter, \dots), \texttt{doc},
+        \texttt{testsuite} and \texttt{dev} pull in tools for notebooks, documentation,
+        tests and linting.
+\end{itemize}
+
+\paragraph{In this workspace.}
+\ps{} is \emph{not} pip-installed here. The sources in \file{submodules/pystencils/src}
+are put on the Python path, and the interpreter of the virtual environment
+\file{.venv-rvv} (Python~3.14, NumPy~2.5, SymPy~1.14, py-cpuinfo) is used:
+\begin{shcode}
+cd my-e4-ws
+PYTHONPATH=submodules/pystencils/src .venv-rvv/bin/python -c \
+    "import pystencils as ps; print(ps.__version__)"     # -> 2.0b1+4.g9a989e16
+\end{shcode}
+The listing generator of this manual (\file{./build.sh listings}) uses the same setup.
+
+\section{A first kernel}
+
+\paragraph{Step 1 -- import.} By convention \ps{} is imported as \code{ps}:
+\pysnippet{ex01_first_kernel.imports}
+
+\paragraph{Step 2 -- declare the fields.}
+A \term{field} is a symbolic stand-in for an array. \code{ps.fields} parses a short
+description: two fields named \code{src} and \code{dst}, with element type
+\code{double} and two spatial dimensions. The fields have no size yet, so the generated
+kernel will work for any array shape.
+\pysnippet{ex01_first_kernel.fields}
+
+\paragraph{Step 3 -- write the update rule.}
+Indexing a field with a tuple of \emph{relative offsets} gives a symbolic neighbour
+access: \code{src[1, 0]} is the east neighbour of the current cell, and
+\code{dst.center()} is the current cell itself. A \code{ps.Assignment} pairs a
+left-hand side with a SymPy right-hand side:
+\pysnippet{ex01_first_kernel.assignment}
+The assignment is an ordinary SymPy object. Printing it shows the compass names \ps{}
+uses for the offsets (E, W, N, S):
+\outsnippet{ex01_first_kernel.assignment}
+
+\paragraph{Step 4 -- generate the kernel.}
+\code{ps.create_kernel} runs the code generator. It returns a \code{Kernel} object that
+holds the generated function. Without a configuration, it targets a generic CPU with
+\code{double} precision:
+\pysnippet{ex01_first_kernel.create}
+
+\paragraph{Step 5 -- look at the code.}
+\code{kernel.get_c_code()} returns the C code. In a Jupyter notebook,
+\code{ps.inspect(kernel, show_cpp=True)} shows it with syntax highlighting.
+\Cref{lst:first-kernel} shows the result.
+
+\csnippet[nolol=false,caption={The generated Jacobi kernel (\texttt{Target.GenericCPU}).},label=lst:first-kernel]{ex01_first_kernel.code}
+
+Several details of this output return throughout the manual:
+\begin{itemize}
+  \item Each field becomes a pointer \code{_data_<name>}. Its sizes and strides become
+        integer parameters \code{_size_<name>_<i>} and \code{_stride_<name>_<i>}.
+        \code{src} is only read, so its pointer is \code{const}. \code{RESTRICT} is a
+        macro the JIT defines as \code{__restrict__}.
+  \item The loops skip \emph{one ghost layer} on each side (\code{ctr_0 = 1} up to
+        \code{_size_dst_0 - 1}). \ps{} inferred this from the largest neighbour offset
+        in the update rule.
+  \item The constant $1/4$ was moved out of the loops into \code{__c_1_0o4_0}.
+  \item Only the shape of \code{dst} is passed: it is the \emph{archetype} field (the
+        alphabetically first domain field) whose sizes define the loop bounds. All domain
+        fields must have the same shape, and the JIT checks this when the kernel is
+        called.
+\end{itemize}
+\Cref{fig:sweep} shows what this loop nest does on the array.
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/kernel-sweep}
+  \caption[How the first kernel traverses the array]{How the kernel of \cref{lst:first-kernel} visits the cells of \texttt{dst}. The outer loop runs over \texttt{ctr\_0} ($x$) and the inner loop over \texttt{ctr\_1} ($y$), the contiguous coordinate of a C-ordered NumPy array. The ghost layer (grey) is skipped.}
+  \label{fig:sweep}
+\end{figure}
+
+\paragraph{Step 6 -- compile and run.}
+\code{kernel.compile()} wraps the kernel in a small C++ Python extension module,
+compiles it with the host compiler, loads it, and returns a callable. Arrays (and
+scalar parameters) are passed as \emph{keyword arguments} named after the fields:
+\pysnippet{ex01_first_kernel.run}
+
+\paragraph{Step 7 -- check the result.}
+For the interior cells, the result matches a NumPy implementation of the same formula.
+The ghost layer of \code{dst} remains untouched:
+\pysnippet{ex01_first_kernel.check}
+
+\begin{note}[Compilation cache]
+  Compiled modules are cached in \file{~/.cache/pystencils/cpujit}, keyed by a SHA-256
+  hash of the code and the compiler command line. A second \code{compile()} of the same
+  kernel therefore costs only the import of the cached module. \Cref{sec:jit} shows how
+  to change this.
+\end{note}
+
+\section{What just happened}
+
+Together, these steps are the whole user workflow of \ps:
+\begin{center}\small
+\begin{tikzpicture}[node distance=0.45cm,
+    st/.style={draw=psblue!70,fill=psblue!6,rounded corners=2pt,align=center,
+      inner sep=4pt,font=\footnotesize},
+    arr/.style={-{Stealth[length=2mm]},thick,draw=psgray}]
+  \node[st] (a) {fields};
+  \node[st,right=of a] (b) {assignments};
+  \node[st,right=of b] (c) {\texttt{create\_kernel}\\+ config};
+  \node[st,right=of c] (d) {\texttt{Kernel}};
+  \node[st,right=of d] (e) {\texttt{compile()}};
+  \node[st,right=of e] (f) {call with\\arrays};
+  \foreach \x/\y in {a/b,b/c,c/d,d/e,e/f} \draw[arr] (\x) -- (\y);
+\end{tikzpicture}
+\end{center}
+The following chapters go through them in order:
+\Cref{ch:symbolic-frontend} covers everything you can write on the symbolic side,
+\cref{ch:kernel-creation} the configuration of the code generator, and
+\cref{ch:outputs-execution} the generated artifacts and how to execute them.

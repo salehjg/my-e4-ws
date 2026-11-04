@@ -1,0 +1,1 @@
+total heat after 50 steps: 15.999999 (NumPy reference: 15.999999)

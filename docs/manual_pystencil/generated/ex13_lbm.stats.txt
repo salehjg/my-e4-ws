@@ -1,0 +1,3 @@
+target of the vectorized kernel: X86_AVX
+generic kernel:    47 lines of C
+vectorized kernel: 90 lines of C

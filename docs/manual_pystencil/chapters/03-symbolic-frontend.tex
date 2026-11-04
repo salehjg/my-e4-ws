@@ -1,0 +1,338 @@
+\chapter{The Symbolic Frontend: What You Write}\label{ch:symbolic-frontend}
+
+A \ps{} program describes a kernel with ordinary SymPy objects plus a few extensions
+that \ps{} adds: \term{fields}, \term{field accesses}, \term{typed symbols} and a
+handful of special functions. This chapter covers everything that can appear on the
+input side of \code{ps.create_kernel}.
+
+\section{Fields}\label{sec:fields}
+
+A \cls{Field} (\file{src/pystencils/field.py}) is the symbolic description of an array.
+It has
+\begin{itemize}
+  \item a \textbf{name}, which becomes the keyword argument at call time;
+  \item a number of \textbf{spatial dimensions} (1--3) that are iterated over;
+  \item optional \textbf{index dimensions} with a fixed \textbf{index shape} (a vector or
+        tensor stored in every cell, e.g.\ 19 populations of a D3Q19 lattice Boltzmann
+        model);
+  \item an \textbf{element type} (\code{float64}, \code{float32}, \code{int32}, a
+        struct, \dots), or a \emph{dynamic} type that is resolved at code generation
+        time;
+  \item a \textbf{shape} and \textbf{strides}, which are either symbolic (sizes become
+        kernel parameters) or fixed integers;
+  \item a \textbf{memory layout} that defines which coordinate is contiguous in memory
+        (\cref{sec:layouts});
+  \item a \textbf{field type}: \code{GENERIC} (the default), \code{INDEXED} (sparse
+        index lists, \cref{sec:sparse}), \code{BUFFER} (packed communication buffers),
+        \code{CUSTOM} (allows absolute accesses) or \code{STAGGERED} /
+        \code{STAGGERED_FLUX} (values on cell faces).
+\end{itemize}
+
+\subsection{Declaring fields}
+
+The most convenient constructor is \code{ps.fields}, which parses a description string
+\begin{center}
+  \texttt{"name(index-shape), name2, ...: <data-type>[<dimensions-or-shape>]"}
+\end{center}
+The data type is anything \code{ps.create_type} accepts (\code{double},
+\code{float32}, \code{int64}, \dots), or \code{dyn} / \code{dynidx} for the dynamic
+numeric and index type. If the type is omitted (\code{"f: [2D]"}), the field gets the
+dynamic numeric type. The bracket contains either a dimensionality (\code{2D}) or a
+fixed shape (\code{10,20}):
+\pysnippet{ex02_fields.declare}
+\outsnippet{ex02_fields.declare-out}
+The symbolic sizes and strides (\code{_size_pdfs_0}, \code{_stride_pdfs_0}, \dots) are
+exactly the names that later appear as kernel parameters. The fixed index shape
+(\code{19}) is a constant.
+
+Fields can also be derived from existing NumPy arrays, which fixes shape, strides and
+type:
+\pysnippet{ex02_fields.numpy}
+\outsnippet{ex02_fields.numpy-out}
+The full constructors are \code{Field.create_generic(name, spatial_dimensions, dtype,
+index_dimensions, layout, index_shape, field_type)},
+\code{Field.create_from_numpy_array(name, array, index_dimensions, field_type)} and
+\code{Field.create_fixed_size(name, shape, index_dimensions, dtype, layout, ...)}.
+
+\subsection{Field accesses}\label{sec:field-access}
+
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/field-access}
+  \caption[Relative field accesses]{Relative field accesses. (a) The offsets in square brackets are relative to the cell being updated; the first offset is $x$, the second $y$. (b) Round brackets select an entry of the index dimensions, here one of the two components stored in every cell.}
+  \label{fig:field-access}
+\end{figure}
+
+Indexing a field yields a \cls{Field.Access}, which is a subclass of
+\cls{TypedSymbol} and therefore a SymPy symbol. Square brackets take \emph{relative
+spatial offsets} from the current cell. Round brackets select an entry of the index
+dimensions (\cref{fig:field-access}):
+\pysnippet{ex02_fields.access}
+\outsnippet{ex02_fields.access-out}
+For the centre of a scalar field, \code{u.center}, \code{u.center()}, \code{u()} and
+\code{u[0,0,0]} are all the same access. The number of offsets must match the number of
+spatial dimensions. Compass names
+(\code{N}, \code{S}, \code{E}, \code{W}, \code{T}, \code{B} and combinations such as
+\code{NE}) are short for unit offsets. Every access knows how many ghost layers it needs
+(\code{required_ghost_layers}). This is how \ps{} infers the iteration space
+automatically (\cref{sec:iteration-space}). Offsets may also be symbolic expressions,
+which gives indirect addressing such as \code{f[idx[0,0], 0]}.
+
+\begin{note}[Absolute and staggered accesses]
+  \code{f.absolute_access(offset, index)} addresses an absolute position and is only
+  allowed on \code{CUSTOM} fields. Staggered fields store values on cell faces and are
+  accessed with \code{f.staggered_access("E")}. The dedicated
+  \code{ps.create_staggered_kernel} of \ps{}~1.x is \emph{not yet available} in 2.0
+  (\cref{app:pitfalls}).
+\end{note}
+
+\subsection{Memory layouts}\label{sec:layouts}
+
+The \term{layout} of a field fixes the order of its coordinates in memory, from the
+slowest to the fastest varying. It determines both the strides of fixed-size fields and
+the \emph{loop order} of the generated kernel: the innermost loop always runs over the
+fastest coordinate. Layouts are given as strings or as tuples of dimension indices:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  \textbf{Name} & \textbf{Meaning} & \textbf{Fastest coordinate}\\
+  \midrule
+  \code{"numpy"}, \code{"c"} & C order: last index fastest & last spatial index (e.g.\ $y$ in 2D)\\
+  \code{"fzyx"}, \code{"soa"}, \code{"f"} & structure of arrays & $x$; index dimension slowest\\
+  \code{"zyxf"}, \code{"aos"} & array of structures & index dimension; then $x$\\
+  \bottomrule
+\end{tabular}
+\end{center}
+\Cref{fig:layouts} shows the two most common layouts for a small field with two
+values per cell.
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/layouts}
+  \caption[Memory layouts \texttt{fzyx} and \texttt{zyxf}]{The same field \texttt{f(2)} of $3\times2$ cells in two memory layouts. With \texttt{fzyx} all values of one component are contiguous, and $x$ is the fastest coordinate: neighbouring cells are neighbours in memory, which SIMD vectorization needs. With \texttt{zyxf} the components of one cell are stored together.}
+  \label{fig:layouts}
+\end{figure}
+
+For a fixed-size field with shape $(4,5,6)$ and 19 values per cell, the strides (in
+elements) are:
+\pysnippet{ex02_fields.layouts}
+\outsnippet{ex02_fields.layouts-out}
+For \emph{generic} fields, whose strides are symbolic, the layout only affects the loop
+order. This is why the Jacobi kernel of \cref{lst:first-kernel} (default C layout)
+iterates \code{ctr_1} in the inner loop, while the lattice Boltzmann kernel of
+\cref{ch:worked-example} (\code{fzyx}) iterates \code{ctr_0} innermost. The helper
+\code{pystencils.field.create_numpy_array_with_layout(shape, layout)} allocates NumPy
+arrays with a matching memory order.
+
+\section{Assignments and assignment collections}\label{sec:assignments}
+
+\code{ps.Assignment(lhs, rhs)} is SymPy's assignment node. \ps{} extends it so that it
+prints as \texttt{lhs}~$\leftarrow$~\texttt{rhs}. The left-hand side is a field access or a plain symbol. A
+kernel is a list of assignments or an \cls{AssignmentCollection}, which separates
+\begin{itemize}
+  \item \textbf{subexpressions}: assignments to temporary symbols, emitted as local
+        \code{const} variables inside the loop body, and
+  \item \textbf{main assignments}: the results, usually stores to fields.
+\end{itemize}
+The following example writes an explicit heat-equation step with a Laplacian
+subexpression \code{lap}. The diffusion coefficient \code{alpha} is a free symbol:
+\pysnippet{ex03_symbolic.collection}
+\outsnippet{ex03_symbolic.collection-ac}
+\csnippet[nolol=false,caption={An assignment collection with a subexpression and a free scalar symbol.},label=lst:heat-code]{ex03_symbolic.collection-code}
+Each \emph{free} symbol, i.e.\ a symbol that is read but never assigned, becomes a
+scalar kernel parameter. Its value is passed by keyword at call time:
+\pysnippet{ex03_symbolic.collection-run}
+
+\paragraph{Rules for the assignment list.}
+\ps{} checks the input before generating code (\cref{sec:constraints}):
+\begin{itemize}
+  \item every symbol is assigned at most once (\emph{static single assignment}, SSA), and
+        it is not assigned after it has been read;
+  \item every field location is written at most once;
+  \item a field that is written at offset $o$ may be read afterwards only at the same
+        offset $o$. Reading it at other offsets would make the result depend on the
+        loop order.
+\end{itemize}
+The collection is topologically sorted, so subexpressions may be listed in any order.
+Useful methods include \code{all_assignments}, \code{free_symbols},
+\code{bound_symbols}, \code{new_with_substitutions(...)},
+\code{new_without_subexpressions()} and \code{operation_count}.
+
+\section{Symbols, types and casts}\label{sec:types-frontend}
+
+\ps{} is \emph{statically and strictly typed}:
+\begin{itemize}
+  \item A plain SymPy symbol has no type. If it is free, it gets the kernel's
+        \code{default_dtype} (\code{float64} unless configured otherwise). If it is
+        assigned, it gets the type of its right-hand side.
+  \item \code{ps.TypedSymbol(name, dtype)} fixes the type explicitly. The type may also
+        be a \code{ps.DynamicType}: \code{NUMERIC_TYPE} resolves to the default type,
+        \code{INDEX_TYPE} to the index type (\code{int64} by default).
+  \item Field accesses have the element type of their field.
+  \item There are \textbf{no implicit conversions}. An expression mixing
+        \code{float32} and \code{float64}, or an integer counter and a float, is
+        rejected with a \code{TypificationError}. Use \code{ps.tcast(expr, dtype)} for
+        an explicit cast.
+\end{itemize}
+\pysnippet{ex03_symbolic.types}
+\csnippet{ex03_symbolic.types-code}
+Untyped number literals take the type their context requires (\code{1.0f} in a
+\code{float} context, \code{1LL} in an \code{int64} context). Types are written as strings
+(\code{"float32"}, \code{"double"}, \code{"int64_t"}, \code{"uint8"}, \code{"half"}),
+NumPy dtypes, Python types (\code{int} is \code{int64}, \code{float} is
+\code{float64}), or \code{PsType} objects (\cref{sec:types}).
+
+\section{Supported SymPy, conditionals and special functions}\label{sec:sympy-subset}
+
+The code generator understands a well-defined subset of SymPy:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Category} & \textbf{Supported}\\
+  \midrule
+  Numbers & \code{Integer}, \code{Rational} (becomes a division), \code{Float} (rounded to a Python \code{float}, then typed by its context), \code{pi}, \code{E}, $\pm$\code{oo}\\
+  Arithmetic & \code{Add}, \code{Mul}, \code{Pow}: small integer powers ($|n|\le 8$) are expanded into multiplications, negative powers into divisions, half-integer powers use \code{sqrt}\\
+  Functions & \code{exp}, \code{log}, trigonometric, hyperbolic and inverse functions, \code{atan2}, \code{Abs}, \code{floor}, \code{ceiling}, \code{Min}, \code{Max}\\
+  Logic & relations (\code{<}, \code{==}, \dots) in boolean contexts, \code{And}, \code{Or}, \code{Not}, \code{true}, \code{false}\\
+  Conditionals & \code{Piecewise} with a final default case \code{(expr, True)}\\
+  Integers & \code{int_div}, \code{int_rem} (C semantics), bit shifts and bitwise operations from \code{pystencils.sympyextensions.integer_functions}\\
+  GPU math & \code{fast_division}, \code{fast_sqrt}, \code{fast_inv_sqrt} (CUDA intrinsics)\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+A \code{Piecewise} expression becomes a chain of C ternary operators. The spatial
+counters \code{ps.x_}, \code{ps.y_}, \code{ps.z_} (also available as
+\code{ps.DEFAULTS.spatial_counters}) give access to the cell index. Since they are
+integers, they must be cast before they are combined with floats:
+\pysnippet{ex03_symbolic.piecewise}
+\csnippet{ex03_symbolic.piecewise-code}
+
+\begin{pitfall}[Integer division]
+  Python's \texttt{//} and \texttt{\%} round towards $-\infty$, C's \texttt{/} and \texttt{\%}
+  towards zero. On integer expressions, use \code{int_div} and \code{int_rem} when you
+  want the C semantics.
+\end{pitfall}
+
+\section{Reductions}\label{sec:reductions}
+
+A \term{reduction} combines a value from every cell into a single scalar. The left-hand
+side must be a \code{TypedSymbol}. The operation is chosen by the assignment class
+\code{ps.<Op>ReductionAssignment}, where \code{<Op>} is one of \code{Add}, \code{Sub},
+\code{Mul}, \code{Min} or \code{Max}. Alternatively, call
+\code{reduction_assignment(lhs, ReductionOp.<Op>, rhs)} from
+\code{pystencils.sympyextensions}.
+\pysnippet{ex06_reduction.reduction}
+The kernel accumulates into a thread-local variable and finally combines it with the
+value already stored in the result. At call time the result is therefore passed as a
+\emph{one-element array}, and its initial value matters:
+\pysnippet{ex06_reduction.reduction-run}
+\csnippet[nolol=false,caption={Sum and maximum reductions with OpenMP.},label=lst:reduction]{ex06_reduction.code}
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/reduction}
+  \caption[An OpenMP sum reduction]{How the sum reduction of \cref{lst:reduction} is computed: every OpenMP thread accumulates its cells into a private \texttt{total\_local}; the \texttt{reduction} clause combines the partial sums; finally the result is added to \texttt{total[0]}.}
+  \label{fig:reduction}
+\end{figure}
+\Cref{fig:reduction} shows how the partial results are combined. Reductions are
+supported on all CPU targets, including vectorized ones (the vector
+partial results are combined horizontally, see \cref{lst:rvv-reduction}), and on CUDA
+through atomic operations (\cref{sec:gpu-platforms}).
+
+\section{Random numbers}
+
+\code{ps.random.Philox(name, dtype, seed)} provides the counter-based Philox-4x32
+generator~\cite{random123}. Each call to \code{get_random_vector(counter)} returns an
+indexed symbol holding four \code{float32} (or two \code{float64}) values, plus the
+assignment that computes them. The values depend on the counter, the cell index and the
+seed. They are reproducible and need no state in memory:
+\pysnippet{ex14_flow_rng.philox}
+\csnippet{ex14_flow_rng.philox}
+The scalar generator lives in the runtime header \file{pystencils_runtime/random.hpp}.
+Vectorized variants for x86, ARM and RISC-V are in the per-ISA headers (\file{x86.hpp},
+\file{neon.hpp}, \file{sve.hpp}, \file{rvv.hpp}), all built on
+\file{bits/philox_rand.h}. In vectorized kernels the index type must match the width of
+the random numbers, e.g.\ \code{index_dtype="int32"} for \code{float32}
+(\cref{sec:data-types}).
+
+\section{From PDEs to stencils: \texttt{pystencils.fd}}\label{sec:fd}
+
+The module \code{ps.fd} discretizes partial differential equations automatically.
+\code{transient}, \code{diffusion} and \code{advection} build the terms of a
+conservation law. \code{Discretization2ndOrder(dx, dt)} solves for the transient term
+and applies explicit Euler in time with second-order central differences in space:
+\pysnippet{ex04_fd_heat.pde}
+\outsnippet{ex04_fd_heat.pde}
+\outsnippet{ex04_fd_heat.rhs}
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/heat-stencil}
+  \caption[From the heat equation to a five-point stencil]{From the heat equation to a five-point stencil: \texttt{ps.fd} discretizes the PDE, and the resulting right-hand side is a weighted sum of a cell and its four neighbours, exactly like \cref{fig:stencil} with different weights.}
+  \label{fig:heat-stencil}
+\end{figure}
+With $D=1$ and $\Delta t=1/10$, the right-hand side is exactly the five-point update
+$c + \tfrac{1}{10}(c_E+c_W+c_N+c_S-4c)$ (\cref{fig:heat-stencil}). A time loop just swaps the arrays:
+\pysnippet{ex04_fd_heat.loop}
+\outsnippet{ex04_fd_heat.check}
+\code{ps.fd} also provides symbolic derivatives (\code{Diff}, \code{diff}), stencil
+families (\code{fd_stencils_standard}, \code{fd_stencils_isotropic}),
+staggered discretizations and \code{functional_derivative} for phase-field models.
+
+\section{Simplification and common subexpressions}\label{sec:simp}
+
+Large models, such as the lattice Boltzmann kernels in \cref{ch:worked-example}, repeat
+many subterms. \code{ps.simp.sympy_cse(ac)} runs SymPy's common subexpression
+elimination over an assignment collection and introduces new subexpressions
+\code{xi_0, xi_1, ...}:
+\pysnippet{ex03_symbolic.cse}
+\outsnippet{ex03_symbolic.cse-ac}
+\outsnippet{ex03_symbolic.cse-counts}
+The sum $\rho$ is now computed once, and the four divisions by $\rho$ became one
+reciprocal \code{xi_2} and four multiplications. The backend itself does \emph{not} perform symbolic CSE. Applying it at the SymPy level
+is the user's job, and it matters a lot for performance. The \code{ps.simp} module also
+contains a \cls{SimplificationStrategy} class for composing rules, and helpers such as
+\code{add_subexpressions_for_divisions} or \code{insert_constants}.
+
+\section{The kernel decorator}
+
+For short kernels, \code{@ps.kernel} offers a compact notation. The operator \code{@=}
+inside the decorated function creates an assignment, and an optional argument
+\code{s} creates symbols on the fly:
+\pysnippet{ex03_symbolic.decorator}
+\outsnippet{ex03_symbolic.decorator-asms}
+
+\begin{pitfall}[Conditional expressions in \texttt{@ps.kernel}]
+  The decorator rewrites Python's \code{a if c else b} into a \code{Piecewise}. On
+  Python 3.14 this rewrite fails with \code{AttributeError: module 'ast' has no
+  attribute 'NameConstant'}, because \code{ast.NameConstant} was removed from the
+  standard library. Use \code{sp.Piecewise} directly instead.
+\end{pitfall}
+
+\section{Flowgraphs (experimental)}\label{sec:flow}
+
+\code{ps.flow} is a new, explicitly experimental way to write kernels as a directed
+acyclic graph of \emph{equation blocks}. Inside a block, \code{_eq.let[x] = ...}
+defines a private value, \code{_eq.export[y] = ...} a value visible to successor
+blocks, \code{_eq.store[f(0)] = ...} a field write and \code{_eq.reduce[q, "max"] = ...}
+a reduction. \code{@ps.flow.cases} creates branches. \code{ps.flow.tie} closes the graph
+and checks it, and \code{create_kernel} accepts the graph directly:
+\pysnippet{ex14_flow_rng.flow}
+\csnippet{ex14_flow_rng.flow}
+Every block keeps its own symbol table, and the generated code marks block boundaries
+with comments. Flowgraphs take a separate path through the driver
+(\cref{sec:driver}): \code{FreezeFlowgraph} replaces \code{KernelAnalysis} and
+\code{FreezeExpressions}.
+
+\begin{keyidea}[Summary]
+  \begin{itemize}[leftmargin=1.2em]
+    \item A \emph{field} stands for an array; \code{f[dx, dy]} reads a neighbour relative
+          to the current cell, \code{f(i)} selects a component.
+    \item A kernel is a list of \emph{assignments} (or an \code{AssignmentCollection}) in
+          SSA form; free symbols become scalar parameters.
+    \item Types are strict: no implicit casts, use \code{TypedSymbol} and \code{tcast}.
+    \item Reductions, Philox random numbers, finite differences (\code{ps.fd}) and CSE
+          (\code{ps.simp}) all produce ordinary assignments.
+  \end{itemize}
+\end{keyidea}

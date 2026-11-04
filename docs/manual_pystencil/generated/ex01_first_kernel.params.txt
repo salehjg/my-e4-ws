@@ -1,0 +1,8 @@
+_data_dst       double * RESTRICT const  FieldBasePtr(dst)
+_data_src       const double * RESTRICT const FieldBasePtr(src)
+_size_dst_0     const int64              FieldShape(dst, 0)
+_size_dst_1     const int64              FieldShape(dst, 1)
+_stride_dst_0   const int64              FieldStride(dst, 0)
+_stride_dst_1   const int64              FieldStride(dst, 1)
+_stride_src_0   const int64              FieldStride(src, 0)
+_stride_src_1   const int64              FieldStride(src, 1)

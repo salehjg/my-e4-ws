@@ -1,0 +1,28 @@
+[from pystencils import *]
+    AttributeError: module 'pystencils' has no attribute 'inspect_ast'
+[ps.show_code(kernel)]
+    prints IR (typed constants like '[0: int64]')
+[CreateKernelConfig(cpu_openmp=True)]
+    cfg.cpu.openmp.enable == False
+[Field.create_fixed_size((4,5), memory_strides=(10,1))]
+    strides == (5, 1)
+[ps.create_staggered_kernel(...)]
+    NotImplementedError: Staggered kernels are not yet implemented for pystencils 2.0
+[@ps.kernel with 'a if c else b' (Python 3.14)]
+    AttributeError: module 'ast' has no attribute 'NameConstant'
+[ps.create_kernel(asm, openmp=True)]
+    TypeError: CreateKernelConfig.__init__() got an unexpected keyword argument 'openmp'
+[default CompilerInfo for a Target.X86_SSE kernel]
+    GccInfo(target=CurrentCPU) -> -march=native
+[AVX kernel (assume_inner_stride_one) called with a strided view]
+    no error raised; result correct: False
+[CUDA reduction, assume_warp_aligned_block_size only / + warp_size=32]
+    __shfl_xor_sync emitted: False / True
+[ps.create_kernel(Assignment(f[0,0], f[1,0]))  (in-place stencil)]
+    ok: Kernel
+[repr(ps.Target.GenericCPU)]
+    <Target._CPU: 1>
+[simplificationfactory.create_simplification_strategy()]
+    returns None
+[DynamicBlockSizeLaunchConfiguration.block_size = (64, 2, 1)]
+    no error; evaluate() still uses block (16, 16, 1)

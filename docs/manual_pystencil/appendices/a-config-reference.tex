@@ -1,0 +1,63 @@
+\chapter{Configuration Reference}\label{app:config-reference}
+
+All options of \cls{CreateKernelConfig} (\file{codegen/config.py}). Options are unset
+(\code{None}) until assigned, and an unset option reads as its default. Validated
+options accept the types in the second column and normalize them.
+
+\begingroup\small
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Option} & \textbf{Type / default} & \textbf{Meaning}\\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{Option} & \textbf{Type / default} & \textbf{Meaning}\\
+  \midrule
+  \endhead
+  \multicolumn{3}{@{}l}{\textit{Top level}}\\
+  \code{target} & \code{Target}; \code{GenericCPU} & hardware target; \code{CurrentCPU}/\code{CurrentGPU} are resolved automatically\\
+  \code{jit} & \code{JitBase}; by target & JIT used by \code{Kernel.compile()}: \code{CpuJit()}, \code{CupyJit()} (or \code{no_jit} without CuPy), \code{SYCLJit()}\\
+  \code{function_name} & \code{str}; \code{"kernel"} & name of the generated function\\
+  \code{ghost_layers} & \code{AUTO}, \code{int}, or per axis \code{int} / \code{(low, high)} & dense iteration space minus ghost layers; \code{AUTO} if no iteration-space option is set\\
+  \code{iteration_slice} & slice(s), e.g.\ \code{ps.make_slice[...]} & dense iteration space given as a slice\\
+  \code{index_field} & \code{Field} (\code{INDEXED}) & sparse iteration space over an index list\\
+  \code{index_dtype} & type spec; \code{int64} & counters, sizes, strides, index symbols\\
+  \code{default_dtype} & type spec; \code{float64} & untyped symbols and dynamically typed fields\\
+  \code{allow_double_writes} & \code{bool}; \code{False} & allow writing a field at several locations\\
+  \code{skip_independence_check} & \code{bool}; \code{False} & skip the read-after-write offset check\\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Category \code{cpu}}}\\
+  \code{cpu.openmp.enable} & \code{bool}; \code{False} & OpenMP parallel region around the outermost loop\\
+  \code{cpu.openmp.schedule} & \code{str}; \code{"static"} & \code{schedule(...)} clause\\
+  \code{cpu.openmp.num_threads} & \code{int}; unset & \code{num_threads(...)} clause\\
+  \code{cpu.openmp.collapse} & \code{int}; unset & \code{collapse(...)} clause\\
+  \code{cpu.vectorize.enable} & \code{bool}; \code{False} & explicit SIMD vectorization (vector targets only)\\
+  \code{cpu.vectorize.lanes} & \code{int}; register width & SIMD lanes; required for \code{ARM_SVE}\\
+  \code{cpu.vectorize.assume_inner_stride_one} & \code{bool}; \code{False} & treat the innermost stride as 1 (not checked at run time)\\
+  \code{cpu.vectorize.assume_aligned} & \code{bool}; \code{False} & defined, currently without effect\\
+  \code{cpu.vectorize.use_nontemporal_stores} & \code{bool} or fields; \code{False} & defined, currently without effect\\
+  \code{cpu.loop_blocking} & tuple of \code{int}/\code{sp.Expr}/\code{None} & block size per dimension (\code{None}: not blocked)\\
+  \code{cpu.use_cacheline_zeroing} & \code{bool}; \code{False} & \code{True} raises \code{NotImplementedError}\\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Category \code{gpu}}}\\
+  \code{gpu.indexing_scheme} & \code{GpuIndexingScheme} or \code{str}; \code{Linear3D} & \code{"linear3d"}, \code{"gridstrided_linear3d"}, \code{"blockwise4d"}\\
+  \code{gpu.manual_launch_grid} & \code{bool}; \code{False} & user sets block and grid size on the launch configuration\\
+  \code{gpu.warp_size} & \code{int}; unset & warp size; must be set explicitly for warp-level reductions\\
+  \code{gpu.assume_warp_aligned_block_size} & \code{bool}; \code{False} & promise that block sizes are multiples of the warp size\\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Category \code{sycl}}}\\
+  \code{sycl.automatic_block_size} & \code{bool}; \code{True} & range kernel (\code{sycl::item}); \code{False}: nd-range kernel\\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Deprecated constructor arguments (FutureWarning; planned removal in 2.1)}}\\
+  \code{data_type} & & use \code{default_dtype}\\
+  \code{cpu_openmp} & & use \code{cpu.openmp.enable} (\code{cpu_openmp=True} disables OpenMP, \cref{app:pitfalls})\\
+  \code{cpu_vectorize_info} & & use \code{cpu.vectorize.*}\\
+  \code{gpu_indexing}, \code{gpu_indexing_params} & & use \code{gpu.*}\\
+  \bottomrule
+\end{xltabular}
+\endgroup
+
+\paragraph{Methods.}
+\code{get_option(name)}, \code{is_option_set(name)}, \code{copy()},
+\code{override(other)}, \code{get_target()} (resolves automatic targets) and
+\code{get_jit()} (returns the configured or the inferred JIT).

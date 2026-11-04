@@ -1,0 +1,23 @@
+\chapter{Glossary}\label{app:glossary}
+
+\begin{description}[style=nextline,leftmargin=1.5em]
+  \item[Archetype field] The domain field whose sizes and layout define a dense iteration space.
+  \item[Assignment collection] Main assignments plus subexpressions (\code{AssignmentCollection}).
+  \item[Axes cube, iteration axis] IR representation of an iteration space before it is lowered to loops, SIMD blocks or GPU indices.
+  \item[Canonical form] AST invariant: everything typed, single declarations, \code{const} where possible.
+  \item[CSE] Common subexpression elimination; done symbolically with \code{ps.simp.sympy_cse}.
+  \item[Field] Symbolic $n$-dimensional array with spatial and index dimensions.
+  \item[Field access] Symbol for a field value at a relative offset (\code{f[1,0](2)}).
+  \item[Freeze] Translation of SymPy expressions into IR nodes (\code{FreezeExpressions}).
+  \item[Ghost layers] Border cells that are read by the stencil but not updated.
+  \item[IR] Intermediate representation: typed AST plus symbols, buffers, constants and functions.
+  \item[JIT] Just-in-time compiler that turns a \code{Kernel} into a Python callable.
+  \item[Kernel] The generated function together with its parameters and metadata.
+  \item[Layout] Order of coordinates in memory, e.g.\ \code{fzyx} (SoA) or \code{zyxf} (AoS).
+  \item[Lowering] Replacing abstract IR constructs by target-specific code (intrinsics, C functions, pointer arithmetic).
+  \item[Platform] Backend class with all target-specific knowledge.
+  \item[Reduction] Combining per-cell values into one scalar (sum, product, min, max).
+  \item[SSA] Static single assignment: every symbol assigned once.
+  \item[Typify] Inference and checking of data types (\code{Typifier}).
+  \item[VLS / VLA] Vector-length specific / agnostic code; the RVV backend emits VLS code for VLEN = 256.
+\end{description}

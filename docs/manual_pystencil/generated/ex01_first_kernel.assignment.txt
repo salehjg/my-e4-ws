@@ -1,0 +1,1 @@
+dst[0,0] ← src_E/4 + src_N/4 + src_S/4 + src_W/4

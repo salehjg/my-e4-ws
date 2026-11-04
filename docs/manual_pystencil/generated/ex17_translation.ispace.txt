@@ -1,0 +1,4 @@
+archetype field : g
+loop order      : (1, 0)   (slowest first)
+dimension 0     : counter ctr_0, start [1: int64], stop _size_g_0 - [1: int64], step [1: int64]
+dimension 1     : counter ctr_1, start [1: int64], stop _size_g_1 - [1: int64], step [1: int64]

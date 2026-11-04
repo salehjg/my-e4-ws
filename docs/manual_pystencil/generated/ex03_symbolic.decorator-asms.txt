@@ -1,0 +1,1 @@
+[Assignment(avg, f_E/2 + f_W/2), Assignment(g_C, avg*weight)]

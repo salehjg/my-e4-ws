@@ -1,0 +1,9 @@
+_data_u         const double * RESTRICT const FieldBasePtr(u)
+_data_u_new     double * RESTRICT const  FieldBasePtr(u_new)
+_size_u_0       const int64              FieldShape(u, 0)
+_size_u_1       const int64              FieldShape(u, 1)
+_stride_u_0     const int64              FieldStride(u, 0)
+_stride_u_1     const int64              FieldStride(u, 1)
+_stride_u_new_0 const int64              FieldStride(u_new, 0)
+_stride_u_new_1 const int64              FieldStride(u_new, 1)
+alpha           const float64            -

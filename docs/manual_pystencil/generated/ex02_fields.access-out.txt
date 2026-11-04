@@ -1,0 +1,13 @@
+u.center                                     -> u_C
+u[1, 0, 0]                                   -> u_E
+u["N"], u["T"]                               -> (u_N, u_T)
+u[1, -1, 0].offsets                          -> (1, -1, 0)
+u[1, -1, 0].offset_name                      -> 'SE'
+u[1, -1, 0].required_ghost_layers            -> 1
+v(1)                                         -> v_C^1
+v[1, 0](1)                                   -> v_E^1
+v.center_vector                              -> Matrix([
+[v_C^0],
+[v_C^1]])
+isinstance(u[1,0,0], ps.TypedSymbol)         -> True
+type(u[1,0,0])                               -> 'Field.Access'

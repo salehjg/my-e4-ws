@@ -1,0 +1,2 @@
+before CSE: adds=24  muls= 4  divs= 4
+after CSE:  adds=11  muls= 8  divs= 1

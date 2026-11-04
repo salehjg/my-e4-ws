@@ -1,0 +1,22 @@
+% The stencil produced by ps.fd for the explicit heat equation (Section 3.8).
+\begin{tikzpicture}[font=\footnotesize]
+  \node[align=center] (pde) at (0,0)
+    {$\dfrac{\partial c}{\partial t} = D\,\nabla^2 c$\\[4pt]
+     \scriptsize\texttt{transient(c) - diffusion(c, D)}};
+  \node[align=center,right=0.9cm of pde] (disc)
+    {\texttt{Discretization2ndOrder}\\\scriptsize explicit Euler in time,\\
+     \scriptsize central differences in space};
+  \draw[flowarrow] (pde) -- (disc);
+  \begin{scope}[shift={($(disc.east)+(0.9,-1.275)$)},x=0.85cm,y=0.85cm]
+    \foreach \dx/\dy in {1/0,-1/0,0/1,0/-1} {
+      \fill[nbcell] (\dx+1,\dy+1) rectangle ++(1,1);
+      \node at (\dx+1.5,\dy+1.5) {$\lambda$};
+    }
+    \fill[centercell] (1,1) rectangle ++(1,1);
+    \node[text=white,font=\scriptsize] at (1.5,1.5) {$1{-}4\lambda$};
+    \draw[gridline] (0,0) grid (3,3);
+    \node[below,align=center,font=\scriptsize] at (1.5,-0.05) {$\lambda = D\,\Delta t/\Delta x^2$;\
+      here $\lambda=\frac1{10}$, centre $\frac35$};
+  \end{scope}
+  \draw[flowarrow] (disc.east) -- ++(0.75,0);
+\end{tikzpicture}

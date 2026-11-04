@@ -1,0 +1,178 @@
+% =============================================================================
+%  preamble.tex -- packages, colours, listing styles, boxes and macros
+% =============================================================================
+
+% ---- Fonts and encoding -------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[varqu,varl]{inconsolata}   % monospaced font for code
+\usepackage{microtype}
+
+% ---- Page layout --------------------------------------------------------------
+\usepackage[a4paper,left=2.6cm,right=2.6cm,top=2.6cm,bottom=2.8cm]{geometry}
+\setlength{\emergencystretch}{2em}
+
+% ---- Mathematics, tables, lists -----------------------------------------------
+\usepackage{amsmath,amssymb}
+\usepackage{array,booktabs,tabularx,xltabular,multirow}
+\usepackage[shortlabels]{enumitem}
+\setlist{itemsep=0.2em,topsep=0.4em}
+\renewcommand{\arraystretch}{1.15}
+
+% ---- Colours ------------------------------------------------------------------
+\usepackage[dvipsnames,table]{xcolor}
+\definecolor{psblue}{HTML}{1F5FA8}
+\definecolor{psteal}{HTML}{127A72}
+\definecolor{psorange}{HTML}{C8641A}
+\definecolor{psred}{HTML}{B3261E}
+\definecolor{psgray}{HTML}{5F6368}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{outbg}{HTML}{FBFBF4}
+\definecolor{codeframe}{HTML}{D0D7DE}
+\definecolor{kwcolor}{HTML}{0B4F9C}
+\definecolor{strcolor}{HTML}{A3410E}
+\definecolor{commentcolor}{HTML}{5E7B5E}
+\definecolor{typecolor}{HTML}{7A3E9D}
+
+% ---- Graphics -----------------------------------------------------------------
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,shapes.multipart,
+  fit,calc,backgrounds,matrix,decorations.pathreplacing,patterns}
+\usepackage[edges]{forest}
+%   Shared styles for the grid / stencil figures (figures/*.tex). Coordinates are in
+%   cells: cell (i, j) is the unit square with lower-left corner (i, j).
+\tikzset{
+  ghostcell/.style={fill=psgray!20},
+  activecell/.style={fill=psblue!22},
+  centercell/.style={fill=psblue!55},
+  nbcell/.style={fill=psorange!45},
+  remcell/.style={fill=psorange!40},
+  gridline/.style={draw=psgray!75,line width=0.3pt,step=1},
+  domainline/.style={draw=black!75,line width=0.9pt},
+  axisarrow/.style={-{Stealth[length=1.6mm]},semithick,draw=psgray!90!black},
+  flowarrow/.style={-{Stealth[length=2.2mm]},thick,draw=psgray!90!black},
+  figlabel/.style={font=\footnotesize},
+  celltext/.style={font=\scriptsize},
+}
+%   \cellfill[style]{i}{j}: fill grid cell (i, j)
+\newcommand{\cellfill}[3][activecell]{\fill[#1] (#2,#3) rectangle ++(1,1);}
+
+% ---- Code listings ------------------------------------------------------------
+\usepackage{listings}
+\lstset{
+  inputpath=generated,
+  nolol=true,               % only captioned listings go into the List of Listings
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=false,
+  postbreak=\mbox{\textcolor{psgray}{$\hookrightarrow$}\space},
+  tabsize=4,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{codeframe},
+  backgroundcolor=\color{codebg},
+  xleftmargin=0.5em,
+  xrightmargin=0.5em,
+  framexleftmargin=0.3em,
+  aboveskip=0.8em,
+  belowskip=0.6em,
+  captionpos=t,
+  upquote=true,
+  literate={←}{{$\leftarrow$}}1 {→}{{$\rightarrow$}}1,
+}
+\lstdefinestyle{py}{
+  language=Python,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{commentcolor},
+  morekeywords={as,with,None,True,False,self},
+}
+\lstdefinestyle{cpp}{
+  language=C++,
+  keywordstyle=\color{kwcolor}\bfseries,
+  stringstyle=\color{strcolor},
+  commentstyle=\color{commentcolor},
+  morekeywords=[2]{int64_t,int32_t,uint8_t,uint32_t,size_t,RESTRICT,__global__,
+    __m256d,__m128d,__m512d,vfloat64m1_t,vfloat32m1_t,PyObject},
+  keywordstyle=[2]\color{typecolor},
+  morekeywords=[3]{pragma,omp,parallel,for,schedule,reduction},
+}
+\lstdefinestyle{ir}{
+  language={},
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{outbg},
+}
+\lstdefinestyle{out}{
+  language={},
+  backgroundcolor=\color{outbg},
+}
+\lstdefinestyle{sh}{
+  language=bash,
+  keywordstyle=\color{kwcolor}\bfseries,
+  commentstyle=\color{commentcolor},
+}
+\renewcommand{\lstlistingname}{Listing}
+\renewcommand{\lstlistlistingname}{List of Listings}
+
+%   \pysnippet[options]{example.region}   -> generated/example.region.py
+%   \csnippet[options]{example.name}      -> generated/example.name.c
+%   \cppsnippet[options]{example.name}    -> generated/example.name.cpp
+%   \outsnippet[options]{example.name}    -> generated/example.name.txt
+%   \irsnippet[options]{example.name}     -> generated/example.name.txt (IR dumps)
+\newcommand{\pysnippet}[2][]{\lstinputlisting[style=py,#1]{#2.py}}
+\newcommand{\csnippet}[2][]{\lstinputlisting[style=cpp,#1]{#2.c}}
+\newcommand{\cppsnippet}[2][]{\lstinputlisting[style=cpp,#1]{#2.cpp}}
+\newcommand{\outsnippet}[2][]{\lstinputlisting[style=out,#1]{#2.txt}}
+\newcommand{\irsnippet}[2][]{\lstinputlisting[style=ir,#1]{#2.txt}}
+\lstnewenvironment{pycode}[1][]{\lstset{style=py,#1}}{}
+\lstnewenvironment{ccode}[1][]{\lstset{style=cpp,#1}}{}
+\lstnewenvironment{shcode}[1][]{\lstset{style=sh,#1}}{}
+\lstnewenvironment{plaincode}[1][]{\lstset{style=out,#1}}{}
+
+% ---- Coloured boxes -----------------------------------------------------------
+\usepackage[most]{tcolorbox}
+\tcbset{
+  psbox/.style={enhanced,breakable,boxrule=0.5pt,arc=1.5pt,left=6pt,right=6pt,
+    top=4pt,bottom=4pt,fonttitle=\bfseries\small,before skip=0.8em,after skip=0.8em},
+}
+\newtcolorbox{note}[1][Note]{psbox,colback=psblue!4,colframe=psblue!70,title={#1}}
+\newtcolorbox{keyidea}[1][Key idea]{psbox,colback=psteal!5,colframe=psteal!80,title={#1}}
+\newtcolorbox{pitfall}[1][Pitfall]{psbox,colback=psred!4,colframe=psred!75,title={#1}}
+\newtcolorbox{forkonly}[1][Fork only: not in upstream pystencils]{psbox,
+  colback=psorange!6,colframe=psorange!85,title={#1}}
+
+% ---- Inline code, files, class names -------------------------------------------
+\usepackage[hyphens,obeyspaces,spaces]{url}
+%   \code{...} prints its argument verbatim in typewriter font and may break after
+%   '.', '_', '(', ',' and '/'. Use it in running text and tables (not in titles).
+\DeclareUrlCommand\code{\urlstyle{tt}}
+\DeclareUrlCommand\file{\urlstyle{tt}}
+\makeatletter
+\g@addto@macro{\UrlBreaks}{\do\_\do\(\do\,\do\[}
+\makeatother
+\newcommand{\ps}{\textsf{pystencils}}
+\newcommand{\cls}[1]{\code{#1}}
+\newcommand{\term}[1]{\emph{#1}}
+
+% ---- Bibliography -------------------------------------------------------------
+\usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=4]{biblatex}
+\addbibresource{references.bib}
+
+% ---- Hyperlinks and references (load late) -------------------------------------
+\usepackage[hidelinks,pdfusetitle,bookmarksnumbered]{hyperref}
+\hypersetup{colorlinks=true,linkcolor=psblue,urlcolor=psteal,citecolor=psteal}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+\crefname{lstlisting}{Listing}{Listings}
+\Crefname{lstlisting}{Listing}{Listings}
+
+% ---- KOMA tweaks --------------------------------------------------------------
+\setkomafont{disposition}{\normalfont\bfseries\color{psblue!85!black}}
+\setkomafont{descriptionlabel}{\normalfont\bfseries}
+\addtokomafont{caption}{\small}
+\setcapindent{0pt}
+\raggedbottom

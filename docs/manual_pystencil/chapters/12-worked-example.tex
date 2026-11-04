@@ -1,0 +1,95 @@
+\chapter{Worked Example: A Lattice Boltzmann Kernel}\label{ch:worked-example}
+
+This chapter combines the pieces of Part~I into one realistic kernel: a fused
+stream-and-collide step of the D2Q9 lattice Boltzmann method (LBM) with the BGK
+collision operator. This is the kind of kernel lbmpy~\cite{lbmpy} generates and waLBerla
+runs. It uses multi-component fields, a memory layout chosen for vectorization,
+subexpressions, common subexpression elimination, a scalar parameter, and two targets.
+The complete script is \file{examples/ex13_lbm.py}.
+
+\section{The model}
+
+In the LBM, every cell stores $Q=9$ \term{populations} $f_q$, one per lattice velocity
+$\mathbf c_q$. One time step consists of
+\begin{align*}
+  \text{streaming:}\quad & \tilde f_q(\mathbf x) = f_q(\mathbf x - \mathbf c_q),\\
+  \text{collision:}\quad & f_q^{\text{new}}(\mathbf x) = \tilde f_q - \omega\,\bigl(\tilde f_q - f_q^{\text{eq}}(\rho, \mathbf u)\bigr),\\
+  \text{with}\quad & \rho = \sum_q \tilde f_q,\qquad \rho\,\mathbf u = \sum_q \mathbf c_q \tilde f_q,\\
+  & f_q^{\text{eq}} = w_q\,\rho\,\bigl(1 + 3\,\mathbf c_q\!\cdot\!\mathbf u + \tfrac92 (\mathbf c_q\!\cdot\!\mathbf u)^2 - \tfrac32\,\mathbf u\!\cdot\!\mathbf u\bigr).
+\end{align*}
+
+\begin{figure}[htbp]
+  \centering
+  \input{figures/d2q9}
+  \caption[The D2Q9 model and pull streaming]{The D2Q9 model. (a) The nine lattice velocities with their weights, numbered as in the example script. (b) Pull streaming: cell $\mathbf x$ fetches population $q$ from the neighbour at $\mathbf x-\mathbf c_q$, which in \ps{} is the field access \texttt{src[-cx, -cy](q)}.}
+  \label{fig:d2q9}
+\end{figure}
+
+The ``pull'' formulation (\cref{fig:d2q9}) reads the neighbours' populations and writes
+only the own cell.
+This makes the kernel free of loop-carried dependencies, as \ps{} requires.
+
+\section{The symbolic description}
+
+Both population arrays are 2D fields with an index dimension of size 9. The layout
+\code{fzyx} (structure of arrays) makes $x$ the contiguous coordinate. That is the layout
+SIMD needs, because neighbouring cells of the same population are adjacent in memory.
+\pysnippet{ex13_lbm.model}
+The rules use only SymPy. Density and velocity are subexpressions, and every main
+assignment writes one population. \code{ps.simp.sympy_cse} then removes the many
+repeated subterms:
+\pysnippet{ex13_lbm.rules}
+\outsnippet{ex13_lbm.ac-size}
+
+\section{Generating and running}
+
+The same assignment collection produces a portable kernel and a vectorized kernel for
+the best SIMD target of the host:
+\pysnippet{ex13_lbm.kernels}
+\outsnippet{ex13_lbm.stats}
+The arrays are created with the matching memory order (population slowest, $x$
+fastest), including one ghost layer:
+\pysnippet{ex13_lbm.run}
+\outsnippet{ex13_lbm.check}
+Both kernels match an independent NumPy implementation of the same step
+(\code{np.roll} for streaming, \code{einsum} for the moments) on all interior cells.
+
+The beginning of the generated portable kernel shows how the CSE subexpressions
+(\code{xi_*}) and the density became \code{const} locals. With the \code{fzyx} layout the
+innermost loop runs over \code{ctr_0} ($x$), and the population index enters as
+\code{q * _stride_src_2}:
+\csnippet[nolol=false,caption={The generated D2Q9 kernel (first 40 lines).},lastline=40,basicstyle=\ttfamily\scriptsize]{ex13_lbm.scalar}
+
+\section{From here to production}
+
+\begin{itemize}
+  \item \textbf{Real models.} lbmpy derives such update rules (moment- and
+        cumulant-based collision operators, forcing schemes, boundary conditions) and
+        optimizes them symbolically before handing them to \ps.
+  \item \textbf{Real applications.} In waLBerla the same \code{Kernel} object is
+        embedded into a C++ sweep through sweepgen and pystencils-sfg
+        (\cref{sec:external-use}). It then runs on distributed, block-structured grids
+        with MPI.
+  \item \textbf{This workspace.} \file{python/learn-lb-pystencil/lb-pystencils.py} is a
+        complete D2Q9 lid-driven-cavity and Taylor--Green simulation built this way.
+        It has command-line switches for the target (\code{generic}/\code{rvv}),
+        precision, compiler and fused or split kernels, and is validated against the
+        NumPy reference in \file{python/learn-lb-numpy}.
+        \file{scripts/lbm_rvv_check.py} compares the RVV and generic collide kernels.
+        The harness numbers quoted in \cref{ch:rvv-backend} were measured with
+        \file{lb-pystencils.py}, the waLBerla numbers with the
+        \file{scripts/walberla_*.sh} benchmarks.
+\end{itemize}
+
+\section{Further reading}
+\begin{itemize}
+  \item The upstream user manual and developer reference~\cite{pystencils-docs}, whose
+        sources are in \file{submodules/pystencils/docs/source}. The backend walkthrough
+        (\file{backend/backend_walkthrough.md}) and the GPU code generation notes
+        (\file{backend/gpu_codegen.md}) complement Part~II of this manual.
+  \item The tests in \file{submodules/pystencils/tests}: \file{nbackend/} for the
+        backend, \file{kernelcreation/} for end-to-end behaviour, \file{jit/} for the
+        JIT. They are the most precise specification of the current behaviour.
+  \item The workspace notes in \file{docs/notes} and \file{docs/notes2} on the RVV
+        backend, its performance, and the waLBerla code generation flow.
+\end{itemize}

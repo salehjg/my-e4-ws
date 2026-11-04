@@ -1,0 +1,11 @@
+'double'                  PsIeeeFloatType        float64            double
+'float32'                 PsIeeeFloatType        float32            float
+'half'                    PsIeeeFloatType        float16            half
+'int64_t'                 PsSignedIntegerType    int64              int64_t
+'uint8'                   PsUnsignedIntegerType  uint8              uint8_t
+'bool'                    PsBoolType             bool               bool
+'const float'             PsIeeeFloatType        const float32      const float
+'double * restrict'       PsPointerType          double * RESTRICT  double * RESTRICT
+<class 'int'>             PsSignedIntegerType    int64              int64_t
+<class 'numpy.float32'>   PsIeeeFloatType        float32            float
+PsVectorType(Fp(64), 4)   PsVectorType           float64<4>         (none: lowered to intrinsics)

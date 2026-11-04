@@ -1,0 +1,46 @@
+% How field accesses become linear memory offsets (C layout, 5 x 4 array).
+\begin{tikzpicture}[font=\footnotesize]
+  % ---- the array (x = ctr_0 to the right, y = ctr_1 upwards) --------------------
+  \begin{scope}[x=0.62cm,y=0.62cm]
+    \foreach \x in {0,...,4} \foreach \y in {0,...,3} {
+      \pgfmathtruncatemacro{\off}{4*\x+\y}
+      \node[font=\tiny,text=psgray] at (\x+0.5,\y+0.5) {\off};
+    }
+    \cellfill[centercell]{2}{1} \cellfill[nbcell]{3}{1} \cellfill[nbcell]{2}{2}
+    \node[font=\tiny,text=white] at (2.5,1.5) {9};
+    \node[font=\tiny] at (3.5,1.5) {13};
+    \node[font=\tiny] at (2.5,2.5) {10};
+    \draw[gridline] (0,0) grid (5,4);
+    \draw[axisarrow] (0,-0.4) -- (2,-0.4) node[right,celltext] {$x$ = \texttt{ctr\_0}};
+    \draw[axisarrow] (-0.4,0) -- (-0.4,2) node[left,celltext] {$y$ = \texttt{ctr\_1}};
+    \node[above,align=center,celltext] at (2.5,4.05) {\texttt{src}, shape $(5, 4)$, C layout\\
+      strides: \texttt{\_stride\_src\_0} = 4, \texttt{\_stride\_src\_1} = 1};
+  \end{scope}
+
+  % ---- the formulas ------------------------------------------------------------
+  \node[anchor=west,align=left,font=\scriptsize] at (4.2,1.6)
+    {cell \texttt{(ctr\_0, ctr\_1) = (2, 1)}:\\[3pt]
+     \texttt{src.center}\ \ $\to$ \texttt{\_data\_src[2*4 + 1*1]}\ = \textbf{9}\\
+     \texttt{src[1,0]} (E) $\to$ \texttt{\_data\_src[(2+1)*4 + 1*1]} = \textbf{13}\\
+     \texttt{src[0,1]} (N) $\to$ \texttt{\_data\_src[2*4 + (1+1)*1]} = \textbf{10}};
+
+  % ---- memory --------------------------------------------------------------------
+  \begin{scope}[shift={(0,-1.25)},x=0.6cm,y=0.5cm]
+    \foreach \i in {0,...,19} {
+      \pgfmathtruncatemacro{\col}{\i/4}
+      \pgfmathsetmacro{\xx}{\i + 0.25*\col}
+      \ifnum\i=9 \fill[centercell] (\xx,0) rectangle ++(1,1);
+      \else\ifnum\i=13 \fill[nbcell] (\xx,0) rectangle ++(1,1);
+      \else\ifnum\i=10 \fill[nbcell] (\xx,0) rectangle ++(1,1);
+      \fi\fi\fi
+      \draw[gridline] (\xx,0) rectangle ++(1,1);
+      \node[font=\tiny] at (\xx+0.5,0.5) {\i};
+    }
+    \foreach \c in {0,...,4} {
+      \pgfmathsetmacro{\xs}{4*\c + 0.25*\c}
+      \draw[decorate,decoration={brace,mirror,amplitude=3pt}] (\xs,-0.1) -- ++(4,0)
+        node[midway,below=3pt,font=\tiny] {$x=\c$};
+    }
+    \node[anchor=east,celltext] at (-0.2,0.5) {memory};
+  \end{scope}
+\end{tikzpicture}

@@ -1,0 +1,8 @@
+fields("a, b")                               -> [a: float64[2d], b: float64[2d]]
+fields("f: [2D]")                            -> f: ps::numeric_t[2d]
+fields("g(2,3): float32[3D]")                -> g(2,3): float32[3d]
+fields("h: int32[10,20]")                    -> h: int32[10,20]
+fields("pdfs(19): float32[3D]", ...)         -> pdfs(19): float32[3d]
+g.spatial_dimensions, g.index_shape          -> (3, (2, 3))
+pdfs.shape                                   -> (_size_pdfs_0, _size_pdfs_1, _size_pdfs_2, 19)
+pdfs.strides                                 -> (_stride_pdfs_0, _stride_pdfs_1, _stride_pdfs_2, _stride_pdfs_3)

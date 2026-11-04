@@ -1,0 +1,43 @@
+% Loop structure of the AVX Jacobi kernel (Listing 4.x) for a 30 x 37 array.
+\begin{tikzpicture}[font=\footnotesize]
+  % ---- outer loop: OpenMP -------------------------------------------------------
+  \begin{scope}[x=0.44cm,y=0.44cm]
+    \colorlet{th0}{psteal!45}\colorlet{th1}{psblue!35}\colorlet{th2}{psorange!45}\colorlet{th3}{psred!25}
+    \fill[ghostcell] (0,0) rectangle ++(1,1);
+    \fill[ghostcell] (29,0) rectangle ++(1,1);
+    \foreach \t/\c in {0/th0,1/th1,2/th2,3/th3} \fill[\c] (1+7*\t,0) rectangle ++(7,1);
+    \draw[gridline] (0,0) grid (30,1);
+    \foreach \t/\c in {0/th0,1/th1,2/th2,3/th3}
+      \node[celltext,fill=\c,inner sep=1pt] at (4.5+7*\t,0.5) {thread \t};
+    \node[anchor=south west,font=\footnotesize] at (0,1.15)
+      {\textbf{outer loop} \texttt{ctr\_0 = 1 \dots{} 28}: \texttt{\#pragma omp for schedule(static)}, e.g.\ 4 threads};
+    \node[celltext,text=psgray] at (0.5,-0.45) {0};
+    \node[celltext,text=psgray] at (29.5,-0.45) {29};
+  \end{scope}
+
+  % ---- inner loop of one row: SIMD blocks + remainder ---------------------------
+  \begin{scope}[shift={(0,-1.9)},x=0.357cm,y=0.44cm]
+    \fill[ghostcell] (0,0) rectangle ++(1,1);
+    \fill[ghostcell] (36,0) rectangle ++(1,1);
+    \foreach \b in {0,...,7} {
+      \pgfmathsetmacro{\shade}{mod(\b,2)==0 ? 50 : 28}
+      \fill[psblue!\shade] (1+4*\b,0) rectangle ++(4,1);
+      \draw[black!60,line width=0.6pt] (1+4*\b,0) rectangle ++(4,1);
+    }
+    \fill[remcell] (33,0) rectangle ++(3,1);
+    \draw[gridline] (0,0) grid (37,1);
+    \foreach \b in {0,...,7} \draw[black!60,line width=0.6pt] (1+4*\b,0) rectangle ++(4,1);
+    \node[anchor=south west,font=\footnotesize] at (0,1.15)
+      {\textbf{inner loop} for each \texttt{ctr\_0}: \texttt{ctr\_1 = 1 \dots{} 35} (contiguous)};
+    \draw[decorate,decoration={brace,mirror,amplitude=4pt}] (1,-0.15) -- (33,-0.15)
+      node[midway,below=5pt,align=center,celltext]
+        {8 vector iterations, 4 lanes each: \texttt{\_mm256\_loadu\_pd}, \texttt{\_mm256\_add\_pd}, \dots,
+         \texttt{\_mm256\_storeu\_pd}};
+    \draw[decorate,decoration={brace,mirror,amplitude=4pt}] (33,-0.15) -- (36,-0.15)
+      node[midway,below=5pt,align=center,celltext] {scalar\\remainder};
+    \draw[psred,thick] (33,-0.1) -- (33,1.6) node[above,celltext,text=psred]
+      {\texttt{ctr\_1\_\_rem\_start} = 33};
+    \node[celltext,text=psgray] at (0.5,-0.45) {0};
+    \node[celltext,text=psgray] at (36.5,-0.45) {36};
+  \end{scope}
+\end{tikzpicture}

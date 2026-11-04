@@ -1,0 +1,4 @@
+Subexpressions:
+	lap ← -4*u_C + u_E + u_N + u_S + u_W
+Main Assignments:
+	u_new[0,0] ← u_C + alpha*lap

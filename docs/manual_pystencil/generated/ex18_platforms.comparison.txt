@@ -1,0 +1,18 @@
+X86_SSE  (header "pystencils_runtime/x86.hpp")
+  _mm_storeu_pd(&_data_g[ctr_0], _mm_add_pd(_mm_set_pd(1.0, 1.0), _mm_mul_pd(_mm_set1_pd(c), _mm_loadu_pd(&_data_f[ctr_0]))));
+
+X86_AVX  (header "pystencils_runtime/x86.hpp")
+  _mm256_storeu_pd(&_data_g[ctr_0], _mm256_add_pd(_mm256_set_pd(1.0, 1.0, 1.0, 1.0), _mm256_mul_pd(_mm256_set1_pd(c), _mm256_loadu_pd(&_data_f[ctr_0]))));
+
+X86_AVX512  (header "pystencils_runtime/x86.hpp")
+  _mm512_storeu_pd(&_data_g[ctr_0], _mm512_add_pd(_mm512_set_pd(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0), _mm512_mul_pd(_mm512_set1_pd(c), _mm512_loadu_pd(&_data_f[ctr_0]))));
+
+ARM_NEON  (header "pystencils_runtime/neon.hpp")
+  vst1q_f64(&_data_g[ctr_0], vaddq_f64(pystencils::runtime::neon::vsetq_f64(1.0, 1.0), vmulq_f64(vdupq_n_f64(c), vld1q_f64(&_data_f[ctr_0]))));
+
+ARM_SVE  (header "pystencils_runtime/sve.hpp")
+  predicate: const svbool_t __mask_b64x4 = svwhilelt_b64_u32(0u, 4u);
+  svst1_f64(__mask_b64x4, &_data_g[ctr_0], svadd_f64_x(svptrue_b64(), svinsr_n_f64(svinsr_n_f64(svinsr_n_f64(svinsr_n_f64(svundef_f64(), 1.0), 1.0), 1.0), 1.0), svmul_f64_x(svptrue_b64(), svdup_n_f64(c), svld1_f64(__mask_b64x4, &_data_f[ctr_0]))));
+
+RISCV_RVV  (header "pystencils_runtime/rvv.hpp")
+  __riscv_vse64_v_f64m1(&_data_g[ctr_0], __riscv_vfadd_vv_f64m1(__riscv_vfmv_v_f_f64m1(1.0, 4uLL), __riscv_vfmul_vv_f64m1(__riscv_vfmv_v_f_f64m1(c, 4uLL), __riscv_vle64_v_f64m1(&_data_f[ctr_0], 4uLL), 4uLL), 4uLL), 4uLL);

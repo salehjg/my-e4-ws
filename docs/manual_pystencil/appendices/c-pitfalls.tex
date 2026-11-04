@@ -1,0 +1,45 @@
+\chapter{Pitfalls and Known Issues}\label{app:pitfalls}
+
+Every item below was re-checked against this checkout by \file{examples/ex15_pitfalls.py};
+its raw output is reproduced at the end of this appendix.
+
+\begin{enumerate}
+  \item \textbf{\code{from pystencils import *} fails} with an \code{AttributeError}:
+        \code{__all__} lists \code{inspect_ast}, which does not exist.
+  \item \textbf{\code{ps.show_code(kernel)} prints IR, not C} (it is deprecated and calls
+        \code{ps.inspect} without \code{show_cpp=True}). Use \code{kernel.get_c_code()}.
+  \item \textbf{The deprecated \code{CreateKernelConfig(cpu_openmp=True)} disables OpenMP.}
+        Use \code{cfg.cpu.openmp.enable = True}.
+  \item \textbf{\code{Field.create_fixed_size(..., memory_strides=...)} ignores the
+        strides} and computes them from the layout instead.
+  \item \textbf{Staggered kernels are not implemented in 2.0}:
+        \code{ps.create_staggered_kernel} raises \code{NotImplementedError}.
+  \item \textbf{\code{@ps.kernel} with \code{a if c else b} fails on Python 3.14}
+        (\code{ast.NameConstant} was removed). Use \code{sp.Piecewise}.
+  \item \textbf{Keyword arguments of \code{create_kernel} must be top-level options}:
+        \code{create_kernel(asm, openmp=True)} raises a \code{TypeError}.
+  \item \textbf{The default JIT ignores the kernel's target} and compiles with
+        \code{-march=native} (\cref{sec:jit}).
+  \item \textbf{\code{assume_inner_stride_one} is not checked at run time}: a strided
+        NumPy view is accepted and gives \emph{wrong results} without an error.
+  \item \textbf{CUDA warp-level reductions need an explicit \code{gpu.warp_size}}: with
+        \code{assume_warp_aligned_block_size} alone, no \code{__shfl_xor_sync} is
+        emitted, because the driver passes the unset option (not the default 32) to the
+        platform.
+  \item \textbf{The loop-independence check is order dependent}: the in-place stencil
+        \texttt{f[0,0]}~$\leftarrow$~\texttt{f[1,0]} is accepted (\cref{sec:constraints}).
+  \item \textbf{\code{Target.GenericCPU} prints as \code{Target._CPU}}.
+  \item \textbf{\code{simplificationfactory.create_simplification_strategy()} returns
+        \code{None}} (missing \code{return}).
+  \item \textbf{Setting \code{block_size} on a dynamic GPU launch configuration has no
+        effect} and raises no error. Use \code{fit_block_size}/\code{trim_block_size}, or
+        \code{gpu.manual_launch_grid = True}.
+  \item \textbf{Vectorized Philox needs a matching index width}: a \code{float32}
+        generator on \code{X86_AVX} requires \code{index_dtype="int32"}.
+  \item \textbf{Stale tutorial notebooks}: the stored outputs in
+        \file{docs/source/tutorials/*.ipynb} come from older versions and use
+        deprecated APIs (\code{pystencils.session}, \code{cpu_openmp},
+        \code{get_parameters()}).
+\end{enumerate}
+
+\outsnippet[caption={Raw output of \texttt{examples/ex15\_pitfalls.py}.},basicstyle=\ttfamily\scriptsize]{ex15_pitfalls.results}

@@ -1,0 +1,177 @@
+\chapter{Platforms and Backends}\label{ch:platforms}
+
+A \term{platform} (\file{backend/platforms/}) holds everything that depends on the
+target hardware. The driver picks one per kernel (\cref{tab:platform-selection}). Its
+methods are called during lowering. This chapter describes the platform interface and
+the existing CPU, GPU and SYCL platforms; \cref{fig:platforms} shows their class
+hierarchy. The RISC-V platform of this workspace has its own chapter
+(\cref{ch:rvv-backend}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{forest}
+    for tree={
+      font=\ttfamily\footnotesize, draw=psblue!60, fill=psblue!5, rounded corners=1.5pt,
+      inner sep=2.5pt, l sep=5mm, s sep=1.5mm, edge={draw=psgray,-{Stealth[length=1.6mm]}},
+      parent anchor=south, child anchor=north,
+    }
+    [Platform
+      [GenericCpu
+        [GenericVectorCpu
+          [X86VectorCpu] [NeonCpu] [SveCpu] [RvvCpu, fill=psorange!12, draw=psorange!70]]]
+      [GenericGpu [CudaPlatform] [HipPlatform]]
+      [SyclPlatform]
+    ]
+  \end{forest}
+  \caption[Platform classes]{Platform classes. \texttt{RvvCpu} exists only on the \texttt{rvv-support} branch.}
+  \label{fig:platforms}
+\end{figure}
+
+\section{The platform interface}
+
+\cls{Platform} (\file{platform.py}) is small:
+\begin{description}
+  \item[\code{required_headers}] (property): the headers every kernel of this platform
+    includes. By convention each platform has one runtime header
+    \file{include/pystencils_runtime/<platform>.hpp}.
+  \item[\code{select_function(call)}]: replace a call to an IR function (math function,
+    constant, GPU index, RNG) by a concrete expression, usually a \code{CFunction} call
+    or a literal. It raises a \code{MaterializationError} if the platform cannot
+    implement the function for the argument types.
+  \item[\code{resolve_reduction(ptr, local, op)}]: implement the final write-back of a
+    reduction. The default implementation raises.
+  \item[\code{materialize_iteration_space(body, ispace)}]: the old way of creating
+    loops. It is deprecated and used only by SYCL.
+\end{description}
+Vector CPU platforms derive from \cls{GenericVectorCpu} and additionally implement
+\code{get_intrinsic_selector()}.
+
+\section{Generic CPU}
+
+\cls{GenericCpu} (\file{generic_cpu.py}) produces portable C++:
+\begin{itemize}
+  \item math functions map to the C library (\code{exp}, \code{sqrt}, \code{pow}, \dots);
+        \code{abs}, \code{min} and \code{max} on floats map to \code{fabs}, \code{fmin}
+        and \code{fmax}, and on integers to ternary expressions;
+  \item $\pi$ and $e$ become typed constants, and $\pm\infty$ becomes
+        \code{std::numeric_limits<T>::infinity()};
+  \item Philox calls become \code{pystencils::runtime::random::philox_float32/64};
+  \item reductions are written back with a plain read-modify-write, after the OpenMP
+        \code{reduction} clause has combined the threads (\cref{lst:reduction});
+  \item required headers: \code{<cmath>}, \code{<limits>} and
+        \file{pystencils_runtime/generic_cpu.hpp}.
+\end{itemize}
+
+\section{Vector CPUs}\label{sec:vector-platforms}
+
+A vector CPU platform is a \cls{GenericCpu} plus an intrinsic selector, a subclass of
+\cls{SelectIntrinsics} (\file{transformations/select_intrinsics.py}). The selector walks
+the AST. It replaces every symbol of vector type by a symbol of the intrinsic type, and
+every vector operation by an intrinsic call. A platform implements:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Method} & \textbf{Responsibility}\\
+  \midrule
+  \code{type_intrinsic(vtype)} & C type of a vector type (\code{__m256d}, \code{float64x2_t}, \code{svfloat64_t}, \code{vfloat64m1_t})\\
+  \code{constant_intrinsic(c)} & vector constants: broadcast or per-lane set\\
+  \code{op_intrinsic(expr, operands)} & arithmetic, broadcast, casts, horizontal reductions\\
+  \code{math_func_intrinsic(call, args)} & vectorized \code{sqrt}, \code{abs}, \code{min}, \code{max}, \code{floor}, \dots\\
+  \code{vector_load(acc)}, \code{vector_store(acc, value)} & contiguous and strided memory accesses\\
+  \code{subscript_intrinsic}, \code{rng_engine_intrinsic} & access to short arrays of vectors, vectorized Philox\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+The same kernel ($g = c\,f + 1$, 1D, \code{double}) shows how differently the
+platforms spell the single vector statement of the main loop:
+\pysnippet{ex18_platforms.kernel}
+\outsnippet[nolol=false,basicstyle=\ttfamily\scriptsize,caption={The vectorized loop body on every vector CPU platform.}]{ex18_platforms.comparison}
+
+\paragraph{x86 (\texttt{X86VectorCpu}, \texttt{x86.py}).}
+The instruction set is a parameter, \code{X86VectorArch.SSE/AVX/AVX512/AVX512_FP16}.
+Intrinsic names are assembled from a prefix that depends on the vector width
+(\code{_mm}, \code{_mm256}, \code{_mm512}), an operation, and a suffix for the element
+type (\code{ps}, \code{pd}, \code{epi32}, \code{ph}). Loads and stores are always
+unaligned (\code{loadu}/\code{storeu}). Strided loads use gather instructions (AVX2 and
+later), and strided stores need AVX-512 scatters. Transcendental functions (\code{exp}, \code{sin},
+\dots) are rejected because they would require Intel's SVML. Horizontal reductions call
+helpers from \file{pystencils_runtime/bits/simd_horizontal_helpers.h}.
+
+\paragraph{ARM NEON (\texttt{NeonCpu}, \texttt{neon.py}).}
+128-bit vectors with types such as \code{float64x2_t} and intrinsics \code{vaddq_f64},
+\code{vld1q_f64}, \dots. Half precision is available with \code{ARM_NEON_FP16}. Strided
+memory accesses are not supported.
+
+\paragraph{ARM SVE (\texttt{SveCpu}, \texttt{sve.py}).}
+SVE is vector-length agnostic in hardware, but \ps{} uses it with a \emph{fixed} lane
+count (\code{cpu.vectorize.lanes} must be set). At kernel entry it declares a predicate
+\code{svwhilelt_b64_u32(0, lanes)} that masks loads and stores, so it is effectively a
+fixed-width backend with a predicate. Strided accesses use gathers and scatters for
+32- and 64-bit types.
+
+\paragraph{Capabilities.}
+\Cref{lst:matrix} lists which vectorized operations each platform can generate. A
+missing entry raises a \code{MaterializationError} at code generation time. The
+column ``strided'' means a copy kernel without \code{assume_inner_stride_one}. In such a
+case you can fall back to \code{GenericCPU} and leave vectorization to the C compiler.
+\outsnippet[nolol=false,caption={Vectorized operations supported per platform (generated by probing the code generator).},label=lst:matrix]{ex18_platforms.matrix}
+
+\section{GPUs}\label{sec:gpu-platforms}
+
+\cls{GenericGpu} (\file{generic_gpu.py}) is the base of the CUDA and HIP platforms. It
+\begin{itemize}
+  \item lowers the GPU indexing functions to the literals \code{blockIdx.x},
+        \code{threadIdx.y}, \dots, cast to the index type;
+  \item maps math functions to the CUDA device library, choosing the variant by type
+        (\code{exp}/\code{expf}/\code{hexp}, \code{fmin}/\code{fminf}, \dots), and maps
+        \code{fast_division}, \code{fast_sqrt} and \code{fast_inv_sqrt} to intrinsics
+        such as \code{__fdividef} (float only);
+  \item represents $\pm\infty$ by the macros \code{PS_FP64_INFINITY},
+        \code{PS_FP64_NEG_INFINITY}, \dots{} from \file{bits/gpu_infinities.h}.
+\end{itemize}
+\cls{CudaPlatform} (\file{cuda.py}) adds \file{pystencils_runtime/cuda.cuh} and
+implements reductions for \code{float} and \code{double}. Each thread accumulates its
+local value and then updates the global result with \code{atomicAdd} (or helper atomics
+for \code{min}, \code{max} and \code{mul} from \file{bits/gpu_atomics.h}). Threads that
+hold the neutral element skip the atomic. If the warp size is known \emph{and}
+\code{gpu.assume_warp_aligned_block_size} is set, the values are first combined across
+the warp with a \code{__shfl_xor_sync} butterfly, and only one thread per warp performs
+the atomic:
+\pysnippet{ex09_gpu.gpu-reduction}
+\csnippet[nolol=false,caption={A CUDA sum reduction with warp shuffles.}]{ex09_gpu.reduction}
+\cls{HipPlatform} (\file{hip.py}) only exchanges the header
+(\file{pystencils_runtime/hip.h}). It does not override \code{resolve_reduction}, so
+reductions are not available for HIP. The \code{Blockwise4D} mapping looks like this,
+compared to \cref{lst:cuda}:
+\csnippet[nolol=false,caption={CUDA kernel with \texttt{Blockwise4D} indexing.}]{ex09_gpu.blockwise4d}
+
+\section{SYCL}
+\cls{SyclPlatform} (\file{sycl.py}) generates kernels that take a \code{sycl::item}
+(range kernels) or \code{sycl::nd_item} (nd-range kernels) as parameter. The counters
+are computed from \code{item.get_id()} or \code{get_global_id()} and guarded by bounds
+checks. Math functions map to \code{sycl::exp}, \code{sycl::fmin}, and so on. Unlike the
+other platforms, SYCL still implements the deprecated
+\code{materialize_iteration_space} hook instead of the axes system.
+
+\section{Runtime headers}
+
+The headers in \file{src/pystencils/include/} are added to the include path by every JIT
+(\code{python -m pystencils.include} prints the path for external builds):
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Header} & \textbf{Provides}\\
+  \midrule
+  \file{generic_cpu.hpp}, \file{generic_gpu.hpp} & include short arrays and scalar Philox\\
+  \file{short_arrays.hpp} & \code{pystencils::runtime::ShortArray<T, N>}\\
+  \file{random.hpp} & scalar \code{philox_float32/64}\\
+  \file{x86.hpp}, \file{neon.hpp}, \file{sve.hpp}, \file{rvv.hpp} & per-ISA helpers: vector set functions, horizontal reductions, vectorized Philox\\
+  \file{cuda.cuh}, \file{hip.h} & GPU fp16 headers, infinities, atomics\\
+  \file{half.h} & \code{half} as \code{_Float16} (experimental)\\
+  \file{bits/philox_rand.h} & Random123-based Philox~\cite{random123} for scalar, SSE, AVX, AVX-512, NEON, SVE and RVV\\
+  \file{bits/platforms.h} & \code{PYSTENCILS_PLATFORM_*} feature macros\\
+  \file{bits/simd_horizontal_helpers.h} & x86 horizontal add/mul/min/max\\
+  \bottomrule
+\end{tabularx}
+\end{center}

@@ -1,0 +1,49 @@
+% Big picture: inputs -> pystencils (create_kernel) -> Kernel object -> its uses
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw=#1!70!black,fill=#1!8,rounded corners=2pt,align=left,
+    inner sep=5pt,text width=3.75cm},
+  core/.style={draw=psblue!80!black,fill=psblue!7,rounded corners=2pt,align=center,
+    inner sep=4pt,text width=3.3cm,minimum height=0.75cm},
+  arr/.style={-{Stealth[length=2.2mm]},thick,draw=psgray},
+  lbl/.style={font=\footnotesize\bfseries,text=psgray},
+]
+  % inputs
+  \node[box=psteal] (in1) {\textbf{Fields}\\[1pt]\footnotesize\texttt{ps.fields("f, g: double[2D]")}};
+  \node[box=psteal,below=0.25cm of in1] (in2) {\textbf{Assignments} (SymPy)\\[1pt]\footnotesize\texttt{g[0,0] = (f[1,0]+f[-1,0])/2}};
+  \node[box=psteal,below=0.25cm of in2] (in3) {\textbf{Configuration}\\[1pt]\footnotesize target, data types, iteration space, OpenMP, SIMD, GPU indexing};
+  \node[lbl,above=0.15cm of in1] {INPUT (Python)};
+
+  % core
+  \node[core,right=1.2cm of in1.north east,anchor=north west] (c1) {Analysis and checks\\\footnotesize\texttt{KernelAnalysis}};
+  \node[core,below=0.22cm of c1] (c2) {Translation to typed IR\\\footnotesize freeze + typify};
+  \node[core,below=0.22cm of c2] (c3) {Transformations\\\footnotesize loops, SIMD, OpenMP, GPU};
+  \node[core,below=0.22cm of c3] (c4) {Platform lowering\\\footnotesize intrinsics, math functions};
+  \node[core,below=0.22cm of c4] (c5) {Finalize\\\footnotesize parameters, headers};
+  \draw[arr] (c1) -- (c2); \draw[arr] (c2) -- (c3); \draw[arr] (c3) -- (c4); \draw[arr] (c4) -- (c5);
+  \begin{scope}[on background layer]
+    \node[draw=psblue!60,dashed,rounded corners=3pt,fit=(c1)(c5),inner sep=6pt,
+      label={[lbl]above:\ps\ \texttt{create\_kernel}}] (core) {};
+  \end{scope}
+
+  % outputs: the Kernel object and what is done with it
+  \node[box=psorange,anchor=north west] (o1) at ($(core.east |- c1.north)+(1.2,0)$)
+    {\textbf{C/C++ source code}\\[1pt]\footnotesize \texttt{kernel.get\_c\_code()}: plain C,
+     intrinsics, CUDA/HIP, SYCL};
+  \node[box=psorange,below=0.25cm of o1] (o2)
+    {\textbf{Python callable} (JIT)\\[1pt]\footnotesize \texttt{kernel.compile()}, call
+     with NumPy / CuPy arrays};
+  \node[box=psorange,below=0.25cm of o2] (o3)
+    {\textbf{Embedded in C++}\\[1pt]\footnotesize \texttt{no\_jit} + pystencils-sfg,
+     waLBerla};
+  \node[lbl,above=0.15cm of o1] {OUTPUT};
+  \node[box=psorange,below=0.4cm of o3,line width=1pt] (k)
+    {\textbf{\texttt{Kernel} object}\\[1pt]\footnotesize body (IR), parameters with
+     properties, headers, metadata};
+
+  \draw[arr] (in1.east) -- (c1.west);
+  \draw[arr] (in2.east) -- ++(0.6,0) |- (c1.west);
+  \draw[arr] (in3.east) -- ++(0.6,0) |- (c1.west);
+  \draw[arr] (c5.east) -- ++(0.55,0) |- (k.west);
+  \foreach \o in {o1,o2,o3} \draw[arr] (k.east) -- ++(0.3,0) |- (\o.east);
+\end{tikzpicture}

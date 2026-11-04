@@ -1,0 +1,1 @@
+riscv64-linux-gnu-g++ -fsyntax-only -march=rv64gcv_zvl256b: jacobi: OK, reduction: OK, strided: OK

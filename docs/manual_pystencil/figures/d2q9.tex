@@ -1,0 +1,42 @@
+% D2Q9: lattice velocities (numbered as in examples/ex13_lbm.py) and pull streaming.
+\begin{tikzpicture}[font=\footnotesize]
+  \def\vel{0/0/0,1/1/0,2/0/1,3/-1/0,4/0/-1,5/1/1,6/-1/1,7/-1/-1,8/1/-1}
+  % ---- (a) velocity set -----------------------------------------------------------
+  \begin{scope}[x=1.15cm,y=1.15cm]
+    \foreach \i in {-1,0,1} {
+      \draw[gridline] (\i,-1.35) -- (\i,1.35); \draw[gridline] (-1.35,\i) -- (1.35,\i);
+      \foreach \j in {-1,0,1} \fill[psgray] (\i,\j) circle (1.2pt);
+    }
+    \foreach \q/\cx/\cy in \vel {
+      \ifnum\q=0
+        \fill[psblue!70] (0,0) circle (2.6pt);
+        \node[celltext] at (0.33,-0.15) {0};
+      \else
+        \draw[-{Stealth[length=2.2mm]},thick,psblue!80!black] (0,0) -- (\cx*0.9,\cy*0.9);
+        \node[celltext,fill=white,inner sep=1pt] at (\cx*1.17,\cy*1.17) {\q};
+      \fi
+    }
+    \node[font=\small] at (0,1.95) {(a) velocities $\mathbf c_q$, $q = 0\dots8$};
+    \node[align=center,celltext] at (0,-2.0)
+      {$w_0 = \frac49$,\ \ $w_{1\dots4} = \frac19$,\ \ $w_{5\dots8} = \frac1{36}$};
+  \end{scope}
+
+  % ---- (b) pull streaming -----------------------------------------------------------
+  \begin{scope}[shift={(6.3cm,0)},x=1.15cm,y=1.15cm]
+    \fill[psblue!25] (-0.5,-0.5) rectangle (0.5,0.5);
+    \foreach \i in {-1.5,-0.5,0.5,1.5} {
+      \draw[gridline] (\i,-1.5) -- (\i,1.5); \draw[gridline] (-1.5,\i) -- (1.5,\i);
+    }
+    \foreach \q/\cx/\cy in \vel {
+      \ifnum\q=0 \else
+        \draw[-{Stealth[length=2.2mm]},thick,psorange!90!black]
+          (-\cx*0.95,-\cy*0.95) -- (-\cx*0.3,-\cy*0.3);
+        \node[celltext,fill=white,inner sep=0.5pt] at (-\cx*1.05,-\cy*1.05) {$f_{\q}$};
+      \fi
+    }
+    \node[celltext] at (0,0) {$\mathbf x$};
+    \node[font=\small] at (0,1.95) {(b) pull: $\tilde f_q(\mathbf x) = f_q(\mathbf x - \mathbf c_q)$};
+    \node[align=center,celltext] at (0,-2.0)
+      {e.g.\ $q=1$ ($\mathbf c_1 = (1,0)$): \texttt{src[-1,0](1)}};
+  \end{scope}
+\end{tikzpicture}

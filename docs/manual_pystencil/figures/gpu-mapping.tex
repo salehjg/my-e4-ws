@@ -1,0 +1,30 @@
+% Linear3D GPU indexing of the Jacobi kernel (Listing 4.x): one thread per cell.
+% Horizontal: ctr_1 (fastest coordinate) <-> x;  vertical: ctr_0 <-> y.
+\begin{tikzpicture}[x=0.5cm,y=0.5cm,font=\footnotesize]
+  % array with one ghost layer: 12 (ctr_1) x 8 (ctr_0) cells, interior 10 x 6
+  \fill[ghostcell] (0,0) rectangle (12,8);
+  \fill[white] (1,1) rectangle (11,7);
+  % threads outside the interior: masked by the guard
+  \fill[pattern=north west lines,pattern color=psred!70] (11,1) rectangle (13,9);
+  \fill[pattern=north west lines,pattern color=psred!70] (1,7) rectangle (11,9);
+  % one highlighted thread
+  \fill[psblue!55] (7,2) rectangle ++(1,1);
+  \draw[gridline] (0,0) grid (12,8);
+  \draw[domainline] (1,1) rectangle (11,7);
+  % thread blocks of 4 x 4
+  \foreach \bx in {0,1,2} \foreach \by in {0,1}
+    \draw[psblue!80!black,line width=1.1pt,dashed] (1+4*\bx,1+4*\by) rectangle ++(4,4);
+  \node[celltext,text=psblue!80!black,fill=white,inner sep=1pt] at (7,8.45) {block (1, 1)};
+  \node[celltext,text=psblue!80!black,fill=white,inner sep=1pt] at (7,0.45) {block (1, 0)};
+  % annotations
+  \draw[psgray] (7.5,2.5) -- (13.6,2.5) node[right,align=left,celltext]
+    {\texttt{blockIdx = (1, 0)}, \texttt{threadIdx = (2, 1)}\\
+     \texttt{ctr\_1 = 1 + 1$\cdot$4 + 2 = 7}\\
+     \texttt{ctr\_0 = 1 + 0$\cdot$4 + 1 = 2}};
+  \draw[psgray] (12.5,6) -- (13.6,6) node[right,align=left,celltext]
+    {threads outside the domain do nothing:\\
+     \texttt{if (ctr\_0 < \_size\_dst\_0 - 1 \&\& ctr\_1 < \_size\_dst\_1 - 1)}};
+  \draw[axisarrow] (0,-0.6) -- (3,-0.6) node[right,celltext]
+    {\texttt{ctr\_1} $\leftrightarrow$ \texttt{blockIdx.x*blockDim.x + threadIdx.x}};
+  \draw[axisarrow] (-0.6,0) -- (-0.6,3) node[above,align=center,celltext] {\texttt{ctr\_0}\\$\leftrightarrow$ \texttt{.y}};
+\end{tikzpicture}

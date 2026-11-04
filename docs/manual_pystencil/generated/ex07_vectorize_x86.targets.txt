@@ -1,0 +1,4 @@
+Target.available_targets()      = ['_CPU', 'X86_SSE', 'X86_AVX']
+Target.auto_cpu()               = X86_AVX
+X86_AVX.default_vector_lanes(float64) = 4
+X86_AVX.default_vector_lanes(float32) = 8

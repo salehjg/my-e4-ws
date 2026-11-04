@@ -1,0 +1,20 @@
+in-place stencil: f[0,0] <- f[1,0]
+    -> accepted
+write f[0,0], then read f[1,0]
+    -> KernelConstraintsError: Violation of loop independence condition. Field f is read at (1, 0) and written at (0, 0)
+same symbol assigned twice (not SSA)
+    -> KernelConstraintsError: Assignments not in SSA form, multiple assignments to t
+float value stored into int64 field
+    -> TypificationError: Type mismatch at expression _data_f[ctr_0 + [0: <untyped>], ctr_1 + [0: <untyped>], [0: <untyped>]]: Expression type did not match the context's ta...
+int counter added to float, no cast
+    -> TypificationError: Type mismatch at expression ctr_0: Expression type did not match the context's target type Expression type: int64 Target type: float64
+ghost_layers and iteration_slice both set
+    -> ValueError: At most one of the options 'ghost_layers' 'iteration_slice' and 'index_field' may be set.
+vectorize on Target.GenericCPU
+    -> CodegenError: Cannot vectorize: selected target is no vector CPU target.
+AVX, symbolic inner stride (needs scatter)
+    -> MaterializationError: x86 scatter instructions require at least AVX512
+exp() vectorized for AVX (no SVML)
+    -> MaterializationError: Trigonometry, exp, log, and pow require SVML.
+exp() vectorized for RISCV_RVV
+    -> MaterializationError: RVV does not support exp on type float64<4>.

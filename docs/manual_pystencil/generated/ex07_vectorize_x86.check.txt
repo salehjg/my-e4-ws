@@ -1,0 +1,1 @@
+AVX kernel executed on this host; NumPy reference check: OK

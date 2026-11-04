@@ -1,0 +1,7 @@
+axes-cube(
+   range(ctr_1 : [[0: int64] : _size_f_1 - [0: int64] : [1: int64]]),
+   range(ctr_0 : [[0: int64] : _size_f_0 - [0: int64] : [1: int64]])
+)
+{
+   _data_g[ctr_0 + [0: int64], ctr_1 + [0: int64], [0: int64]] = [1.0: float64] + c * _data_f[ctr_0 + [0: int64], ctr_1 + [0: int64], [0: int64]];
+}

@@ -1,0 +1,44 @@
+% The five stages of DefaultKernelCreationDriver.__call__
+\begin{tikzpicture}[
+  font=\small,
+  stage/.style={draw=psblue!80!black,fill=psblue!8,rounded corners=2pt,
+    minimum width=3.4cm,minimum height=1.0cm,align=center,inner sep=3pt},
+  passes/.style={draw=psgray!50,fill=white,rounded corners=2pt,align=left,
+    text width=8.6cm,inner sep=4pt,font=\footnotesize},
+  io/.style={draw=psteal!80!black,fill=psteal!8,rounded corners=2pt,align=center,
+    inner sep=4pt,font=\footnotesize},
+  arr/.style={-{Stealth[length=2.2mm]},thick,draw=psgray},
+  conn/.style={draw=psgray!60,dashed},
+]
+  \node[io] (in) {SymPy assignments / \texttt{AssignmentCollection} / flowgraph\\
+    \texttt{CreateKernelConfig}};
+
+  \node[stage,below=0.55cm of in] (s1) {\textbf{1. parse}\\\scriptsize\texttt{parse\_kernel\_body}};
+  \node[stage,below=0.95cm of s1] (s2) {\textbf{2. iteration space}\\\scriptsize\texttt{\_materialize\_iteration\_space}};
+  \node[stage,below=0.95cm of s2] (s3) {\textbf{3. optimize}\\\scriptsize\texttt{\_general\_optimize}};
+  \node[stage,below=0.6cm of s3] (s4) {\textbf{4. lower}\\\scriptsize\texttt{\_lowering}};
+  \node[stage,below=0.6cm of s4] (s5) {\textbf{5. finalize}\\\scriptsize\texttt{\_finalize}};
+  \node[io,below=0.55cm of s5] (out) {\texttt{Kernel} / \texttt{GpuKernel}};
+
+  \foreach \a/\b in {in/s1,s1/s2,s2/s3,s3/s4,s4/s5,s5/out} \draw[arr] (\a) -- (\b);
+
+  \node[passes,right=0.6cm of s1] (p1) {\texttt{KernelAnalysis} (checks, field registry)
+    $\to$ create iteration space (ghost layers / slice / index field)
+    $\to$ \texttt{FreezeExpressions} (SymPy $\to$ IR) $\to$ \texttt{Typifier}};
+  \node[passes,right=0.6cm of s2] (p2) {CPU: \texttt{DefaultCpuLoopStrategies} / GPU:
+    \texttt{GpuIndexMappingStrategy} build an \emph{axes tree}
+    (\texttt{AxisExpansion}, \texttt{HoistIterationInvariantDeclarations})
+    $\to$ \texttt{MaterializeAxes} (loops, OpenMP, SIMD, GPU indices) $\to$
+    \texttt{ReductionsToMemory}};
+  \node[passes,right=0.6cm of s3] (p3) {\texttt{CanonicalizeSymbols} $\to$
+    \texttt{EliminateConstants} (folding, constant extraction) $\to$
+    \texttt{HoistIterationInvariantDeclarations}};
+  \node[passes,right=0.6cm of s4] (p4) {vector CPU: platform's \texttt{SelectIntrinsics}
+    $\to$ \texttt{LowerToC} (linearize buffer accesses) $\to$
+    \texttt{SelectFunctions} (platform-specific math)};
+  \node[passes,right=0.6cm of s5] (p5) {\texttt{CanonicalizeSymbols} $\to$
+    \texttt{KernelFactory}: collect parameters and headers, attach JIT and launch
+    configuration};
+
+  \foreach \i in {1,...,5} \draw[conn] (s\i.east) -- (p\i.west);
+\end{tikzpicture}

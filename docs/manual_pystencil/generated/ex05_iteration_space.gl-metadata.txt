@@ -1,0 +1,3 @@
+k_auto       metadata = {'ghost_layers': 0}
+k_gl2        metadata = {'ghost_layers': 2}
+k_gl_sides   metadata = {'ghost_layers': [(1, 3), 0]}

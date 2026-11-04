@@ -1,0 +1,24 @@
+% How the OpenMP sum reduction of Listing 3.x combines all cells into total[0].
+\begin{tikzpicture}[font=\footnotesize,
+    acc/.style={draw=psgray!80,rounded corners=2pt,fill=white,inner sep=3pt,font=\scriptsize\ttfamily},
+    res/.style={draw=psteal!80!black,fill=psteal!10,rounded corners=2pt,inner sep=4pt,font=\scriptsize\ttfamily,align=center}]
+  \colorlet{th0}{psteal!45}\colorlet{th1}{psblue!35}\colorlet{th2}{psorange!45}\colorlet{th3}{psred!25}
+  \begin{scope}[x=0.55cm,y=0.55cm]
+    \foreach \t/\c in {0/th0,1/th1,2/th2,3/th3} {
+      \fill[\c] (5*\t,0) rectangle ++(5,1);
+      \node[acc,align=center] (a\t) at (5*\t+2.5,-1.7) {{\rmfamily\textcolor{psgray}{thread \t}}\\total\_local};
+      \draw[flowarrow,shorten >=1pt] (5*\t+2.5,0) -- (a\t);
+    }
+    \draw[gridline] (0,0) grid (20,1);
+    \node[anchor=east,celltext] at (-0.2,0.5) {\texttt{x}};
+    \node[anchor=south west,font=\scriptsize] at (0,1.1)
+      {every thread adds its share of the cells: \texttt{total\_local = total\_local + x[ctr\_0]}};
+    \node[res] (omp) at (10,-4.3) {\texttt{\#pragma omp parallel reduction(+: total\_local)}\\
+      combines the four partial sums};
+    \foreach \t in {0,...,3} \draw[flowarrow,shorten >=1pt] (a\t.south) -- (omp);
+    \node[res] (wb) at (10,-6.4) {total[0] = total[0] + total\_local};
+    \draw[flowarrow] (omp) -- (wb);
+    \node[anchor=west,align=left,celltext] at (16.5,-6.4)
+      {\texttt{total} is a 1-element array;\\its initial value is kept};
+  \end{scope}
+\end{tikzpicture}

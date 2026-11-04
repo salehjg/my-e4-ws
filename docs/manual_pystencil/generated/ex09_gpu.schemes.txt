@@ -1,0 +1,4 @@
+linear3d                       -> DynamicBlockSizeLaunchConfiguration
+gridstrided_linear3d           -> DynamicBlockSizeLaunchConfiguration
+blockwise4d                    -> AutomaticLaunchConfiguration
+linear3d + manual_launch_grid  -> ManualLaunchConfiguration
