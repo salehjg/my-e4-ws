@@ -1,0 +1,140 @@
+\chapter{What Was Missing}\label{r02:ch:gap}
+
+This chapter walks through upstream waLBerla (\texttt{v7.2-88-g0c8ed8c9}) and upstream
+\ps{} (\texttt{20d7dcf0}) on the K1 and records, layer by layer, what prevents RVV code.
+The analysis is organized along the five decision points of \cref{r02:fig:build-flow}.
+
+\section{What upstream waLBerla does on the K1}\label{r02:sec:gap-behaviour}
+
+There are two ways to configure a CPU build, and neither yields vector code:
+\begin{description}[style=nextline]
+  \item[\cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=OFF} (the default)] waLBerla adds no
+    \code{-march} flag. Both board compilers then default to
+    \code{rv64imafdc_zicsr_zifencei}, i.e.\ \emph{without} the V extension, so not even
+    the auto-vectorizer can use the vector unit. sweepgen selects
+    \code{Target.GenericCPU}. Everything builds and runs, entirely scalar.
+  \item[\cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON}] waLBerla adds
+    \code{-march=native} to every compile command, and both compilers reject it:
+\begin{plaincode}
+gcc:   error: '-march=native': ISA string must begin with rv32 or rv64
+clang: error: invalid arch name 'native', string must begin with rv32{i,e,g} or rv64{i,e,g}
+\end{plaincode}
+    The build fails at the first translation unit. Had it got that far, sweepgen
+    would have selected \code{Target.CurrentCPU}, and upstream \ps{} would have
+    resolved it to \code{GenericCPU} with the warning \emph{``Unable to determine
+    available vector CPU targets for this system: unknown platform riscv64''}.
+\end{description}
+
+\section{The chain of decisions}\label{r02:sec:gap-chain}
+
+For an x86 developer, ``build for this machine, vectorized'' works because five
+independent decisions line up. On RISC-V each of them failed or was undefined:
+
+\begin{description}[style=nextline]
+  \item[\rmark{1} Compiler flags (waLBerla CMake)] On x86 the flags come from
+    \code{-march=native}. On riscv64, \code{-march=native} is an error with GCC~14 and
+    Clang~18. And even if it worked, it would not be enough: the K1's ISA string in
+    \file{/proc/cpuinfo} (\code{rv64imafdcv_zicbom_..._zve64d_..._zvfh_...}) does
+    not contain \code{zvl256b}. A compiler deriving \code{-march} from it would know
+    that vectors exist, but not that they are 256 bits wide. Generated VLS code needs
+    that guarantee (decision 4).
+  \item[\rmark{2} Target selection (sweepgen)] sweepgen maps
+    \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} to \code{Target.CurrentCPU}, otherwise to
+    \code{GenericCPU} (\cref{r02:lst:buildconfig}). This logic is
+    architecture-neutral and \emph{correct} for RISC-V; it only needs \ps{} to resolve
+    \code{CurrentCPU} properly. Nothing was missing here.
+  \item[\rmark{3} Target resolution and code generation (\ps{})]
+    \code{Target.auto_cpu()} only knows x86 (through \code{py-cpuinfo}) and ARM. There
+    was no RISC-V vector target in the \code{Target} enum, no platform class, no
+    intrinsic selector and no runtime header. Separately, \ps{}' own JIT compiler
+    passes \code{-march=native} for \code{CurrentCPU}, which fails with GCC on RISC-V
+    in the same way. (waLBerla does not use the JIT, it generates code only; but every
+    \ps{} test and every Python-side experiment does.)
+  \item[\rmark{4} Compiling the generated code] Generated RVV intrinsics compile only if
+    the global flags enable the V extension (decision 1). VLS code with 4 lanes per
+    \code{double} vector is only \emph{correct} if VLEN $\geq$ 256 (on a VLEN-128 chip,
+    \code{vl = 4} exceeds VLMAX = 2 and the hardware silently processes fewer lanes).
+    Some mechanism has to stop such code from being built for the wrong machine.
+  \item[\rmark{5} Requesting vectorization (generator script)] sweepgen's
+    \code{get_pystencils_config} never sets \code{cpu.vectorize.enable}, on any
+    platform (\cref{r02:sec:buildconfig}). An application that wants explicit SIMD
+    code has to say so. No waLBerla application or test in the tree does this for the
+    LBM sweeps; \code{grep vectorize} over \file{sweepgen/} and \file{apps/examples/}
+    finds nothing.
+\end{description}
+
+\section{Everything else that was in the way}\label{r02:sec:gap-other}
+
+Getting from ``it generates RVV code'' to ``it builds, runs and can be measured''
+uncovered more obstacles:
+\begin{description}[style=nextline]
+  \item[Python package versions] sweepgen's managed venv installs \ps{}, lbmpy and
+    pystencils-sfg from their git \texttt{master} branches. That would replace the
+    \ps{} fork, and the newest pystencils-sfg (0.2, 0.3) imports
+    \code{pystencils.grids}, which does not exist in the pinned \ps{} (2026-05-21).
+    pystencils-sfg 0.1.1 (2026-05-26) is the matching release. lbmpy was not installed
+    at all, and the git server that sweepgen's requirements point to returned HTTP 500
+    at the time; lbmpy 2.1.1 from PyPI works with the fork although it declares
+    \code{pystencils~=2.1}.
+  \item[Clang 18 and the v8 halo exchange] \file{GenericFieldPackInfos.hpp} declares
+    \code{const ConstFieldView srcView{ field_, srcBlock };}. That deduces the template
+    arguments of an \emph{alias template} (C++20 feature P1814), which GCC supports but
+    Clang implements only from version 19. The board has Clang 17 and 18, so every
+    application that uses the v8 halo exchange failed to compile with Clang. This is
+    not RVV-specific, but it blocked the Clang half of the measurements.
+  \item[No way to measure] waLBerla had no benchmark that builds the same sweep with
+    and without explicit vectorization and prints a checksum. The closest examples
+    (\code{DoubleShearLayer}) write VTK output and run a fixed scenario; the classic
+    \code{UniformGridCPU} benchmark uses the legacy code generation path.
+  \item[Board constraints] 4\,GB of RAM (the heaviest waLBerla translation units need
+    about 1.3\,GB each, so at most \code{-j2}), a shared machine (everything under
+    \file{/home/bananapi/saleh/}), slow builds (41 minutes for the first target of a
+    fresh build directory), and a board clock about 46 hours behind the laptop.
+\end{description}
+
+\section{Not missing, but worth knowing}\label{r02:sec:gap-not}
+
+Some parts needed \emph{no} change, which is as instructive as the gaps:
+\begin{itemize}
+  \item \textbf{sweepgen}: target selection is generic, and the \code{gen_config}
+        argument of \cls{Sweep} and \cls{LbmBulk} already lets a script request
+        vectorization. The first attempt added RVV options to sweepgen; they were
+        removed again (\cref{r02:sec:design-history}).
+  \item \textbf{The v8 data structures}: fields are \code{fzyx} with $x$ contiguous,
+        which is what any SIMD backend needs. RVV loads only require element
+        alignment, so the 16-byte line alignment on RISC-V is sufficient.
+  \item \textbf{The classic SIMD module} \file{src/simd}: x86-only, but unused by
+        generated code (\cref{r02:sec:simd-module}).
+  \item \textbf{The legacy code generation path}: it cannot use \ps{}~2.0 at all, so
+        RVV support there would mean porting the path first. Out of scope.
+\end{itemize}
+
+\Cref{r02:tab:gap-summary} summarizes the gaps and where each one was closed.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Gaps and where they were closed.}\label{r02:tab:gap-summary}
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{4.1cm}@{}}
+    \toprule
+    \textbf{Layer} & \textbf{Gap} & \textbf{Closed by}\\
+    \midrule
+    \rmark{1} waLBerla CMake & \code{-march=native} rejected; no VLEN information
+      & explicit \code{-march=rv64gcv_zvl256b} in \file{GNU.cmake}/\file{Clang.cmake}
+      (\cref{r02:sec:wlb-cmake})\\
+    \rmark{2} sweepgen & nothing & ---\\
+    \rmark{3} \ps{} & no RISC-V target, platform, intrinsics, runtime header; JIT
+      \code{-march=native} & \code{Target.RISCV_RVV}, \cls{RvvCpu}, \file{rvv.hpp},
+      JIT flags (\cref{r02:ch:pystencils})\\
+    \rmark{4} compile guard & nothing prevents VLS-256 code on a smaller VLEN &
+      \texttt{\#error} in \file{rvv.hpp} unless \code{__riscv_v_min_vlen >= 256}\\
+    \rmark{5} generator script & sweepgen never vectorizes & opt-in via
+      \code{gen_config} in the script (\cref{r02:sec:wlb-optin})\\
+    Python environment & sfg/lbmpy versions & sfg 0.1.1 + lbmpy 2.1.1 in an external
+      venv, \code{PYTHONPATH} to the forks (\cref{r02:sec:env})\\
+    Clang 18 & alias-template CTAD in the halo exchange & explicit type in
+      \file{GenericFieldPackInfos.hpp} (\cref{r02:sec:wlb-clang})\\
+    Measurement & no comparable benchmark & \file{apps/benchmarks/SweepgenLbmCPU}
+      (\cref{r02:sec:app})\\
+    \bottomrule
+  \end{tabularx}
+\end{table}

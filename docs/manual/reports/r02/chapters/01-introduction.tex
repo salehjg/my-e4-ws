@@ -1,0 +1,128 @@
+\chapter{Introduction}\label{r02:ch:introduction}
+
+waLBerla~\cite{walberla} is a massively parallel C++ framework for lattice Boltzmann
+and other grid-based simulations. It runs on laptops and on the largest
+supercomputers, on x86 and ARM CPUs and on NVIDIA and AMD GPUs. Its fastest kernels
+are not written by hand: they are generated from a symbolic description by
+\ps{}~\cite{pystencils}, during the build.
+
+This report explains how waLBerla was made to run with explicit RISC-V Vector (RVV)
+code on the SpacemiT~K1, the eight-core RISC-V chip of the Banana~Pi BPI-F3 board.
+It is written for a developer who knows C++, Python and SIMD programming, but has
+never looked inside waLBerla. The first part therefore introduces waLBerla itself: the
+problem it solves, how its sources and its build system are organized, and how its
+code generation works. The second part identifies what was missing for RVV, and
+describes what was added, why it was done that way, how to build and run it, and what
+it achieves.
+
+\section{The short version}
+
+\begin{keyidea}[The one thing to understand first]
+  waLBerla never emits SIMD code itself. Its performance-critical loops (the
+  \term{sweeps}) are C++ files that the code generator \ps{} writes at build time.
+  So ``RVV support in waLBerla'' consists of three parts: a RISC-V vector
+  \emph{target} in \ps{}; waLBerla \emph{build flags} that tell the C++ compiler
+  about the vector unit; and a generator script that \emph{asks} for vectorized
+  code. Each part was missing.
+\end{keyidea}
+
+Before this work, waLBerla on the K1 behaved as follows (\cref{r02:ch:gap}):
+\begin{itemize}
+  \item With the default settings it built, but every kernel was scalar: the compiler
+        was not told about the vector extension, and sweepgen generated plain C++.
+  \item With \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON}, the switch that selects
+        the host's best instruction set on x86 and ARM, it did not build at all. The
+        option adds \code{-march=native}, which both GCC~14 and Clang~18 reject on
+        RISC-V. And had it built, \ps{} would still have generated plain C++: it knew no
+        RISC-V vector target, and its host detection only warned ``unknown platform
+        riscv64''.
+  \item Even on x86, waLBerla's new code generation layer (sweepgen) never turns
+        vectorization on. A generator script has to request it.
+  \item Around these gaps were smaller obstacles: Python package versions that did not
+        match the pinned \ps{}, a C++20 feature in the halo exchange that Clang~18 does
+        not implement, and no benchmark that could compare the variants.
+\end{itemize}
+
+What was added (\cref{r02:ch:design,r02:ch:pystencils,r02:ch:wlb-changes}):
+\begin{itemize}
+  \item \textbf{In \ps{}} (fork commit \texttt{9a989e16}, about 1270 lines including
+        tests): the target \code{Target.RISCV_RVV}, host detection from
+        \file{/proc/cpuinfo}, a platform that maps the vector IR to RVV~1.0 C intrinsics
+        for a fixed register width of 256 bits, a small runtime header, and the matching
+        JIT compiler flags. The design copies the contract of the existing AVX backend
+        on purpose.
+  \item \textbf{In waLBerla} (fork commits \texttt{dbb1b400} and \texttt{b78f2d87}): an
+        explicit \code{-march=rv64gcv_zvl256b} instead of \code{-march=native} on
+        riscv64 hosts, for GCC and Clang (about 20 lines of CMake); a fix that lets Clang~18
+        compile the v8 halo exchange; and a new benchmark application,
+        \file{apps/benchmarks/SweepgenLbmCPU}, that builds the same LBM sweep as
+        scalar, auto-vectorized and explicit-RVV code. \emph{No new CMake option and no
+        change to sweepgen} were needed: the existing path
+        \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} $\rightarrow$ \code{Target.CurrentCPU}
+        now resolves to \code{RISCV_RVV} on the K1, exactly as it resolves to AVX on
+        an x86 workstation.
+  \item \textbf{In this workspace}: board scripts that build and run the benchmark
+        matrix unattended, and the measurements in \cref{r02:ch:results}.
+\end{itemize}
+
+The result: on one core of the K1, the explicit RVV sweep of a D3Q19 lattice
+Boltzmann simulation is 1.16--1.23$\times$ faster than the best auto-vectorized build in
+double precision and 1.50--1.70$\times$ faster in single precision. The checksums of all
+double-precision variants agree to twelve digits. With all eight cores the gain shrinks
+to 1.05--1.26$\times$, because the sweep then runs into the memory bandwidth of the
+chip.
+
+\section{How to read this report}
+
+\begin{description}[style=nextline]
+  \item[\Cref{r02:ch:walberla}: waLBerla in a nutshell] The lattice Boltzmann
+    method in one page, the block-structured domain, fields, sweeps, halo exchange and
+    time loop, and the difference between the classic core and the new \emph{v8} core.
+  \item[\Cref{r02:ch:structure}: Project structure and build system] The source tree,
+    the CMake options that matter here, and where compiler flags come from.
+  \item[\Cref{r02:ch:codegen}: Code generation] How a Python generator script becomes
+    a C++ sweep class during the build, and where the code generator target is chosen.
+  \item[\Cref{r02:ch:rvv-primer}: RVV and the \ps{} backend] The RVV concepts needed
+    for the rest of the report, and what the generated code looks like.
+  \item[\Cref{r02:ch:gap,r02:ch:design}] What was missing, layer by layer, and the
+    design decisions (including a first, larger attempt that was later discarded).
+  \item[\Cref{r02:ch:pystencils,r02:ch:wlb-changes}] The changes in both forks, file by
+    file.
+  \item[\Cref{r02:ch:build-run,r02:ch:results,r02:ch:limitations}] How to build and run
+    it on the board, validation and benchmark results, and known limitations.
+\end{description}
+Readers who already know waLBerla can start at \cref{r02:ch:gap}. Report~1 of this
+collection is a manual of \ps{} itself; its \cref{r01:ch:rvv-backend} documents the
+RVV backend in more depth than \cref{r02:ch:pystencils} of this report does.
+
+\section{Sources and versions}\label{r02:sec:versions}
+
+Everything described here lives in this workspace (\file{my-e4-ws}):
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Component} & \textbf{Version used}\\
+  \midrule
+  waLBerla & \file{submodules/walberla}, upstream \texttt{v7.2-88-g0c8ed8c9}
+    (2026-05) plus three fork commits on branch \texttt{rvv-support}:
+    \texttt{e9712d59} (first attempt, superseded), \texttt{dbb1b400} (build flags),
+    \texttt{b78f2d87} (benchmark app, Clang fix)\\
+  \ps{} & \file{submodules/pystencils}, upstream \texttt{20d7dcf0} (2.0b1) plus
+    \texttt{31758e93} (first attempt, superseded) and \texttt{9a989e16} (the VLS-256
+    backend) on branch \texttt{rvv-support}\\
+  pystencils-sfg & 0.1.1 (PyPI), the last release that works with the pinned \ps{}\\
+  lbmpy & 2.1.1 (PyPI, installed without dependencies)\\
+  Board & Banana~Pi BPI-F3: SpacemiT~K1, 8 SpacemiT~X60 cores in two clusters of 4,
+    RVV~1.0 with VLEN = 256 bits, 4\,GB RAM; Bianbu Linux (Ubuntu 24.04 based)\\
+  Toolchains & GCC 14.2.0 and Clang 18.1.8 (both Bianbu builds), CMake 3.28.3,
+    Open MPI 4.1.6, Python 3.12\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The design notes and the full measurement log are in
+\file{docs/notes2/rvv-vls256-only-plan-opus5.5.md} and
+\file{docs/notes2/rvv-vls256-only-progress-opus5.5.md}. An older, broader analysis of
+waLBerla's code generation paths is \file{docs/notes/walberla-codegen-flow.md}. Paths in
+this report are relative to the waLBerla or \ps{} submodule root unless they start with
+\file{submodules/}, \file{scripts/} or \file{docs/}, which are relative to the workspace
+root.

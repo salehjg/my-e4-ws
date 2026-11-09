@@ -1,0 +1,58 @@
+% Block-structured domain (left) and one block with ghost layer and halo exchange (right).
+\begin{tikzpicture}[x=1cm,y=1cm,font=\footnotesize]
+  % ---------------------------------------------------------------- left: domain
+  \begin{scope}[shift={(0,0.3)}]
+    \def\bs{1.05}
+    \foreach \i/\j/\p/\c in {0/0/0/psblue, 1/0/0/psblue, 2/0/1/psteal, 3/0/1/psteal,
+                             0/1/2/psorange, 1/1/2/psorange, 2/1/3/psgray, 3/1/3/psgray} {
+      \fill[\c!18] (\i*\bs,\j*\bs) rectangle ++(\bs,\bs);
+      \node[font=\scriptsize] at (\i*\bs+0.5*\bs,\j*\bs+0.5*\bs) {P\p};
+    }
+    \draw[psgray!80,step=\bs] (0,0) grid (4*\bs,2*\bs);
+    \draw[black!75,line width=0.9pt] (0,0) rectangle (4*\bs,2*\bs);
+    \draw[psorange!90!black,line width=1.4pt] (0,0) rectangle (\bs,\bs);
+    \node[r02label,anchor=north] at (2*\bs,-0.12)
+      {domain: $4\times2$ blocks on 4 processes;\\the orange block is shown on the right};
+  \end{scope}
+
+  % ---------------------------------------------------------------- right: one block
+  \begin{scope}[shift={(5.7,0.0)}]
+    \def\s{0.34}
+    % our block: 8x8 cells = 6x6 interior + 1 ghost layer
+    \fill[psgray!25] (0,0) rectangle (8*\s,8*\s);
+    \fill[white] (\s,\s) rectangle (7*\s,7*\s);
+    \draw[r02cell,step=\s] (0,0) grid (8*\s,8*\s);
+    \draw[black!80,line width=0.9pt] (\s,\s) rectangle (7*\s,7*\s);
+    \draw[psorange!90!black,line width=1.4pt] (0,0) rectangle (8*\s,8*\s);
+    \node[r02label,anchor=north] at (4*\s,-0.12) {block of P0:\\$6\times6$ cells + ghost layer};
+
+    % east neighbour (same process): 3 columns shown, its first interior column is the border slice
+    \begin{scope}[shift={(8*\s+1.7,0)}]
+      \fill[psgray!25] (0,0) rectangle (\s,8*\s);
+      \fill[psgray!25] (0,0) rectangle (3*\s,\s);
+      \fill[psgray!25] (0,7*\s) rectangle (3*\s,8*\s);
+      \fill[psblue!35] (\s,\s) rectangle (2*\s,7*\s);
+      \draw[r02cell,step=\s] (0,0) grid (3*\s,8*\s);
+      \draw[black!80,line width=0.9pt] (\s,\s) -- (3*\s,\s) (\s,\s) -- (\s,7*\s) -- (3*\s,7*\s);
+      \node[r02label,anchor=north] at (1.5*\s,-0.12) {east neighbour\\(P0)};
+      \coordinate (eastslice) at (1.2*\s,4*\s);
+    \end{scope}
+    % north neighbour (other process): 3 rows shown, its first interior row is the border slice
+    \begin{scope}[shift={(0,8*\s+1.0)}]
+      \fill[psgray!25] (0,0) rectangle (8*\s,\s);
+      \fill[psgray!25] (0,0) rectangle (\s,3*\s);
+      \fill[psgray!25] (7*\s,0) rectangle (8*\s,3*\s);
+      \fill[psorange!35] (\s,\s) rectangle (7*\s,2*\s);
+      \draw[r02cell,step=\s] (0,0) grid (8*\s,3*\s);
+      \draw[black!80,line width=0.9pt] (\s,3*\s) -- (\s,\s) -- (7*\s,\s) -- (7*\s,3*\s);
+      \node[r02label,anchor=west] at (8*\s+0.15,1.5*\s) {north neighbour (P2)};
+      \coordinate (northslice) at (4*\s,1.2*\s);
+    \end{scope}
+
+    % halo exchange arrows: border slice -> ghost layer
+    \draw[r02arrow,psblue!80!black,thick] (eastslice) -- (7.5*\s,4*\s)
+      node[pos=0.5,above,font=\scriptsize,text=psblue!80!black,align=center] {local\\copy};
+    \draw[r02arrow,psorange!90!black,thick] (northslice) -- (4*\s,7.5*\s)
+      node[pos=0.45,right,font=\scriptsize,text=psorange!90!black] {MPI message};
+  \end{scope}
+\end{tikzpicture}

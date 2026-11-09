@@ -1,0 +1,176 @@
+\chapter{Design Decisions}\label{r02:ch:design}
+
+The gaps of \cref{r02:ch:gap} could be closed in many ways. This chapter explains the
+choices that were made, and why a first, more ambitious implementation was replaced by
+a much smaller one.
+
+\section{Two attempts}\label{r02:sec:design-history}
+
+\paragraph{First attempt: VLS and VLA, configurable (October 2026).}
+The first implementation (\ps{} commit \texttt{31758e93}, waLBerla \texttt{e9712d59})
+aimed at full generality. In \ps{} it added about 2600 lines:
+\begin{itemize}
+  \item both vector-length-specific and vector-length-agnostic (stripmining) code, with
+        a new IR function \code{PsVecStripmineLanes} and a new \code{stripmine} loop
+        transformation;
+  \item a configurable VLEN, a register-group multiplier (LMUL) derived per type from
+        lanes and VLEN, and new configuration classes (\code{RvvOptions},
+        \code{VectorizationMode});
+  \item an optional run-time VLEN check in every kernel, broadcast folding, \code{vid}
+        and slide chains for non-uniform constants, and \code{-march} synthesis from
+        \file{/proc/cpuinfo}.
+\end{itemize}
+In waLBerla it added three CMake options and plumbed them into sweepgen
+(\cref{r02:lst:first-attempt}).
+
+\rneedspace{12\baselineskip}
+\begin{diffcode}[nolol=false,caption={[The first attempt in waLBerla]The first attempt in waLBerla (commit \texttt{e9712d59}, abridged): new options, mapped into sweepgen, which then forced vectorization.},label=r02:lst:first-attempt]
+--- CMakeLists.txt
++ option ( WALBERLA_RISCV_RVV  "Generate kernels for the RISC-V V extension (RVV 1.0)" OFF )
++ set    ( WALBERLA_RVV_VLEN "128" CACHE STRING "Assumed (VLS) / minimum (VLA) RVV VLEN in bits" )
++ set    ( WALBERLA_RVV_MODE "vla" CACHE STRING "RVV vectorization mode: 'fixed' (VLS) or 'vla'" )
+--- sweepgen/src/sweepgen/build_config.py
++        elif self.rvv_enabled:
++            target = Target.RISCV_RVV
+ ...
++        if cfg.target == Target.RISCV_RVV:
++            cfg.cpu.vectorize.enable = True
++            cfg.cpu.vectorize.assume_inner_stride_one = True
++            cfg.cpu.vectorize.mode = self.rvv_mode
++            cfg.cpu.rvv.vlen = self.rvv_vlen
+\end{diffcode}
+
+It worked: about 150 tests passed on the board, and kernels gave bit-identical results
+for VLEN 128 to 1024 under QEMU. But it was large, it introduced concepts no other
+\ps{} backend has, and it made RVV builds of waLBerla behave differently from every
+other CPU build (vectorization forced on, new options to learn).
+
+\paragraph{Second attempt: VLS-256 with AVX parity (November 2026).}
+The current implementation (\ps{} \texttt{9a989e16}, waLBerla \texttt{dbb1b400})
+started by restoring every file of the first attempt to upstream, and then rebuilt the
+backend under one rule: \emph{make the same assumptions the AVX backend makes}. The
+\ps{} diff shrank from about 2600 to about 760 lines of source (1270 with tests); the
+waLBerla build change shrank to about 20 lines of CMake. On the LBM workloads of the
+first attempt, the simpler backend measured the same within $\pm 2$\,\% in double
+precision and within run-to-run noise in single precision. The plan of this rewrite is
+\file{docs/notes2/rvv-vls256-only-plan-opus5.5.md}.
+
+\section{Vector-length specific, VLEN = 256}\label{r02:sec:design-vls}
+
+Fixing VLEN turns RVV into a fixed-width SIMD instruction set, so the whole machinery
+\ps{} already has for AVX applies unchanged: lane counts known at code generation,
+peeling, a vector loop and a scalar remainder, one register type per vector width.
+\begin{description}[style=nextline]
+  \item[What it costs] Generated code is correct only on hardware with VLEN $\geq$ 256,
+    and uses only 256 bits of wider registers. The K1 is the only RVV hardware in this
+    project, so neither costs anything today.
+  \item[What it saves] No new IR node, no new loop strategy, no new configuration
+    options. The backend is a platform class plus a runtime header, like the x86 one.
+  \item[LMUL] Only one register (\code{m1}) and half a register (\code{mf2}, needed for
+    mixed-precision casts, mirroring AVX's \code{__m128}). Register groups
+    (\code{m2}, \code{m4}) behave like wider-than-native vectors; AVX rejects those too.
+    An \code{m2} variant measured faster for one f64 collide kernel during the first
+    attempt; adding it later is a matter of the width table in \code{_lmul}.
+  \item[vl] Every intrinsic receives the literal lane count (\code{4uLL} for
+    \code{double}). At VLEN = 256 that equals VLMAX for every legal type, so each
+    operation processes exactly one full (or half) register, and no \code{vsetvl}
+    bookkeeping is visible in the generated code. The compiler inserts the
+    \code{vsetvli} instructions.
+\end{description}
+
+\section{No new waLBerla options}\label{r02:sec:design-no-options}
+
+On an x86 workstation, a developer who wants host-specific code sets
+\cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON}. The compiler gets \code{-march=native},
+sweepgen selects \code{CurrentCPU}, and \ps{} resolves it to the best x86 target. The
+second attempt keeps exactly this path for RISC-V. Its two halves only had to be made to
+work:
+\begin{itemize}
+  \item the compiler half, by replacing \code{-march=native} with an explicit string on
+        riscv64 (\cref{r02:sec:wlb-cmake});
+  \item the code generator half, by teaching \ps{} to detect RVV and resolve
+        \code{CurrentCPU} to \code{RISCV_RVV} (\cref{r02:sec:ps-target}).
+\end{itemize}
+The first attempt's options \cmakeopt{WALBERLA_RISCV_RVV}, \code{_VLEN} and \code{_MODE}
+became unnecessary once VLEN was fixed and VLA dropped. Equally, sweepgen no longer
+forces vectorization for RVV. Whether a sweep is vectorized is the generator script's
+decision on every platform; making RVV the only platform where it happens automatically
+would surprise anyone who knows waLBerla on x86.
+
+\section{Compiler flags: \texttt{zvl256b}, not \texttt{-mrvv-vector-bits}}\label{r02:sec:design-flags}
+
+Both waLBerla and the \ps{} JIT use \code{-march=rv64gcv_zvl256b}:
+\begin{description}
+  \item[\code{rv64gc}] the base ISA with the usual extensions (what the compilers use
+    by default on the board);
+  \item[\code{v}] the vector extension, required for any RVV intrinsic;
+  \item[\code{zvl256b}] the promise ``VLEN $\geq$ 256''. It makes the compiler define
+    \code{__riscv_v_min_vlen = 256}, which the runtime header checks
+    (\cref{r02:sec:design-guard}).
+\end{description}
+GCC and Clang also accept \code{-mrvv-vector-bits=zvl}, which makes the compiler assume
+VLEN \emph{equal} to the \code{Zvl} value and treat the vector types as fixed-size. The
+backend does not need that: its \code{vl} arguments are literals anyway. It would also
+narrow the contract from ``VLEN $\geq$ 256'' to ``VLEN = 256''. The first attempt
+measured it as performance-neutral, so it was left out.
+
+The same string is produced in two places that must agree: waLBerla's CMake files for
+the C++ build, and \ps{}' \code{CompilerInfo} for the JIT. Both apply the same rule to
+the same input: if the \code{isa} line of \file{/proc/cpuinfo} lists the single-letter
+extension \code{v}, use \code{-march=rv64gcv_zvl256b}, otherwise \code{-march=rv64gc}.
+
+\section{A compile-time guard instead of a run-time check}\label{r02:sec:design-guard}
+
+The AVX backend has no run-time CPU check: a kernel compiled with
+\code{-march=x86-64-v3} simply crashes with an illegal instruction on a CPU without
+AVX2. The RVV backend follows suit, with one addition: the failure mode on RVV hardware
+with VLEN $<$ 256 is \emph{silent} (fewer lanes processed, wrong results), not a crash.
+The runtime header therefore refuses to compile unless the compiler was told
+VLEN $\geq$ 256:
+\begin{ccode}
+#if !defined(__riscv_v_min_vlen) || __riscv_v_min_vlen < 256
+#error "pystencils RVV kernels assume VLEN >= 256 bits: compile with -march=rv64gcv_zvl256b"
+#endif
+\end{ccode}
+This catches wrong build flags. It cannot catch a binary built correctly and then run on
+a smaller-VLEN machine; that remains a documented precondition (\cref{r02:sec:lim-vlen}).
+The first attempt emitted a run-time guard at the entry of every vector kernel: it read
+the hardware VLEN with \code{__riscv_vlenb()} and called \code{std::abort()} if it did
+not match. It was dropped for parity with AVX.
+
+\section{Detecting RVV}\label{r02:sec:design-detect}
+
+Linux reports the ISA string in \file{/proc/cpuinfo}, e.g.\ on the K1:
+\begin{plaincode}
+isa : rv64imafdcv_zicbom_zicboz_..._zve32f_zve32x_zve64d_zve64f_zve64x_zvfh_zvfhmin_...
+\end{plaincode}
+RVV~1.0 appears as the single letter \code{v} in the leading part before the first
+underscore. Detection looks only there, on purpose: multi-letter extensions such as
+\code{zve64d} (embedded vector subsets) or \code{xtheadvector} (the incompatible RVV~0.7
+draft of T-Head cores) must not count. The CMake files use the regular expression
+\code{rv64[a-z]*v} on the same line, which also stops at the first underscore.
+
+\section{Summary}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Decision} & \textbf{Reason}\\
+  \midrule
+  VLS with VLEN = 256, LMUL $\leq$ 1 & reuses the AVX code path; the K1 is the only
+    target; measured no slower than the general version\\
+  no new waLBerla CMake options & \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} already
+    means ``this host''; same behaviour as x86\\
+  no sweepgen change & target selection is generic; vectorization is opt-in on every
+    platform\\
+  \code{-march=rv64gcv_zvl256b} & enables V and guarantees VLEN $\geq$ 256 to the
+    compiler and the runtime header\\
+  no \code{-mrvv-vector-bits} & not needed by literal \code{vl}; would narrow the
+    contract; performance-neutral\\
+  compile-time \texttt{\#error}, no run-time check & catches wrong flags; parity with
+    AVX, which has no run-time check either\\
+  detect single-letter \code{v} only & exclude \code{zve*} and RVV~0.7
+    (\code{xtheadvector})\\
+  \bottomrule
+\end{tabularx}
+\end{center}

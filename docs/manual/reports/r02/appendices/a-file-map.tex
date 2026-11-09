@@ -1,0 +1,87 @@
+\chapter{File Map}\label{r02:app:file-map}
+
+Every file that belongs to the RVV work, by repository. Line counts are relative to the
+upstream base (waLBerla \texttt{0c8ed8c9}, \ps{} \texttt{20d7dcf0}).
+
+\section*{waLBerla fork (\texttt{submodules/walberla}, branch \texttt{rvv-support})}
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Change}\\
+  \midrule
+  \endhead
+  \file{cmake/compileroptions/GNU.cmake} & riscv64: \code{-march=rv64gcv_zvl256b} or
+    \code{rv64gc} instead of \code{-march=native} (\cref{r02:sec:wlb-cmake})\\
+  \file{cmake/compileroptions/Clang.cmake} & the same for Clang, C and C++ flags\\
+  \file{include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp} & explicit
+    \code{ConstFieldViewType} instead of alias-template CTAD, for Clang $<$ 19
+    (\cref{r02:sec:wlb-clang})\\
+  \file{apps/benchmarks/CMakeLists.txt} & add \file{SweepgenLbmCPU} under
+    \cmakeopt{WALBERLA_ENABLE_SWEEPGEN}\\
+  \file{apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt} & six executables: scalar /
+    autovec / explicit, each with and without global CSE\\
+  \file{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py} & generator script; the
+    explicit variant enables vectorization and \code{assume_inner_stride_one}\\
+  \file{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp} & periodic D3Q19 benchmark,
+    prints MLUP/s and a kinetic-energy checksum\\
+  \file{apps/benchmarks/SweepgenLbmCPU/README.md} & variants, usage, output format\\
+  \bottomrule
+\end{xltabular}
+Commit \texttt{e9712d59} (first attempt: \cmakeopt{WALBERLA_RISCV_RVV},
+\code{_VLEN}, \code{_MODE}, sweepgen plumbing) is fully reverted by \texttt{dbb1b400}.
+
+\section*{pystencils fork (\texttt{submodules/pystencils}, branch \texttt{rvv-support})}
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Change}\\
+  \midrule
+  \endhead
+  \file{src/pystencils/codegen/target.py} & \code{Target.RISCV_RVV}, default lanes,
+    \code{_riscv_has_rvv()}, riscv64 branch in host detection\\
+  \file{src/pystencils/codegen/driver.py} & \code{RISCV_RVV} $\rightarrow$
+    \cls{RvvCpu}\\
+  \file{src/pystencils/backend/platforms/rvv.py} & new: \cls{RvvCpu},
+    \cls{SelectIntrinsicsRvv}\\
+  \file{src/pystencils/backend/platforms/__init__.py} & export \cls{RvvCpu}\\
+  \file{src/pystencils/include/pystencils_runtime/rvv.hpp} & new: VLEN guard,
+    \code{set_*}, \code{horizontal_*}, Philox wrappers\\
+  \file{src/pystencils/jit/cpu/compiler_info.py} & \code{-march} for \code{RISCV_RVV}
+    and for \code{CurrentCPU} on riscv64\\
+  \file{tests/nbackend/test_rvv_target.py} & new: target, detection, JIT flags\\
+  \file{tests/nbackend/test_rvv_codegen.py} & new: intrinsic selection, cross-compile
+    syntax checks\\
+  \file{tests/nbackend/test_rvv_execution.py} & new: hardware execution, Philox
+    parity, truncation\\
+  \file{tests/nbackend/test_vectorization.py}, \file{test_cpu_axes.py},
+    \file{tests/kernelcreation/test_type_cast.py}, \file{test_functions.py},
+    \file{test_domain_kernels.py}, \file{tests/codegen/test_flowgraph_codegen.py} & RVV
+    cases next to AVX/SVE\\
+  \bottomrule
+\end{xltabular}
+
+\section*{Workspace (\texttt{my-e4-ws})}
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Purpose}\\
+  \midrule
+  \endhead
+  \file{push.to.sh}, \file{run.on.bananapi.sh}, \file{test.on.bananapi.sh} & sync to the
+    board, run commands and tests there (\cref{r02:sec:push})\\
+  \file{scripts/walberla_lbm_bench.sh} & build and run the six benchmark variants in one
+    build directory\\
+  \file{scripts/walberla_bench_all.sh} & the compiler $\times$ precision matrix, LBM
+    scenario tests, summary\\
+  \file{scripts/walberla_bench_mpi.sh}, \file{walberla_bench_followup.sh} & multi-core
+    runs; reruns after failures\\
+  \file{scripts/walberla_bench_summary.py} & combined result tables\\
+  \file{scripts/lbm_baselines.sh}, \file{lbm_rvv_check.py},
+    \file{python/learn-lb-pystencil/lb-pystencils.py} & D2Q9 harness: correctness and
+    baselines outside waLBerla\\
+  \file{misc/rvv-vs-autovec/} & standalone kernel experiments (gathers, splats, FMA,
+    LMUL)\\
+  \file{docs/notes2/rvv-vls256-only-plan-opus5.5.md} & design plan of the VLS-256
+    rewrite\\
+  \file{docs/notes2/rvv-vls256-only-progress-opus5.5.md} & full log of all measurements\\
+  \file{docs/notes/walberla-codegen-flow.md} & earlier analysis of waLBerla's two
+    code generation paths\\
+  \bottomrule
+\end{xltabular}

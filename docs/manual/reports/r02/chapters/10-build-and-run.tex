@@ -1,0 +1,170 @@
+\chapter{Building and Running on the K1}\label{r02:ch:build-run}
+
+This chapter is the practical recipe: how the workspace reaches the board, how waLBerla
+is configured and built there, how the benchmark is run, and how to check that the
+binary really contains RVV code. All commands are taken from the scripts in
+\file{scripts/} and the board logs.
+
+\begin{pitfall}[The board is shared]
+  The Banana~Pi is used by others. Everything lives under \file{/home/bananapi/saleh/}:
+  the synced workspace (\file{my-e4-ws/}), the Python venv (\file{venv/}), build
+  directories (\file{walberla-build*/}), caches (\file{.cache/}) and logs. Long jobs run
+  in detached \code{screen} sessions with output to a log file, so they survive a lost
+  connection.
+\end{pitfall}
+
+\section{Getting the sources to the board}\label{r02:sec:push}
+
+The workspace is edited on a laptop and mirrored to the board with three scripts in the
+workspace root:
+\begin{description}[style=nextline]
+  \item[\code{bash push.to.sh bananapi}] \code{rsync -az --delete} of the workspace to
+    \file{/home/bananapi/saleh/my-e4-ws/}, without \file{.git}, the local venv and
+    caches. Incremental, about two seconds per push. The remote directory itself is
+    kept, so build directories that point into it survive.
+  \item[\code{bash run.on.bananapi.sh <command>}] push, then run a command in the remote
+    workspace root with the venv's Python first on \code{PATH} and the \ps{} fork on
+    \code{PYTHONPATH}. \code{NO_PUSH=1} skips the push.
+  \item[\code{bash test.on.bananapi.sh <pytest args>}] push, then run \ps{}' pytest
+    natively on the board (with \code{-o addopts=''}, because \ps{}' default options
+    require pytest-cov).
+\end{description}
+Never run two of them concurrently: a push in the middle of a build changes the
+sources under it.
+
+\section{One-time setup}\label{r02:sec:setup}
+
+\begin{shcode}
+# Python venv on the board (Python 3.12), outside the synced tree
+python3 -m venv /home/bananapi/saleh/venv
+/home/bananapi/saleh/venv/bin/pip install numpy sympy pytest     # ...and the usual deps
+/home/bananapi/saleh/venv/bin/pip install --no-deps pystencilssfg==0.1.1 lbmpy==2.1.1
+
+# Environment for every configure/build (the scripts export these)
+export PATH=/home/bananapi/saleh/venv/bin:$PATH
+export PYTHONPATH=/home/bananapi/saleh/my-e4-ws/submodules/pystencils/src:\
+/home/bananapi/saleh/my-e4-ws/submodules/walberla/sweepgen/src
+export XDG_CACHE_HOME=/home/bananapi/saleh/.cache
+\end{shcode}
+System packages needed: GCC and/or Clang, CMake $\geq$ 3.26 (the board has 3.28), an
+MPI implementation (Open MPI 4.1.6), and \code{llvm-objdump} for inspecting binaries.
+
+\section{Configure}\label{r02:sec:configure}
+
+\rneedspace{12\baselineskip}
+\begin{shcode}[nolol=false,caption={[Configuring a benchmark build directory]Configuring a benchmark build directory (from \texttt{scripts/walberla\_bench\_all.sh}).},label=r02:lst:configure]
+cmake -S /home/bananapi/saleh/my-e4-ws/submodules/walberla \
+      -B /home/bananapi/saleh/walberla-build-gcc-f64 \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+      -DWALBERLA_DOUBLE_ACCURACY=ON \
+      -DWALBERLA_OPTIMIZE_FOR_LOCALHOST=ON \
+      -DWALBERLA_ENABLE_V8CORE=ON -DWALBERLA_ENABLE_SWEEPGEN=ON \
+      -DWALBERLA_SWEEPGEN_MANAGED_VENV=OFF \
+      -DPython_EXECUTABLE=/home/bananapi/saleh/venv/bin/python \
+      -DWALBERLA_BUILD_WITH_MPI=ON \
+      -DWALBERLA_BUILD_BENCHMARKS=ON -DWALBERLA_BUILD_TESTS=OFF \
+      -DWALBERLA_BUILD_TOOLS=OFF -DWALBERLA_BUILD_TUTORIALS=OFF \
+      -DWALBERLA_BUILD_EXAMPLES=OFF -DWALBERLA_BUILD_SHOWCASES=OFF -DWALBERLA_BUILD_DOC=OFF
+\end{shcode}
+For Clang use \code{clang}/\code{clang++}; for single precision
+\code{-DWALBERLA_DOUBLE_ACCURACY=OFF}. Each combination needs its own build directory.
+The configure output should contain \emph{``Found pystencils Source File Generator
+(Version 0.1.1)''}. To build waLBerla's own tests as well, set
+\code{-DWALBERLA_BUILD_TESTS=ON}.
+
+\section{Build}\label{r02:sec:build}
+
+\begin{shcode}
+cmake --build /home/bananapi/saleh/walberla-build-gcc-f64 --target SweepgenLbmCPU_explicit_cse -j 2
+\end{shcode}
+Use at most two parallel jobs: the heaviest waLBerla translation units need about
+1.3\,GB of memory each, and the board has under 4\,GB. The first target in a fresh build
+directory takes about 40 minutes, because it builds the waLBerla core libraries; each
+further benchmark variant takes about 5 minutes. The generated sources land in
+\file{<build>/apps/benchmarks/SweepgenLbmCPU/_gen/<target>/gen/}.
+
+\section{Run}\label{r02:sec:run}
+
+\begin{shcode}
+cd /home/bananapi/saleh/walberla-build-gcc-f64/apps/benchmarks/SweepgenLbmCPU
+taskset -c 2 ./SweepgenLbmCPU_explicit_cse 64 200 10        # one core: 64^3 cells, 200 steps
+mpirun -np 4 --bind-to core --map-by core ./SweepgenLbmCPU_explicit_cse 64 100 10   # one cluster
+mpirun -np 8 --bind-to core --map-by core ./SweepgenLbmCPU_explicit_cse 64 100 10   # whole chip
+\end{shcode}
+With $N$ processes the domain has $N$ blocks of $64^3$ cells. The K1's eight cores form
+two clusters of four, so 4 processes fill one cluster and 8 the chip.
+
+\section{Unattended runs}\label{r02:sec:scripts}
+
+The full measurement matrix takes several hours and runs from scripts started in
+\code{screen}:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Script} & \textbf{What it does}\\
+  \midrule
+  \file{scripts/walberla_lbm_bench.sh} & in one build directory: build the six variants,
+    count RVV instructions in each generated sweep object, run each three times on core
+    2, print a summary table\\
+  \file{scripts/walberla_bench_all.sh} & configure and run the \{GCC, Clang\} $\times$
+    \{f64, f32\} matrix, one build directory each; then waLBerla's
+    \code{TestLbmScenarios_CXX}; then a combined summary\\
+  \file{scripts/walberla_bench_mpi.sh} & every executable of every configuration with 4
+    and 8 MPI processes\\
+  \file{scripts/walberla_bench_followup.sh} & rerun failed configurations, then the
+    multi-core runs\\
+  \file{scripts/walberla_bench_summary.py} & merge logs into one markdown table with
+    speedups and checksum agreement\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+\begin{shcode}
+cd /home/bananapi/saleh && screen -dmS walberla-all bash -c \
+    "bash my-e4-ws/scripts/walberla_bench_all.sh > walberla-all.log 2>&1"
+\end{shcode}
+Each script waits for the previous \code{screen} session to finish before it starts, so
+two benchmarks never compete for the cores.
+
+\section{Checking the generated code}\label{r02:sec:check-code}
+
+Three quick checks show whether a build really uses the RVV backend:
+\begin{shcode}
+G=apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse/gen
+grep -c '__riscv_' $G/SweepgenLbmCPU.cpp                 # intrinsics in the source
+grep 'rvv.hpp'     $G/SweepgenLbmCPU.cpp                 # runtime header included
+obj=$(find apps/benchmarks/SweepgenLbmCPU/CMakeFiles/SweepgenLbmCPU_explicit_cse.dir \
+           -name 'SweepgenLbmCPU.cpp.o' -path '*_gen*')
+llvm-objdump -d --no-show-raw-insn $obj | awk '$2 ~ /^v/ {n++} END {print n}'   # vector insns
+\end{shcode}
+Use \code{llvm-objdump}: GNU objdump 2.42 on the board prints Clang's RVV instructions as
+raw \code{.insn} words and would count zero. For the double-precision GCC build the
+counts are 665 vector instructions (\code{explicit}), 608 (\code{explicit_cse}) and 138
+(\code{autovec}).
+
+\section{Running the pystencils tests}\label{r02:sec:run-tests}
+
+\begin{shcode}
+# laptop (x86): codegen tests, cross-compile syntax checks
+cd submodules/pystencils
+PYTHONPATH=src ../../.venv-rvv/bin/python -m pytest -o addopts='' tests/nbackend/test_rvv_*.py
+# board: everything RVV, natively
+bash test.on.bananapi.sh -q tests/nbackend/test_rvv_target.py tests/nbackend/test_rvv_codegen.py \
+                            tests/nbackend/test_rvv_execution.py tests/nbackend/test_vectorization.py
+NO_PUSH=1 bash test.on.bananapi.sh -q -k RISCV_RVV tests/kernelcreation tests/nbackend
+\end{shcode}
+Every board test JIT-compiles natively, about ten seconds each; filter with \code{-k} or
+\code{-x}.
+
+\section{Known nuisances}\label{r02:sec:nuisances}
+
+\begin{itemize}
+  \item \textbf{Clock skew.} The board clock is about 46 hours behind the laptop.
+        Synced files carry future modification times, so \code{make} warns about clock
+        skew and rebuilds more than needed. This is harmless (it never causes stale
+        objects), and the clock of a shared machine is left alone.
+  \item \textbf{Caches.} lbmpy and \ps{} write caches under \code{XDG_CACHE_HOME};
+        keep it inside the user directory.
+  \item \textbf{Package versions.} Do not let pip upgrade pystencils-sfg past 0.1.1, and
+        never install \ps{} into the venv; it must come from \code{PYTHONPATH}.
+\end{itemize}

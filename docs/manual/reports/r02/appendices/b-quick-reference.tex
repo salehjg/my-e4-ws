@@ -1,0 +1,64 @@
+\chapter{Quick Reference}\label{r02:app:quick-reference}
+
+\section*{Configure waLBerla for RVV on the K1}
+\begin{shcode}
+export PYTHONPATH=<repo>/submodules/pystencils/src:<repo>/submodules/walberla/sweepgen/src
+cmake -S <repo>/submodules/walberla -B <build> -DCMAKE_BUILD_TYPE=Release \
+      -DWALBERLA_OPTIMIZE_FOR_LOCALHOST=ON \
+      -DWALBERLA_ENABLE_V8CORE=ON -DWALBERLA_ENABLE_SWEEPGEN=ON \
+      -DWALBERLA_SWEEPGEN_MANAGED_VENV=OFF -DPython_EXECUTABLE=<venv>/bin/python
+cmake --build <build> --target SweepgenLbmCPU_explicit_cse -j 2
+\end{shcode}
+
+\section*{Vectorize a sweep in a generator script}
+\begin{pycode}
+gen_config = ps.CreateKernelConfig()          # target, dtype, OpenMP still from CMake
+gen_config.cpu.vectorize.enable = True
+gen_config.cpu.vectorize.assume_inner_stride_one = True   # v8 fields: fzyx, x fastest
+Sweep("MySweep", assignments, gen_config)     # or LbmBulk(sfg, name, lbm_config, gen_config=...)
+\end{pycode}
+
+\section*{What decides what}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Setting} & \textbf{Effect on the K1}\\
+  \midrule
+  \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=OFF} & no \code{-march}: compilers default to
+    \code{rv64gc}, no V; sweepgen target \code{GenericCPU}\\
+  \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON} & \code{-march=rv64gcv_zvl256b}; target
+    \code{CurrentCPU} $\rightarrow$ \code{RISCV_RVV}\\
+  \code{cpu.vectorize.enable} unset & scalar loops (on every platform)\\
+  \code{cpu.vectorize.enable = True} & vector loop with \code{__riscv_*} intrinsics, 4
+    lanes (f64) / 8 lanes (f32), scalar remainder\\
+  \cmakeopt{WALBERLA_DOUBLE_ACCURACY} & \code{real_t} and generated code in f64 (ON) or
+    f32 (OFF)\\
+  lbmpy \code{cse_global=True} & fewer intrinsic calls; worthwhile with GCC\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Flags and macros}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \code{-march=rv64gcv_zvl256b} & V extension, VLEN $\geq$ 256 guaranteed; defines
+    \code{__riscv_vector} and \code{__riscv_v_min_vlen = 256}\\
+  \code{-march=rv64gc} & no V extension (truly scalar baseline)\\
+  \code{-march=native} & rejected by GCC 14 and Clang 18 on RISC-V\\
+  \code{-mrvv-vector-bits=zvl} & not used (assumes VLEN = 256 exactly)\\
+  \code{__BIGGEST_ALIGNMENT__} & 16 on riscv64: v8 field line alignment\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Board commands}
+\begin{shcode}
+bash push.to.sh bananapi                                    # rsync the workspace
+bash run.on.bananapi.sh python scripts/lbm_rvv_check.py     # any command, remote repo root
+bash test.on.bananapi.sh -q tests/nbackend/test_rvv_codegen.py   # pystencils tests on the board
+taskset -c 2 ./SweepgenLbmCPU_explicit_cse 64 200 10        # one core
+mpirun -np 8 --bind-to core --map-by core ./SweepgenLbmCPU_explicit_cse 64 100 10
+llvm-objdump -d --no-show-raw-insn <obj> | awk '$2 ~ /^v/ {n++} END {print n}'
+screen -dmS <name> bash -c "<command> > /home/bananapi/saleh/<name>.log 2>&1"
+\end{shcode}

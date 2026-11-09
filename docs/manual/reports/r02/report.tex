@@ -1,0 +1,43 @@
+% =============================================================================
+%  Report r02 -- RISC-V Vector Support in waLBerla (written 2026-11-09)
+%
+%  Explains waLBerla (what it is, how the code is organized, how its code
+%  generation works) for readers who have never seen it, then what was missing
+%  for RVV on the SpacemiT K1 and what the rvv-support forks of waLBerla and
+%  pystencils add. Sources: submodules/walberla (b78f2d87), submodules/pystencils
+%  (9a989e16), docs/notes2/ and the board logs summarized there.
+%
+%  Chapters and appendices are \include'd, so single chapters can be built with
+%  \includeonly in manual.tex, e.g. \includeonly{reports/r02/chapters/06-gap-analysis}.
+%  Code excerpts that are longer than a few lines live in listings/.
+% =============================================================================
+\input{reports/r02/macros}
+\lstset{inputpath=reports/r02/listings}
+
+\reporttitle[{What was missing, what was added, and how it fits together\\[0.4em]
+  \normalsize waLBerla \texttt{b78f2d87} and pystencils \texttt{9a989e16},
+  branch \texttt{rvv-support}, on the SpacemiT K1}]
+  {RISC-V Vector Support in waLBerla}{2026-11-09}
+
+\reportpart{Background}
+\include{reports/r02/chapters/01-introduction}
+\include{reports/r02/chapters/02-walberla-overview}
+\include{reports/r02/chapters/03-project-structure}
+\include{reports/r02/chapters/04-code-generation}
+\include{reports/r02/chapters/05-rvv-primer}
+
+\reportpart{Adding RVV to waLBerla}
+\include{reports/r02/chapters/06-gap-analysis}
+\include{reports/r02/chapters/07-design}
+\include{reports/r02/chapters/08-pystencils-changes}
+\include{reports/r02/chapters/09-walberla-changes}
+\include{reports/r02/chapters/10-build-and-run}
+\include{reports/r02/chapters/11-results}
+\include{reports/r02/chapters/12-limitations}
+
+\reportappendix
+\include{reports/r02/appendices/a-file-map}
+\include{reports/r02/appendices/b-quick-reference}
+\include{reports/r02/appendices/c-glossary}
+
+\printbibliography[heading=bibintoc]

@@ -1,0 +1,135 @@
+\chapter{RVV and the pystencils RVV Backend}\label{r02:ch:rvv-primer}
+
+This chapter gives the minimum of RISC-V Vector background that the rest of the report
+needs, explains how \ps{} vectorizes a kernel, and shows what the RVV backend makes of
+the waLBerla LBM sweep. A longer primer is \file{docs/notes/rvv-isa-primer.md}; the
+backend itself is documented in Report~1, \cref{r01:ch:rvv-backend}.
+
+\section{RVV in five concepts}\label{r02:sec:rvv-concepts}
+
+The ratified RISC-V \emph{V} extension, version 1.0~\cite{rvv-spec}, adds 32 vector
+registers \code{v0}--\code{v31} and instructions on them. Unlike SSE, AVX or NEON, the
+ISA does not fix the register width.
+\begin{description}
+  \item[VLEN] The width of one vector register in bits, chosen by the hardware vendor
+    (a power of two, at least 128 for the full V extension). The SpacemiT~X60 cores
+    of the K1 have \textbf{VLEN = 256}. A program can read it at run time
+    (\code{csrr vlenb}). The extension \code{Zvl256b} in a \code{-march} string promises
+    the compiler that VLEN $\geq$ 256; the compiler then defines
+    \code{__riscv_v_min_vlen} as 256.
+  \item[SEW] The selected element width: 8, 16, 32 or 64 bits.
+  \item[LMUL] The register-group multiplier. With LMUL = 2, 4 or 8 an instruction works
+    on 2, 4 or 8 registers at once; fractional values (\code{mf2}, \code{mf4},
+    \code{mf8}) use part of one register.
+  \item[VLMAX] The number of elements an instruction can process:
+    $\text{VLMAX} = \text{LMUL}\cdot\text{VLEN}/\text{SEW}$. For \code{double} at LMUL 1
+    on the K1: $1\cdot256/64 = 4$.
+  \item[vl] The \term{active vector length}, $\leq$ VLMAX, set by \code{vsetvli}. Every
+    vector instruction processes only the first \code{vl} elements.
+\end{description}
+In C and C++, RVV is programmed through intrinsics~\cite{rvv-intrinsics}. Their names
+encode the operation, the operand kinds and the type, and every intrinsic takes the
+active length as its last argument:
+\begin{ccode}
+vfloat64m1_t a = __riscv_vle64_v_f64m1(&x[i], 4);      // load 4 doubles (f64, LMUL 1)
+vfloat64m1_t c = __riscv_vfadd_vv_f64m1(a, b, 4);      // vector + vector
+__riscv_vse64_v_f64m1(&y[i], c, 4);                    // store
+\end{ccode}
+The vector types (\code{vfloat64m1_t}, \code{vint32mf2_t}, \dots) are \term{sizeless}:
+their size is unknown at compile time, so they cannot be members of a struct or
+elements of an array. RVV provides \term{tuple types} such as \code{vfloat32m1x4_t}
+instead.
+
+\section{Vector-length agnostic or specific}\label{r02:sec:vla-vls}
+
+Because VLEN varies between chips, RVV code is usually written \term{vector-length
+agnostic} (VLA): a stripmining loop asks the hardware in every iteration how many
+elements it may process, and the same binary runs on any VLEN. The alternative is
+\term{vector-length specific} (VLS) code: assume one VLEN, and treat RVV like a
+fixed-width SIMD instruction set.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  & \textbf{VLA (stripmining)} & \textbf{VLS (fixed width)}\\
+  \midrule
+  loop & \code{for (; n > 0; n -= vl) { vl = vsetvl(n); ... }} & vector loop over
+    $\lfloor n/L\rfloor L$ elements, scalar remainder\\
+  portability & any VLEN & only VLEN $\geq$ the assumed value (and exactly equal for
+    full efficiency)\\
+  remainder & handled by the last, shorter \code{vl} & separate scalar loop\\
+  code generator & needs new loop structures and IR & same structure as AVX/NEON\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The backend used here is \textbf{VLS with VLEN = 256}. \Cref{r02:sec:design-vls}
+explains why.
+
+\section{How pystencils vectorizes}\label{r02:sec:ps-vectorize}
+
+\ps{} vectorizes the innermost loop of a kernel. With
+\code{cpu.vectorize.enable = True}, the code generator:
+\begin{enumerate}
+  \item splits the innermost ($x$) loop into a vector loop that advances by $L$ lanes
+        and a scalar remainder loop (\cref{r02:fig:fzyx});
+  \item rewrites the loop body into vector IR: vector types, vector memory accesses,
+        broadcasts of loop-invariant scalars, horizontal reductions;
+  \item hands the vector IR to the \term{platform} of the target, whose
+        \term{intrinsic selector} (a subclass of \cls{SelectIntrinsics}) replaces every
+        vector operation by the target's intrinsic: \code{_mm256_add_pd} on AVX,
+        \code{vaddq_f64} on NEON, \code{__riscv_vfadd_vv_f64m1} on RVV.
+\end{enumerate}
+The number of lanes $L$ comes from \code{Target.default_vector_lanes(dtype)}, e.g.\ 4
+for \code{double} on AVX. Contiguous vector loads need the innermost stride to be 1,
+which the user promises with \code{cpu.vectorize.assume_inner_stride_one}. Without
+that promise, accesses along $x$ must use strided loads (on RVV) or gathers.
+
+\section{The RVV backend at a glance}\label{r02:sec:backend-glance}
+
+The backend added in \ps{} (\cref{r02:ch:pystencils}) follows the contract of the AVX
+backend line by line:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{AVX (x86)} & \textbf{RVV backend (VLEN = 256)}\\
+  \midrule
+  \code{__m256d}, 4 doubles; \code{__m256}, 8 floats & \code{vfloat64m1_t},
+    \code{vfloat32m1_t}: one register (LMUL 1)\\
+  \code{__m128} (half width) & LMUL \code{mf2}, only for elements $\leq$ 32 bits\\
+  no wider vectors & no register groups (no \code{m2}, \code{m4})\\
+  implicit length & literal lane count as \code{vl} in every call (\code{4uLL}), which
+    equals VLMAX at VLEN = 256\\
+  \code{_mm256_set_pd}, horizontal helpers in \file{x86.hpp} & \code{set_<sfx>},
+    \code{horizontal_<op>_<sfx>} in \file{rvv.hpp}\\
+  \code{-march=x86-64-v3} & \code{-march=rv64gcv_zvl256b}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\Cref{r02:lst:kernel} shows the generated kernel of the waLBerla stream-collide sweep
+(\code{explicit_cse} variant, double precision) as it was produced on the K1. Apart from
+reformatting, elisions and the \code{//} comments, it is unchanged.
+
+\rneedspace{12\baselineskip}
+\lstinputlisting[style=cpp,nolol=false,basicstyle=\ttfamily\scriptsize,
+  caption={[Generated RVV kernel of the D3Q19 stream-collide sweep]Generated RVV kernel of the D3Q19 stream-collide sweep (reformatted and abridged, comments added in \texttt{//}).},
+  label=r02:lst:kernel]{streamcollide-kernel.cpp}
+
+Things to notice:
+\begin{itemize}
+  \item The structure is exactly that of an AVX kernel: hoisted constants, the $z$ and
+        $y$ loops, a vector loop over $x$ in steps of 4, and a scalar remainder.
+  \item Every access to the PDF field is a unit-stride \code{vle64}/\code{vse64}, which
+        is what \code{assume_inner_stride_one} buys. The neighbour offsets of the pull
+        stream are just constant offsets in the index expressions.
+  \item Per vector iteration the source contains 70 loads (from 19 distinct
+        addresses), 23 stores (19 PDFs, $\rho$ and 3 velocity components), 101
+        multiplications, 82 additions, 43 subtractions and one division ($1/\rho$).
+        Constants are broadcast with \code{vfmv_v_f}.
+  \item RVV intrinsics are opaque to the compilers' algebraic optimizations. Neither GCC
+        nor Clang contracts an intrinsic multiply and add into a fused multiply-add,
+        or folds a multiplication by $-1$; on x86 the intrinsics are ordinary vector
+        operations in the headers, so this never mattered there. GCC also does not
+        merge repeated identical intrinsic calls. This is why the global common
+        subexpression elimination of lbmpy (\code{cse_global}) matters for GCC
+        (\cref{r02:sec:results-single}).
+\end{itemize}

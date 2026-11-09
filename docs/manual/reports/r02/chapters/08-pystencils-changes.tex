@@ -1,0 +1,225 @@
+\chapter{Implementation in pystencils}\label{r02:ch:pystencils}
+
+\begin{r02fork}
+  All changes in this chapter are in commit \texttt{9a989e16} (``rvv support opus5.5
+  VLS only VLEN256'') on the \texttt{rvv-support} branch of \file{submodules/pystencils},
+  on top of upstream \texttt{20d7dcf0}. Report~1, \cref{r01:ch:rvv-backend}, documents
+  the backend from a \ps{} user's perspective with more generated examples.
+\end{r02fork}
+
+From waLBerla's point of view, \ps{} is a black box that turns a target and a
+configuration into C++ source. This chapter opens that box just far enough to show what
+was added for RVV and how it plugs into the existing structure. Every new piece has an
+exact counterpart in the x86 backend.
+
+\section{Overview}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}r>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File (under \file{src/pystencils/})} & \textbf{Lines} & \textbf{Role / x86 counterpart}\\
+  \midrule
+  \file{codegen/target.py} & +43 & \code{Target.RISCV_RVV}, default lanes, host detection\\
+  \file{codegen/driver.py} & +4 & maps the target to the platform\\
+  \file{backend/platforms/rvv.py} & +490 (new) & platform and intrinsic selector;
+    \file{x86.py}\\
+  \file{backend/platforms/__init__.py} & +2 & export \cls{RvvCpu}\\
+  \file{include/pystencils_runtime/rvv.hpp} & +189 (new) & runtime helpers;
+    \file{x86.hpp}\\
+  \file{jit/cpu/compiler_info.py} & +27 & \code{-march} for \code{RISCV_RVV} and for
+    \code{CurrentCPU} on riscv64\\
+  \midrule
+  \file{tests/nbackend/test_rvv_{target,codegen,execution}.py} & +479 (new) & RVV unit,
+    codegen and hardware tests\\
+  six shared test modules & +40 & RVV cases next to AVX and SVE\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+No IR node, transformation or loop strategy was changed. That is the practical meaning
+of ``AVX parity'': the vectorizer produces the same vector IR for RVV as for AVX, and
+only the last step, intrinsic selection, differs.
+
+\section{The target}\label{r02:sec:ps-target}
+
+\ps{} describes targets as combinations of feature flags in an \code{enum.Flag}. The new
+target adds two architecture bits:
+\begin{pycode}
+class Target(Flag):
+    ...
+    _RISCV = auto()
+    _RVV = auto()
+    ...
+    RISCV_RVV = _CPU | _VECTOR | _RISCV | _RVV
+    """RISC-V architecture with the ratified V vector extension (RVV 1.0). Treated like a
+    fixed-width target (cf. `X86_AVX`): VLEN = 256 bits, vector-length-specific code."""
+\end{pycode}
+\code{default_vector_lanes} returns $256/\text{element bits}$ for \code{RISCV_RVV},
+the same case as \code{X86_AVX}: 4 lanes for \code{double}, 8 for \code{float}.
+
+Host detection is the change that makes waLBerla's \code{CurrentCPU} work.
+\code{_available_vector_targets()} gained a branch for riscv64 that calls the new helper
+\code{_riscv_has_rvv()} (\cref{r02:lst:detect}); \code{Target.auto_cpu()} then returns
+\code{RISCV_RVV} on the K1.
+
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[RVV host detection in pystencils]RVV host detection in \texttt{codegen/target.py} (abridged).},label=r02:lst:detect]
+    elif machine_spec == "riscv64":
+        if _riscv_has_rvv():
+            targets.append(Target.RISCV_RVV)
+    ...
+
+def _riscv_has_rvv(cpuinfo: str | None = None) -> bool:
+    """RVV 1.0 shows up as the single-letter extension `v` in the leading part of the
+    ISA string before the first `_`. `_zve64d` or `_xtheadvector` (RVV 0.7) must not count."""
+    if cpuinfo is None:
+        try:
+            with open("/proc/cpuinfo") as f:
+                cpuinfo = f.read()
+        except OSError:
+            return False
+    for line in cpuinfo.splitlines():
+        key, _, value = line.partition(":")
+        if key.strip() == "isa":
+            base = value.strip().lower().split("_")[0]           # e.g. "rv64imafdcv"
+            return base.startswith("rv") and "v" in base[4:]     # skip "rv64"/"rv32"
+    return False
+\end{pycode}
+The \code{cpuinfo} argument is a testing hook: \file{test_rvv_target.py} feeds it ISA
+strings of real and invented chips. In \code{DefaultKernelCreationDriver._get_platform},
+the target maps to the platform class:
+\begin{pycode}
+            elif self._target == Target.RISCV_RVV:
+                from ..backend.platforms.rvv import RvvCpu
+                return RvvCpu(self._ctx)
+\end{pycode}
+
+\section{The platform and its intrinsic selector}\label{r02:sec:ps-platform}
+
+\file{backend/platforms/rvv.py} holds two classes, modelled on \file{x86.py}:
+\begin{description}[style=nextline]
+  \item[\cls{RvvCpu}(\cls{GenericVectorCpu})] the platform. It adds
+    \code{"pystencils_runtime/rvv.hpp"} to the required headers and returns the
+    intrinsic selector. It refuses \code{use_builtin_convertvector}, because RVV types
+    are sizeless and cannot be used with GCC/Clang vector extensions.
+  \item[\cls{SelectIntrinsicsRvv}(\cls{SelectIntrinsics})] the selector. The base class
+    walks the vector IR and calls one hook per construct; this class implements the
+    hooks.
+\end{description}
+Everything is driven by three small naming helpers. The register-group multiplier is
+derived from the vector width exactly the way AVX picks between \code{__m256} and
+\code{__m128}:
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[Type naming in the RVV platform]Type naming in \texttt{backend/platforms/rvv.py}.},label=r02:lst:lmul]
+RVV_VLEN = 256   # the single knob: fixing VLEN turns RVV into a fixed-width SIMD ISA
+
+def _lmul(vtype: PsVectorType) -> str:
+    match vtype.width:
+        case w if w == RVV_VLEN:
+            return "m1"                                   # AVX: __m256*
+        case w if w == RVV_VLEN // 2 and vtype.scalar_type.width <= 32:
+            return "mf2"                                  # AVX: __m128*; no vfloat64mf2_t
+        case _:
+            raise MaterializationError(...)               # wider vectors: rejected, like AVX
+
+def _sfx(vtype):      # "f64m1", "i32mf2", ...  -> intrinsic name suffix
+def _rvv_type(vtype): # PsCustomType("vfloat64m1_t"), tuples "vfloat32m1x4_t"
+\end{pycode}
+
+The hooks then assemble intrinsic names from a stem and the suffix:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Hook} & \textbf{Generated code}\\
+  \midrule
+  \code{type_intrinsic} & \code{vfloat64m1_t}, \code{vint32mf2_t}, \dots; short arrays of
+    vectors become RVV tuple types (\code{vfloat32m1x4_t}), because sizeless types
+    cannot be struct members\\
+  \code{constant_intrinsic} & uniform constants: \code{__riscv_vfmv_v_f_f64m1(c, 4uLL)};
+    others (lane offsets $0,1,2,3$ of a vectorized counter):
+    \code{pystencils::runtime::rvv::set_i64m1(0, 1, 2, 3)}\\
+  \code{op_intrinsic} & \code{__riscv_vf{add,sub,mul,div}_vv_<sfx>} (integer:
+    \code{v{add,sub,mul,div}}), broadcasts, casts, horizontal reductions\\
+  \code{math_func_intrinsic} & \code{vfsqrt_v}, \code{vfabs_v}, \code{vfmin_vv},
+    \code{vfmax_vv}; integer abs as \code{vmax(x, vneg(x))}; transcendentals and
+    floor/ceil raise \code{MaterializationError}\\
+  \code{vector_load}/\code{_store} & contiguous \code{__riscv_vle64_v_f64m1(&p[i], vl)}
+    and \code{vse64}; strided \code{vlse64}/\code{vsse64} with a byte stride (x86 needs
+    gathers and AVX-512 scatters here)\\
+  \code{rng_engine_intrinsic}, \code{subscript_intrinsic} & vectorized Philox via the
+    runtime header; tuple elements via \code{__riscv_vget_v_...}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+Casts use one intrinsic each, because the legal widths (128 and 256 bits at the same
+lane count) differ by at most a factor of two: \code{vfcvt}, widening \code{vfwcvt} or
+\code{vsext}, narrowing \code{vfncvt} or \code{vncvt}. Float-to-integer conversions
+always use the \code{rtz} (round-towards-zero) variant, because C truncates.
+
+For the waLBerla LBM sweep only a small subset matters: the loads and stores
+\code{vle64} and \code{vse64}, the arithmetic \code{vfadd}, \code{vfsub}, \code{vfmul} and
+\code{vfdiv}, and \code{vfmv_v_f} broadcasts (\cref{r02:lst:kernel}).
+
+\section{The runtime header}\label{r02:sec:ps-runtime}
+
+Generated code includes \file{pystencils_runtime/rvv.hpp}. The CMake integration of
+pystencils-sfg puts \ps{}' include directory on the target's include path; on the board
+that is \file{submodules/pystencils/src/pystencils/include} of the fork, found through
+\code{PYTHONPATH}. It provides what the x86
+backend takes from its own headers:
+\begin{itemize}
+  \item the VLEN guard (\cref{r02:sec:design-guard});
+  \item \code{set_<sfx>(v0, v1, \dots)}: build a vector from per-lane values through a
+        stack array and one load (RVV has no ``set'' intrinsic); generated by one macro
+        for every legal type;
+  \item \code{horizontal_{add,mul,min,max}_<sfx>(dst, v)}: store the lanes and fold them
+        with a scalar loop, so the order of operations (and hence the result) matches
+        scalar code exactly. Reductions run once per kernel call;
+  \item \code{random::philox_float32/64}: wrappers around the shared vectorized Philox
+        generator in \file{bits/philox_rand.h}, returning RVV tuple types.
+\end{itemize}
+The sweeps of \cref{r02:ch:results} use none of the helpers; for them the header is
+only the guard and \code{<riscv_vector.h>}.
+
+\section{JIT compiler flags}\label{r02:sec:ps-jit}
+
+waLBerla generates code without compiling it in Python (\code{cfg.jit = no_jit}), so
+this part matters for \ps{}' own tests and for Python experiments, not for the
+waLBerla build. It mirrors waLBerla's CMake rule (\cref{r02:sec:wlb-cmake}):
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[JIT compiler flags for RISC-V]Compiler flags in \texttt{jit/cpu/compiler\_info.py} (abridged).},label=r02:lst:jitflags]
+_RISCV_RVV_MARCH = "-march=rv64gcv_zvl256b"
+
+def _current_cpu_march() -> list[str]:
+    """GCC (at least up to 14) rejects -march=native on RISC-V."""
+    if platform.machine() == "riscv64":
+        if Target.RISCV_RVV in Target.available_vector_cpu_targets():
+            return [_RISCV_RVV_MARCH]
+        return ["-march=rv64gc"]
+    return ["-march=native"]
+
+        match self.target:
+            case Target.CurrentCPU:
+                flags += _current_cpu_march()
+            ...
+            case Target.RISCV_RVV:
+                flags += [_RISCV_RVV_MARCH]
+\end{pycode}
+
+\section{Tests}\label{r02:sec:ps-tests}
+
+\begin{description}[style=nextline]
+  \item[\file{tests/nbackend/test_rvv_target.py}] target flags, default lanes, ISA string
+    parsing (\code{v} versus \code{zve*} and \code{xtheadvector}), JIT flags.
+  \item[\file{tests/nbackend/test_rvv_codegen.py}] runs on any machine: the type and LMUL
+    table, rejection of illegal types, intrinsic names for every construct, and a
+    syntax-only compile of eight representative kernels with a riscv64 cross compiler
+    (\code{riscv64-linux-gnu-g++ -march=rv64gcv_zvl256b}) or the native compiler on the
+    board.
+  \item[\file{tests/nbackend/test_rvv_execution.py}] runs only on RVV hardware: results
+    against NumPy and \code{GenericCPU}, bit-exact Philox, truncating casts
+    (\code{(int)-1.5 == -1}).
+  \item[Shared modules] \file{test_vectorization.py}, \file{test_cpu_axes.py},
+    \file{test_type_cast.py}, \file{test_functions.py}, \file{test_domain_kernels.py}
+    and \file{test_flowgraph_codegen.py} got RVV cases next to the AVX and SVE ones.
+\end{description}
+Results are in \cref{r02:sec:results-tests}.

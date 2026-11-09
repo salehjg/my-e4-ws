@@ -1,0 +1,113 @@
+\chapter{Limitations, Pitfalls and Future Work}\label{r02:ch:limitations}
+
+\section{Limitations of the current implementation}\label{r02:sec:limitations}
+
+\paragraph{Hardware with VLEN $\geq$ 256 only.}\label{r02:sec:lim-vlen}
+The generated code assumes 4 doubles or 8 floats per vector register. The runtime header
+makes sure the compiler was told so, but nothing checks the machine the binary finally
+runs on. On RVV hardware with VLEN = 128, which is common among current RISC-V chips,
+the code compiles if the flags are forced and then \emph{silently} processes half the
+lanes of every operation. On hardware with VLEN = 512 or more it is correct but uses
+only part of each register. A binary built on the K1 should therefore only run on the
+K1 or on a chip with the same or a larger VLEN.
+
+\paragraph{Native builds only.}
+Both halves of the host detection (waLBerla's CMake files and \ps{}'
+\code{Target.CurrentCPU}) read \file{/proc/cpuinfo} of the \emph{build} machine, as
+\code{-march=native} does on x86. A cross build for the K1 on an x86 machine would need
+a CMake toolchain file that sets \code{-march=rv64gcv_zvl256b}, and a target override in
+the generator scripts (\code{get_build_config(sfg).target = Target.RISCV_RVV}, or the
+benchmark's \code{--explicit-target}). Neither is set up.
+
+\paragraph{Vectorization is opt-in per generator script.}
+Only the new benchmark requests explicit vectorization. All other waLBerla applications
+(\code{DoubleShearLayer}, \code{FlowAroundSphere}, the LBM scenario tests) still generate
+scalar sweeps on the K1, just as they generate scalar sweeps on x86. They now compile
+with \code{-march=rv64gcv_zvl256b}, so the compilers may auto-vectorize them, but
+\cref{r02:sec:results-single} shows that this achieves little for LBM.
+
+\paragraph{The inner-stride contract is not checked.}\label{r02:sec:lim-stride}
+\code{assume_inner_stride_one} removes the $x$ stride from the kernel signature; the
+generated wrapper only records the assumption in a comment
+(\cref{r02:lst:generated-wrapper}). It holds for every v8 field in the default
+\code{fzyx} layout. A \code{zyxf} field, or a view whose innermost stride is not 1, would
+produce wrong results without any error. The same is true for the AVX backend (Report~1,
+\cref{r01:app:pitfalls}).
+
+\paragraph{Field alignment on RISC-V.}\label{r02:sec:lim-alignment}
+\code{hostAlignment()} in \file{include/walberla/v8/memory/MemoryTraits.hpp} has cases for
+SVE, NEON, AVX-512, AVX and SSE, but not for RVV, so v8 fields on the K1 align their
+lines to \code{__BIGGEST_ALIGNMENT__} = 16 bytes instead of the 32 bytes of a vector
+register. RVV loads and stores need only element alignment, so this is correct. The
+generated kernels do not assume alignment anyway: with one ghost layer, the first
+interior cell of a line sits one element after the aligned line start. Whether 32-byte
+alignment would change performance was not measured.
+
+\paragraph{What the backend cannot vectorize.}
+Transcendental functions, \code{floor}/\code{ceil}, unsigned integers, half precision and
+masked (conditional) vector code are rejected, as most of them are on AVX. Sweeps that
+need them, such as the benchmark's initial state with \code{tanh} and \code{Piecewise},
+must be generated for \code{GenericCPU}.
+
+\paragraph{Only the sweepgen path.}
+The legacy code generation path (\file{python/pystencils_walberla}, the classic
+\file{lbm_generated} module) uses the \ps{}~1.x API and gets no RVV support. The
+classic hand-written SIMD module \file{src/simd} remains x86-only.
+
+\paragraph{Pinned Python packages.}
+The build depends on pystencils-sfg 0.1.1 and lbmpy 2.1.1 in an external venv, with the
+\ps{} fork on \code{PYTHONPATH}. Moving to newer pystencils-sfg releases requires
+rebasing the \ps{} fork onto a version that has \code{pystencils.grids}.
+
+\paragraph{Compiler sensitivity.}
+GCC is faster than Clang in every variant on the K1, and Clang handles the explicit
+intrinsics less well than GCC (spills of constant splats, scheduling for the in-order
+X60). The vendor Clang's \code{-mtune=spacemit-x60} gains 8--17\,\% in kernel
+experiments, but is vendor- and chip-specific and not used.
+
+\section{Pitfalls for developers}\label{r02:sec:pitfalls}
+
+\begin{description}[style=nextline]
+  \item[Forgetting \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST}] Without it, the build has
+    no V extension and sweepgen selects \code{GenericCPU}. A script that sets
+    \code{target=CurrentCPU} itself (like the benchmark) then generates RVV intrinsics
+    that the compiler rejects, because the flags lack the V extension. The fix is the
+    CMake option, not a different target.
+  \item[Using the managed venv] \cmakeopt{WALBERLA_SWEEPGEN_MANAGED_VENV=ON} (the
+    default) installs upstream \ps{} from git, which has no RVV target, and a
+    pystencils-sfg that does not match the fork.
+  \item[Counting instructions with GNU objdump] binutils 2.42 cannot decode Clang's RVV
+    code and reports zero vector instructions. Use \code{llvm-objdump}.
+  \item[Comparing against the wrong baseline] Code compiled with
+    \code{-march=rv64gcv_zvl256b} is not scalar: the compiler may auto-vectorize it. A
+    truly scalar baseline needs \code{-march=rv64gc} (the benchmark's \code{scalar}
+    variant); with \code{-fno-tree-vectorize} alone the compiler may still use vector
+    instructions elsewhere, e.g.\ for inlined block copies.
+  \item[Global CSE with GCC] Without lbmpy's \code{cse_global}, GCC executes the repeated
+    subterms of the update rule as separate intrinsic calls. Enable it for explicit
+    vectorization with GCC.
+\end{description}
+
+\section{Future work}\label{r02:sec:future}
+
+\begin{description}[style=nextline]
+  \item[Upstreaming] The Clang~18 fix and the riscv64 \code{-march} case in the compiler
+    option files are independent of the \ps{} backend and could go upstream as they are.
+    The backend itself would go to \ps{}, together with its tests.
+  \item[Splat folding in the backend] Emitting vector--scalar forms (\code{vfmul_vf},
+    \code{vfadd_vf}) for loop-invariant operands removed Clang's spills and gained up to
+    25\,\% in kernel experiments. AVX has no analogue (x86 has no vector--scalar
+    arithmetic), which is why it was left out of the parity design.
+  \item[Register groups] LMUL 2 measured faster for an f64 collide kernel in the first
+    attempt; it fits into \code{_lmul} as an additional width.
+  \item[Other VLENs] A configurable \code{RVV_VLEN}, or a vector-length-agnostic mode,
+    would make binaries portable to VLEN-128 hardware. The first attempt showed that
+    VLA is feasible in \ps{}, at a large cost in complexity.
+  \item[A sweepgen option for vectorization] A build option (or a field in
+    \cls{WalberlaBuildConfig}) to vectorize all sweeps would spare every script the
+    opt-in, on x86 as well as on RISC-V.
+  \item[Alignment] An RVV case in \code{hostAlignment()} (e.g.\
+    \code{__riscv_v_min_vlen / 8}) for symmetry with AVX.
+  \item[Less memory traffic] Since the multi-core sweep is bandwidth-bound, in-place
+    streaming patterns or single-precision storage promise more than better vector code.
+\end{description}

@@ -1,0 +1,58 @@
+% From CMake configuration to an object file: where the target and the ISA are decided.
+% Orange = changed for RVV, teal = new for RVV, white = unchanged. Markers 1-5 are the
+% decision points of Chapter 6.
+\begin{tikzpicture}[x=1cm,y=1cm,
+    fb/.style={r02box,text width=2.95cm},
+    lbl/.style={r02label,minimum height=0pt}]
+  % ---- configure time
+  \node[fb,text width=3.25cm] (cache) at (-0.15,0)
+    {\textbf{CMake cache}\\\texttt{\scriptsize OPTIMIZE\_FOR\_LOCALHOST}\\
+     \texttt{\scriptsize DOUBLE\_ACCURACY}, \dots};
+  \node[fb,r02changed] (copts) at (4.1,0.75)
+    {\textbf{compileroptions/}\\\texttt{GNU.cmake}, \texttt{Clang.cmake}};
+  \node[fb,text width=3.3cm] (flags) at (8.2,0.75)
+    {\texttt{CMAKE\_CXX\_FLAGS}\\\texttt{\scriptsize -march=rv64gcv\_zvl256b}};
+  \node[fb,text width=3.3cm] (cfg) at (4.1,-0.85)
+    {\texttt{SweepgenConfig.py}\\{\scriptsize\cls{WalberlaBuildConfig}}};
+  \draw[r02arrow] (cache.east) -- ++(0.35,0) |- (copts.west);
+  \draw[r02arrow] (cache.east) -- ++(0.35,0) |- (cfg.west);
+  \draw[r02arrow] (copts) -- (flags);
+
+  \draw[psgray!60,dashed] (-1.6,-1.85) -- (13.95,-1.85);
+  \node[lbl,anchor=south west] at (-1.6,-1.83) {configure time};
+  \node[lbl,anchor=north west] at (-1.6,-1.87) {build time};
+
+  % ---- build time: code generation
+  \node[fb,r02new] (script) at (0,-3.15)
+    {\textbf{generator script}\\\texttt{SweepgenLbmCPU.py}\\(\texttt{gen\_config})};
+  \node[fb] (sweepgen) at (4.1,-3.15)
+    {\textbf{sweepgen}\\\cls{Sweep}, \cls{LbmBulk}\\target $=$ \code{CurrentCPU}};
+  \node[fb,r02changed] (ps) at (8.2,-3.15)
+    {\textbf{\ps{}}\\\code{CurrentCPU} $\rightarrow$ \code{RISCV_RVV}\\\cls{RvvCpu} platform};
+  \node[fb] (sfg) at (12.3,-3.15)
+    {\textbf{pystencils-sfg}\\writes \texttt{gen/*.hpp}, \texttt{gen/*.cpp}};
+  \draw[r02arrow] (script) -- (sweepgen);
+  \draw[r02arrow] (sweepgen) -- (ps);
+  \draw[r02arrow] (ps) -- (sfg);
+  \draw[r02arrow] (cfg.south) -- (sweepgen.north);
+
+  % ---- build time: compilation
+  \node[r02code,text width=2.95cm] (src) at (12.3,-5.2)
+    {\#include ".../rvv.hpp"\\\_\_riscv\_vle64\_v\_f64m1\\\_\_riscv\_vfadd\_vv\_...};
+  \node[fb] (cxx) at (8.2,-5.2) {\textbf{C++ compiler}\\GCC 14 / Clang 18};
+  \node[r02code,text width=2.95cm] (obj) at (4.1,-5.2) {vle64.v\quad vfadd.vv\\vfmul.vv\quad vse64.v};
+  \node[fb] (app) at (0,-5.2) {\textbf{application}\\links \code{walberla::v8}};
+  \draw[r02arrow] (sfg) -- (src);
+  \draw[r02arrow] (src) -- (cxx);
+  \draw[r02arrow] (cxx) -- (obj);
+  \draw[r02arrow] (obj) -- (app);
+  \draw[r02arrow] (flags.east) -- ++(0.55,0) |- ([yshift=4mm]cxx.east)
+    node[lbl,pos=0.15,right,align=left] {global\\flags};
+
+  % ---- decision markers
+  \node[r02marker] at ([xshift=1.5mm,yshift=1.2mm]copts.north east) {1};
+  \node[r02marker] at ([xshift=1.5mm,yshift=1.2mm]sweepgen.north east) {2};
+  \node[r02marker] at ([xshift=1.5mm,yshift=1.2mm]ps.north east) {3};
+  \node[r02marker] at ([xshift=1.5mm,yshift=1.2mm]src.north east) {4};
+  \node[r02marker] at ([xshift=1.5mm,yshift=1.2mm]script.north east) {5};
+\end{tikzpicture}

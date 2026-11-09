@@ -1,0 +1,59 @@
+% fzyx layout of one x-line of a PDF field and how the generated kernel covers it.
+\begin{tikzpicture}[x=1cm,y=1cm,font=\footnotesize]
+  \def\w{0.66}   % cell width
+  \def\h{0.52}   % cell height
+  % ---- line (y, z, i): ghost, 10 interior cells, ghost, padding
+  \begin{scope}
+    \fill[psgray!25] (0,0) rectangle (\w,\h);
+    \foreach \x in {0,...,7} {
+      \pgfmathsetmacro{\xx}{(\x+1)*\w}
+      \fill[psblue!22] (\xx,0) rectangle ++(\w,\h);
+      \node[font=\scriptsize] at (\xx+0.5*\w,0.5*\h) {\x};
+    }
+    \foreach \x in {8,9} {
+      \pgfmathsetmacro{\xx}{(\x+1)*\w}
+      \fill[psorange!30] (\xx,0) rectangle ++(\w,\h);
+      \node[font=\scriptsize] at (\xx+0.5*\w,0.5*\h) {\x};
+    }
+    \fill[psgray!25] (11*\w,0) rectangle (12*\w,\h);
+    \fill[pattern=north east lines,pattern color=psgray!70] (12*\w,0) rectangle (13*\w,\h);
+    \draw[r02cell] (0,0) grid[xstep=\w,ystep=\h] (13*\w,\h);
+    \draw[black!80,line width=0.9pt] (\w,0) rectangle (11*\w,\h);
+    \node[font=\scriptsize,anchor=east] at (-0.1,0.5*\h) {$f_i(\cdot,y,z)$};
+    \node[font=\scriptsize] at (0.5*\w,0.5*\h) {$-1$};
+    \node[font=\scriptsize] at (11.5*\w,0.5*\h) {10};
+
+    % vector chunks
+    \draw[decorate,decoration={brace,amplitude=4pt,mirror},thick,psblue!80!black]
+      (1*\w+0.04,-0.08) -- (5*\w-0.04,-0.08)
+      node[midway,below=5pt,font=\scriptsize,text=psblue!80!black,align=center]
+      {\texttt{vle64\_v\_f64m1}\\4 cells, one vector};
+    \draw[decorate,decoration={brace,amplitude=4pt,mirror},thick,psblue!80!black]
+      (5*\w+0.04,-0.08) -- (9*\w-0.04,-0.08)
+      node[midway,below=5pt,font=\scriptsize,text=psblue!80!black,align=center]
+      {next iteration\\\texttt{ctr\_0 += 4}};
+    \draw[decorate,decoration={brace,amplitude=4pt,mirror},thick,psorange!90!black]
+      (9*\w+0.04,-0.08) -- (11*\w-0.04,-0.08)
+      node[midway,below=5pt,font=\scriptsize,text=psorange!90!black,align=center]
+      {scalar\\remainder};
+    \node[font=\scriptsize,anchor=north,align=center,text=psgray!90!black] at (12.5*\w,-0.08)
+      {line\\padding};
+    \node[font=\scriptsize,anchor=north,align=center,text=psgray!90!black] at (0.5*\w,-0.08)
+      {ghost};
+  \end{scope}
+
+  % ---- next line (y+1) and next direction, as offsets
+  \begin{scope}[shift={(0,1.35)}]
+    \fill[psgray!25] (0,0) rectangle (\w,\h);
+    \fill[psgray!25] (11*\w,0) rectangle (12*\w,\h);
+    \fill[pattern=north east lines,pattern color=psgray!70] (12*\w,0) rectangle (13*\w,\h);
+    \draw[r02cell] (0,0) grid[xstep=\w,ystep=\h] (13*\w,\h);
+    \node[font=\scriptsize,anchor=east] at (-0.1,0.5*\h) {$f_i(\cdot,y{+}1,z)$};
+  \end{scope}
+  \draw[r02arrow] (1.5*\w,\h+0.02) -- (1.5*\w,1.33)
+    node[midway,right,font=\scriptsize] {\texttt{+\,\_stride\_f\_1}};
+  \node[font=\scriptsize,anchor=west,align=left,text=psgray!90!black] at (13*\w+0.25,1.35+0.5*\h)
+    {next plane: \texttt{+\,\_stride\_f\_2}\\next direction $i{+}1$: \texttt{+\,\_stride\_f\_3}};
+  \node[font=\scriptsize,anchor=west,align=left] at (13*\w+0.25,0.5*\h)
+    {$x$ contiguous,\\stride 1 (assumed)};
+\end{tikzpicture}

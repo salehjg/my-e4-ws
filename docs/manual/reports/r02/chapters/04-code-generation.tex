@@ -1,0 +1,192 @@
+\chapter{Code Generation: From Python to C++ Sweeps}\label{r02:ch:codegen}
+
+waLBerla's fast kernels are not part of its source tree. They are generated during the
+build from Python descriptions. This chapter follows that path from the generator
+script to the compiled sweep, and points out where the hardware target is chosen.
+\Cref{r02:fig:build-flow} is the map for this chapter and for the rest of the report.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r02/figures/build-flow}}
+  \caption[From CMake configuration to RVV object code]{From the CMake configuration to
+    RVV object code. Configure time (top) produces the global compiler flags and the
+    project configuration module; build time (bottom) runs the generator script through
+    sweepgen, \ps{} and pystencils-sfg, and compiles the result. Orange boxes were
+    changed for RVV, the teal box is new, white boxes are unchanged. The numbered
+    markers are the five decision points of \cref{r02:sec:gap-chain}.}
+  \label{r02:fig:build-flow}
+\end{figure}
+
+\section{The tool chain}\label{r02:sec:toolchain}
+
+Four Python packages from the \emph{pycodegen} family work together:
+\begin{description}[style=nextline]
+  \item[\ps{}~\cite{pystencils}] compiles a symbolic stencil description (SymPy
+    assignments on abstract fields) into one C/C++ function for a given
+    \term{target}: generic C, x86 SSE/AVX/AVX-512, ARM NEON/SVE, CUDA, HIP, SYCL, and
+    now RISC-V RVV. Report~1 of this collection describes it in detail.
+  \item[lbmpy~\cite{lbmpy}] derives lattice Boltzmann methods symbolically (stencil,
+    collision operator, equilibrium, forcing, boundary conditions) and hands the
+    resulting assignment collections to \ps{}.
+  \item[pystencils-sfg~\cite{pystencils-sfg}] (\emph{source file generator}) writes
+    complete C++ header and source files around \ps{} kernels: namespaces, classes,
+    methods, and the glue that extracts data pointers, shapes and strides from C++
+    data structures and passes them to the kernel. It also provides the CMake function
+    \code{pystencilssfg_generate_target_sources} that runs generator scripts at build
+    time.
+  \item[sweepgen] is waLBerla's layer on top of pystencils-sfg
+    (\file{sweepgen/src/sweepgen/}). It knows waLBerla's data structures: blocks, the
+    classic \cls{GhostLayerField} and the v8 \code{memory::Field}, cell intervals,
+    block geometry. It provides \cls{Sweep} (one kernel as a sweep class),
+    \cls{LbmBulk} (stream-collide and initialization sweeps for an lbmpy method),
+    boundary-condition generators, pack infos for communication, and the build
+    configuration object \cls{WalberlaBuildConfig}.
+\end{description}
+
+\section{Two code generation paths}\label{r02:sec:two-paths}
+
+waLBerla v7.2 contains two independent code generation layers:
+\begin{description}[style=nextline]
+  \item[Legacy: \file{python/pystencils_walberla} and \file{lbmpy_walberla}] Enabled with
+    \cmakeopt{WALBERLA_BUILD_WITH_CODEGEN}, used by the older applications in
+    \file{apps/} and by the classic \file{lbm_generated} module. It is written against
+    the \ps{} \emph{1.x} API: its helper \code{get_vectorize_instruction_set(ctx)}
+    imports \code{pystencils.backends.simd_instruction_sets}, a module that no longer
+    exists in \ps{}~2.0, and picks the newest instruction set the 1.x code knows
+    (\code{'sse'}, \code{'avx'}, \code{'avx512'}, \code{'neon'}, \dots). It cannot work
+    with the 2.0-based RVV backend without a port.
+  \item[Current: sweepgen] Enabled with \cmakeopt{WALBERLA_ENABLE_SWEEPGEN}, built on
+    \ps{}~2.0 and pystencils-sfg, used by the v8 examples and tests. This is where new
+    development happens, and the only path this work targets.
+\end{description}
+
+\section{A generator script}\label{r02:sec:sweepgen-script}
+
+A generator script is an ordinary Python program that opens a
+\code{SourceFileGenerator} context and emits code into it.
+\Cref{r02:lst:genscript} is the core of \file{SweepgenLbmCPU.py}, the generator of the
+benchmark application. The lines that request explicit vectorization are the only
+RVV-related part of it; everything else is how any waLBerla LBM application looks.
+
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[Generator script of the benchmark]Generator script of the benchmark (\texttt{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py}, abridged).},label=r02:lst:genscript]
+with SourceFileGenerator(keep_unknown_argv=True) as sfg:
+    args = parser.parse_args(sfg.context.argv)      # --variant, --cse-global
+
+    Sweep.use_v8core_fields()                       # generate for walberla::v8::memory::Field
+    sfg.namespace("SweepgenLbmCPU::gen")
+
+    if args.variant == "explicit":
+        lbm_gen_config = ps.CreateKernelConfig(target=ps.Target[args.explicit_target])  # CurrentCPU
+        lbm_gen_config.cpu.vectorize.enable = True
+        #   waLBerla fields are fzyx with x fastest: the innermost loop has stride 1
+        lbm_gen_config.cpu.vectorize.assume_inner_stride_one = True
+    else:
+        lbm_gen_config = ps.CreateKernelConfig(target=ps.Target.GenericCPU)
+
+    lbm_config = LBMConfig(stencil=LBStencil(Stencil.D3Q19), method=Method.SRT,
+                           compressible=True, relaxation_rate=sp.Symbol("omega"))
+    lbm_optimisation = LBMOptimisation(simplification="auto", cse_global=args.cse_global,
+                                       field_layout="fzyx")
+
+    lbm_bulk = LbmBulk(sfg, "LBM", lbm_config, lbm_optimisation, lbm_gen_config)
+    sfg.generate(lbm_bulk)                          # -> classes LBM::StreamCollide, LBM::InitPdfs
+
+    #   Initial state (tanh, Piecewise): not vectorizable, never timed -> always generic
+    sfg.generate(Sweep("SetInitialState", initial_state_assignments,
+                       ps.CreateKernelConfig(target=ps.Target.GenericCPU)))
+\end{pycode}
+
+The script runs in the build, once per executable, with the arguments given in
+\file{CMakeLists.txt} (\cref{r02:sec:app}). \code{sfg.context.argv} carries those
+arguments; pystencils-sfg consumes its own options (output directory, configuration
+module) first.
+
+\section{The build configuration and the target}\label{r02:sec:buildconfig}
+
+Every \cls{Sweep} and \cls{LbmBulk} starts from the code generator configuration that
+the build implies, and then applies the script's own configuration on top
+(\code{gen_config.override(...)}). The build configuration is the
+\cls{WalberlaBuildConfig} object returned by \code{project_info()} in
+\file{SweepgenConfig.py} (\cref{r02:lst:sweepgen-config}). Its two key methods are in
+\cref{r02:lst:buildconfig}.
+
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[Target selection in sweepgen's build configuration]Target selection in \texttt{sweepgen/src/sweepgen/build\_config.py} (unchanged upstream code, abridged).},label=r02:lst:buildconfig]
+@property
+def target(self) -> Target:
+    if self.override.target is not None:
+        target = self.override.target
+    elif self.cuda_enabled:
+        target = Target.CUDA
+    elif self.hip_enabled:
+        target = Target.HIP
+    else:
+        #  CPU target
+        if self.optimize_for_localhost:
+            target = Target.CurrentCPU      # "the best this host can do"
+        else:
+            target = Target.GenericCPU      # portable C++
+    ...
+    return target
+
+def get_pystencils_config(self) -> CreateKernelConfig:
+    cfg = CreateKernelConfig()
+    cfg.default_dtype = Fp(64) if self.use_double_precision else Fp(32)
+    cfg.jit = no_jit                        # generate only, never compile in Python
+    cfg.target = self.target
+    if self.openmp_enabled:
+        cfg.cpu.openmp.enable = True
+    return cfg
+\end{pycode}
+
+Two facts follow from this code:
+\begin{enumerate}
+  \item On a CPU build, the target is \code{Target.CurrentCPU} exactly when
+        \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} is on. \ps{} resolves
+        \code{CurrentCPU} when the kernel is created, by asking the host:
+        \code{CreateKernelConfig.get_target()} calls \code{Target.auto_cpu()}, which
+        returns the last (most capable) entry of \code{_available_vector_targets()}, or
+        \code{GenericCPU} if the list is empty. On an AVX2 workstation that is
+        \code{X86_AVX}; on the K1 it is now \code{RISCV_RVV}
+        (\cref{r02:sec:ps-target}). Code is generated on the machine that builds, so
+        the build host must be the target machine, as with \code{-march=native}.
+  \item \code{get_pystencils_config} never sets \code{cpu.vectorize.enable}. A vector
+        target without that switch only changes the platform object inside \ps{}; the
+        loops stay scalar. This is the same on x86: waLBerla sweeps are scalar unless a
+        generator script requests vectorization, as \cref{r02:lst:genscript} does.
+\end{enumerate}
+
+\section{Anatomy of a generated sweep}\label{r02:sec:generated-sweep}
+
+For each \cls{Sweep}, sweepgen generates a C++ class in the header and its methods in
+the source file. The header of \code{LBM::StreamCollide} (generated on the K1, double
+precision) contains:
+\begin{itemize}
+  \item a \code{detail::StreamCollideProperties} struct that holds the fields
+        (\code{f_}, \code{rho_}, \code{u_}) and scalar parameters (\code{omega_});
+  \item a constructor taking those, getters for the fields, and getter/setter pairs for
+        the parameters, so an application can change \code{omega} between steps;
+  \item \code{operator()(IBlock*)} for a whole block, \code{runOnCellInterval(...)} for
+        a sub-region (used for communication hiding), and \code{swapShadowBuffers};
+  \item a \code{ShadowBufferCache} member that owns the temporary PDF field
+        \code{f_tmp} per block, so the application never sees it.
+\end{itemize}
+The source file contains the \ps{} kernel as a free function in a namespace
+\code{StreamCollide_kernels}, followed by the method bodies.
+\Cref{r02:lst:generated-wrapper} shows how \code{operator()} maps the v8 field views to
+the kernel's raw parameters.
+
+\rneedspace{12\baselineskip}
+\lstinputlisting[style=cpp,nolol=false,basicstyle=\ttfamily\scriptsize,
+  caption={[A generated sweep's operator()]Generated \texttt{StreamCollide::operator()} (explicit variant, double precision; abridged, comments added in \texttt{//}).},
+  label=r02:lst:generated-wrapper]{streamcollide-wrapper.cpp}
+
+The kernel signature differs between variants in one revealing detail. The generic
+(scalar and auto-vectorized) kernel receives the stride along $x$ as a run-time argument
+\code{_stride_f_0}, so the compiler cannot know that consecutive cells are adjacent in
+memory. With \code{assume_inner_stride_one}, \ps{} fixes that stride to 1 at code
+generation time; the parameter disappears, and the wrapper only records the assumption
+in a comment. Nothing checks it at run time. For waLBerla fields it holds by
+construction (\code{fzyx}, $x$ fastest), but it is a contract, not a guarantee
+(\cref{r02:sec:lim-stride}).

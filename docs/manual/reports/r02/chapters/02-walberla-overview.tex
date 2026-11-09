@@ -1,0 +1,222 @@
+\chapter{waLBerla in a Nutshell}\label{r02:ch:walberla}
+
+waLBerla (\emph{widely applicable lattice Boltzmann from Erlangen}) is developed at the
+chair for system simulation of FAU Erlangen-Nürnberg~\cite{walberla,walberla-repo}. It
+started as a lattice Boltzmann (LBM) code and grew into a general framework for
+simulations on block-structured grids: multiphase and free-surface flows, phase-field
+models, rigid-body and particle dynamics (the MESA-PD module) and fluid--particle
+coupling. Its design goal is near-perfect scaling, from a laptop to hundreds of
+thousands of cores~\cite{schornbaum-blockforest}. This chapter introduces the concepts a
+developer needs to follow the rest of the report. It uses the lattice Boltzmann method
+as the running example, because that is also the workload measured on the K1.
+
+\section{The lattice Boltzmann method in one page}\label{r02:sec:lbm}
+
+The LBM~\cite{krueger-lbm} simulates a fluid on a regular grid of cells. Instead of
+velocity and pressure, each cell stores $q$ \term{particle distribution functions} (PDFs)
+$f_i$, one for each discrete velocity $\mathbf{c}_i$ of a \term{stencil}. The stencils
+are named D$d$Q$q$: D3Q19 is three-dimensional with 19 velocities (the cell itself, 6
+face neighbours and 12 edge neighbours). One time step consists of two parts:
+\begin{equation}
+  f_i(\mathbf{x} + \mathbf{c}_i\,\Delta t,\; t + \Delta t)
+  \;=\; f_i(\mathbf{x}, t) \;-\; \omega\,\bigl(f_i(\mathbf{x}, t) - f_i^{\text{eq}}(\rho, \mathbf{u})\bigr).
+  \label{r02:eq:lbm}
+\end{equation}
+\begin{description}
+  \item[Collision] (right-hand side) relaxes each PDF towards an equilibrium
+    $f_i^{\text{eq}}$ that depends only on the cell's density $\rho = \sum_i f_i$ and
+    velocity $\mathbf{u} = \frac{1}{\rho}\sum_i f_i\mathbf{c}_i$. With a single relaxation
+    rate $\omega$ this is the SRT (BGK) collision operator; MRT, TRT, cumulant and
+    central-moment operators use more rates. The collision is purely local and costs a
+    few hundred floating-point operations per cell.
+  \item[Streaming] (left-hand side) moves each post-collision PDF to the neighbour cell in
+    its direction. It is pure data movement.
+\end{description}
+waLBerla's generated sweeps fuse both into one \term{stream-collide} sweep in the
+\term{pull} pattern: each cell gathers $f_i(\mathbf{x} - \mathbf{c}_i)$ from its
+neighbours, collides, and writes the 19 results into a second array, \code{f_tmp}. The
+two arrays are swapped after the sweep. Per cell and time step the sweep reads 19 and
+writes 19 values, plus the density and the three velocity components if they are
+stored: 42 values, 336 bytes in double precision. With a few hundred floating-point
+operations per 336 bytes, the LBM is usually limited by memory bandwidth, not by
+arithmetic. That fact returns in \cref{r02:ch:results}.
+
+Performance is reported in \term{MLUP/s}, million lattice-cell updates per second.
+
+\section{The block-structured domain}\label{r02:sec:blockforest}
+
+waLBerla does not store one big array. The simulation domain is split into
+\term{blocks}, and every block holds a regular grid of cells of the same size
+(\cref{r02:fig:blockforest}). The blocks are the unit of everything:
+\begin{itemize}
+  \item \textbf{Distribution.} Each MPI process owns one or more blocks. A uniform
+        grid with one block per process is the simplest case, and the one the K1
+        benchmark uses. For grid refinement, the blocks form an octree (a
+        \term{forest} of octrees, hence \cls{BlockForest}), and load balancing moves
+        blocks between processes.
+  \item \textbf{Data.} Simulation data such as fields are \term{block data}: one
+        instance per block, registered once and looked up with a handle.
+  \item \textbf{Work.} A \term{sweep} is a function that processes one block. The
+        time loop calls every sweep for every local block.
+\end{itemize}
+The class most applications use is \cls{StructuredBlockForest}, a block forest whose
+blocks carry a Cartesian cell grid. \code{blockforest::createUniformBlockGrid(...)}
+creates one from a domain bounding box, the number of blocks per direction and the
+number of cells per block, together with periodicity flags.
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r02/figures/blockforest}
+  \caption[Block-structured domain, ghost layers and halo exchange]{Left: a 2D domain
+    split into $4\times2$ blocks, distributed over four MPI processes (colours). Right:
+    one block with its interior cells (white) and one ghost layer (grey). Before a
+    sweep reads its neighbours, the halo exchange copies the border slice of each
+    neighbouring block into the matching ghost layer: by a local copy if both blocks
+    belong to the same process, by MPI otherwise.}
+  \label{r02:fig:blockforest}
+\end{figure}
+
+\section{Fields}\label{r02:sec:fields}
+
+A \term{field} is the per-block array of the simulation state: a 3D grid of cells with
+$F$ values per cell (e.g.\ $F = 19$ PDFs, $F = 3$ velocity components, $F = 1$ density),
+surrounded by $g$ \term{ghost layers}. A field of $N_x\times N_y\times N_z$ interior cells
+therefore allocates $(N_x+2g)(N_y+2g)(N_z+2g)\cdot F$ values. Cell coordinates of the
+interior start at 0, so ghost cells have negative indices or indices $\geq N$.
+
+The memory \term{layout} decides which index varies fastest
+(\cref{r02:fig:fzyx}):
+\begin{description}
+  \item[\code{fzyx}] (structure of arrays): $x$ is contiguous, then $y$, then $z$, and
+    the value index $f$ is outermost. All PDFs of direction $i$ form one contiguous 3D
+    array. This is the layout of all generated LBM code in waLBerla, and the one SIMD
+    code needs: four neighbouring cells along $x$ are four consecutive doubles, exactly
+    one 256-bit vector.
+  \item[\code{zyxf}] (array of structures): all values of one cell are contiguous.
+\end{description}
+In the v8 core (\cref{r02:sec:v8}), an \code{fzyx} field additionally pads every
+$x$-line so that each line starts at an aligned address. The alignment is chosen per
+architecture in \file{include/walberla/v8/memory/MemoryTraits.hpp}: 32 bytes for AVX,
+64 for AVX-512, 16 for NEON. On RISC-V there is no special case, so the fallback
+\code{__BIGGEST_ALIGNMENT__} applies, which is 16 bytes with both board compilers. The
+RVV code does not depend on it (\cref{r02:sec:lim-alignment}).
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r02/figures/fzyx}
+  \caption[The fzyx layout and vectorization along x]{The \texttt{fzyx} layout of a PDF
+    field, shown for one $x$-line of one direction $i$: $x$ is the contiguous index, so
+    a 256-bit vector holds 4 consecutive \texttt{double} cells (8 \texttt{float}s). The
+    generated kernel runs the vector loop over the first $\lfloor N_x/4\rfloor\cdot 4$
+    cells and a scalar remainder loop over the rest. The strides
+    \texttt{\_stride\_f\_1}, \texttt{\_stride\_f\_2} and \texttt{\_stride\_f\_3} (in
+    elements) lead to the next line, the next plane and the next direction. The stride
+    along $x$ is assumed to be 1.}
+  \label{r02:fig:fzyx}
+\end{figure}
+
+\section{Sweeps, halo exchange and the time loop}\label{r02:sec:sweeps}
+
+A \term{sweep} is any callable that takes a block, \code{void operator()(IBlock*)}.
+Typical sweeps are the stream-collide update, an initialization, a boundary condition
+or the computation of an output quantity. Sweeps only update interior cells; they may
+read the ghost layers.
+
+The ghost layers are filled by \term{communication}, called \term{halo exchange} in the
+v8 core. For every pair of neighbouring blocks and every direction, a \term{pack info}
+packs the \term{border slice} of the sender (the outermost interior cells) into a buffer
+and unpacks it into the \term{ghost slice} of the receiver. If both blocks live on the
+same process, the pack info copies directly (\code{localCopy}). For the LBM pull scheme a
+specialized pack info (\code{streamPullSync}) sends only the PDFs that actually stream
+across the face, a fraction of all 19. Periodic boundaries are handled the same way:
+the block at the right end of the domain is the left neighbour of the one at the left
+end.
+
+A time step is therefore: halo exchange, then sweeps on all local blocks. waLBerla's
+\cls{SweepTimeloop} manages such sequences with timing and logging. A plain C++ loop
+works as well, and is what the K1 benchmark uses (\cref{r02:lst:app-timestep}).
+
+\section{The classic core and the v8 core}\label{r02:sec:v8}
+
+waLBerla currently contains two generations of its core data structures:
+\begin{description}[style=nextline]
+  \item[The classic modules in \file{src/}] \file{core} (types, MPI, logging, math),
+    \file{blockforest}, \file{field} (\cls{GhostLayerField}), \file{communication},
+    \file{timeloop}, \file{lbm} (hand-written LBM, now ``legacy''),
+    \file{lbm_generated}, \file{gpu}, \file{vtk}, \file{mesa_pd} and about twenty more.
+    They are compiled into one static library per module (\code{walberla_core},
+    \code{walberla_field}, \dots). Their field classes are separate for CPU and GPU.
+  \item[The experimental \emph{v8} core in \file{include/walberla/v8/}] A header-only
+    library (\code{walberla::v8}, enabled with \cmakeopt{WALBERLA_ENABLE_V8CORE}) that
+    is portable between CPU and GPU by construction:
+    \begin{itemize}
+      \item \code{memory::Field<T, F, MemTag>}: a distributed field whose per-block
+            storage is managed by a \cls{BufferSystem}. The \term{memory tag} says where
+            the memory lives: \code{memtag::host} (aligned CPU memory),
+            \code{device}, \code{unified}, \code{pinned}.
+      \item \code{memory::FieldView}: the view of one block's portion, with
+            \code{data()}, \code{shape()} and \code{strides()}.
+      \item \term{Execution tags} (\code{exectag::Serial}, \code{OpenMP}, \code{GPU})
+            and \code{sweep::forAllCells(xtag, interval, lambda)} for hand-written
+            loops.
+      \item \code{HaloExchange::create<Stencil, MemTag>(blocks).sync(...).build()}:
+            the halo exchange, with generic pack infos for fields and for the LBM pull
+            scheme.
+    \end{itemize}
+    The v8 core builds on the classic \file{core}, \file{blockforest}, \file{stencil}
+    and \file{field} modules. The new examples in \file{apps/examples/} (e.g.\
+    \code{DoubleShearLayer}, \code{FlowAroundSphere}) use it, and it is the field system
+    the RVV benchmark uses.
+\end{description}
+Code generated by sweepgen (\cref{r02:ch:codegen}) can target either field system. A
+generator script selects v8 fields with \code{Sweep.use_v8core_fields()}.
+
+\section{Anatomy of a v8 application}\label{r02:sec:app-anatomy}
+
+\Cref{r02:lst:app-setup,r02:lst:app-timestep} show the important parts of the new
+benchmark application \file{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp}. It is
+the \code{DoubleShearLayer} example reduced to what is timed. The classes in namespace
+\code{gen} (\code{SetInitialState}, \code{LBM::InitPdfs}, \code{LBM::StreamCollide}) are
+generated at build time from a Python script (\cref{r02:sec:sweepgen-script}).
+
+\rneedspace{12\baselineskip}
+\begin{ccode}[nolol=false,caption={[Setting up blocks, fields and generated sweeps]Setting up blocks, fields and generated sweeps (\texttt{SweepgenLbmCPU.cpp}, abridged).},label=r02:lst:app-setup]
+using MemoryTag  = memtag::host;
+using LbStencil  = stencil::D3Q19;
+using PdfField_T = memory::Field< real_t, LbStencil::Q, MemoryTag >;   // 19 PDFs per cell
+
+//  One block of cells^3 per MPI process, periodic in all directions
+auto blocks = blockforest::createUniformBlockGrid(
+   domainAabb, numBlocks[0], numBlocks[1], numBlocks[2],   // blocks per direction
+   cells, cells, cells,                                    // cells per block
+   /*oneBlockPerProcess*/ true, true, true, true);         // periodic in x, y, z
+ScalarField_T rho{ *blocks };       // density
+VectorField_T u{ *blocks };         // velocity, 3 components
+PdfField_T    pdfs{ *blocks };      // fzyx layout, one ghost layer by default
+
+//  Generated sweeps: plain C++ classes, constructed from fields and parameters
+gen::SetInitialState setInitialState{ blocks, rho, u, delta, kappa, u_0 };
+gen::LBM::InitPdfs   lbInit{ pdfs, rho, u };
+for (auto& b : *blocks) { setInitialState(&b); lbInit(&b); }
+
+gen::LBM::StreamCollide streamCollide{ pdfs, rho, u, omega };
+auto haloExchange = HaloExchange::create< LbStencil, MemoryTag >(blocks)
+                       .sync(halo_exchange::streamPullSync< LbStencil >(pdfs))
+                       .build();
+\end{ccode}
+
+\rneedspace{12\baselineskip}
+\begin{ccode}[nolol=false,caption={[The timed time step of the benchmark]The timed time step (\texttt{SweepgenLbmCPU.cpp}).},label=r02:lst:app-timestep]
+haloExchange();   // the pull stream reads the ghost layers, so fill them first
+
+auto timestep = [&]() {
+   for (auto& b : *blocks)
+      streamCollide(&b);   // generated: stream + collide on one block, then swap f <-> f_tmp
+   haloExchange();
+   sweep::sync();          // waits for GPU work; a no-op on the CPU
+};
+\end{ccode}
+
+The type \code{real_t} is \code{double} or \code{float}, depending on the CMake option
+\cmakeopt{WALBERLA_DOUBLE_ACCURACY}. The generated code follows the same switch
+(\cref{r02:sec:buildconfig}), which is how the benchmark runs in both precisions.

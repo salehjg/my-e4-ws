@@ -1,0 +1,222 @@
+\chapter{Validation and Performance}\label{r02:ch:results}
+
+All numbers in this chapter were measured on the Banana~Pi BPI-F3 between 2026-11-01 and
+2026-11-03 (board time) and are recorded in
+\file{docs/notes2/rvv-vls256-only-progress-opus5.5.md}; the raw logs are on the board
+under \file{/home/bananapi/saleh/}.
+
+\section{Correctness}\label{r02:sec:results-tests}
+
+\paragraph{\ps{} tests.}
+\begin{itemize}
+  \item Laptop (x86): the three RVV test modules give 77 passed and 7 skipped (the
+        hardware tests); the syntax check compiles all eight kernel shapes with the
+        riscv64 GCC cross compiler. A regression run over \file{tests/nbackend},
+        \file{test_quicktests}, \file{test_type_cast}, \file{test_reduction},
+        \file{test_functions} and \file{tests/jit} gives 636 passed, 250 skipped,
+        2 expected failures and no failures, so the x86 paths are unaffected.
+  \item Board (native GCC 14.2): 84 of 84 RVV tests pass, including bit-exact Philox
+        against \code{GenericCPU} and C truncation semantics; the 39 tests of
+        \file{test_vectorization.py} pass (all of them run as RVV on the board); and 126
+        RVV-parametrized cases of the shared kernel tests (casts, reductions with
+        OpenMP, functions, iteration slices, domain kernels, the JIT) pass.
+\end{itemize}
+
+\paragraph{waLBerla tests.}
+\begin{itemize}
+  \item \code{TestSweepGeneration}: 6 of 6 pass (1D and 2D fields, v8 fields, field
+        swaps). This test pins its sweeps to \code{Target.CPU} on every platform, so it
+        validates the sweepgen machinery and the new build flags, not the RVV backend.
+  \item An extra 3D stencil sweep on a \cls{GhostLayerField}, generated with
+        vectorization and no target override, includes \file{rvv.hpp}, uses
+        \code{vle64}/\code{vfadd}/\code{vfmul}/\code{vfmv}/\code{vse64}, and compiles
+        with waLBerla's full warning set (\code{-Wall -Wconversion -Wshadow -pedantic})
+        without a single warning.
+  \item \code{TestLbmScenarios_CXX}: 9 of 9 pass (fully periodic, mirrored half channel
+        and free-slip pipe, each with 1, 2 and 4 MPI processes). This is the default
+        waLBerla path on the K1 after the change: \code{CurrentCPU} = \code{RISCV_RVV},
+        not vectorized, with lbmpy 2.1.1, boundaries, and the v8 halo exchange over MPI.
+\end{itemize}
+
+\paragraph{Checksums of the benchmark.}
+Every run prints the total kinetic energy after the last step.
+\begin{itemize}
+  \item \textbf{Double precision:} all six variants of both compilers agree to all
+        twelve printed digits ($3.775155682480\cdot10^{2}$ for $64^3$ cells and 200
+        steps), on one core and with 4 and 8 processes. The explicit RVV sweeps compute
+        exactly what the scalar ones compute.
+  \item \textbf{Single precision:} variants with the same expression structure agree
+        exactly (\code{scalar} = \code{autovec}). Between structures, results differ by
+        at most $4.7\cdot10^{-6}$ relative, about 60 single-precision ulps after
+        200 steps over 262\,144 cells. Global CSE reorders the arithmetic, and the
+        compilers contract scalar code into FMAs but not RVV intrinsics, so this is
+        expected. The explicit sweeps give \emph{bit-identical} results with GCC and
+        Clang: the intrinsics fix the order of operations.
+\end{itemize}
+
+\section{Benchmark setup}\label{r02:sec:results-setup}
+
+\code{SweepgenLbmCPU} (\cref{r02:sec:app}): D3Q19 SRT, fully periodic, $64^3$ cells per
+process. Single core: 200 timed steps after 10 warm-up steps, pinned to core 2, best of
+3 runs (spread at most 1.2\,\% where recorded). Multi-core: 100 steps, \code{mpirun --bind-to core},
+best of 2 runs (spread at most 3.9\,\%). Four configurations: \{GCC 14.2, Clang 18.1.8\}
+$\times$ \{double, single\} precision, each with the six variants of
+\cref{r02:sec:app}.
+
+\section{Single core}\label{r02:sec:results-single}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Single-core throughput in MLUP/s ($64^3$ cells, best of 3). In parentheses:
+    speedup over the plain scalar build of the same configuration.}\label{r02:tab:single}
+  \begin{tabular}{@{}lllll@{}}
+    \toprule
+    \textbf{Variant} & \textbf{GCC f64} & \textbf{Clang f64} & \textbf{GCC f32} & \textbf{Clang f32}\\
+    \midrule
+    scalar        & 0.90 (1.00$\times$) & 0.77 (1.00$\times$) & 1.39 (1.00$\times$) & 1.10 (1.00$\times$)\\
+    scalar\_cse   & 0.96 (1.06$\times$) & 0.86 (1.12$\times$) & 1.56 (1.12$\times$) & 1.22 (1.11$\times$)\\
+    autovec       & 0.91 (1.00$\times$) & 0.77 (1.00$\times$) & 1.39 (1.00$\times$) & 1.11 (1.01$\times$)\\
+    autovec\_cse  & 0.96 (1.06$\times$) & 0.87 (1.12$\times$) & 1.60 (1.15$\times$) & 1.24 (1.12$\times$)\\
+    explicit      & 1.14 (1.26$\times$) & \textbf{1.01 (1.31$\times$)} & 2.37 (1.70$\times$) & \textbf{2.11 (1.92$\times$)}\\
+    explicit\_cse & \textbf{1.18 (1.31$\times$)} & 0.99 (1.28$\times$) & \textbf{2.40 (1.73$\times$)} & 2.06 (1.87$\times$)\\
+    \midrule
+    \multicolumn{5}{@{}l}{\textit{Best explicit / best autovec}}\\
+                  & \textbf{1.23$\times$} & \textbf{1.16$\times$} & \textbf{1.50$\times$} & \textbf{1.70$\times$}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Vector instructions in the generated sweep object file (\texttt{llvm-objdump}).}\label{r02:tab:insns}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    \textbf{Variant} & \textbf{GCC f64} & \textbf{Clang f64} & \textbf{GCC f32} & \textbf{Clang f32}\\
+    \midrule
+    scalar        & 0   & 0   & 0   & 0\\
+    autovec       & 138 & 55  & 138 & 55\\
+    explicit      & 665 & 592 & 665 & 590\\
+    explicit\_cse & 608 & 561 & 608 & 561\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\Cref{r02:tab:single,r02:tab:insns} support four conclusions:
+\begin{enumerate}
+  \item \textbf{Before this work, waLBerla's LBM effectively ran scalar on the K1.}
+        Neither compiler's auto-vectorizer does anything useful with the D3Q19 sweep:
+        GCC emits 138 vector instructions, Clang 55, and \code{autovec} runs at the
+        speed of \code{scalar}. The generic kernel takes the $x$ stride as a run-time
+        argument (\cref{r02:sec:generated-sweep}), so the compiler cannot prove that
+        consecutive cells are contiguous.
+  \item \textbf{The explicit RVV sweep is the fastest build in every configuration}:
+        1.16--1.23$\times$ the best auto-vectorized build in double precision,
+        1.50--1.70$\times$ in single precision.
+  \item \textbf{Single precision gains more.} A 256-bit register holds 8 floats instead
+        of 4 doubles, and each cell moves half the bytes.
+  \item \textbf{Global CSE helps GCC but not Clang.} With GCC, \code{explicit_cse} is
+        3\,\% faster than \code{explicit} in f64; with Clang it is 2--3\,\% slower.
+        Clang removes repeated intrinsic calls by itself, GCC does not
+        (\cref{r02:sec:backend-glance}). Clang is slower than GCC in every variant
+        (scalar f64: 0.77 versus 0.90), so its speedup ratios look better only because
+        its baseline is lower. The fastest build overall is GCC with \code{explicit_cse}.
+\end{enumerate}
+
+\section{Multiple cores}\label{r02:sec:results-multi}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Throughput with 4 and 8 MPI processes in MLUP/s ($64^3$ cells per process,
+    best of 2), and the speedup over scalar.}\label{r02:tab:multi}
+  \begin{tabular}{@{}llllll@{}}
+    \toprule
+    \textbf{Processes} & \textbf{Variant} & \textbf{GCC f64} & \textbf{Clang f64} & \textbf{GCC f32} & \textbf{Clang f32}\\
+    \midrule
+    4 & scalar        & 3.30 (1.00$\times$) & 2.82 (1.00$\times$) & 5.25 (1.00$\times$) & 4.31 (1.00$\times$)\\
+      & autovec\_cse  & 3.48 (1.05$\times$) & 3.12 (1.11$\times$) & 5.57 (1.06$\times$) & 4.81 (1.12$\times$)\\
+      & explicit      & 3.84 (1.16$\times$) & 3.56 (1.26$\times$) & 7.65 (1.46$\times$) & 7.13 (1.66$\times$)\\
+      & explicit\_cse & 3.89 (1.18$\times$) & 3.51 (1.24$\times$) & 7.81 (1.49$\times$) & 6.96 (1.62$\times$)\\
+    \midrule
+    8 & scalar        & 4.90 (1.00$\times$) & 4.48 (1.00$\times$) & 8.55 (1.00$\times$) & 7.50 (1.00$\times$)\\
+      & autovec\_cse  & 5.00 (1.02$\times$) & 4.78 (1.07$\times$) & 9.00 (1.05$\times$) & 8.07 (1.08$\times$)\\
+      & explicit      & 5.24 (1.07$\times$) & 5.07 (1.13$\times$) & 10.38 (1.21$\times$) & 10.13 (1.35$\times$)\\
+      & explicit\_cse & 5.26 (1.07$\times$) & 5.03 (1.12$\times$) & 10.45 (1.22$\times$) & 9.95 (1.33$\times$)\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r02/figures/speedup-chart}
+  \caption[Speedup of explicit RVV over auto-vectorization]{Best explicit RVV build
+    divided by the best auto-vectorized build of the same configuration, with 1, 4 and 8
+    MPI processes. The gain shrinks as more cores share the memory system.}
+  \label{r02:fig:speedup}
+\end{figure}
+
+The explicit sweeps stay ahead with more cores, but the margin shrinks
+(\cref{r02:fig:speedup}): with all eight cores it is 1.05--1.06$\times$ in double
+precision and 1.16--1.26$\times$ in single precision. Going from 4 to 8 processes,
+i.e.\ adding the second cluster, raises the throughput of the explicit GCC f64 build only
+from 3.89 to 5.26 MLUP/s (1.35$\times$).
+
+\section{Why the gain shrinks}\label{r02:sec:results-bandwidth}
+
+The generated \code{StreamCollide} reads 19 PDFs and writes 19 PDFs, $\rho$ and three
+velocity components: at least 42 values per cell, 336 bytes in double precision and 168
+in single precision (write-allocate traffic not counted). Multiplying by the
+throughput gives the memory traffic:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrr@{}}
+  \toprule
+  & \multicolumn{2}{c}{\textbf{explicit\_cse, GCC}} & \multicolumn{2}{c}{\textbf{explicit, Clang}} & \multicolumn{2}{c}{\textbf{scalar, GCC}}\\
+  \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+  \textbf{Processes} & f64 & f32 & f64 & f32 & f64 & f32\\
+  \midrule
+  1 & 396 & 403 & 339 & 354 & 302 & 234\\
+  4 & 1307 & 1312 & 1196 & 1198 & 1109 & 882\\
+  8 & 1767 & 1756 & 1704 & 1702 & 1646 & 1436\\
+  \bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize Lower bound of the memory traffic in MB/s (MLUP/s $\times$ bytes per cell).}
+\end{center}
+
+The explicit sweeps move the \emph{same} number of bytes per second in double and single
+precision: 396 versus 403\,MB/s on one core, 1307 versus 1312 on four, 1767 versus 1756 on
+eight. That is the signature of a bandwidth limit. Single precision runs twice as many
+cells per second only because each cell is half the bytes. The scalar builds stay below
+the limit, so vectorization helps them; the more cores share the memory system, the
+closer even scalar code gets to the limit (1646 of about 1770\,MB/s with eight cores in
+f64), and the less there is to gain. On one core, about 400\,MB/s is a per-core limit,
+not the DRAM limit: the in-order X60 core can keep only a few cache misses in flight.
+
+\begin{keyidea}[What the RVV support achieves]
+  The backend removes the compute bottleneck of the waLBerla LBM sweep on the K1. Beyond
+  that, the sweep is limited by memory bandwidth, which no code generator can fix.
+  Further gains need less traffic per cell: in-place streaming (AA pattern, esoteric
+  twist), single-precision storage, or fusing more work into one pass.
+\end{keyidea}
+
+\section{Context: kernel-level experiments}\label{r02:sec:results-context}
+
+Before the waLBerla runs, the same backend was studied on a D2Q9 LBM harness
+(\file{python/learn-lb-pystencil/lb-pystencils.py}) and on standalone kernels
+(\file{misc/rvv-vs-autovec/}). Their findings explain the waLBerla numbers:
+\begin{itemize}
+  \item With the inner stride a run-time value, as in waLBerla and the \ps{} JIT,
+        GCC's auto-vectorizer turns every field access into indexed gathers and scatters
+        (\code{vluxei64}/\code{vsuxei64}), while the explicit backend uses unit-stride
+        loads. With GCC, the explicit kernel was 1.24--1.31$\times$ (f64) and
+        1.35--1.53$\times$ (f32) faster than the best auto-vectorized build.
+  \item Clang versions the loop on stride $=1$ and auto-vectorizes at LMUL 2, so for
+        Clang the stride contract gives no advantage. The weakest combination is Clang
+        with explicit intrinsics: it keeps all constant splats in vector registers and
+        spills, and schedules poorly for the in-order X60. Rewriting splats as
+        vector--scalar \code{.vf} operations (\code{vfmul_vf} instead of
+        \code{vfmul_vv} with a \code{vfmv} splat) removed the spills and gained 7--25\,\%
+        with Clang and 1.5--13\,\% with GCC.
+  \item Hand-inserted FMAs gave no gain with GCC, so the backend does not emit them.
+\end{itemize}

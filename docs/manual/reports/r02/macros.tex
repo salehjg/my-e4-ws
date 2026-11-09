@@ -1,0 +1,64 @@
+% =============================================================================
+%  macros.tex -- styles and macros only report r02 uses. \input by report.tex
+%  before anything else. Do not use these in titles or captions (see preamble.tex).
+%  Names start with r02 so they cannot clash with other reports' definitions.
+% =============================================================================
+
+% ---- TikZ styles for the diagrams in figures/ -----------------------------------
+\tikzset{
+  r02box/.style={draw=psgray!80,fill=white,rounded corners=1.5pt,align=center,
+    font=\footnotesize,inner sep=3.5pt,minimum height=7mm},
+  r02code/.style={r02box,fill=codebg,font=\ttfamily\scriptsize},
+  r02changed/.style={draw=psorange!90!black,fill=psorange!12,line width=0.8pt},
+  r02new/.style={draw=psteal!90!black,fill=psteal!10,line width=0.8pt},
+  r02group/.style={draw=psgray!60,dashed,rounded corners=3pt,inner sep=5pt},
+  r02arrow/.style={-{Stealth[length=2mm]},semithick,draw=psgray!90!black},
+  r02label/.style={font=\scriptsize,text=psgray!90!black,align=center},
+  r02marker/.style={circle,fill=psorange!90!black,text=white,font=\scriptsize\bfseries,
+    inner sep=0.8pt,minimum size=4mm},
+  r02cell/.style={draw=psgray!70,line width=0.3pt},
+}
+%   \rmark{n}: the numbered orange marker of the diagrams, for use in running text
+\newcommand{\rmark}[1]{\tikz[baseline=(m.base)]\node[r02marker](m){#1};}
+
+% ---- Listings -----------------------------------------------------------------
+\lstdefinestyle{cmake}{
+  language={},
+  morekeywords={if,elseif,else,endif,set,add_flag,file,foreach,endforeach,
+    add_executable,target_compile_options,target_compile_definitions,
+    target_link_libraries,walberla_generate_sources,add_subdirectory,list,
+    function,endfunction,option,STRINGS,REGEX,MATCHES,STREQUAL,PRIVATE,APPEND,
+    LIMIT_COUNT,SCRIPTS,SCRIPT_ARGS,AND,NOT},
+  keywordstyle=\color{kwcolor}\bfseries,
+  comment=[l]{\#},
+  commentstyle=\color{commentcolor},
+  morestring=[b]",
+  stringstyle=\color{strcolor},
+}
+\lstnewenvironment{cmakecode}[1][]{\lstset{style=cmake,#1}}{}
+\lstdefinestyle{diff}{
+  language={},
+  moredelim=[il][\color{psred!85!black}]{---},
+  moredelim=[l][\color{psred!85!black}]{-\ },
+  moredelim=[l][\color{psteal!85!black}]{+\ },
+  moredelim=[l][\color{psgray}]{@@},
+}
+\lstnewenvironment{diffcode}[1][]{\lstset{style=diff,#1}}{}
+
+% ---- Boxes --------------------------------------------------------------------
+\newtcolorbox{r02fork}[1][Fork only: not in upstream waLBerla or pystencils]{psbox,
+  colback=psorange!6,colframe=psorange!85,title={#1}}
+
+% ---- Small helpers ------------------------------------------------------------
+%   \cmakeopt{NAME}: a CMake cache variable
+\newcommand{\cmakeopt}[1]{\code{#1}}
+
+% ---- Page breaks ----------------------------------------------------------------
+%   \rneedspace{len}: start a new page unless at least len of vertical space is left
+%   (the classic needspace trick). Used before captioned listings so that a listing
+%   does not start with its caption and one or two lines at the bottom of a page.
+\makeatletter
+\newcommand{\rneedspace}[1]{\par\penalty-100\begingroup
+  \setlength{\dimen@}{#1}\dimen@ii\pagegoal\advance\dimen@ii-\pagetotal
+  \ifdim\dimen@>\dimen@ii\ifdim\dimen@ii>\z@\vfil\fi\penalty-10000\fi\endgroup}
+\makeatother

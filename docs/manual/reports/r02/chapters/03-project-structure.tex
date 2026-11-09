@@ -1,0 +1,180 @@
+\chapter{Project Structure and Build System}\label{r02:ch:structure}
+
+This chapter maps the waLBerla repository and explains how a build is configured. The
+point that matters most for RVV: \emph{every} translation unit, including the generated
+sweeps, is compiled with the flags that waLBerla's CMake files assemble. Whether the
+C++ compiler may use the vector unit at all is decided there, not in \ps{}.
+
+\section{The source tree}\label{r02:sec:tree}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Directory} & \textbf{Content}\\
+  \midrule
+  \file{CMakeLists.txt} & top-level build: options, compiler detection, dependency
+    lookup, then \file{src/}, \file{include/} (v8), \file{sweepgen/},
+    \file{tests/}, \file{apps/}\\
+  \file{cmake/} & helper functions (\file{waLBerlaFunctions.cmake},
+    \file{waLBerlaHelperFunctions.cmake}), \file{walberla_v8core.cmake}, \code{Find*}
+    modules, and \file{compileroptions/}: one file per compiler (\file{GNU.cmake},
+    \file{Clang.cmake}, \file{Intel.cmake}, \file{IntelLLVM.cmake},
+    \file{FujitsuClang.cmake}, \dots)\\
+  \file{src/} & the classic modules, one static library each: \file{core},
+    \file{blockforest}, \file{field}, \file{stencil}, \file{communication},
+    \file{timeloop}, \file{boundary}, \file{lbm}, \file{lbm_generated}, \file{gpu},
+    \file{vtk}, \file{mesa_pd}, \file{simd}, \dots\\
+  \file{include/walberla/} & header-only libraries: \file{v8/} (the v8 core:
+    \file{memory/}, \file{sweep/}, \file{halo_exchange/}, \file{domain/}) and
+    \file{sweepgen/} (small runtime helpers the generated code includes, e.g.\
+    \file{SweepParts.hpp})\\
+  \file{sweepgen/} & the sweepgen code generation package: Python sources in
+    \file{src/sweepgen/}, its CMake integration in \file{cmake/} (\file{SweepGen.cmake},
+    \file{SweepgenConfig.template.py}, venv management), and its user manual\\
+  \file{python/} & the \emph{legacy} code generation bridge
+    \file{pystencils_walberla} and \file{lbmpy_walberla} (\ps{} 1.x API), the Python
+    bindings \file{waLBerla}, and MESA-PD's generator\\
+  \file{apps/} & \file{benchmarks/} (e.g.\ \file{UniformGridCPU}, and the new
+    \file{SweepgenLbmCPU}), \file{examples/} (v8 + sweepgen examples),
+    \file{showcases/}, \file{tutorials/}, \file{tools/}, \file{pythonmodule/}\\
+  \file{tests/} & one folder per module; \file{tests/sweepgen/} and \file{tests/v8/}
+    test the new stack (\code{TestSweepGeneration}, \code{TestLbmScenarios_CXX})\\
+  \file{doc/}, \file{utilities/}, \file{extern/}, \file{geometry/} & Doxygen sources
+    and guides, helper scripts, bundled third-party code, geometry files\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+A waLBerla \term{application} is a CMake target in \file{apps/} that links the modules
+it needs (\code{walberla::v8} for the new stack) and, if it uses code generation,
+registers its generator scripts with \code{walberla_generate_sources}
+(\cref{r02:sec:cmake-codegen}). The build happens out of source; each application and
+test is its own make target, so a developer builds only what they need, e.g.\
+\code{cmake --build build --target SweepgenLbmCPU_explicit}.
+
+\section{Configuration options}\label{r02:sec:options}
+
+waLBerla is configured with CMake cache variables. The ones relevant to this report:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.6cm}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{Option} & \textbf{Default} & \textbf{Effect}\\
+  \midrule
+  \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} & OFF & add the host's instruction set to
+    the compiler flags (\code{-march=native}), and let code generation target the host
+    CPU (\code{Target.CurrentCPU})\\
+  \cmakeopt{WALBERLA_DOUBLE_ACCURACY} & ON & \code{real_t} is \code{double}; OFF gives
+    \code{float}, also in generated code\\
+  \cmakeopt{WALBERLA_BUILD_WITH_MPI} & ON & distributed-memory parallelism\\
+  \cmakeopt{WALBERLA_BUILD_WITH_OPENMP} & OFF & threads; generated kernels get
+    \code{omp parallel for}\\
+  \cmakeopt{WALBERLA_BUILD_WITH_CUDA}, \code{_HIP} & OFF & GPU builds; code generation
+    targets CUDA or HIP\\
+  \cmakeopt{WALBERLA_ENABLE_V8CORE} & OFF & the v8 core library\\
+  \cmakeopt{WALBERLA_ENABLE_SWEEPGEN} & OFF & sweepgen code generation (requires the v8
+    core)\\
+  \cmakeopt{WALBERLA_SWEEPGEN_MANAGED_VENV} & ON & let CMake create a Python venv and
+    install \ps{}, lbmpy and pystencils-sfg from their git \texttt{master} branches;
+    OFF uses the Python given by \cmakeopt{Python_EXECUTABLE}\\
+  \cmakeopt{WALBERLA_BUILD_WITH_CODEGEN} & OFF & the \emph{legacy} code generation path
+    (\file{pystencils_walberla}, \ps{} 1.x)\\
+  \cmakeopt{WALBERLA_BUILD_TESTS}, \code{_BENCHMARKS}, \code{_EXAMPLES}, \dots & ON &
+    which parts of \file{tests/} and \file{apps/} are configured\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+Note that \cmakeopt{WALBERLA_OPTIMIZE_FOR_LOCALHOST} has two effects, one on the C++
+compiler and one on the code generator. Both have to agree, and on RISC-V neither worked
+(\cref{r02:ch:gap}).
+
+\section{Where compiler flags come from}\label{r02:sec:compileroptions}
+
+The top-level \file{CMakeLists.txt} detects the compiler and includes the matching file
+from \file{cmake/compileroptions/} (\code{include(GNU)} for GCC, \code{include(Clang)}
+for Clang). These files set warnings, C++ standard details, and the architecture flags.
+\Cref{r02:lst:gnu-upstream} shows the architecture part of \file{GNU.cmake} as it is
+upstream; \file{Clang.cmake} is the same apart from a special case for Apple
+Silicon.
+
+\rneedspace{12\baselineskip}
+\begin{cmakecode}[nolol=false,caption={[Architecture flags in upstream GNU.cmake]Architecture flags in upstream \texttt{cmake/compileroptions/GNU.cmake} (before this work).},label=r02:lst:gnu-upstream]
+# architecture optimization
+if(WALBERLA_OPTIMIZE_FOR_LOCALHOST)
+  add_flag(CMAKE_CXX_FLAGS "-march=native")
+endif()
+
+if(EXISTS "/proc/sys/abi/sve_default_vector_length")
+  file(READ "/proc/sys/abi/sve_default_vector_length" SVE_LENGTH_BYTES)
+  string(STRIP "${SVE_LENGTH_BYTES}" SVE_LENGTH_BYTES)
+  math(EXPR SVE_LENGTH "${SVE_LENGTH_BYTES} * 8")
+  add_flag(CMAKE_CXX_FLAGS "-msve-vector-bits=${SVE_LENGTH}")
+  add_flag(CMAKE_C_FLAGS "-msve-vector-bits=${SVE_LENGTH}")
+endif()
+\end{cmakecode}
+
+Three observations, all relevant later:
+\begin{enumerate}
+  \item The only instruction-set logic is \code{-march=native}. waLBerla relies on the
+        compiler to know the host. On x86 and ARM, GCC and Clang do.
+  \item ARM SVE, the other scalable vector ISA, already has a special case: the kernel
+        reports the vector length in \file{/proc/sys/abi/sve_default_vector_length}, and
+        CMake pins it with \code{-msve-vector-bits}. RISC-V had nothing equivalent; a
+        \code{grep -ri 'riscv\textbar rvv'} over the upstream tree finds no match.
+  \item The flags are global: they apply to the classic modules, the v8 headers, the
+        applications and the generated sweeps alike. An intrinsic such as
+        \code{__riscv_vle64_v_f64m1} only compiles if the global flags enable the
+        vector extension.
+\end{enumerate}
+
+\section{waLBerla's own SIMD layer}\label{r02:sec:simd-module}
+
+The classic module \file{src/simd/} contains a small hand-written SIMD abstraction
+(\file{SIMD.h} with the back ends \file{AVX.h} and \file{AVX2.h} and a scalar emulation
+in \file{Scalar.h}), selected by preprocessor macros such as \code{__AVX2__}. It predates
+code generation and is x86-only. Today it is used only by its own test,
+\file{tests/simd/SIMD_Equivalence.cpp}. It plays no role for generated sweeps, so it was
+left alone: on RISC-V it falls back to its scalar implementation.
+
+\section{Code generation in the build}\label{r02:sec:cmake-codegen}
+
+With \cmakeopt{WALBERLA_ENABLE_SWEEPGEN=ON}, the top-level \file{CMakeLists.txt}
+includes \file{sweepgen/cmake/SweepGen.cmake}, which does three things at configure
+time:
+\begin{enumerate}
+  \item It sets up the Python interpreter for code generation: either a managed venv in
+        the build directory, or (with \cmakeopt{WALBERLA_SWEEPGEN_MANAGED_VENV=OFF}) the
+        interpreter given by \cmakeopt{Python_EXECUTABLE}, after
+        \file{CheckExternalEnv.py} has verified that the needed packages import.
+  \item It finds pystencils-sfg (\code{find_package(PystencilsSfg)}), which provides
+        the CMake function that runs generator scripts.
+  \item It writes the \term{project configuration module}
+        \file{<build>/SweepgenConfig.py} from the template
+        \file{sweepgen/cmake/SweepgenConfig.template.py}. CMake
+        substitutes its cache variables into the template, so the module carries the
+        build configuration into every generator script (\cref{r02:lst:sweepgen-config}).
+\end{enumerate}
+An application then calls \code{walberla_generate_sources(<target> SCRIPTS gen.py)}.
+For each script this registers a custom command that runs the script with the codegen
+Python during the build, places the generated \file{.hpp}/\file{.cpp} under
+\file{<build>/.../_gen/<target>/gen/}, adds the \file{.cpp} to the target's sources, and
+links the target against \code{walberla::sweepgen}. The generated files are ordinary
+C++ and are compiled with the same global flags as everything else.
+
+\rneedspace{12\baselineskip}
+\begin{pycode}[nolol=false,caption={[The project configuration module template]The template of the project configuration module (\texttt{sweepgen/cmake/SweepgenConfig.template.py}, abridged).},label=r02:lst:sweepgen-config]
+def project_info() -> WalberlaBuildConfig:
+    return WalberlaBuildConfig(
+        c_compiler_id="${CMAKE_C_COMPILER_ID}",
+        cxx_compiler_id="${CMAKE_CXX_COMPILER_ID}",
+        use_double_precision=cmake_parse_bool("${WALBERLA_DOUBLE_ACCURACY}"),
+        optimize_for_localhost=cmake_parse_bool("${WALBERLA_OPTIMIZE_FOR_LOCALHOST}"),
+        mpi_enabled=cmake_parse_bool("${WALBERLA_BUILD_WITH_MPI}"),
+        openmp_enabled=cmake_parse_bool("${WALBERLA_BUILD_WITH_OPENMP}"),
+        cuda_enabled=cmake_parse_bool("${WALBERLA_BUILD_WITH_CUDA}"),
+        hip_enabled=cmake_parse_bool("${WALBERLA_BUILD_WITH_HIP}"),
+        likwid_enabled=cmake_parse_bool("${WALBERLA_BUILD_WITH_LIKWID_MARKERS}"),
+    )
+\end{pycode}
+
+\Cref{r02:fig:build-flow} in the next chapter shows the whole path from CMake to an
+object file.

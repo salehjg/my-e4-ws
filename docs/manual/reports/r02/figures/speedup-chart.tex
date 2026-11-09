@@ -1,0 +1,32 @@
+% Best explicit RVV build over the best auto-vectorized build, per configuration and
+% number of MPI processes (data: Table "best explicit / best autovec", Chapter 11).
+% Sequential encoding: more processes = darker blue.
+\begin{tikzpicture}[x=1cm,y=2.6cm,font=\footnotesize]
+  \def\bw{0.62}   % bar width
+  \def\gap{0.07}  % surface gap between bars
+  % recessive grid and axis
+  \foreach \v in {0.5,1.5} \draw[psgray!25,line width=0.3pt] (-0.4,\v) -- (11.9,\v);
+  \foreach \v in {0,0.5,1,1.5}
+    \node[anchor=east,font=\scriptsize,text=psgray!90!black] at (-0.45,\v) {\pgfmathprintnumber[fixed,precision=1,min exponent for 1000 sep=5]{\v}$\times$};
+  \draw[psgray!80,line width=0.4pt] (-0.4,0) -- (11.9,0);
+  % data: group / label / np1 / np4 / np8
+  \foreach \g/\lab/\a/\b/\c in {0/{GCC, f64}/1.23/1.12/1.05, 1/{Clang, f64}/1.16/1.14/1.06,
+                                 2/{GCC, f32}/1.50/1.40/1.16, 3/{Clang, f32}/1.70/1.48/1.26} {
+    \pgfmathsetmacro{\xo}{\g*3.1+0.35}
+    \fill[psblue!30,rounded corners=0.8pt] (\xo,0) rectangle ++(\bw,\a);
+    \fill[psblue!62,rounded corners=0.8pt] (\xo+\bw+\gap,0) rectangle ++(\bw,\b);
+    \fill[psblue!100!black,rounded corners=0.8pt] (\xo+2*\bw+2*\gap,0) rectangle ++(\bw,\c);
+    \node[anchor=north,font=\footnotesize] at (\xo+1.5*\bw+\gap,-0.04) {\lab};
+  }
+  % baseline: best auto-vectorized build of the same configuration
+  \draw[psred!80!black,dashed,line width=0.7pt] (-0.4,1) -- (11.9,1);
+  \node[anchor=west,font=\scriptsize,text=psred!80!black,align=left] at (11.95,1.0) {best\\autovec};
+  % legend
+  \begin{scope}[shift={(0.35,1.8)}]
+    \foreach \x/\c/\t in {0/psblue!30/1 process, 2.4/psblue!62/4 processes (one cluster),
+                          7.0/psblue!100!black/8 processes (whole chip)} {
+      \fill[\c,rounded corners=0.8pt] (\x,0) rectangle ++(0.32,0.09);
+      \node[anchor=west,font=\scriptsize] at (\x+0.38,0.045) {\t};
+    }
+  \end{scope}
+\end{tikzpicture}

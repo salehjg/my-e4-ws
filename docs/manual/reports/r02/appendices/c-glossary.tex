@@ -1,0 +1,59 @@
+\chapter{Glossary}\label{r02:app:glossary}
+
+\begin{description}[style=nextline,itemsep=0.15em]
+  \item[AVX parity] The design rule of the RVV backend: make exactly the assumptions the
+    x86 AVX backend makes (fixed width, same loop structure, same supported types).
+  \item[Block] A rectangular part of the domain with its own cell grid; the unit of
+    distribution, data and work in waLBerla.
+  \item[BlockForest / StructuredBlockForest] The data structure holding all blocks and
+    their distribution over processes; the structured variant gives each block a
+    Cartesian cell grid.
+  \item[Border slice / ghost slice] The outermost interior cells of a block that a
+    neighbour needs / the ghost-layer cells that receive them.
+  \item[CSE (global)] Common subexpression elimination over a whole update rule
+    (lbmpy's \code{cse_global}); removes repeated subterms before code generation.
+  \item[CurrentCPU] The \ps{} target ``best vector target of this host'', resolved by
+    \code{Target.auto_cpu()} at code generation time.
+  \item[D3Q19] The LBM stencil with 3 dimensions and 19 discrete velocities.
+  \item[Explicit vectorization] SIMD code written (here: generated) with intrinsics,
+    as opposed to auto-vectorization by the compiler.
+  \item[fzyx / zyxf] Field layouts: structure of arrays with $x$ fastest / array of
+    structures with the value index fastest.
+  \item[Generator script] A Python file run during the build that emits C++ through
+    pystencils-sfg and sweepgen.
+  \item[Ghost layer] Extra cells around a block's interior that hold copies of the
+    neighbours' border values.
+  \item[Halo exchange] Filling the ghost layers from the neighbours, by local copy or
+    MPI (classic name: communication).
+  \item[Intrinsic] A C function that maps to one machine instruction, e.g.\
+    \code{__riscv_vfadd_vv_f64m1}.
+  \item[K1 / X60] The SpacemiT K1 chip (8 cores) of the Banana~Pi BPI-F3 / its in-order
+    RISC-V cores with RVV~1.0 at VLEN = 256.
+  \item[LBM] Lattice Boltzmann method: fluid simulation by streaming and colliding
+    particle distribution functions on a grid.
+  \item[lbmpy] Python package that derives LBM update rules symbolically for \ps{}.
+  \item[LMUL] RVV register-group multiplier; the backend uses \code{m1} and \code{mf2}.
+  \item[MLUP/s] Million lattice-cell updates per second.
+  \item[Pack info] An object that packs a field's border slice into a buffer and
+    unpacks it into a ghost slice.
+  \item[PDF] Particle distribution function: one of the $q$ values per LBM cell.
+  \item[Platform (\ps{})] The backend class that maps vector IR to a target's intrinsics
+    (\cls{X86VectorCpu}, \cls{RvvCpu}, \dots).
+  \item[pystencils-sfg] The source file generator that writes C++ files around \ps{}
+    kernels and runs generator scripts from CMake.
+  \item[Pull scheme] LBM streaming where each cell gathers incoming PDFs from its
+    neighbours.
+  \item[RVV] The RISC-V Vector extension, version 1.0.
+  \item[SRT / BGK] Single-relaxation-time collision operator.
+  \item[Sweep] A function applied to one block; generated sweeps are C++ classes whose
+    \code{operator()} takes an \code{IBlock*}.
+  \item[sweepgen] waLBerla's code generation layer on top of pystencils-sfg.
+  \item[Target (\ps{})] The hardware a kernel is generated for, e.g.\ \code{GenericCPU},
+    \code{X86_AVX}, \code{RISCV_RVV}, \code{CUDA}.
+  \item[v8 core] waLBerla's experimental, header-only, CPU/GPU-portable core library in
+    \file{include/walberla/v8/}.
+  \item[VLA / VLS] Vector-length agnostic / specific code.
+  \item[VLEN, SEW, VLMAX, vl] RVV register width, element width, maximum and active
+    element count (\cref{r02:sec:rvv-concepts}).
+  \item[Zvl256b] RVV extension name meaning ``VLEN $\geq$ 256''.
+\end{description}
