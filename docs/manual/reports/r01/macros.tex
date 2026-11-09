@@ -1,0 +1,27 @@
+% =============================================================================
+%  macros.tex -- styles and macros only report r01 uses. \input by report.tex
+%  before anything else. Do not use these in titles or captions (see preamble.tex).
+% =============================================================================
+
+% ---- Grid / stencil figures (figures/*.tex) ------------------------------------
+%   Coordinates are in cells: cell (i, j) is the unit square with lower-left
+%   corner (i, j).
+\tikzset{
+  ghostcell/.style={fill=psgray!20},
+  activecell/.style={fill=psblue!22},
+  centercell/.style={fill=psblue!55},
+  nbcell/.style={fill=psorange!45},
+  remcell/.style={fill=psorange!40},
+  gridline/.style={draw=psgray!75,line width=0.3pt,step=1},
+  domainline/.style={draw=black!75,line width=0.9pt},
+  axisarrow/.style={-{Stealth[length=1.6mm]},semithick,draw=psgray!90!black},
+  flowarrow/.style={-{Stealth[length=2.2mm]},thick,draw=psgray!90!black},
+  figlabel/.style={font=\footnotesize},
+  celltext/.style={font=\scriptsize},
+}
+%   \cellfill[style]{i}{j}: fill grid cell (i, j)
+\newcommand{\cellfill}[3][activecell]{\fill[#1] (#2,#3) rectangle ++(1,1);}
+
+% ---- Boxes --------------------------------------------------------------------
+\newtcolorbox{forkonly}[1][Fork only: not in upstream pystencils]{psbox,
+  colback=psorange!6,colframe=psorange!85,title={#1}}

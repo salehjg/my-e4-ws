@@ -1,5 +1,8 @@
 # Plan: pystencils manual in LaTeX (`docs/manual_pystencil/`)
 
+> **Copied (2026-11-09):** this manual is now also report r01 of `docs/manual/` (`docs/manual/reports/r01/`),
+> built with `docs/manual/build.sh`. Paths below refer to the original copy in `docs/manual_pystencil/`.
+
 ## Context
 The user wants one comprehensive LaTeX tutorial/manual about the `submodules/pystencils` submodule.
 That submodule is on branch `rvv-support`: pystencils `2.0b1+4.g9a989e16`, i.e. upstream 2.0 plus our

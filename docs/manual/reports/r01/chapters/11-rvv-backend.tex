@@ -1,4 +1,4 @@
-\chapter{The RISC-V Vector Backend}\label{ch:rvv-backend}
+\chapter{The RISC-V Vector Backend}\label{r01:ch:rvv-backend}
 
 \begin{forkonly}
   Everything in this chapter exists only on the \texttt{rvv-support} branch of the
@@ -49,7 +49,7 @@ unless the compiler was told that VLEN $\geq$ 256:
 \section{Integration points}
 
 The backend touches the same places any new vector target would
-(\cref{sec:new-backend}):
+(\cref{r01:sec:new-backend}):
 \begin{description}[style=nextline]
   \item[\file{codegen/target.py}] adds \code{Target.RISCV_RVV = _CPU | _VECTOR | _RISCV |
     _RVV}. \code{default_vector_lanes} returns $256/\text{element width}$, like AVX.
@@ -97,13 +97,13 @@ Configure it like any other vector target. The JIT selects the right \code{-marc
 automatically when it runs on an RVV host:
 \pysnippet{ex08_rvv.config}
 \outsnippet{ex08_rvv.headers}
-\csnippet[nolol=false,caption={Jacobi kernel, \texttt{float32}, OpenMP and RVV (8 lanes per vector).},label=lst:rvv-jacobi,basicstyle=\ttfamily\scriptsize]{ex08_rvv.jacobi}
-The structure matches the AVX kernel of \cref{lst:avx} exactly. Only the spelling
+\csnippet[nolol=false,caption={Jacobi kernel, \texttt{float32}, OpenMP and RVV (8 lanes per vector).},label=r01:lst:rvv-jacobi,basicstyle=\ttfamily\scriptsize]{ex08_rvv.jacobi}
+The structure matches the AVX kernel of \cref{r01:lst:avx} exactly. Only the spelling
 differs: \code{vfloat32m1_t} instead of \code{__m256}, and an explicit \code{8uLL}
 vector length in every call. Reductions use a vector accumulator per thread, which is
 folded into the scalar at the end of the parallel region:
 \pysnippet{ex08_rvv.reduction}
-\csnippet[nolol=false,caption={A \texttt{float64} sum reduction for RVV.},label=lst:rvv-reduction]{ex08_rvv.reduction}
+\csnippet[nolol=false,caption={A \texttt{float64} sum reduction for RVV.},label=r01:lst:rvv-reduction]{ex08_rvv.reduction}
 Unlike x86 before AVX-512, RVV has native strided loads and stores. A kernel can
 therefore be vectorized along a non-contiguous axis:
 \pysnippet{ex08_rvv.strided}
@@ -112,7 +112,7 @@ therefore be vectorized along a non-contiguous axis:
 \paragraph{Compiling for RVV on another machine.}
 Code generation works on any host. To compile a kernel for the K1 elsewhere, or to pick
 the compiler on the board, construct the compiler info with the target, as described in
-\cref{sec:jit}:
+\cref{r01:sec:jit}:
 \outsnippet[basicstyle=\ttfamily\scriptsize]{ex08_rvv.flags}
 On this laptop, the listings of this chapter were syntax-checked with the cross
 compiler, the same way the test \file{tests/nbackend/test_rvv_codegen.py} does:
@@ -129,7 +129,7 @@ compiler, the same way the test \file{tests/nbackend/test_rvv_codegen.py} does:
         auto-vectorizer).
   \item Like AVX and the other vector targets, it relies on
         \code{assume_inner_stride_one} for contiguous accesses. That assumption is not
-        checked at run time (\cref{app:pitfalls}).
+        checked at run time (\cref{r01:app:pitfalls}).
 \end{itemize}
 
 \section{Validation and performance}
@@ -161,7 +161,7 @@ build beats the best auto-vectorized build by 1.23$\times$ (GCC, \code{float64})
 1.05--1.26$\times$, because the chip becomes memory-bandwidth bound. The \code{float64}
 checksums of all variants agree.
 
-\section{Recipe: adding a vector backend}\label{sec:new-backend}
+\section{Recipe: adding a vector backend}\label{r01:sec:new-backend}
 
 The RVV work suggests the following checklist for a new SIMD architecture:
 \begin{enumerate}

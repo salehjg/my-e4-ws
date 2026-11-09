@@ -1,4 +1,4 @@
-\chapter{Transformations and Iteration Axes}\label{ch:transformations}
+\chapter{Transformations and Iteration Axes}\label{r01:ch:transformations}
 
 After stage~1 the kernel body is a typed block of assignments, without any loops. This
 chapter explains how the iteration strategy is attached (stage~2), which optimizations
@@ -6,7 +6,7 @@ follow (stage~3), and how the IR is lowered to plain C plus intrinsics (stage~4)
 ends by running the whole pipeline by hand. All passes live in
 \file{backend/transformations/} and are called as \code{Pass(ctx)(ast)}.
 
-\section{Iteration axes}\label{sec:axes}
+\section{Iteration axes}\label{r01:sec:axes}
 
 \ps{} does not generate loops directly. It first represents the iteration space as an
 \term{axes cube}: a \cls{PsAxesCube} node with one \cls{PsAxisRange}
@@ -47,7 +47,7 @@ replacing the innermost buffer strides with the constant 1. Afterwards it runs
 of every axis whose \code{can_hoist} flag is set.
 
 The GPU strategy (\cls{GpuIndexMappingStrategy}, \file{codegen/gpu_indexing.py}) maps
-the indexing schemes of \cref{sec:gpu-options} onto these expansions:
+the indexing schemes of \cref{r01:sec:gpu-options} onto these expansions:
 \code{Linear3D} uses \code{gpu_block_x_thread} for every dimension,
 \code{GridstridedLinear3D} wraps grid-strided loops around them, and
 \code{Blockwise4D} uses \code{gpu_block} for the slow dimensions and
@@ -84,12 +84,12 @@ it relies on the kernel analysis having ruled out loop-carried dependencies.
 \code{<sym>_local = <neutral element>} to the kernel and appends a write-back
 \code{<sym>[0] = op(<sym>[0], <sym>_local)}, which the platform lowers later
 (\code{resolve_reduction}: a plain update on CPUs, atomics on CUDA). Compare
-\cref{lst:reduction}.
+\cref{r01:lst:reduction}.
 
 \section{Optimizations}
 
 \begin{description}
-  \item[\cls{CanonicalizeSymbols}] establishes the canonical form (\cref{sec:ast}). It
+  \item[\cls{CanonicalizeSymbols}] establishes the canonical form (\cref{r01:sec:ast}). It
     renames symbols that are declared more than once and makes every symbol that is never
     updated \code{const}. It runs on the axes cube, after the iteration space is
     materialized, and at the very end.
@@ -102,7 +102,7 @@ it relies on the kernel analysis having ruled out loop-carried dependencies.
   \item[\cls{HoistIterationInvariantDeclarations}] moves declarations whose value does
     not depend on a loop counter (or on anything written in the loop) out of loops and
     hoistable axes. This is how \code{ctr_1__rem_start} and the broadcast constants in
-    \cref{lst:avx} end up outside the loop nest.
+    \cref{r01:lst:avx} end up outside the loop nest.
 \end{description}
 
 \section{Lowering}
@@ -112,11 +112,11 @@ it relies on the kernel analysis having ruled out loop-carried dependencies.
     provides a subclass via \code{platform.get_intrinsic_selector()}. It maps vector types
     to intrinsic types and vector operations, broadcasts, loads, stores, casts,
     horizontal reductions and math functions to \code{CFunction} calls.
-    \Cref{sec:vector-platforms} describes the interface.
+    \Cref{r01:sec:vector-platforms} describes the interface.
   \item[\cls{LowerToC}] linearizes every \cls{PsBufferAcc} into a \cls{PsMemAcc} on the
     base pointer, with index $\sum_i \text{idx}_i\cdot\text{stride}_i$. Anonymous struct
     types are replaced by byte offsets on a \code{uint8_t} pointer (see the sparse kernel
-    in \cref{sec:sparse}).
+    in \cref{r01:sec:sparse}).
   \item[\cls{SelectFunctions}] replaces every remaining IR function call
     (\code{exp}, \code{min}, $\pi$, GPU indices, RNG, reduction write-back) with the
     platform's implementation (\code{platform.select_function(call)} and
@@ -149,7 +149,7 @@ it relies on the kernel analysis having ruled out loop-carried dependencies.
 \end{tabularx}
 \end{center}
 
-\section{Running the pipeline by hand}\label{sec:manual-pipeline}
+\section{Running the pipeline by hand}\label{r01:sec:manual-pipeline}
 
 Because every stage is a callable object, the pipeline can be executed step by step.
 This is the best way to understand it, and the starting point for experiments with new

@@ -1,31 +1,27 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  Build the pystencils manual.
+#  Build the manuals (all reports in one document).
 #
 #  Usage:  ./build.sh [command]
 #
-#    pdf        (default) build build/pystencils-manual.pdf with latexmk
-#    listings   re-run all examples/ and refresh the captured outputs in generated/
-#               (needs Python + pystencils; extra arguments select examples, e.g. ex01)
+#    pdf        (default) build build/manual.pdf with latexmk
+#    listings [rNN] [args...]
+#               refresh a report's captured listings by running its
+#               tools/listings.sh (args are passed on, e.g. ./build.sh listings r01 ex01);
+#               without rNN, every report that has a tools/listings.sh
 #    all        listings, then pdf
 #    watch      rebuild continuously whenever a source file changes
 #    clean      remove the build/ directory
 #    help       show this text
 #
-#  Environment overrides for 'listings':
-#    PYTHON          Python interpreter      (default: <repo>/.venv-rvv/bin/python, else python3)
-#    PYSTENCILS_SRC  pystencils source tree  (default: <repo>/submodules/pystencils/src)
-#
 #  The PDF build itself needs only a TeX distribution (pdflatex, latexmk, biber):
-#  the captured listings in generated/ are part of the repository.
+#  captured listings (e.g. reports/r01/generated/) are part of the repository.
 # =============================================================================
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="$(cd "$HERE/../.." && pwd)"
 BUILD_DIR="build"
-MAIN="main"
-PDF_NAME="pystencils-manual.pdf"
+MAIN="manual"
 
 cd "$HERE"
 
@@ -40,7 +36,8 @@ latexmk_args() {
 prepare_build_dir() {
     # pdflatex writes the .aux file of every \include'd file into the matching
     # sub-directory of the output directory, which must already exist.
-    mkdir -p "$BUILD_DIR/chapters" "$BUILD_DIR/appendices"
+    mkdir -p "$BUILD_DIR"
+    find reports -type d -not -name __pycache__ -exec mkdir -p "$BUILD_DIR/{}" \;
 }
 
 build_pdf() {
@@ -52,20 +49,28 @@ build_pdf() {
         grep -n -A3 -E '^(.*:[0-9]+:|!)' "$BUILD_DIR/$MAIN.log" | head -40 >&2 || tail -40 "$BUILD_DIR/latexmk.out" >&2
         exit 1
     fi
-    cp "$BUILD_DIR/$MAIN.pdf" "$BUILD_DIR/$PDF_NAME"
+    # Duplicate or missing labels still produce a PDF, just with wrong numbers.
+    grep -a -E 'LaTeX Warning: (Label|Reference)|Citation .* undefined' "$BUILD_DIR/$MAIN.log" || true
     local warnings
     warnings=$(grep -cE 'LaTeX Warning|Package .* Warning' "$BUILD_DIR/$MAIN.log" || true)
-    echo "built $BUILD_DIR/$PDF_NAME ($warnings warning(s) in $BUILD_DIR/$MAIN.log)"
+    echo "built $BUILD_DIR/$MAIN.pdf ($warnings warning(s) in $BUILD_DIR/$MAIN.log)"
 }
 
 build_listings() {
-    local py="${PYTHON:-}"
-    if [[ -z "$py" ]]; then
-        if [[ -x "$REPO/.venv-rvv/bin/python" ]]; then py="$REPO/.venv-rvv/bin/python"; else py="python3"; fi
+    local reports=()
+    if [[ $# -gt 0 && -d "reports/$1" ]]; then
+        reports=("$1"); shift
+    else
+        for script in reports/*/tools/listings.sh; do
+            [[ -e "$script" ]] && reports+=("$(basename "$(dirname "$(dirname "$script")")")")
+        done
     fi
-    local src="${PYSTENCILS_SRC:-$REPO/submodules/pystencils/src}"
-    [[ -d "$src/pystencils" ]] || { echo "error: no pystencils sources at $src" >&2; exit 1; }
-    PYTHONPATH="$src${PYTHONPATH:+:$PYTHONPATH}" "$py" -B tools/gen_listings.py "$@"
+    [[ ${#reports[@]} -gt 0 ]] || { echo "error: no report has a tools/listings.sh" >&2; exit 1; }
+    for r in "${reports[@]}"; do
+        [[ -x "reports/$r/tools/listings.sh" ]] || { echo "error: reports/$r has no tools/listings.sh" >&2; exit 1; }
+        echo "[listings] $r"
+        "reports/$r/tools/listings.sh" "$@"
+    done
 }
 
 cmd="${1:-pdf}"

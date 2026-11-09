@@ -1,4 +1,4 @@
-\chapter{Configuration Reference}\label{app:config-reference}
+\chapter{Configuration Reference}\label{r01:app:config-reference}
 
 All options of \cls{CreateKernelConfig} (\file{codegen/config.py}). Options are unset
 (\code{None}) until assigned, and an unset option reads as its default. Validated
@@ -50,7 +50,7 @@ options accept the types in the second column and normalize them.
   \midrule
   \multicolumn{3}{@{}l}{\textit{Deprecated constructor arguments (FutureWarning; planned removal in 2.1)}}\\
   \code{data_type} & & use \code{default_dtype}\\
-  \code{cpu_openmp} & & use \code{cpu.openmp.enable} (\code{cpu_openmp=True} disables OpenMP, \cref{app:pitfalls})\\
+  \code{cpu_openmp} & & use \code{cpu.openmp.enable} (\code{cpu_openmp=True} disables OpenMP, \cref{r01:app:pitfalls})\\
   \code{cpu_vectorize_info} & & use \code{cpu.vectorize.*}\\
   \code{gpu_indexing}, \code{gpu_indexing_params} & & use \code{gpu.*}\\
   \bottomrule

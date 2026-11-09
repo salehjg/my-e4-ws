@@ -1,11 +1,11 @@
-\chapter{Architecture Overview}\label{ch:architecture}
+\chapter{Architecture Overview}\label{r01:ch:architecture}
 
 Part~II looks inside the code generator. This chapter gives the big picture: the
 design principles, the package structure, and the driver that runs the compilation
 pipeline. The following chapters then look at the pieces: the intermediate
-representation (\cref{ch:ir}), the translation from SymPy (\cref{ch:translation}), the
-transformations (\cref{ch:transformations}), and the hardware platforms
-(\cref{ch:platforms,ch:rvv-backend}).
+representation (\cref{r01:ch:ir}), the translation from SymPy (\cref{r01:ch:translation}), the
+transformations (\cref{r01:ch:transformations}), and the hardware platforms
+(\cref{r01:ch:platforms,r01:ch:rvv-backend}).
 
 \section{Design principles}
 
@@ -20,7 +20,7 @@ transformations (\cref{ch:transformations}), and the hardware platforms
         instances are called on an AST and return a new or modified AST:
         \code{EliminateConstants(ctx)(ast)}, \code{LowerToC(ctx)(ast)}, \dots. The
         driver is a short, readable sequence of such calls, and a developer can run any
-        subset by hand (\cref{sec:manual-pipeline}).
+        subset by hand (\cref{r01:sec:manual-pipeline}).
   \item[A shared context.] All passes of one kernel share one
         \cls{KernelCreationContext}. It owns the symbol table, the fields and their
         memory buffers, the iteration space, the reductions and the required headers.
@@ -28,24 +28,24 @@ transformations (\cref{ch:transformations}), and the hardware platforms
         OpenMP, SIMD blocks with remainder loops, GPU thread indices) is first expressed
         as \emph{iteration axes} inside the AST. It is lowered to concrete loops only
         afterwards. CPU and GPU kernels share this machinery and differ in the
-        strategy they choose (\cref{sec:axes}).
+        strategy they choose (\cref{r01:sec:axes}).
   \item[Platforms encapsulate the hardware.] Everything that depends on the instruction
         set (vector intrinsics, math function names, reductions, required headers) lives
-        in a \cls{Platform} class (\cref{ch:platforms}). A new architecture is added by
-        writing a new platform, not by changing the passes (\cref{sec:new-backend}).
+        in a \cls{Platform} class (\cref{r01:ch:platforms}). A new architecture is added by
+        writing a new platform, not by changing the passes (\cref{r01:sec:new-backend}).
   \item[Self-describing results.] The output is a \code{Kernel} object with typed
-        parameters and semantic properties (\cref{sec:kernel-object}). Compiling it is
+        parameters and semantic properties (\cref{r01:sec:kernel-object}). Compiling it is
         a separate concern, handled by the JIT or by external code generators.
 \end{description}
 
 \section{Package structure}
 
-\Cref{tab:packages} maps the packages under \file{src/pystencils/} to these roles.
-\Cref{app:source-map} gives a file-by-file map.
+\Cref{r01:tab:packages} maps the packages under \file{src/pystencils/} to these roles.
+\Cref{r01:app:source-map} gives a file-by-file map.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Main packages of \ps{} 2.0.}\label{tab:packages}
+  \caption{Main packages of \ps{} 2.0.}\label{r01:tab:packages}
   \begin{tabularx}{\linewidth}{@{}l >{\raggedright\arraybackslash}p{4.4cm} >{\raggedright\arraybackslash}X@{}}
     \toprule
     \textbf{Layer} & \textbf{Package / module} & \textbf{Responsibility}\\
@@ -75,7 +75,7 @@ transformations (\cref{ch:transformations}), and the hardware platforms
   \end{tabularx}
 \end{table}
 
-\section{The kernel creation driver}\label{sec:driver}
+\section{The kernel creation driver}\label{r01:sec:driver}
 
 \code{create_kernel} creates a \cls{DefaultKernelCreationDriver}
 (\file{codegen/driver.py}) and calls it. The constructor
@@ -87,9 +87,9 @@ transformations (\cref{ch:transformations}), and the hardware platforms
   \item resolves automatic targets (\code{CurrentCPU} becomes \code{auto_cpu()}), and for
         GPU targets creates the GPU indexing object that later provides the launch
         configuration;
-  \item selects the \cls{Platform} for the target (\cref{tab:platform-selection}).
+  \item selects the \cls{Platform} for the target (\cref{r01:tab:platform-selection}).
 \end{enumerate}
-Its \code{__call__} method then runs the five stages of \cref{fig:pipeline}:
+Its \code{__call__} method then runs the five stages of \cref{r01:fig:pipeline}:
 \begin{pycode}
 def __call__(self, symbolic_kernel: SymbolicKernel) -> Kernel:
     kernel_body = self.parse_kernel_body(symbolic_kernel)
@@ -101,9 +101,9 @@ def __call__(self, symbolic_kernel: SymbolicKernel) -> Kernel:
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/pipeline}
+  \input{reports/r01/figures/pipeline}
   \caption[The five stages of the kernel creation driver]{The five stages of \texttt{DefaultKernelCreationDriver} and the passes they run.}
-  \label{fig:pipeline}
+  \label{r01:fig:pipeline}
 \end{figure}
 
 \paragraph{Stage 1: parse.}
@@ -111,8 +111,8 @@ For assignment input, \code{parse_assignment_collection} wraps the input in an
 \code{AssignmentCollection}, runs \cls{KernelAnalysis} (constraint checks; registers all
 fields in the context and marks read-only fields \code{const}), creates the iteration
 space, and translates the assignments into a typed \code{PsBlock} with
-\cls{FreezeExpressions} and \cls{Typifier} (\cref{ch:translation}). Flowgraph input
-(\cref{sec:flow}) takes a separate path, \code{parse_flowgraph}: it registers the fields
+\cls{FreezeExpressions} and \cls{Typifier} (\cref{r01:ch:translation}). Flowgraph input
+(\cref{r01:sec:flow}) takes a separate path, \code{parse_flowgraph}: it registers the fields
 directly and uses \cls{FreezeFlowgraph}, which typifies each node on its own.
 \cls{KernelAnalysis} is not run on this path.
 
@@ -124,7 +124,7 @@ blocking options. For GPUs it is \cls{GpuIndexMappingStrategy}
 (\file{codegen/gpu_indexing.py}), which reads the indexing scheme. Then
 \cls{MaterializeAxes} turns the axes into loops, pragmas, vectorized bodies or GPU index
 computations, and \cls{ReductionsToMemory} adds the initialization and write-back of
-reduction variables (\cref{ch:transformations}). The SYCL platform still uses the older
+reduction variables (\cref{r01:ch:transformations}). The SYCL platform still uses the older
 platform hook \code{materialize_iteration_space} instead.
 
 \paragraph{Stage 3: general optimizations.}
@@ -150,7 +150,7 @@ the context's metadata and, for GPU kernels, the launch configuration factory.
 \begin{table}[htbp]
   \centering\small
   \caption{Platform selection in \texttt{DefaultKernelCreationDriver.\_get\_platform}.}
-  \label{tab:platform-selection}
+  \label{r01:tab:platform-selection}
   \begin{tabular}{@{}ll@{}}
     \toprule
     \textbf{Target} & \textbf{Platform class} (\file{backend/platforms/})\\

@@ -17,8 +17,8 @@ build/
 *.synctex.gz
 *.toc
 *.xdv
-/main.pdf
+/manual.pdf
 
-# ---- Python (example scripts and the listing generator) ----
+# ---- Python (example scripts and listing generators) ----
 __pycache__/
 *.pyc

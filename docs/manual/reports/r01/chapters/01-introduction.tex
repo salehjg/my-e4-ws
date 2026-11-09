@@ -1,4 +1,4 @@
-\chapter{Introduction}\label{ch:introduction}
+\chapter{Introduction}\label{r01:ch:introduction}
 
 \ps{}~\cite{pystencils} describes itself as \emph{``a symbolic domain-specific language
 and metaprogramming toolkit for writing high-performance numerical stencil kernels for a
@@ -13,22 +13,22 @@ few neighbouring cells. The fixed pattern of neighbours is called a \term{stenci
 typical example is one step of a Jacobi solver for the Laplace equation on a 2D grid:
 \begin{equation}
   u^{\text{new}}_{i,j} \;=\; \tfrac14\,\bigl(u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1}\bigr).
-  \label{eq:jacobi}
+  \label{r01:eq:jacobi}
 \end{equation}
 The same pattern appears in finite-difference and finite-volume schemes, in image
 filters, in cellular automata and in lattice Boltzmann methods~\cite{lbmpy}. A
 \term{stencil kernel} is the function that applies such an update to every cell of an
 array. Cells at the border do not have all their neighbours, so the arrays usually carry
 extra \term{ghost layers} around the domain that the kernel reads but does not update.
-\Cref{fig:stencil} shows one application of \cref{eq:jacobi}: four values of the
+\Cref{r01:fig:stencil} shows one application of \cref{r01:eq:jacobi}: four values of the
 source array are read and one value of the destination array is written. A kernel
 repeats this for every interior cell.
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/stencil-jacobi}
-  \caption[One application of the Jacobi stencil]{One application of the Jacobi stencil of \cref{eq:jacobi}: the four neighbours (orange) of a cell are read from \texttt{src} and their mean is written to the same cell (blue) of \texttt{dst}. The hatched cell is where the result belongs; its own value is not used. The grey ghost layer is read but never written.}
-  \label{fig:stencil}
+  \input{reports/r01/figures/stencil-jacobi}
+  \caption[One application of the Jacobi stencil]{One application of the Jacobi stencil of \cref{r01:eq:jacobi}: the four neighbours (orange) of a cell are read from \texttt{src} and their mean is written to the same cell (blue) of \texttt{dst}. The hatched cell is where the result belongs; its own value is not used. The grey ghost layer is read but never written.}
+  \label{r01:fig:stencil}
 \end{figure}
 
 Stencil kernels are simple to state, but fast implementations are not:
@@ -80,36 +80,36 @@ families of models, as lbmpy~\cite{lbmpy} does for lattice Boltzmann methods.
 
 \section{Inputs and outputs at a glance}
 
-\Cref{fig:big-picture} summarizes the data flow covered in this manual.
-\Cref{tab:io} lists the most important objects on each side.
+\Cref{r01:fig:big-picture} summarizes the data flow covered in this manual.
+\Cref{r01:tab:io} lists the most important objects on each side.
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/big-picture}
+  \input{reports/r01/figures/big-picture}
   \caption[From a symbolic description to executable kernels]{From a symbolic
     description to executable kernels. The code generator (middle) produces a
     \texttt{Kernel} object; the C/C++ code, the compiled Python function and the
-    integration into C++ applications are all derived from it. \Cref{ch:architecture}
+    integration into C++ applications are all derived from it. \Cref{r01:ch:architecture}
     looks at the code generator in detail.}
-  \label{fig:big-picture}
+  \label{r01:fig:big-picture}
 \end{figure}
 
 \begin{table}[htbp]
   \centering\small
-  \caption{The main user-facing objects.}\label{tab:io}
+  \caption{The main user-facing objects.}\label{r01:tab:io}
   \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X l@{}}
     \toprule
     \textbf{Object} & \textbf{Role} & \textbf{Chapter}\\
     \midrule
-    \code{ps.Field}, \code{ps.fields(...)} & abstract arrays and neighbour accesses \code{f[1,0]} & \ref{ch:symbolic-frontend}\\
-    \code{ps.Assignment}, \code{ps.AssignmentCollection} & the update rule, optionally with subexpressions & \ref{ch:symbolic-frontend}\\
-    \code{ps.TypedSymbol}, \code{ps.tcast} & scalars with explicit types; casts & \ref{ch:symbolic-frontend}\\
-    \code{ps.CreateKernelConfig}, \code{ps.Target} & target, types, iteration space, optimizations & \ref{ch:kernel-creation}\\
-    \code{ps.create_kernel(...)} & the code generator entry point & \ref{ch:kernel-creation}\\
+    \code{ps.Field}, \code{ps.fields(...)} & abstract arrays and neighbour accesses \code{f[1,0]} & \ref{r01:ch:symbolic-frontend}\\
+    \code{ps.Assignment}, \code{ps.AssignmentCollection} & the update rule, optionally with subexpressions & \ref{r01:ch:symbolic-frontend}\\
+    \code{ps.TypedSymbol}, \code{ps.tcast} & scalars with explicit types; casts & \ref{r01:ch:symbolic-frontend}\\
+    \code{ps.CreateKernelConfig}, \code{ps.Target} & target, types, iteration space, optimizations & \ref{r01:ch:kernel-creation}\\
+    \code{ps.create_kernel(...)} & the code generator entry point & \ref{r01:ch:kernel-creation}\\
     \midrule
-    \code{Kernel} / \code{GpuKernel} & generated function: IR, parameters, headers, metadata & \ref{ch:outputs-execution}\\
-    \code{kernel.get_c_code()} & the C/C++ source text & \ref{ch:outputs-execution}\\
-    \code{kernel.compile()} & a Python callable (\code{KernelWrapper}) & \ref{ch:outputs-execution}\\
+    \code{Kernel} / \code{GpuKernel} & generated function: IR, parameters, headers, metadata & \ref{r01:ch:outputs-execution}\\
+    \code{kernel.get_c_code()} & the C/C++ source text & \ref{r01:ch:outputs-execution}\\
+    \code{kernel.compile()} & a Python callable (\code{KernelWrapper}) & \ref{r01:ch:outputs-execution}\\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -129,7 +129,7 @@ families of models, as lbmpy~\cite{lbmpy} does for lattice Boltzmann methods.
   \item[pystencils-sfg~\cite{pystencils-sfg}] (\emph{source file generator}) writes
         complete C++ source and header files around \ps{} kernels. It maps C++ data
         structures to the kernel parameters, as described in
-        \cref{sec:external-use}.
+        \cref{r01:sec:external-use}.
 \end{description}
 
 \section{Scope of this manual}
@@ -139,7 +139,7 @@ of this workspace. That is version \texttt{2.0b1+4.g9a989e16} of the \emph{pyste
 2.0} line, a near-complete rewrite of the 1.x series. The legacy 1.4 releases live on the
 \texttt{v1.x} branch upstream. The submodule is checked out on the branch
 \texttt{rvv-support}, which adds a RISC-V vector backend on top of upstream \ps. That
-backend is covered in \cref{ch:rvv-backend} and marked with boxes like this one:
+backend is covered in \cref{r01:ch:rvv-backend} and marked with boxes like this one:
 
 \begin{forkonly}
   Material in an orange box describes code that exists only on the \texttt{rvv-support}
@@ -147,18 +147,18 @@ backend is covered in \cref{ch:rvv-backend} and marked with boxes like this one:
 \end{forkonly}
 
 \paragraph{How to read this manual.}
-\Cref{ch:getting-started,ch:symbolic-frontend,ch:kernel-creation,ch:outputs-execution}
+\Cref{r01:ch:getting-started,r01:ch:symbolic-frontend,r01:ch:kernel-creation,r01:ch:outputs-execution}
 (Part~I) are written for \emph{users}. They teach the workflow from fields to running
-kernels. \Cref{ch:architecture,ch:ir,ch:translation,ch:transformations,ch:platforms,ch:rvv-backend}
+kernels. \Cref{r01:ch:architecture,r01:ch:ir,r01:ch:translation,r01:ch:transformations,r01:ch:platforms,r01:ch:rvv-backend}
 (Part~II) are for \emph{developers}. They explain the internal representation, the
-compiler passes and the hardware platforms. \Cref{ch:worked-example} closes with a
+compiler passes and the hardware platforms. \Cref{r01:ch:worked-example} closes with a
 complete lattice Boltzmann example. The appendices contain a quick reference
-(\cref{app:quick-reference}), a reference of all configuration options, a map of the
+(\cref{r01:app:quick-reference}), a reference of all configuration options, a map of the
 source tree, a list of pitfalls, and a glossary.
 
 \paragraph{The listings are real.}
 The example code in this manual comes from the scripts in
-\file{docs/manual_pystencil/examples/}. All generated code, IR dumps and printed values
+\file{docs/manual/reports/r01/examples/}. All generated code, IR dumps and printed values
 were captured by running those scripts against the submodule with
 \file{./build.sh listings}. The scripts check their own results, mostly against NumPy.
 Generated C code was re-indented with \texttt{clang-format} to fit the page. Only

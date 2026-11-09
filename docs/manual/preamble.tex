@@ -1,5 +1,11 @@
 % =============================================================================
-%  preamble.tex -- packages, colours, listing styles, boxes and macros
+%  preamble.tex -- packages, colours, listing styles, boxes and macros shared by
+%  all reports. Things only one report needs go in that report's macros.tex
+%  (e.g. reports/r01/macros.tex), which its report.tex \input's first.
+%
+%  Anything that ends up in the table of contents, the list of figures or the
+%  list of listings (section titles, captions) may only use macros from this
+%  file: the contents is typeset before any report is read.
 % =============================================================================
 
 % ---- Fonts and encoding -------------------------------------------------------
@@ -41,28 +47,12 @@
 \usetikzlibrary{positioning,arrows.meta,shapes.geometric,shapes.multipart,
   fit,calc,backgrounds,matrix,decorations.pathreplacing,patterns}
 \usepackage[edges]{forest}
-%   Shared styles for the grid / stencil figures (figures/*.tex). Coordinates are in
-%   cells: cell (i, j) is the unit square with lower-left corner (i, j).
-\tikzset{
-  ghostcell/.style={fill=psgray!20},
-  activecell/.style={fill=psblue!22},
-  centercell/.style={fill=psblue!55},
-  nbcell/.style={fill=psorange!45},
-  remcell/.style={fill=psorange!40},
-  gridline/.style={draw=psgray!75,line width=0.3pt,step=1},
-  domainline/.style={draw=black!75,line width=0.9pt},
-  axisarrow/.style={-{Stealth[length=1.6mm]},semithick,draw=psgray!90!black},
-  flowarrow/.style={-{Stealth[length=2.2mm]},thick,draw=psgray!90!black},
-  figlabel/.style={font=\footnotesize},
-  celltext/.style={font=\scriptsize},
-}
-%   \cellfill[style]{i}{j}: fill grid cell (i, j)
-\newcommand{\cellfill}[3][activecell]{\fill[#1] (#2,#3) rectangle ++(1,1);}
 
 % ---- Code listings ------------------------------------------------------------
+%   \addreport (manual.tex) clears inputpath at the start of every report; a report
+%   whose listings live in its own folder sets it, e.g. reports/r01/report.tex.
 \usepackage{listings}
 \lstset{
-  inputpath=generated,
   nolol=true,               % only captioned listings go into the List of Listings
   basicstyle=\ttfamily\footnotesize,
   columns=fullflexible,
@@ -119,11 +109,12 @@
 \renewcommand{\lstlistingname}{Listing}
 \renewcommand{\lstlistlistingname}{List of Listings}
 
-%   \pysnippet[options]{example.region}   -> generated/example.region.py
-%   \csnippet[options]{example.name}      -> generated/example.name.c
-%   \cppsnippet[options]{example.name}    -> generated/example.name.cpp
-%   \outsnippet[options]{example.name}    -> generated/example.name.txt
-%   \irsnippet[options]{example.name}     -> generated/example.name.txt (IR dumps)
+%   Captured listings, read relative to the current inputpath (see above):
+%   \pysnippet[options]{example.region}   -> example.region.py
+%   \csnippet[options]{example.name}      -> example.name.c
+%   \cppsnippet[options]{example.name}    -> example.name.cpp
+%   \outsnippet[options]{example.name}    -> example.name.txt
+%   \irsnippet[options]{example.name}     -> example.name.txt (IR dumps)
 \newcommand{\pysnippet}[2][]{\lstinputlisting[style=py,#1]{#2.py}}
 \newcommand{\csnippet}[2][]{\lstinputlisting[style=cpp,#1]{#2.c}}
 \newcommand{\cppsnippet}[2][]{\lstinputlisting[style=cpp,#1]{#2.cpp}}
@@ -143,8 +134,6 @@
 \newtcolorbox{note}[1][Note]{psbox,colback=psblue!4,colframe=psblue!70,title={#1}}
 \newtcolorbox{keyidea}[1][Key idea]{psbox,colback=psteal!5,colframe=psteal!80,title={#1}}
 \newtcolorbox{pitfall}[1][Pitfall]{psbox,colback=psred!4,colframe=psred!75,title={#1}}
-\newtcolorbox{forkonly}[1][Fork only: not in upstream pystencils]{psbox,
-  colback=psorange!6,colframe=psorange!85,title={#1}}
 
 % ---- Inline code, files, class names -------------------------------------------
 \usepackage[hyphens,obeyspaces,spaces]{url}
@@ -155,13 +144,17 @@
 \makeatletter
 \g@addto@macro{\UrlBreaks}{\do\_\do\(\do\,\do\[}
 \makeatother
-\newcommand{\ps}{\textsf{pystencils}}
 \newcommand{\cls}[1]{\code{#1}}
 \newcommand{\term}[1]{\emph{#1}}
 
+% ---- Names (used in titles and captions, so they must live here) ---------------
+\newcommand{\ps}{\textsf{pystencils}}
+
 % ---- Bibliography -------------------------------------------------------------
+%   No global resources: \addreport gives every report its own reference section
+%   with that report's references.bib, so a report's bibliography lists only its
+%   own citations.
 \usepackage[backend=biber,style=numeric,sorting=none,maxbibnames=4]{biblatex}
-\addbibresource{references.bib}
 
 % ---- Hyperlinks and references (load late) -------------------------------------
 \usepackage[hidelinks,pdfusetitle,bookmarksnumbered]{hyperref}

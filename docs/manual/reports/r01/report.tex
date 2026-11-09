@@ -1,0 +1,40 @@
+% =============================================================================
+%  Report r01 -- pystencils -- A Tutorial and Manual (written 2026-11-04)
+%
+%  Chapters and appendices are \include'd, so single chapters can be built with
+%  \includeonly in manual.tex, e.g. \includeonly{reports/r01/chapters/02-getting-started}.
+%  Code listings are captured from examples/ into generated/ by
+%  `./build.sh listings r01` (tools/listings.sh). The plan this manual was
+%  written from is plan-opus5.5.md.
+% =============================================================================
+\input{reports/r01/macros}
+\lstset{inputpath=reports/r01/generated}
+
+\reporttitle[{What it does, how to use it, and how it works inside\\[0.4em]
+  \normalsize pystencils 2.0 (\texttt{2.0b1+4.g9a989e16}, branch \texttt{rvv-support})}]
+  {pystencils -- A Tutorial and Manual}{2026-11-04}
+
+\reportpart{Using pystencils}
+\include{reports/r01/chapters/01-introduction}
+\include{reports/r01/chapters/02-getting-started}
+\include{reports/r01/chapters/03-symbolic-frontend}
+\include{reports/r01/chapters/04-kernel-creation}
+\include{reports/r01/chapters/05-outputs-execution}
+
+\reportpart{Inside pystencils}
+\include{reports/r01/chapters/06-architecture}
+\include{reports/r01/chapters/07-ir}
+\include{reports/r01/chapters/08-translation}
+\include{reports/r01/chapters/09-transformations}
+\include{reports/r01/chapters/10-platforms}
+\include{reports/r01/chapters/11-rvv-backend}
+\include{reports/r01/chapters/12-worked-example}
+
+\reportappendix
+\include{reports/r01/appendices/0-quick-reference}
+\include{reports/r01/appendices/a-config-reference}
+\include{reports/r01/appendices/b-source-map}
+\include{reports/r01/appendices/c-pitfalls}
+\include{reports/r01/appendices/d-glossary}
+
+\printbibliography[heading=bibintoc]

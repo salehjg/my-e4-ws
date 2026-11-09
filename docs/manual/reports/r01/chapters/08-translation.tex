@@ -1,14 +1,14 @@
-\chapter{From SymPy to Typed IR}\label{ch:translation}
+\chapter{From SymPy to Typed IR}\label{r01:ch:translation}
 
 The first stage of the driver checks the symbolic input, sets up the iteration space,
 and translates the SymPy assignments into a typed IR block. The classes involved live in
 \file{backend/kernelcreation/}. This chapter runs them by hand on a small example.
 
-\section{Kernel analysis}\label{sec:analysis}
+\section{Kernel analysis}\label{r01:sec:analysis}
 
 \cls{KernelAnalysis} (\file{analysis.py}) walks the assignments once, subexpressions
 first and then the main assignments. Within each assignment it visits the right-hand
-side before the left-hand side. It enforces the rules of \cref{sec:assignments}:
+side before the left-hand side. It enforces the rules of \cref{r01:sec:assignments}:
 \begin{itemize}
   \item \textbf{SSA form}: a symbol is assigned at most once, and never after it has been
         read;
@@ -23,9 +23,9 @@ Its second job is to collect knowledge. It registers every field in the context 
 \code{ctx.add_field(field, const=...)}, and fields that are never written become
 \code{const}. Because the right-hand side of an assignment is checked before its own
 store is recorded, an in-place update \texttt{f[0,0]}~$\leftarrow$~\texttt{f[1,0]} passes the check
-(\cref{sec:constraints}).
+(\cref{r01:sec:constraints}).
 
-\section{Iteration spaces}\label{sec:ispace}
+\section{Iteration spaces}\label{r01:sec:ispace}
 
 An iteration space (\file{iteration_space.py}) defines the counters of the kernel and
 the range of each counter.
@@ -56,9 +56,9 @@ A \cls{SparseIterationSpace} iterates over an index list. Its single counter
 \code{sparse_idx} runs over the entries of the \code{INDEXED} field, and
 \code{get_spatial_counter_declarations} produces the declarations
 \code{ctr_i = index_list[sparse_idx].x/y/z} at the top of the loop body (see the sparse
-kernel in \cref{sec:sparse}).
+kernel in \cref{r01:sec:sparse}).
 
-\section{Freezing: SymPy to IR}\label{sec:freeze}
+\section{Freezing: SymPy to IR}\label{r01:sec:freeze}
 
 \cls{FreezeExpressions} (\file{freeze.py}) is a visitor over SymPy objects. For every
 node it looks up a method \code{map_<ClassName>} along the class's method resolution
@@ -99,7 +99,7 @@ $f_E^3$ became two multiplications, $1/3$ a division, and $-x/f_C$ a subtraction
 \code{x * (1 / f_C)}. Every field access is now a buffer access with three indices: two
 spatial ones and the trivial index dimension of a scalar field.
 
-\section{Typification}\label{sec:typify}
+\section{Typification}\label{r01:sec:typify}
 
 The \cls{Typifier} (\file{typification.py}) assigns a type to every symbol, constant
 and expression, and checks that all types fit together. It works with
@@ -138,7 +138,7 @@ The free symbol \code{x} was given the context's \code{default_dtype}, here
   \item \code{loop(ctr_name, slice, body)}, \code{loop_nest(...)},
         \code{loops_from_ispace(ispace, body)}: build \cls{PsLoop} nodes;
   \item \code{axes_cube(...)} and \code{cube_from_ispace(ispace, body)}: build the
-        iteration-axes representation used by the next stage (\cref{sec:axes}).
+        iteration-axes representation used by the next stage (\cref{r01:sec:axes}).
 \end{itemize}
 Transformations use the factory when they create new code, e.g.\ the remainder loop of a
 vectorized kernel. This guarantees that the new nodes are typed consistently.

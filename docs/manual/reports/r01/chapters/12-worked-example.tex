@@ -1,4 +1,4 @@
-\chapter{Worked Example: A Lattice Boltzmann Kernel}\label{ch:worked-example}
+\chapter{Worked Example: A Lattice Boltzmann Kernel}\label{r01:ch:worked-example}
 
 This chapter combines the pieces of Part~I into one realistic kernel: a fused
 stream-and-collide step of the D2Q9 lattice Boltzmann method (LBM) with the BGK
@@ -20,12 +20,12 @@ $\mathbf c_q$. One time step consists of
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/d2q9}
+  \input{reports/r01/figures/d2q9}
   \caption[The D2Q9 model and pull streaming]{The D2Q9 model. (a) The nine lattice velocities with their weights, numbered as in the example script. (b) Pull streaming: cell $\mathbf x$ fetches population $q$ from the neighbour at $\mathbf x-\mathbf c_q$, which in \ps{} is the field access \texttt{src[-cx, -cy](q)}.}
-  \label{fig:d2q9}
+  \label{r01:fig:d2q9}
 \end{figure}
 
-The ``pull'' formulation (\cref{fig:d2q9}) reads the neighbours' populations and writes
+The ``pull'' formulation (\cref{r01:fig:d2q9}) reads the neighbours' populations and writes
 only the own cell.
 This makes the kernel free of loop-carried dependencies, as \ps{} requires.
 
@@ -68,7 +68,7 @@ innermost loop runs over \code{ctr_0} ($x$), and the population index enters as
         optimizes them symbolically before handing them to \ps.
   \item \textbf{Real applications.} In waLBerla the same \code{Kernel} object is
         embedded into a C++ sweep through sweepgen and pystencils-sfg
-        (\cref{sec:external-use}). It then runs on distributed, block-structured grids
+        (\cref{r01:sec:external-use}). It then runs on distributed, block-structured grids
         with MPI.
   \item \textbf{This workspace.} \file{python/learn-lb-pystencil/lb-pystencils.py} is a
         complete D2Q9 lid-driven-cavity and Taylor--Green simulation built this way.
@@ -76,7 +76,7 @@ innermost loop runs over \code{ctr_0} ($x$), and the population index enters as
         precision, compiler and fused or split kernels, and is validated against the
         NumPy reference in \file{python/learn-lb-numpy}.
         \file{scripts/lbm_rvv_check.py} compares the RVV and generic collide kernels.
-        The harness numbers quoted in \cref{ch:rvv-backend} were measured with
+        The harness numbers quoted in \cref{r01:ch:rvv-backend} were measured with
         \file{lb-pystencils.py}, the waLBerla numbers with the
         \file{scripts/walberla_*.sh} benchmarks.
 \end{itemize}

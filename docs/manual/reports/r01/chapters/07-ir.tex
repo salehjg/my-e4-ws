@@ -1,4 +1,4 @@
-\chapter{The Intermediate Representation}\label{ch:ir}
+\chapter{The Intermediate Representation}\label{r01:ch:ir}
 
 All backend passes operate on one intermediate representation (IR). It consists of
 \emph{objects}, which are symbols, buffers, constants, literals and functions, connected
@@ -19,7 +19,7 @@ that is shared by the passes of one kernel:
         \code{duplicate_symbol(s)} creates a copy named \code{s__0}, \code{s__1}, \dots;
   \item the \textbf{fields} of the kernel, grouped into domain, index, buffer and custom
         fields, and for each field its \cls{PsBuffer} (\code{get_buffer(field)});
-  \item the \textbf{iteration space} (\cref{sec:ispace});
+  \item the \textbf{iteration space} (\cref{r01:sec:ispace});
   \item \textbf{reduction info}: for each reduction symbol a write-back pointer, a local
         accumulator and the initial value;
   \item \textbf{required headers} and free-form \textbf{metadata}, which ends up in
@@ -50,7 +50,7 @@ identity. Properties attach meaning to a symbol. \code{FieldShape}, \code{FieldS
 and \code{BufferBasePtr} mark the size, stride and base-pointer symbols of buffers.
 \code{BackendPrivateProperty} marks properties that are not exported to the kernel's
 parameters. When the kernel is finalized, the properties of parameter symbols become the
-properties of the corresponding \code{Parameter} (\cref{sec:kernel-object}).
+properties of the corresponding \code{Parameter} (\cref{r01:sec:kernel-object}).
 
 \paragraph{Buffers.}
 \cls{PsBuffer} describes the memory of a field: name, element type, a base pointer
@@ -82,10 +82,10 @@ C code with a type, printed verbatim. Examples are \code{blockIdx.x} or
         \code{CFunction}s created by the platforms.
 \end{itemize}
 
-\section{The type system}\label{sec:types}
+\section{The type system}\label{r01:sec:types}
 
 Types are instances of \cls{PsType} (\file{src/pystencils/types/}). The class hierarchy
-is shown in \cref{fig:types}. A metaclass interns all type objects, so
+is shown in \cref{r01:fig:types}. A metaclass interns all type objects, so
 \code{create_type("float64") is Fp(64)} holds, and types can be compared with \code{is}
 or \code{==}. Every type has a \code{const} flag. Pointer types also have a
 \code{restrict} flag. \code{constify(t)} and \code{deconstify(t)} switch between the two
@@ -93,9 +93,9 @@ forms. \code{c_string()} gives the C spelling.
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/type-hierarchy}
+  \input{reports/r01/figures/type-hierarchy}
   \caption[The \texttt{PsType} hierarchy]{The \texttt{PsType} hierarchy.}
-  \label{fig:types}
+  \label{r01:fig:types}
 \end{figure}
 
 \code{create_type} parses user specifications: type names, NumPy types, Python types
@@ -114,7 +114,7 @@ spelling, because each vector platform maps it to its own intrinsic type
 represents NumPy structured dtypes, such as the elements of index fields.
 \cls{PsCustomType} wraps arbitrary C++ type names.
 
-\section{The abstract syntax tree}\label{sec:ast}
+\section{The abstract syntax tree}\label{r01:sec:ast}
 
 AST nodes (\file{backend/ast/}) derive from \cls{PsAstNode}, which provides
 \code{children}, \code{clone()} and \code{structurally_equal()}. \code{str(node)} prints
@@ -137,11 +137,11 @@ the node as IR. There are four groups of nodes:
   \item[Iteration axes] (\file{axes.py}): \cls{PsAxesCube}, \cls{PsAxisRange} and the
     \cls{PsIterationAxis} subclasses \cls{PsLoopAxis}, \cls{PsParallelLoopAxis},
     \cls{PsSimdAxis} and the GPU axes. They describe how to iterate before any loop
-    exists (\cref{sec:axes}).
+    exists (\cref{r01:sec:axes}).
 \end{description}
 
 The following snippet builds a small AST by hand with the \cls{AstFactory}. The SymPy
-assignments go through freeze and typify (\cref{ch:translation}), and \code{loop} wraps
+assignments go through freeze and typify (\cref{r01:ch:translation}), and \code{loop} wraps
 them in a loop:
 \pysnippet{ex16_ir.ast}
 \irsnippet[nolol=false,caption={The hand-built AST printed as IR (\texttt{emit\_ir}).}]{ex16_ir.ast-ir}
@@ -160,7 +160,7 @@ Most transformations require their input to be in \term{canonical form}:
 The \cls{Typifier} establishes rule~1, and \cls{CanonicalizeSymbols} the other three.
 The hand-built AST above is not yet canonical: \code{a} and \code{c} are not
 \code{const}, although they are never reassigned. In real kernels the driver runs
-\cls{CanonicalizeSymbols}, which is why the declarations in \cref{lst:heat-code} are
+\cls{CanonicalizeSymbols}, which is why the declarations in \cref{r01:lst:heat-code} are
 \code{const}.
 
 \paragraph{Traversal and analysis helpers.}

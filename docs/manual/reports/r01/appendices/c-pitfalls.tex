@@ -1,4 +1,4 @@
-\chapter{Pitfalls and Known Issues}\label{app:pitfalls}
+\chapter{Pitfalls and Known Issues}\label{r01:app:pitfalls}
 
 Every item below was re-checked against this checkout by \file{examples/ex15_pitfalls.py};
 its raw output is reproduced at the end of this appendix.
@@ -19,7 +19,7 @@ its raw output is reproduced at the end of this appendix.
   \item \textbf{Keyword arguments of \code{create_kernel} must be top-level options}:
         \code{create_kernel(asm, openmp=True)} raises a \code{TypeError}.
   \item \textbf{The default JIT ignores the kernel's target} and compiles with
-        \code{-march=native} (\cref{sec:jit}).
+        \code{-march=native} (\cref{r01:sec:jit}).
   \item \textbf{\code{assume_inner_stride_one} is not checked at run time}: a strided
         NumPy view is accepted and gives \emph{wrong results} without an error.
   \item \textbf{CUDA warp-level reductions need an explicit \code{gpu.warp_size}}: with
@@ -27,7 +27,7 @@ its raw output is reproduced at the end of this appendix.
         emitted, because the driver passes the unset option (not the default 32) to the
         platform.
   \item \textbf{The loop-independence check is order dependent}: the in-place stencil
-        \texttt{f[0,0]}~$\leftarrow$~\texttt{f[1,0]} is accepted (\cref{sec:constraints}).
+        \texttt{f[0,0]}~$\leftarrow$~\texttt{f[1,0]} is accepted (\cref{r01:sec:constraints}).
   \item \textbf{\code{Target.GenericCPU} prints as \code{Target._CPU}}.
   \item \textbf{\code{simplificationfactory.create_simplification_strategy()} returns
         \code{None}} (missing \code{return}).

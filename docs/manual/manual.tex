@@ -1,0 +1,144 @@
+% =============================================================================
+%  Manuals -- independent reports gathered into one document.
+%  Build with ./build.sh; the PDF lands in build/manual.pdf.
+%
+%  Every report lives in its own folder reports/rNN/ with a report.tex that
+%  starts with \reporttitle, plus whatever folders it needs (chapters/,
+%  figures/, examples/, ...). To add a report: create reports/rNN/report.tex
+%  and add an \addreport line at the bottom of this file.
+%
+%  Rules for a report:
+%   - Each report is a part ("Report 1"); its chapters restart at 1, so figures,
+%     tables and listings are numbered "Figure 3.2" within the report.
+%   - Labels are <report folder>:<key>, e.g. \label{r01:sec:fields}, because all
+%     reports share one set of labels.
+%   - Write file paths in full from this folder: \include{reports/r01/chapters/x},
+%     \input{reports/r01/figures/y}. Only \includegraphics is report-relative:
+%     \addreport points it at reports/rNN/figures/.
+%   - Use \reportpart{Title} to group a report's chapters ("Part I"), and
+%     \reportappendix (never \appendix) before its appendices.
+%   - A report's references.bib, if present, is its own reference section:
+%     \printbibliography inside the report lists only that report's citations.
+%   - Shared packages and macros are in preamble.tex; macros only one report
+%     uses go in its own macros.tex.
+% =============================================================================
+\documentclass[11pt,a4paper,oneside,parskip=half,open=any,
+  toc=bibliography,toc=listof,numbers=noenddot]{scrreprt}
+
+\input{preamble}
+
+\makeatletter
+
+% ---- Reports are parts --------------------------------------------------------
+% KOMA sets \partname again at \begin{document}, hence the hook.
+\AtBeginDocument{\renewcommand{\partname}{Report}}
+\renewcommand{\thepart}{\arabic{part}}
+\counterwithin*{chapter}{part}
+% Contents line "Report 1: Title".
+\RedeclareSectionCommand[tocnumberprefix=\partname~,tocnumberpostfix=:,
+  tocdynnumwidth=true]{part}
+
+% \reporttitle[subtitle]{Title}{Date}: opens a report; goes first in each
+% report.tex (after the report's own macros). Prints the report's title page and
+% adds a heading for the report to the list of figures and of listings.
+\newcommand{\reporttitle}[3][]{%
+  \setpartpreamble[uc][0.8\textwidth]{%
+    \centering
+    \ifblank{#1}{}{\vspace{1.5em}{\large #1\par}}%
+    \vspace{1.5em}{\color{psgray}#3\par}}%
+  \part{#2}%
+  \addtocontents{lof}{\protect\report@listheading{\thepart}{#2}}%
+  \addtocontents{lol}{\protect\report@listheading{\thepart}{#2}}%
+}
+\newcommand{\report@listheading}[2]{%
+  \addvspace{1.5em}%
+  \noindent{\usekomafont{disposition}\partname~#1: #2}\par
+  \nopagebreak\addvspace{0.4em}%
+}
+
+% ---- Parts within a report ----------------------------------------------------
+% \reportpart{Title}: a divider page "Part I / Title" that groups the chapters
+% after it; numbering restarts in every report.
+\newcounter{reportpart}[part]
+\renewcommand{\thereportpart}{\Roman{reportpart}}
+\renewcommand{\theHreportpart}{\thepart.\arabic{reportpart}}
+\DeclareTOCStyleEntry[level=0,indent=0pt,numwidth=0pt,
+  beforeskip=1.6em plus 1pt,entryformat=\bfseries\itshape,
+  pagenumberformat=\bfseries]{tocline}{reportpart}
+\newcommand{\reportpart}[1]{%
+  \clearpage
+  \refstepcounter{reportpart}%
+  \addcontentsline{toc}{reportpart}{Part~\thereportpart: #1}%
+  \thispagestyle{\partpagestyle}%
+  \null\vfill
+  {\centering\usekomafont{disposition}%
+    {\usekomafont{partnumber}Part~\thereportpart\par}%
+    \vspace{1em}{\usekomafont{part}#1\par}}%
+  \vfill\vfill\null
+  \clearpage
+}
+
+% ---- Appendices within a report -----------------------------------------------
+% \appendix switches chapter numbering to letters for the rest of the document;
+% \addreport switches it back for the next report. The hyperref names include
+% the report number, so chapter 1 (or appendix A) of two reports never clash.
+\newcommand{\reportappendix}{%
+  \appendix
+  \gdef\theHchapter{\thepart.\Alph{chapter}}%
+}
+\newcommand{\report@resetchapters}{%
+  \setcounter{chapter}{0}%
+  \gdef\thechapter{\arabic{chapter}}%
+  \gdef\@chapapp{\chaptername}%
+  \xdef\Hy@chapapp{\Hy@chapterstring}%
+  \gdef\theHchapter{\thepart.\arabic{chapter}}%
+  \addtocontents{\ext@toc}{\def\protect\@chapapp{\protect\chaptername}}%
+  \doforeachtocfile[float]{%
+    \addtocontents{\@currext}{\def\protect\@chapapp{\protect\chaptername}}}%
+}
+
+% ---- \addreport ---------------------------------------------------------------
+% \addreport{folder}: pulls in reports/<folder>/report.tex in a new reference
+% section (with reports/<folder>/references.bib if it exists) and points
+% \includegraphics at reports/<folder>/figures/. \currentreport holds the
+% folder name.
+\newcommand{\currentreport}{}
+\newcommand{\addreport}[1]{%
+  \renewcommand{\currentreport}{#1}%
+  \graphicspath{{reports/#1/figures/}}%
+  \lstset{inputpath={}}%
+  \report@resetchapters
+  \IfFileExists{reports/#1/references.bib}
+    {\def\report@bib{reports/#1/references.bib}}
+    {\let\report@bib\@empty}%
+  \newrefsection[\report@bib]%
+  \input{reports/#1/report}%
+}
+
+\makeatother
+
+% ---- Title page ---------------------------------------------------------------
+\title{Manuals}
+\subtitle{Tutorials and reference documents for my-e4-ws}
+\author{Saleh Jamali Golzar}
+\date{Last updated \today}
+
+% Build only some chapters, e.g.:
+% \includeonly{reports/r01/chapters/02-getting-started}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+% Oldest first, so report numbers stay the same as new ones are added.
+\addreport{r01}
+
+% ---- Lists for all reports, grouped by report ---------------------------------
+\clearpage
+\phantomsection
+\addparttocentry{}{Lists of Figures and Listings}
+\listoffigures
+\lstlistoflistings
+
+\end{document}

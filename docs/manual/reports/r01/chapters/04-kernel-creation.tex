@@ -1,10 +1,10 @@
-\chapter{Configuring Kernel Creation}\label{ch:kernel-creation}
+\chapter{Configuring Kernel Creation}\label{r01:ch:kernel-creation}
 
 The same symbolic description can produce very different kernels. Whether you get a
 scalar loop nest, an OpenMP-parallel AVX kernel or a CUDA function is decided by the
 \term{configuration} you pass to the code generator. This chapter describes the entry
 point \code{create_kernel}, the configuration object, and the options that matter most.
-\Cref{app:config-reference} lists every option.
+\Cref{r01:app:config-reference} lists every option.
 
 \section{The entry point}
 
@@ -14,7 +14,7 @@ def create_kernel(assignments: SymbolicKernel,
                   **kwargs) -> Kernel
 \end{pycode}
 \code{assignments} may be a single \code{Assignment}, a list of assignments, an
-\code{AssignmentCollection}, or a flowgraph (\cref{sec:flow}). The configuration can be
+\code{AssignmentCollection}, or a flowgraph (\cref{r01:sec:flow}). The configuration can be
 given in three ways:
 \begin{pycode}
 ps.create_kernel(asms)                                   # all defaults
@@ -25,10 +25,10 @@ Keyword arguments replace \emph{top-level} fields of the configuration
 (\code{dataclasses.replace}). Nested options such as \code{cpu.openmp.enable} cannot be
 passed this way, so for those you need a configuration object. The function lives in
 \file{src/pystencils/codegen/driver.py}. It creates a
-\cls{DefaultKernelCreationDriver} and calls it. \Cref{ch:architecture} describes what
+\cls{DefaultKernelCreationDriver} and calls it. \Cref{r01:ch:architecture} describes what
 the driver does.
 
-\section{The configuration object}\label{sec:config}
+\section{The configuration object}\label{r01:sec:config}
 
 \cls{CreateKernelConfig} (\file{codegen/config.py}) is a dataclass of
 \term{options}, grouped into \term{categories}:
@@ -56,13 +56,13 @@ when you work with several variants:
 
 \begin{table}[htbp]
   \centering\small
-  \caption{The most important options (full list in \cref{app:config-reference}).}
-  \label{tab:config-overview}
+  \caption{The most important options (full list in \cref{r01:app:config-reference}).}
+  \label{r01:tab:config-overview}
   \begin{tabularx}{\linewidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
     \toprule
     \textbf{Option} & \textbf{Default} & \textbf{Meaning}\\
     \midrule
-    \code{target} & \code{GenericCPU} & hardware target (\cref{sec:targets})\\
+    \code{target} & \code{GenericCPU} & hardware target (\cref{r01:sec:targets})\\
     \code{default_dtype} & \code{float64} & type of untyped symbols and dynamic fields\\
     \code{index_dtype} & \code{int64} & type of counters, sizes and strides\\
     \code{ghost_layers} & \code{AUTO} & iteration space: skip cells at the border\\
@@ -79,7 +79,7 @@ when you work with several variants:
   \end{tabularx}
 \end{table}
 
-\section{Targets}\label{sec:targets}
+\section{Targets}\label{r01:sec:targets}
 
 \cls{Target} (\file{codegen/target.py}) is a \code{Flag} enum. Each public target is
 the combination of private feature bits (\code{_CPU}, \code{_VECTOR}, \code{_X86},
@@ -96,7 +96,7 @@ the combination of private feature bits (\code{_CPU}, \code{_VECTOR}, \code{_X86
   \code{X86_SSE}, \code{X86_AVX}, \code{X86_AVX512}, \code{X86_AVX512_FP16} & vector CPU & 128/256/512-bit, x86-64-v2/v3/v4\\
   \code{ARM_NEON}, \code{ARM_NEON_FP16} & vector CPU & 128-bit\\
   \code{ARM_SVE} & vector CPU & scalable; lane count must be set explicitly\\
-  \code{RISCV_RVV} & vector CPU & \emph{fork only}: VLEN = 256 (\cref{ch:rvv-backend})\\
+  \code{RISCV_RVV} & vector CPU & \emph{fork only}: VLEN = 256 (\cref{r01:ch:rvv-backend})\\
   \code{CUDA}, \code{HIP} & GPU & run through CuPy\\
   \code{CurrentGPU} (\code{GPU}) & GPU, automatic & CUDA or HIP, depending on the installed CuPy\\
   \code{SYCL} & SYCL & experimental; run through dpctl\\
@@ -113,7 +113,7 @@ The first entry is \code{GenericCPU}. Its canonical flag name is the private bit
 lanes the vectorizer uses when \code{cpu.vectorize.lanes} is unset: the register width
 divided by the element width.
 
-\section{Data types}\label{sec:data-types}
+\section{Data types}\label{r01:sec:data-types}
 
 Two options control the types the code generator chooses on its own:
 \begin{description}
@@ -129,19 +129,19 @@ Two options control the types the code generator chooses on its own:
 \end{description}
 A generic field declared as \code{"f: [2D]"} therefore produces \code{double} or
 \code{float} code depending on \code{default_dtype}. Fields with an explicit type keep
-that type, and mixing types requires explicit casts (\cref{sec:types-frontend}).
+that type, and mixing types requires explicit casts (\cref{r01:sec:types-frontend}).
 
-\section{The iteration space}\label{sec:iteration-space}
+\section{The iteration space}\label{r01:sec:iteration-space}
 
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/iteration-spaces}
+  \input{reports/r01/figures/iteration-spaces}
   \caption[Iteration-space options]{Cells visited (blue) by kernels with different iteration-space options on an $8\times8$ array. The options are explained below; (a)--(d) correspond to the kernels of this section.}
-  \label{fig:ispaces}
+  \label{r01:fig:ispaces}
 \end{figure}
 
-The iteration space is the set of cells the kernel visits (\cref{fig:ispaces}). It is defined by \emph{at
+The iteration space is the set of cells the kernel visits (\cref{r01:fig:ispaces}). It is defined by \emph{at
 most one} of three options. Setting two of them raises a \code{ValueError}.
 
 \subsection{Ghost layers}
@@ -165,12 +165,12 @@ non-rectangular iteration spaces such as a triangle:
 \pysnippet{ex05_iteration_space.triangle}
 \csnippet{ex05_iteration_space.triangle}
 
-\subsection{Sparse kernels with index fields}\label{sec:sparse}
+\subsection{Sparse kernels with index fields}\label{r01:sec:sparse}
 For boundary conditions, or any other update on an irregular set of cells, a kernel can
 iterate over a list of cell coordinates instead of a dense box. The list is a 1D field of
 type \code{INDEXED} with a struct element type. Its members \code{x}, \code{y}
 (\code{z}) are the coordinates, and any further members are available as
-\code{idx("member")} (\cref{fig:sparse}):
+\code{idx("member")} (\cref{r01:fig:sparse}):
 \pysnippet{ex05_iteration_space.sparse}
 \outsnippet{ex05_iteration_space.sparse-out}
 \csnippet[nolol=false,caption={A sparse kernel. The struct type was lowered to byte offsets.}]{ex05_iteration_space.sparse}
@@ -178,17 +178,17 @@ This is how \code{pystencils.boundaries} implements boundary handling.
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/sparse-kernel}
+  \input{reports/r01/figures/sparse-kernel}
   \caption[A sparse index-list kernel]{The sparse kernel above: the loop runs over the entries of the index list, and each entry supplies the coordinates of one cell plus additional data.}
-  \label{fig:sparse}
+  \label{r01:fig:sparse}
 \end{figure}
 
 
-\section{CPU optimizations}\label{sec:cpu-options}
+\section{CPU optimizations}\label{r01:sec:cpu-options}
 
 \paragraph{OpenMP.}
 \code{cpu.openmp.enable = True} turns the outermost loop into an OpenMP work-sharing
-loop inside a parallel region (see \cref{lst:reduction} for a reduction). The options
+loop inside a parallel region (see \cref{r01:lst:reduction} for a reduction). The options
 \code{schedule} (default \code{"static"}), \code{num_threads} and \code{collapse} map
 directly to the corresponding OpenMP clauses.
 
@@ -205,20 +205,20 @@ vectorizer raises a \code{CodegenError}. The options are:
         it, the stride is a runtime value, and strided accesses need gather and scatter
         instructions. On x86, gathers need AVX2 and scatters AVX-512, so a kernel that
         writes a strided field cannot be vectorized for SSE or AVX
-        (\cref{lst:matrix}).
+        (\cref{r01:lst:matrix}).
 \end{itemize}
 \pysnippet{ex07_vectorize_x86.config}
-\csnippet[nolol=false,caption={The Jacobi kernel for \texttt{X86\_AVX} with OpenMP and vectorization.},label=lst:avx]{ex07_vectorize_x86.code}
+\csnippet[nolol=false,caption={The Jacobi kernel for \texttt{X86\_AVX} with OpenMP and vectorization.},label=r01:lst:avx]{ex07_vectorize_x86.code}
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/vectorization}
-  \caption[OpenMP and SIMD loop structure]{Loop structure of the kernel in \cref{lst:avx} for a $30\times37$ array: OpenMP distributes the outer loop over threads; within each row, 32 cells are processed in 8 vector iterations of 4 lanes, and the last 3 cells by the scalar remainder loop.}
-  \label{fig:vectorization}
+  \input{reports/r01/figures/vectorization}
+  \caption[OpenMP and SIMD loop structure]{Loop structure of the kernel in \cref{r01:lst:avx} for a $30\times37$ array: OpenMP distributes the outer loop over threads; within each row, 32 cells are processed in 8 vector iterations of 4 lanes, and the last 3 cells by the scalar remainder loop.}
+  \label{r01:fig:vectorization}
 \end{figure}
 
-\Cref{fig:vectorization} shows the loop structure of this kernel.
-In \cref{lst:avx}, \code{ctr_1__rem_start} marks where the remainder loop begins. The
+\Cref{r01:fig:vectorization} shows the loop structure of this kernel.
+In \cref{r01:lst:avx}, \code{ctr_1__rem_start} marks where the remainder loop begins. The
 inner strides are gone from the signature, and the constant $1/4$ exists both as a
 broadcast vector and as a scalar. The kernel was compiled and checked against NumPy on
 an array whose inner size (35) is not a multiple of 4:
@@ -227,7 +227,7 @@ an array whose inner size (35) is not a multiple of 4:
 \begin{pitfall}[\texttt{assume\_inner\_stride\_one} is not checked at run time]
   Once the inner stride has been assumed to be 1, it is no longer a kernel parameter. A
   non-contiguous array (for example a NumPy view \code{a[:, ::2]}) is accepted without
-  any error and produces \emph{wrong results}. \Cref{app:pitfalls} shows this case.
+  any error and produces \emph{wrong results}. \Cref{r01:app:pitfalls} shows this case.
   The source contains a \texttt{TODO} to pass the assumption on to the runtime as a
   precondition.
 \end{pitfall}
@@ -246,18 +246,18 @@ The options \code{cpu.vectorize.assume_aligned} and
 reads them. x86 kernels always use unaligned loads and stores. Setting
 \code{cpu.use_cacheline_zeroing = True} raises a \code{NotImplementedError}.
 
-\section{GPU options}\label{sec:gpu-options}
+\section{GPU options}\label{r01:sec:gpu-options}
 
 For \code{Target.CUDA} and \code{Target.HIP}, \ps{} generates a \code{__global__}
 function in which each thread handles one cell (or several, with grid striding):
 \pysnippet{ex09_gpu.cuda}
-\csnippet[nolol=false,caption={CUDA kernel with the default \texttt{Linear3D} indexing.},label=lst:cuda]{ex09_gpu.linear3d}
+\csnippet[nolol=false,caption={CUDA kernel with the default \texttt{Linear3D} indexing.},label=r01:lst:cuda]{ex09_gpu.linear3d}
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/gpu-mapping}
-  \caption[\texttt{Linear3D} GPU indexing]{\texttt{Linear3D} indexing of \cref{lst:cuda} with $4\times4$ thread blocks (dashed): each thread computes its cell from its block and thread indices. The grid is rounded up to whole blocks, so the guard \texttt{if} disables the threads outside the domain (hatched).}
-  \label{fig:gpu-mapping}
+  \input{reports/r01/figures/gpu-mapping}
+  \caption[\texttt{Linear3D} GPU indexing]{\texttt{Linear3D} indexing of \cref{r01:lst:cuda} with $4\times4$ thread blocks (dashed): each thread computes its cell from its block and thread indices. The grid is rounded up to whole blocks, so the guard \texttt{if} disables the threads outside the domain (hatched).}
+  \label{r01:fig:gpu-mapping}
 \end{figure}
 
 The \code{gpu.indexing_scheme} option selects the mapping from cells to threads:
@@ -265,7 +265,7 @@ The \code{gpu.indexing_scheme} option selects the mapping from cells to threads:
   \item[\code{Linear3D}] (default, up to 3D): every spatial dimension is mapped to
         \code{blockIdx * blockDim + threadIdx} of one CUDA dimension. The fastest
         coordinate goes to $x$. A guard \code{if} skips threads outside the domain
-        (\cref{fig:gpu-mapping}).
+        (\cref{r01:fig:gpu-mapping}).
   \item[\code{GridstridedLinear3D}]: like \code{Linear3D}, but each thread loops over the
         domain with the grid size as stride, so a small grid can cover a large domain.
   \item[\code{Blockwise4D}] (up to 4D): the slow dimensions go to \code{blockIdx}, the
@@ -283,7 +283,7 @@ the size of the iteration space, as for the triangle above.
 \pysnippet{ex09_gpu.launch}
 \outsnippet{ex09_gpu.launch}
 The option \code{gpu.assume_warp_aligned_block_size}, combined with an explicitly set
-\code{gpu.warp_size}, enables warp-level reductions (\cref{sec:gpu-platforms}).
+\code{gpu.warp_size}, enables warp-level reductions (\cref{r01:sec:gpu-platforms}).
 
 \section{SYCL}
 \code{Target.SYCL} generates a function to be called inside a SYCL parallel
@@ -293,7 +293,7 @@ command. With \code{sycl.automatic_block_size=True} (the default) the kernel tak
 compiler \texttt{icpx} by default) runs such kernels from Python on dpctl USM arrays.
 SYCL support is marked experimental.
 
-\section{Constraints and code-generation errors}\label{sec:constraints}
+\section{Constraints and code-generation errors}\label{r01:sec:constraints}
 
 Before generating code, \ps{} checks that the kernel can be executed in any loop order
 and in parallel. During generation it checks types and target capabilities. The script

@@ -1,10 +1,10 @@
-\chapter{Outputs and Execution}\label{ch:outputs-execution}
+\chapter{Outputs and Execution}\label{r01:ch:outputs-execution}
 
 \code{create_kernel} returns a \cls{Kernel} object. This chapter explains what that
 object contains, how to read the generated code, how the just-in-time compiler turns it
 into a Python function, and how other tools embed it into C++ programs.
 
-\section{The \texttt{Kernel} object}\label{sec:kernel-object}
+\section{The \texttt{Kernel} object}\label{r01:sec:kernel-object}
 
 \cls{Kernel} and its subclass \cls{GpuKernel} are defined in
 \file{codegen/kernel.py}. They are plain containers produced by the last stage of the
@@ -17,7 +17,7 @@ code generator:
   \code{name} & function name (settable; default \code{"kernel"})\\
   \code{target} & the resolved \code{Target}\\
   \code{parameters} & tuple of \cls{Parameter} objects, sorted by name\\
-  \code{body} & the kernel body as a backend AST (\cref{ch:ir})\\
+  \code{body} & the kernel body as a backend AST (\cref{r01:ch:ir})\\
   \code{required_headers} & set of headers to include (\code{<cmath>}, \code{"pystencils_runtime/x86.hpp"}, \dots)\\
   \code{metadata} & dictionary, e.g.\ \texttt{\{'ghost\_layers': 1\}}\\
   \code{get_fields()} & the set of \code{Field}s accessed\\
@@ -28,7 +28,7 @@ code generator:
   \bottomrule
 \end{tabularx}
 \end{center}
-For the Jacobi kernel of \cref{ch:getting-started}:
+For the Jacobi kernel of \cref{r01:ch:getting-started}:
 \outsnippet[caption={\texttt{str(kernel)}}]{ex01_first_kernel.str}
 \outsnippet[caption={\texttt{kernel.required\_headers}}]{ex01_first_kernel.headers}
 \outsnippet[caption={\texttt{kernel.metadata}}]{ex01_first_kernel.metadata}
@@ -38,7 +38,7 @@ For the Jacobi kernel of \cref{ch:getting-started}:
 Every kernel parameter is a \cls{Parameter} (\file{codegen/parameters.py}) with a
 \code{name}, a \code{dtype} and a set of \term{properties} that say what the parameter
 \emph{means}:
-\outsnippet[nolol=false,caption={Name, type and properties of every parameter of the Jacobi kernel.},label=lst:params]{ex01_first_kernel.params}
+\outsnippet[nolol=false,caption={Name, type and properties of every parameter of the Jacobi kernel.},label=r01:lst:params]{ex01_first_kernel.params}
 The properties (\file{codegen/properties.py}) are frozen dataclasses:
 \begin{description}
   \item[\code{FieldBasePtr(field)}] the parameter is the data pointer of \code{field};
@@ -47,15 +47,15 @@ The properties (\file{codegen/properties.py}) are frozen dataclasses:
   \item[\code{FieldStride(field, coordinate)}] it is a stride, in \emph{elements} (not
         bytes);
   \item[(none)] a scalar parameter from a free symbol (such as \code{alpha} in
-        \cref{lst:heat-code}), or a reduction target pointer.
+        \cref{r01:lst:heat-code}), or a reduction target pointer.
 \end{description}
 This metadata is what makes kernels usable outside \ps. A runtime system only has to
 look at the properties to know which array, size or stride to pass for each argument.
-The CPU JIT (\cref{sec:jit}) and pystencils-sfg (\cref{sec:external-use}) both work this
+The CPU JIT (\cref{r01:sec:jit}) and pystencils-sfg (\cref{r01:sec:external-use}) both work this
 way. Convenience accessors are \code{param.fields}, \code{param.is_field_parameter} and
 \code{param.get_properties(FieldShape)}.
 
-\section{Anatomy of the generated code}\label{sec:anatomy}
+\section{Anatomy of the generated code}\label{r01:sec:anatomy}
 
 Every kernel is a single C function \code{void <name>(<parameters>)}. CUDA and HIP
 kernels carry the \code{__global__} prefix. The names follow fixed conventions from
@@ -78,9 +78,9 @@ kernels carry the \code{__global__} prefix. The names follow fixed conventions f
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/linearization}
+  \input{reports/r01/figures/linearization}
   \caption[Linearized memory accesses]{Linearized memory accesses for a C-ordered $5\times4$ array: every access becomes \texttt{\_data\_src[ctr\_0 * \_stride\_src\_0 + ctr\_1 * \_stride\_src\_1]} plus the offsets. The north neighbour is the next element in memory, the east neighbour is one stride (4 elements) away.}
-  \label{fig:linearization}
+  \label{r01:fig:linearization}
 \end{figure}
 
 Further properties of the code:
@@ -88,7 +88,7 @@ Further properties of the code:
   \item Fields that are only read get \code{const} element types. All field pointers are
         \code{RESTRICT} (the JIT defines this macro as \code{__restrict__}), which
         promises the C compiler that fields do not alias.
-  \item Memory accesses are \emph{linearized} (\cref{fig:linearization}): \code{f[1,0]} becomes
+  \item Memory accesses are \emph{linearized} (\cref{r01:fig:linearization}): \code{f[1,0]} becomes
         \code{_data_f[(ctr_0 + 1) * _stride_f_0 + ctr_1 * _stride_f_1]}. Fixed sizes
         and strides become literals.
   \item Every variable is declared \code{const} unless it is updated later, and every
@@ -105,7 +105,7 @@ every declaration shows the symbol's type. This view is most useful when you deb
 errors:
 \irsnippet[nolol=false,caption={The Jacobi kernel as typed IR (\texttt{kernel.get\_ir\_code()}).}]{ex01_first_kernel.ir}
 
-\section{Just-in-time compilation}\label{sec:jit}
+\section{Just-in-time compilation}\label{r01:sec:jit}
 
 \code{kernel.compile()} delegates to the kernel's JIT compiler, an instance of
 \cls{JitBase} (\file{src/pystencils/jit/}). The JIT comes from \code{config.jit}. If
@@ -132,11 +132,11 @@ C++ source code, and a \cls{CompilerInfo}, which describes the host compiler.
         \cls{DefaultCpuKernelWrapper}).
 \end{enumerate}
 The interesting part of the rendered module is the argument handling.
-\Cref{lst:glue} shows it for the kernel \code{g = 2 f}. Each parameter is filled
+\Cref{r01:lst:glue} shows it for the kernel \code{g = 2 f}. Each parameter is filled
 according to its property: \code{FieldBasePtr} from the array's data pointer,
 \code{FieldShape} and \code{FieldStride} from the array's shape and strides (converted
 from bytes to elements), and scalars from Python numbers.
-\cppsnippet[nolol=false,caption={Argument extraction in the JIT extension module (excerpt).},label=lst:glue,basicstyle=\ttfamily\scriptsize]{ex10_jit.module-glue}
+\cppsnippet[nolol=false,caption={Argument extraction in the JIT extension module (excerpt).},label=r01:lst:glue,basicstyle=\ttfamily\scriptsize]{ex10_jit.module-glue}
 
 \subsection{Calling a compiled kernel}
 Arguments are passed \emph{by keyword only}: field names for arrays, symbol names for
@@ -173,7 +173,7 @@ specific GCC version), subclass the info class and override \code{cxx()}.
   \emph{``inlining failed in call to `always\_inline' `\_mm512\_storeu\_pd': target
   specific option mismatch''}. The kernel can only run on matching hardware anyway. To
   compile for a target other than the host (e.g.\ to inspect the assembly), construct
-  the \cls{CompilerInfo} with that target, as shown for RVV in \cref{ch:rvv-backend}.
+  the \cls{CompilerInfo} with that target, as shown for RVV in \cref{r01:ch:rvv-backend}.
 \end{pitfall}
 
 \paragraph{Cache.}
@@ -182,21 +182,21 @@ specific GCC version), subclass the info class and override \code{cxx()}.
 a temporary directory, and a path selects a custom cache. \code{emit_warnings=True}
 turns compiler warnings into Python \code{RuntimeWarning}s.
 
-\section{GPU execution with CuPy}\label{sec:gpu-execution}
+\section{GPU execution with CuPy}\label{r01:sec:gpu-execution}
 
 \cls{CupyJit} (\file{jit/gpu_cupy.py}) compiles a \code{GpuKernel} at run time with
 NVRTC through \code{cupy.RawKernel}. It prepends the required headers and
 \code{#define RESTRICT __restrict__}, and compiles with \code{-std=c++17} plus the \ps{}
 include path. The wrapper \cls{CupyKernelWrapper} accepts CuPy arrays as keyword
 arguments and checks their types, shapes and strides. It then evaluates the kernel's
-launch configuration (\cref{sec:gpu-options}) on the actual array sizes to obtain block
+launch configuration (\cref{r01:sec:gpu-options}) on the actual array sizes to obtain block
 and grid, and launches the kernel on the arrays' device. The launch configuration is
 available as \code{kfunc.launch_config}. That is the place to call
 \code{fit_block_size(...)}, or to set \code{block_size}/\code{grid_size} for manual
 launch grids. The GPU examples in this manual were generated without a GPU: code
 generation does not need CuPy.
 
-\section{Using kernels outside Python}\label{sec:external-use}
+\section{Using kernels outside Python}\label{r01:sec:external-use}
 
 A \code{Kernel} object is a complete, self-describing unit, so other tools can generate
 C++ code around it. Such tools set \code{config.jit = ps.no_jit} (there is no need to
@@ -227,7 +227,7 @@ waLBerla's new code generation layer \emph{sweepgen} (in
   \item For every field parameter, \code{sfg.map_field(field, <extraction>)} generates
         C++ code that takes the data pointer, shapes and strides from a waLBerla
         \code{GhostLayerField}. It relies on exactly the \code{FieldBasePtr},
-        \code{FieldShape} and \code{FieldStride} properties shown in \cref{lst:params}.
+        \code{FieldShape} and \code{FieldStride} properties shown in \cref{r01:lst:params}.
   \item The result is a C++ class with a properties struct and an \code{operator()} that
         waLBerla calls on every block of the distributed domain.
 \end{itemize}
@@ -249,7 +249,7 @@ of the JIT:
         waLBerla's Python bindings.
   \item[\code{pystencils.boundaries}] provides \cls{BoundaryHandling} with
         \cls{Neumann} and \cls{Dirichlet} conditions. Internally, these are sparse index
-        kernels (\cref{sec:sparse}).
+        kernels (\cref{r01:sec:sparse}).
   \item[\code{pystencils.runhelper}] offers a \cls{ParameterStudy} driver and a
         result \cls{Database}.
 \end{description}

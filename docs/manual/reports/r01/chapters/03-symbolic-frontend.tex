@@ -1,11 +1,11 @@
-\chapter{The Symbolic Frontend: What You Write}\label{ch:symbolic-frontend}
+\chapter{The Symbolic Frontend: What You Write}\label{r01:ch:symbolic-frontend}
 
 A \ps{} program describes a kernel with ordinary SymPy objects plus a few extensions
 that \ps{} adds: \term{fields}, \term{field accesses}, \term{typed symbols} and a
 handful of special functions. This chapter covers everything that can appear on the
 input side of \code{ps.create_kernel}.
 
-\section{Fields}\label{sec:fields}
+\section{Fields}\label{r01:sec:fields}
 
 A \cls{Field} (\file{src/pystencils/field.py}) is the symbolic description of an array.
 It has
@@ -21,9 +21,9 @@ It has
   \item a \textbf{shape} and \textbf{strides}, which are either symbolic (sizes become
         kernel parameters) or fixed integers;
   \item a \textbf{memory layout} that defines which coordinate is contiguous in memory
-        (\cref{sec:layouts});
+        (\cref{r01:sec:layouts});
   \item a \textbf{field type}: \code{GENERIC} (the default), \code{INDEXED} (sparse
-        index lists, \cref{sec:sparse}), \code{BUFFER} (packed communication buffers),
+        index lists, \cref{r01:sec:sparse}), \code{BUFFER} (packed communication buffers),
         \code{CUSTOM} (allows absolute accesses) or \code{STAGGERED} /
         \code{STAGGERED_FLUX} (values on cell faces).
 \end{itemize}
@@ -54,20 +54,20 @@ index_dimensions, layout, index_shape, field_type)},
 \code{Field.create_from_numpy_array(name, array, index_dimensions, field_type)} and
 \code{Field.create_fixed_size(name, shape, index_dimensions, dtype, layout, ...)}.
 
-\subsection{Field accesses}\label{sec:field-access}
+\subsection{Field accesses}\label{r01:sec:field-access}
 
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/field-access}
+  \input{reports/r01/figures/field-access}
   \caption[Relative field accesses]{Relative field accesses. (a) The offsets in square brackets are relative to the cell being updated; the first offset is $x$, the second $y$. (b) Round brackets select an entry of the index dimensions, here one of the two components stored in every cell.}
-  \label{fig:field-access}
+  \label{r01:fig:field-access}
 \end{figure}
 
 Indexing a field yields a \cls{Field.Access}, which is a subclass of
 \cls{TypedSymbol} and therefore a SymPy symbol. Square brackets take \emph{relative
 spatial offsets} from the current cell. Round brackets select an entry of the index
-dimensions (\cref{fig:field-access}):
+dimensions (\cref{r01:fig:field-access}):
 \pysnippet{ex02_fields.access}
 \outsnippet{ex02_fields.access-out}
 For the centre of a scalar field, \code{u.center}, \code{u.center()}, \code{u()} and
@@ -76,7 +76,7 @@ spatial dimensions. Compass names
 (\code{N}, \code{S}, \code{E}, \code{W}, \code{T}, \code{B} and combinations such as
 \code{NE}) are short for unit offsets. Every access knows how many ghost layers it needs
 (\code{required_ghost_layers}). This is how \ps{} infers the iteration space
-automatically (\cref{sec:iteration-space}). Offsets may also be symbolic expressions,
+automatically (\cref{r01:sec:iteration-space}). Offsets may also be symbolic expressions,
 which gives indirect addressing such as \code{f[idx[0,0], 0]}.
 
 \begin{note}[Absolute and staggered accesses]
@@ -84,10 +84,10 @@ which gives indirect addressing such as \code{f[idx[0,0], 0]}.
   allowed on \code{CUSTOM} fields. Staggered fields store values on cell faces and are
   accessed with \code{f.staggered_access("E")}. The dedicated
   \code{ps.create_staggered_kernel} of \ps{}~1.x is \emph{not yet available} in 2.0
-  (\cref{app:pitfalls}).
+  (\cref{r01:app:pitfalls}).
 \end{note}
 
-\subsection{Memory layouts}\label{sec:layouts}
+\subsection{Memory layouts}\label{r01:sec:layouts}
 
 The \term{layout} of a field fixes the order of its coordinates in memory, from the
 slowest to the fastest varying. It determines both the strides of fixed-size fields and
@@ -104,14 +104,14 @@ fastest coordinate. Layouts are given as strings or as tuples of dimension indic
   \bottomrule
 \end{tabular}
 \end{center}
-\Cref{fig:layouts} shows the two most common layouts for a small field with two
+\Cref{r01:fig:layouts} shows the two most common layouts for a small field with two
 values per cell.
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/layouts}
+  \input{reports/r01/figures/layouts}
   \caption[Memory layouts \texttt{fzyx} and \texttt{zyxf}]{The same field \texttt{f(2)} of $3\times2$ cells in two memory layouts. With \texttt{fzyx} all values of one component are contiguous, and $x$ is the fastest coordinate: neighbouring cells are neighbours in memory, which SIMD vectorization needs. With \texttt{zyxf} the components of one cell are stored together.}
-  \label{fig:layouts}
+  \label{r01:fig:layouts}
 \end{figure}
 
 For a fixed-size field with shape $(4,5,6)$ and 19 values per cell, the strides (in
@@ -119,13 +119,13 @@ elements) are:
 \pysnippet{ex02_fields.layouts}
 \outsnippet{ex02_fields.layouts-out}
 For \emph{generic} fields, whose strides are symbolic, the layout only affects the loop
-order. This is why the Jacobi kernel of \cref{lst:first-kernel} (default C layout)
+order. This is why the Jacobi kernel of \cref{r01:lst:first-kernel} (default C layout)
 iterates \code{ctr_1} in the inner loop, while the lattice Boltzmann kernel of
-\cref{ch:worked-example} (\code{fzyx}) iterates \code{ctr_0} innermost. The helper
+\cref{r01:ch:worked-example} (\code{fzyx}) iterates \code{ctr_0} innermost. The helper
 \code{pystencils.field.create_numpy_array_with_layout(shape, layout)} allocates NumPy
 arrays with a matching memory order.
 
-\section{Assignments and assignment collections}\label{sec:assignments}
+\section{Assignments and assignment collections}\label{r01:sec:assignments}
 
 \code{ps.Assignment(lhs, rhs)} is SymPy's assignment node. \ps{} extends it so that it
 prints as \texttt{lhs}~$\leftarrow$~\texttt{rhs}. The left-hand side is a field access or a plain symbol. A
@@ -139,13 +139,13 @@ The following example writes an explicit heat-equation step with a Laplacian
 subexpression \code{lap}. The diffusion coefficient \code{alpha} is a free symbol:
 \pysnippet{ex03_symbolic.collection}
 \outsnippet{ex03_symbolic.collection-ac}
-\csnippet[nolol=false,caption={An assignment collection with a subexpression and a free scalar symbol.},label=lst:heat-code]{ex03_symbolic.collection-code}
+\csnippet[nolol=false,caption={An assignment collection with a subexpression and a free scalar symbol.},label=r01:lst:heat-code]{ex03_symbolic.collection-code}
 Each \emph{free} symbol, i.e.\ a symbol that is read but never assigned, becomes a
 scalar kernel parameter. Its value is passed by keyword at call time:
 \pysnippet{ex03_symbolic.collection-run}
 
 \paragraph{Rules for the assignment list.}
-\ps{} checks the input before generating code (\cref{sec:constraints}):
+\ps{} checks the input before generating code (\cref{r01:sec:constraints}):
 \begin{itemize}
   \item every symbol is assigned at most once (\emph{static single assignment}, SSA), and
         it is not assigned after it has been read;
@@ -159,7 +159,7 @@ Useful methods include \code{all_assignments}, \code{free_symbols},
 \code{bound_symbols}, \code{new_with_substitutions(...)},
 \code{new_without_subexpressions()} and \code{operation_count}.
 
-\section{Symbols, types and casts}\label{sec:types-frontend}
+\section{Symbols, types and casts}\label{r01:sec:types-frontend}
 
 \ps{} is \emph{statically and strictly typed}:
 \begin{itemize}
@@ -181,9 +181,9 @@ Untyped number literals take the type their context requires (\code{1.0f} in a
 \code{float} context, \code{1LL} in an \code{int64} context). Types are written as strings
 (\code{"float32"}, \code{"double"}, \code{"int64_t"}, \code{"uint8"}, \code{"half"}),
 NumPy dtypes, Python types (\code{int} is \code{int64}, \code{float} is
-\code{float64}), or \code{PsType} objects (\cref{sec:types}).
+\code{float64}), or \code{PsType} objects (\cref{r01:sec:types}).
 
-\section{Supported SymPy, conditionals and special functions}\label{sec:sympy-subset}
+\section{Supported SymPy, conditionals and special functions}\label{r01:sec:sympy-subset}
 
 The code generator understands a well-defined subset of SymPy:
 \begin{center}\small
@@ -214,7 +214,7 @@ integers, they must be cast before they are combined with floats:
   want the C semantics.
 \end{pitfall}
 
-\section{Reductions}\label{sec:reductions}
+\section{Reductions}\label{r01:sec:reductions}
 
 A \term{reduction} combines a value from every cell into a single scalar. The left-hand
 side must be a \code{TypedSymbol}. The operation is chosen by the assignment class
@@ -227,18 +227,18 @@ The kernel accumulates into a thread-local variable and finally combines it with
 value already stored in the result. At call time the result is therefore passed as a
 \emph{one-element array}, and its initial value matters:
 \pysnippet{ex06_reduction.reduction-run}
-\csnippet[nolol=false,caption={Sum and maximum reductions with OpenMP.},label=lst:reduction]{ex06_reduction.code}
+\csnippet[nolol=false,caption={Sum and maximum reductions with OpenMP.},label=r01:lst:reduction]{ex06_reduction.code}
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/reduction}
-  \caption[An OpenMP sum reduction]{How the sum reduction of \cref{lst:reduction} is computed: every OpenMP thread accumulates its cells into a private \texttt{total\_local}; the \texttt{reduction} clause combines the partial sums; finally the result is added to \texttt{total[0]}.}
-  \label{fig:reduction}
+  \input{reports/r01/figures/reduction}
+  \caption[An OpenMP sum reduction]{How the sum reduction of \cref{r01:lst:reduction} is computed: every OpenMP thread accumulates its cells into a private \texttt{total\_local}; the \texttt{reduction} clause combines the partial sums; finally the result is added to \texttt{total[0]}.}
+  \label{r01:fig:reduction}
 \end{figure}
-\Cref{fig:reduction} shows how the partial results are combined. Reductions are
+\Cref{r01:fig:reduction} shows how the partial results are combined. Reductions are
 supported on all CPU targets, including vectorized ones (the vector
-partial results are combined horizontally, see \cref{lst:rvv-reduction}), and on CUDA
-through atomic operations (\cref{sec:gpu-platforms}).
+partial results are combined horizontally, see \cref{r01:lst:rvv-reduction}), and on CUDA
+through atomic operations (\cref{r01:sec:gpu-platforms}).
 
 \section{Random numbers}
 
@@ -254,9 +254,9 @@ Vectorized variants for x86, ARM and RISC-V are in the per-ISA headers (\file{x8
 \file{neon.hpp}, \file{sve.hpp}, \file{rvv.hpp}), all built on
 \file{bits/philox_rand.h}. In vectorized kernels the index type must match the width of
 the random numbers, e.g.\ \code{index_dtype="int32"} for \code{float32}
-(\cref{sec:data-types}).
+(\cref{r01:sec:data-types}).
 
-\section{From PDEs to stencils: \texttt{pystencils.fd}}\label{sec:fd}
+\section{From PDEs to stencils: \texttt{pystencils.fd}}\label{r01:sec:fd}
 
 The module \code{ps.fd} discretizes partial differential equations automatically.
 \code{transient}, \code{diffusion} and \code{advection} build the terms of a
@@ -268,21 +268,21 @@ and applies explicit Euler in time with second-order central differences in spac
 
 \begin{figure}[htbp]
   \centering
-  \input{figures/heat-stencil}
-  \caption[From the heat equation to a five-point stencil]{From the heat equation to a five-point stencil: \texttt{ps.fd} discretizes the PDE, and the resulting right-hand side is a weighted sum of a cell and its four neighbours, exactly like \cref{fig:stencil} with different weights.}
-  \label{fig:heat-stencil}
+  \input{reports/r01/figures/heat-stencil}
+  \caption[From the heat equation to a five-point stencil]{From the heat equation to a five-point stencil: \texttt{ps.fd} discretizes the PDE, and the resulting right-hand side is a weighted sum of a cell and its four neighbours, exactly like \cref{r01:fig:stencil} with different weights.}
+  \label{r01:fig:heat-stencil}
 \end{figure}
 With $D=1$ and $\Delta t=1/10$, the right-hand side is exactly the five-point update
-$c + \tfrac{1}{10}(c_E+c_W+c_N+c_S-4c)$ (\cref{fig:heat-stencil}). A time loop just swaps the arrays:
+$c + \tfrac{1}{10}(c_E+c_W+c_N+c_S-4c)$ (\cref{r01:fig:heat-stencil}). A time loop just swaps the arrays:
 \pysnippet{ex04_fd_heat.loop}
 \outsnippet{ex04_fd_heat.check}
 \code{ps.fd} also provides symbolic derivatives (\code{Diff}, \code{diff}), stencil
 families (\code{fd_stencils_standard}, \code{fd_stencils_isotropic}),
 staggered discretizations and \code{functional_derivative} for phase-field models.
 
-\section{Simplification and common subexpressions}\label{sec:simp}
+\section{Simplification and common subexpressions}\label{r01:sec:simp}
 
-Large models, such as the lattice Boltzmann kernels in \cref{ch:worked-example}, repeat
+Large models, such as the lattice Boltzmann kernels in \cref{r01:ch:worked-example}, repeat
 many subterms. \code{ps.simp.sympy_cse(ac)} runs SymPy's common subexpression
 elimination over an assignment collection and introduces new subexpressions
 \code{xi_0, xi_1, ...}:
@@ -310,7 +310,7 @@ inside the decorated function creates an assignment, and an optional argument
   standard library. Use \code{sp.Piecewise} directly instead.
 \end{pitfall}
 
-\section{Flowgraphs (experimental)}\label{sec:flow}
+\section{Flowgraphs (experimental)}\label{r01:sec:flow}
 
 \code{ps.flow} is a new, explicitly experimental way to write kernels as a directed
 acyclic graph of \emph{equation blocks}. Inside a block, \code{_eq.let[x] = ...}
@@ -322,7 +322,7 @@ and checks it, and \code{create_kernel} accepts the graph directly:
 \csnippet{ex14_flow_rng.flow}
 Every block keeps its own symbol table, and the generated code marks block boundaries
 with comments. Flowgraphs take a separate path through the driver
-(\cref{sec:driver}): \code{FreezeFlowgraph} replaces \code{KernelAnalysis} and
+(\cref{r01:sec:driver}): \code{FreezeFlowgraph} replaces \code{KernelAnalysis} and
 \code{FreezeExpressions}.
 
 \begin{keyidea}[Summary]
