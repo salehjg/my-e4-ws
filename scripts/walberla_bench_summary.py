@@ -12,7 +12,8 @@ import pathlib
 import re
 import sys
 
-VARIANTS = ["scalar", "scalar_cse", "autovec", "autovec_cse", "explicit", "explicit_cse"]
+VARIANTS = ["scalar", "scalar_cse", "autovec", "autovec_cse", "explicit", "explicit_cse",
+            "explicit_pf", "explicit_cse_pf"]
 
 configs = {}
 for arg in sys.argv[1:]:

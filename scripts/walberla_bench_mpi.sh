@@ -18,6 +18,9 @@ CELLS="${CELLS:-64}"
 STEPS="${STEPS:-100}"
 REPS="${REPS:-2}"
 NPS="${NPS:-4 8}"
+LOGDIR="${LOGDIR:-${BASE}}"
+#   explicit_pf / explicit_cse_pf: software prefetch (docs/notes3); skipped where not built
+VARIANTS="${VARIANTS:-scalar scalar_cse autovec autovec_cse explicit explicit_cse explicit_pf explicit_cse_pf}"
 export PATH="${VENV:-${BASE}/venv}/bin:${PATH}"
 
 #   Never compete with the single-core matrix for the CPU
@@ -30,9 +33,9 @@ for np in ${NPS}; do
                "walberla-build-gcc-f32 gcc-f32" "walberla-build-clang-f32 clang-f32"; do
         read -r dir name <<< "${cfg}"
         appdir="${BASE}/${dir}/apps/benchmarks/SweepgenLbmCPU"
-        log="${BASE}/walberla-mpi-np${np}-${name}.log"
+        log="${LOGDIR}/walberla-mpi-np${np}-${name}.log"
         : > "${log}"
-        for v in scalar scalar_cse autovec autovec_cse explicit explicit_cse; do
+        for v in ${VARIANTS}; do
             exe="${appdir}/SweepgenLbmCPU_${v}"
             [[ -x "${exe}" ]] || continue
             for r in $(seq 1 "${REPS}"); do

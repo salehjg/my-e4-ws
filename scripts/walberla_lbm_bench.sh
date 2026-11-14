@@ -7,7 +7,9 @@
 #   scalar    GenericCPU sweeps, -march=rv64gc (no V extension)
 #   autovec   GenericCPU sweeps, -march=rv64gcv_zvl256b (GCC auto-vectorizes)
 #   explicit  Target.CurrentCPU = RISCV_RVV, vectorized: our RVV backend
-# each with lbmpy's default optimisation and with global CSE (_cse).
+# each with lbmpy's default optimisation and with global CSE (_cse), plus
+#   explicit_pf / explicit_cse_pf   explicit with software prefetch 128 B ahead (docs/notes3)
+# TARGETS="..." (env) overrides the list, e.g. TARGETS="SweepgenLbmCPU_explicit_cse_pf".
 #
 # Run it detached, so it survives a lost connection:
 #   screen -dmS walberla-bench bash -c "bash scripts/walberla_lbm_bench.sh > ../walberla-bench.log 2>&1"
@@ -29,8 +31,11 @@ export PYTHONPATH="${REPO}/submodules/pystencils/src:${REPO}/submodules/walberla
 #   lbmpy/pystencils caches stay in our folder: the board is shared
 export XDG_CACHE_HOME="$(dirname "${REPO}")/.cache"
 
-TARGETS=""
-for v in scalar autovec explicit; do TARGETS="${TARGETS} SweepgenLbmCPU_${v} SweepgenLbmCPU_${v}_cse"; done
+if [[ -z "${TARGETS:-}" ]]; then
+    TARGETS=""
+    for v in scalar autovec explicit; do TARGETS="${TARGETS} SweepgenLbmCPU_${v} SweepgenLbmCPU_${v}_cse"; done
+    TARGETS="${TARGETS} SweepgenLbmCPU_explicit_pf SweepgenLbmCPU_explicit_cse_pf"
+fi
 APPDIR="${BUILD}/apps/benchmarks/SweepgenLbmCPU"
 
 echo "== configure $(date)"
