@@ -64,16 +64,67 @@ def _prefetch(code, *, target, ctype, arg):
     return code, {"prefetches": len(lines), "elems_ahead": elems}
 
 
+#  Row pointers of pystencils' HoistRowPointers (Loop 12): `_data_rho_row`, `_data_u_row__1`, ...
+_ROW = r"(?:_row(?:__\d+)?)?"
+
+
 def _no_macro_out(code, *, target, ctype, arg):
-    """Drop the density/velocity stores (NOT a valid kernel: measures 4 fewer write streams)."""
+    """Drop the density/velocity stores and their prefetch hints from the inner loop.
+
+    Models a sweep without the macroscopic outputs (plan lever C6: 4 fewer write streams). Not a
+    complete kernel by itself: rho/u are not written, so the driver's energy/mass come out 0.
+    """
     s, e = _inner_loop(code, target)
     body = code[s:e]
     n0 = len(body)
+    body, npf = re.subn(rf"pystencils::runtime::\w+::prefetch_(write|read)\(&_data_(rho|u){_ROW}\[[^\]]*\]\);", "", body)
     if target == "rvv":
-        body = re.sub(r"__riscv_vse(32|64)_v_f(32|64)m1\(&_data_(rho|u)\[[^\]]*\],[^;]*;", "", body)
+        body, nst = re.subn(rf"__riscv_vse(32|64)_v_f(32|64)m1\(&_data_(rho|u){_ROW}\[[^\]]*\],[^;]*;", "", body)
     else:
-        body = re.sub(r"_data_(rho|u)\[[^\]]*\] = [^;]*;", "", body)
-    return code[:s] + body + code[e:], {"removed_chars": n0 - len(body)}
+        body, nst = re.subn(rf"_data_(rho|u){_ROW}\[[^\]]*\] = [^;]*;", "", body)
+    return code[:s] + body + code[e:], {"removed_chars": n0 - len(body), "stores": nst, "prefetches": npf}
 
 
 EDITS.update({"pf": _prefetch, "nomacro": _no_macro_out})
+
+_ROW_ACCESS = re.compile(r"(&?)_data_(\w+)\[ctr_0 \+ ([^\]]*)\]")
+
+
+def _row_pointers(code, *, target, ctype, arg):
+    """Hoist one row base pointer per distinct access out of the vector x-loop (Loop 12).
+
+    `_data_X[ctr_0 + REST]` becomes `_rp_k[ctr_0]` with `auto * const _rp_k = _data_X + (REST);`
+    declared before the loop. GCC otherwise bases the induction variable of an access with a
+    +-1 x offset on x itself and needs an `addi` per access (RVV loads/stores have no immediate
+    offset; prefetch immediates must be multiples of 32), and spills the extra addresses.
+    """
+    m = re.search(r"\n(\s*)for\(int64_t ctr_0__1 = 0LL;", code)
+    if not m or target != "rvv":
+        raise ValueError("rp: vector inner loop not found")
+    s, e = _inner_loop(code, target)
+    keys = {}
+
+    def rep(a):
+        amp, fld, rest = a.groups()
+        k = keys.setdefault((fld, rest), len(keys))
+        return f"{amp}_rp_{k}[ctr_0]"
+
+    body = _ROW_ACCESS.sub(rep, code[s:e])
+    decls = "".join(f"\n{m[1]}auto * const _rp_{k} = _data_{fld} + ({rest});" for (fld, rest), k in keys.items())
+    code = code[: m.start()] + decls + code[m.start() : s] + body + code[e:]
+    return code, {"row_pointers": len(keys)}
+
+
+def _opaque_constants(code, *, target, ctype, arg):
+    """Make the scalar constants opaque (`asm("" : "+f"(c))` after the declaration, Loop 12).
+
+    GCC otherwise rematerializes every scalar operand of a .vf instruction from the constant
+    pool inside the loop (`lla` + `flw` per use) instead of keeping it in one of the 32 idle
+    FP registers.
+    """
+    pat = re.compile(r"^( +)const (float|double) (__c\w*) = ([^;]*);", re.M)
+    code, n = pat.subn(lambda a: f'{a[1]}{a[2]} {a[3]} = {a[4]}; __asm__("" : "+f"({a[3]}));', code)
+    return code, {"opaque_constants": n}
+
+
+EDITS.update({"rp": _row_pointers, "opq": _opaque_constants})

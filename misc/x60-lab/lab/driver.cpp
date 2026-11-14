@@ -15,8 +15,10 @@
 //                   initialised with the pull-streamed initial state so that the rho/u outputs
 //                   (energy, mass) of every step equal the pull kernels'; periodic ghost fill
 //                   before odd steps, ghost-to-interior fold after odd steps (both untimed)
-// Prints: one tab-separated key=value line (MLUP/s of the kernel alone, cycles/insns per cell
-//         from perf_event_open around the kernel calls, checksums).
+// Prints: one tab-separated key=value line (MLUP/s of the kernel alone: best and median step,
+//         mean over all steps, mean over even / odd steps; cycles/insns per cell from
+//         perf_event_open around the kernel calls; checksums). Compare `mean_mlups` with the
+//         application: for AA, `best` is an even step, which is the cheaper kernel.
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -172,6 +174,7 @@ int main(int argc, char** argv) {
 
    Pmu pmu;
    std::vector<double> secs;
+   double par_secs[2] = {0, 0};   // total time of the even / odd steps (AA) or of alternate steps (pull)
    uint64_t cyc = 0, ins = 0;
    for (int s = 0; s < steps; ++s) {
       const double t0 = now();
@@ -179,12 +182,17 @@ int main(int argc, char** argv) {
       step(*a, *b);
       pmu.stop();
       secs.push_back(now() - t0);
+      par_secs[aa ? (aa_t & 1) : (s & 1)] += secs.back();
       cyc += pmu.cycles();
       ins += pmu.insns();
       between();
    }
    std::sort(secs.begin(), secs.end());
    const double cells = double(N) * N * N;
+   //  mean over all timed steps: comparable to the application's MLUP/s. For AA, `best` is always
+   //  an even step (the cheaper kernel), so it overstates the kernel; even/odd are reported apart.
+   const double mean_mlups = cells * steps / (par_secs[0] + par_secs[1]) / 1e6;
+   const double even_mlups = cells * (steps / 2) / par_secs[0] / 1e6, odd_mlups = cells * (steps / 2) / par_secs[1] / 1e6;
    double e = 0, mass = 0, wsum = 0;
    for (int64_t z = 1; z <= N; ++z)
       for (int64_t y = 1; y <= N; ++y)
@@ -195,8 +203,8 @@ int main(int argc, char** argv) {
             for (int i = 0; i < 19; ++i) wsum += (i + 1) * double(a->at(x, y, z, i));
          }
    std::printf("best_mlups=%.3f\tmedian_mlups=%.3f\tcycles_per_cell=%.1f\tinsns_per_cell=%.1f\tipc=%.3f\t"
-               "energy=%.12e\tmass=%.12e\twsum=%.12e\n",
+               "energy=%.12e\tmass=%.12e\twsum=%.12e\tmean_mlups=%.3f\teven_mlups=%.3f\todd_mlups=%.3f\n",
                cells / secs[0] / 1e6, cells / secs[secs.size() / 2] / 1e6, cyc / (cells * steps),
-               ins / (cells * steps), cyc ? double(ins) / cyc : 0.0, e, mass, wsum);
+               ins / (cells * steps), cyc ? double(ins) / cyc : 0.0, e, mass, wsum, mean_mlups, even_mlups, odd_mlups);
    return 0;
 }

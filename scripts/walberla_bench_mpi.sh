@@ -20,7 +20,9 @@ REPS="${REPS:-2}"
 NPS="${NPS:-4 8}"
 LOGDIR="${LOGDIR:-${BASE}}"
 #   explicit_pf / explicit_cse_pf: software prefetch (docs/notes3); skipped where not built
-VARIANTS="${VARIANTS:-scalar scalar_cse autovec autovec_cse explicit explicit_cse explicit_pf explicit_cse_pf}"
+VARIANTS="${VARIANTS:-scalar scalar_cse autovec autovec_cse explicit explicit_cse explicit_pf explicit_cse_pf scalar_cse_aa explicit_cse_aa explicit_cse_aa_pf}"
+#   "<build dir> <label>" pairs separated by ';'
+CONFIGS="${CONFIGS:-walberla-build gcc-f64;walberla-build-clang-f64 clang-f64;walberla-build-gcc-f32 gcc-f32;walberla-build-clang-f32 clang-f32}"
 export PATH="${VENV:-${BASE}/venv}/bin:${PATH}"
 
 #   Never compete with the single-core matrix for the CPU
@@ -29,8 +31,8 @@ echo "== start $(date)"
 
 for np in ${NPS}; do
     labels=()
-    for cfg in "walberla-build gcc-f64" "walberla-build-clang-f64 clang-f64" \
-               "walberla-build-gcc-f32 gcc-f32" "walberla-build-clang-f32 clang-f32"; do
+    IFS=';' read -r -a cfgs <<< "${CONFIGS}"
+    for cfg in "${cfgs[@]}"; do
         read -r dir name <<< "${cfg}"
         appdir="${BASE}/${dir}/apps/benchmarks/SweepgenLbmCPU"
         log="${LOGDIR}/walberla-mpi-np${np}-${name}.log"

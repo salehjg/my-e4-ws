@@ -13,7 +13,7 @@ import re
 import sys
 
 VARIANTS = ["scalar", "scalar_cse", "autovec", "autovec_cse", "explicit", "explicit_cse",
-            "explicit_pf", "explicit_cse_pf"]
+            "explicit_pf", "explicit_cse_pf", "scalar_cse_aa", "explicit_cse_aa", "explicit_cse_aa_pf"]
 
 configs = {}
 for arg in sys.argv[1:]:

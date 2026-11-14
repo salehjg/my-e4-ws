@@ -8,11 +8,13 @@
 #      CCS="gcc clang"  FLAGS="O3"  (O3 = waLBerla's -O3, Ofast = the JIT's)  N=64 STEPS=20
 #      CPU=2  BUILD=/home/bananapi/saleh/notes3/lab  EXTRA="..." (extra kernel flags)
 #      RUNENV="THP=1 ..." (environment for the run)  TAG=<label in results.tsv>
+#      RUNONLY=1 (reuse an existing binary, e.g. to rerun it with another RUNENV)
+#      INC=<dir> (pystencils runtime headers; default: the repo's pystencils include dir)
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "${HERE}/../../.." && pwd)"
 BUILD="${BUILD:-/home/bananapi/saleh/notes3/lab}"
-INC="${REPO}/submodules/pystencils/src/pystencils/include"
+INC="${INC:-${REPO}/submodules/pystencils/src/pystencils/include}"
 CCS="${CCS:-gcc}"; FLAGS="${FLAGS:-O3}"; N="${N:-64}"; STEPS="${STEPS:-20}"; CPU="${CPU:-2}"
 TAG="${TAG:-}"
 declare -A CXX=( [gcc]=g++ [clang]=clang++ )
@@ -34,8 +36,11 @@ for cc in ${CCS}; do
       [[ $tgt == generic && $v == *scalar* ]] && march=${MARCH_SCALAR:--march=rv64gc_zicbop}
       name="${cc}-${fl}-${v}"
       base="${v%%@*}"
-      ${CXX[$cc]} -O2 -march=rv64gc -DT=$ct -c "${HERE}/driver.cpp" -o "${BUILD}/obj/driver-${cc}-${dt}.o"
-      if [[ -f "${HERE}/hand/${base}.cpp" ]]; then
+      if [[ ${RUNONLY:-0} == 1 && -x "${BUILD}/bin/${name}" ]]; then
+         :
+      elif ! ${CXX[$cc]} -O2 -march=rv64gc -DT=$ct -c "${HERE}/driver.cpp" -o "${BUILD}/obj/driver-${cc}-${dt}.o"; then
+         exit 1
+      elif [[ -f "${HERE}/hand/${base}.cpp" ]]; then
          ${CXX[$cc]} -DNDEBUG -std=c++20 ${OPT[$fl]} $march ${EXTRA:-} ${HAND_DEFS:-} -c "${HERE}/hand/${base}.cpp" -o "${BUILD}/obj/${name}.o" 2> "${BUILD}/log/${name}.log" \
             || { cat "${BUILD}/log/${name}.log"; exit 1; }
          ${CXX[$cc]} "${BUILD}/obj/driver-${cc}-${dt}.o" "${BUILD}/obj/${name}.o" -o "${BUILD}/bin/${name}"
