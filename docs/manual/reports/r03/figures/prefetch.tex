@@ -1,0 +1,26 @@
+% Software prefetch along one row (f32): an iteration loads 8 floats = 32 B; the prefetch for the same
+% access goes 128 B = 32 floats ahead, i.e. 4 iterations ahead; one prefetch per access and iteration,
+% so each 64-B line receives two. (f64: 4 lanes = 32 B per iteration, 128 B = 16 doubles, also 4 ahead.)
+\begin{tikzpicture}[every node/.style={font=\scriptsize}]
+  \def\rthreeCW{0.2}
+  % 48 floats = 3 cache lines of 16 floats
+  \foreach \i in {0,...,47} {
+    \pgfmathsetmacro{\xx}{\i*\rthreeCW}
+    \ifnum\i<8 \def\rthreeFC{psblue!35}\else\ifnum\i>31 \ifnum\i<40 \def\rthreeFC{psorange!35}\else\def\rthreeFC{white}\fi\else\def\rthreeFC{white}\fi\fi
+    \fill[\rthreeFC] (\xx,0) rectangle ++(\rthreeCW,0.45);
+    \draw[psgray!60,line width=0.2pt] (\xx,0) rectangle ++(\rthreeCW,0.45);
+  }
+  % cache line boundaries
+  \foreach \l in {0,1,2,3} \draw[psgray!90!black,line width=1pt] (\l*16*\rthreeCW,-0.1) -- ++(0,0.65);
+  \foreach \l in {0,1,2} \node[r03label] at (\l*16*\rthreeCW+8*\rthreeCW,-1.15) {64-B cache line};
+  \node[anchor=south] at (4*\rthreeCW,0.5) {\texttt{vle32} at $x$};
+  \node[anchor=south] at (36*\rthreeCW,0.5) {\texttt{prefetch} at $x + 32$};
+  \draw[r03arrow,psorange!90!black] (4*\rthreeCW,0.9) to[bend left=20] node[above] {same iteration, 128~B ahead} (36*\rthreeCW,0.9);
+  % iterations
+  \foreach \k in {0,...,5} \draw[psblue!60,decorate,decoration={brace,mirror,amplitude=2pt}]
+    (\k*8*\rthreeCW+0.02,-0.55) -- node[below=2pt] {\tiny it.\,$k{+}\k$} (\k*8*\rthreeCW+8*\rthreeCW-0.02,-0.55);
+  \node[anchor=west,text width=52mm] at (9.9,0.25)
+    {The line holding $x + 32 \ldots x + 39$ is requested 4 iterations before \texttt{vle32} needs it.
+     One prefetch per distinct access: 42 per iteration in the pull loop, 23 in the AA loop
+     (\texttt{prefetch.r} for read-only, \texttt{prefetch.w} for written addresses).};
+\end{tikzpicture}

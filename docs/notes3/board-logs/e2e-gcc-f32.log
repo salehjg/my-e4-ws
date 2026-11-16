@@ -1,0 +1,58 @@
+== configure Thu Nov 12 08:15:44 AM CST 2026
+== build SweepgenLbmCPU_scalar 08:17:25
+== build SweepgenLbmCPU_scalar_cse 08:22:50
+== build SweepgenLbmCPU_autovec 08:28:21
+== build SweepgenLbmCPU_autovec_cse 08:33:55
+== build SweepgenLbmCPU_explicit 08:39:12
+== build SweepgenLbmCPU_explicit_cse 08:44:36
+== build SweepgenLbmCPU_explicit_pf 08:50:02
+== build SweepgenLbmCPU_explicit_cse_pf 08:55:14
+
+== RVV instructions in the generated sweeps (gen/SweepgenLbmCPU.cpp.o)
+SweepgenLbmCPU_scalar: 0
+SweepgenLbmCPU_scalar_cse: 0
+SweepgenLbmCPU_autovec: 138
+SweepgenLbmCPU_autovec_cse: 138
+SweepgenLbmCPU_explicit: 665
+SweepgenLbmCPU_explicit_cse: 608
+SweepgenLbmCPU_explicit_pf: 665
+SweepgenLbmCPU_explicit_cse_pf: 608
+
+== run Thu Nov 12 09:00:35 AM CST 2026, 64^3 cells, 200 steps, 3 reps, core 2
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=37.9106351887 mlups=1.38295757217 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=38.2489239262 mlups=1.37072614386 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=37.5070175347 mlups=1.39783974963 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=262144 steps=200 seconds=32.9951122741 mlups=1.58898686461 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=262144 steps=200 seconds=33.8101902294 mlups=1.55068042044 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=262144 steps=200 seconds=33.6264491051 mlups=1.55915362446 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=32 cells=262144 steps=200 seconds=37.7581324375 mlups=1.38854325189 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=32 cells=262144 steps=200 seconds=37.3870929785 mlups=1.4023235246 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=32 cells=262144 steps=200 seconds=37.3369045945 mlups=1.40420853227 energy=377.524475931
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=32 cells=262144 steps=200 seconds=32.8452452651 mlups=1.5962371289 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=32 cells=262144 steps=200 seconds=33.4161329579 mlups=1.56896670438 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=32 cells=262144 steps=200 seconds=33.4689614948 mlups=1.56649019445 energy=377.525144504
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit real_t=32 cells=262144 steps=200 seconds=22.304093031 mlups=2.3506358195 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit real_t=32 cells=262144 steps=200 seconds=22.4317541211 mlups=2.33725814383 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit real_t=32 cells=262144 steps=200 seconds=22.2582090587 mlups=2.35548151523 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=262144 steps=200 seconds=21.8667227138 mlups=2.39765239108 energy=377.523390862
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=262144 steps=200 seconds=21.8761566973 mlups=2.39661841545 energy=377.523390862
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=262144 steps=200 seconds=21.886217742 mlups=2.3955166954 energy=377.523390862
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_pf real_t=32 cells=262144 steps=200 seconds=11.800662439 mlups=4.44286922628 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_pf real_t=32 cells=262144 steps=200 seconds=12.1574821794 mlups=4.31247187751 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_pf real_t=32 cells=262144 steps=200 seconds=11.822934741 mlups=4.43449965244 energy=377.523372063
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=11.2639557902 mlups=4.65456372314 energy=377.523390862
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=11.0845490158 mlups=4.72989924309 energy=377.523390862
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=10.927397803 mlups=4.79792178753 energy=377.523390862
+
+== Summary: best MLUP/s of 3 runs
+| variant | MLUP/s | vs scalar | kinetic energy (checksum) |
+|---|---|---|---|
+| scalar | 1.40 | 1.00x | 3.775244759310e+02 |
+| scalar_cse | 1.59 | 1.14x | 3.775251445040e+02 |
+| autovec | 1.40 | 1.00x | 3.775244759310e+02 |
+| autovec_cse | 1.60 | 1.14x | 3.775251445040e+02 |
+| explicit | 2.36 | 1.69x | 3.775233720630e+02 |
+| explicit_cse | 2.40 | 1.72x | 3.775233908620e+02 |
+| explicit_pf | 4.44 | 3.18x | 3.775233720630e+02 |
+| explicit_cse_pf | 4.80 | 3.43x | 3.775233908620e+02 |
+== done Thu Nov 12 09:11:53 AM CST 2026

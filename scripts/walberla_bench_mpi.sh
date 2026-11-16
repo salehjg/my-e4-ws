@@ -20,7 +20,7 @@ REPS="${REPS:-2}"
 NPS="${NPS:-4 8}"
 LOGDIR="${LOGDIR:-${BASE}}"
 #   explicit_pf / explicit_cse_pf: software prefetch (docs/notes3); skipped where not built
-VARIANTS="${VARIANTS:-scalar scalar_cse autovec autovec_cse explicit explicit_cse explicit_pf explicit_cse_pf scalar_cse_aa explicit_cse_aa explicit_cse_aa_pf}"
+VARIANTS="${VARIANTS:-scalar scalar_cse autovec autovec_cse explicit explicit_cse explicit_pf explicit_cse_pf scalar_cse_aa autovec_cse_aa explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split}"
 #   "<build dir> <label>" pairs separated by ';'
 CONFIGS="${CONFIGS:-walberla-build gcc-f64;walberla-build-clang-f64 clang-f64;walberla-build-gcc-f32 gcc-f32;walberla-build-clang-f32 clang-f32}"
 export PATH="${VENV:-${BASE}/venv}/bin:${PATH}"

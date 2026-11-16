@@ -1,0 +1,14 @@
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=2097152 steps=100 seconds=28.6853137418 mlups=7.31089092794 energy=3182.99010914
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=2097152 steps=100 seconds=25.9935023617 mlups=8.06798549429 energy=3182.99010914
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=2097152 steps=100 seconds=25.1360808536 mlups=8.34319404132 energy=3182.99298634
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=2097152 steps=100 seconds=22.5720830507 mlups=9.29091034838 energy=3182.99298634
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=2097152 steps=100 seconds=18.9250252211 mlups=11.0813696442 energy=3182.98389459
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=2097152 steps=100 seconds=18.8996339305 mlups=11.0962572487 energy=3182.98389459
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=2097152 steps=100 seconds=15.3132316963 mlups=13.6950321238 energy=3182.98389459
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=2097152 steps=100 seconds=15.1041899707 mlups=13.8845711294 energy=3182.98389459
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=2097152 steps=100 seconds=16.523123267 mlups=12.6922251085 energy=3182.99326281
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=2097152 steps=100 seconds=16.5552791996 mlups=12.6675725291 energy=3182.99326281
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=32 cells=2097152 steps=100 seconds=15.8497574534 mlups=13.2314453781 energy=3182.98442072
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=32 cells=2097152 steps=100 seconds=14.7836922335 mlups=14.1855766941 energy=3182.98442072
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=2097152 steps=100 seconds=10.6572835777 mlups=19.6781101366 energy=3182.98442072
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=2097152 steps=100 seconds=10.9604623157 mlups=19.1337914368 energy=3182.98442072

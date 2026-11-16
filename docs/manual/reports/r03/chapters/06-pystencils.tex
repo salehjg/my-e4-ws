@@ -1,0 +1,246 @@
+\chapter{Changes in \texorpdfstring{\ps}{pystencils}}\label{r03:ch:pystencils}
+
+\emph{How \ps{} vectorizes the kernel for RVV, and the three additions that were adopted:
+software prefetch, a new instruction selection with scalar operands and fused multiply-add,
+and row pointers with constants kept in registers.}
+
+The fork is \href{\rPSurl/tree/\rPSsha}{\texttt{mirrored-pystencil2}}, branch
+\texttt{rvv-support}, commit \rcommitps. The changes described here touch ten files
+(\href{\rPSurl/compare/9a989e1625fbb0272876f550a5f7d3456fdaca25...\rPSsha}{\texttt{9a989e16..a81dc547}}:
+807 lines added, 2 removed). Only code for the RVV target changes. The new extension points
+do nothing for other targets, and the prefetch option is refused for them.
+
+\section{How the kernel is vectorized}\label{r03:sec:ps-simd}
+
+\ps{} vectorizes the innermost loop, which runs over $x$; in the fzyx layout consecutive $x$
+are consecutive in memory (\cref{r03:sec:bg-blocks}). One vector is one LMUL-1 register of
+256~bits: 8 lanes in f32, 4 in f64. Each vector iteration therefore updates 8 (or 4) cells at
+once. Every memory access is a unit-stride load or store of part of one row of one slice; the
+kernel needs no gather or scatter instructions. If the row length is not a multiple of the
+lane count, a scalar loop handles the remaining cells; at 64 cells per row it has nothing to do.
+\Cref{r03:fig:simd} shows the layout and one iteration.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/simd-layout}}
+  \caption[How the generated kernel uses the vector registers]{How the generated kernel uses
+    the vector registers: (a) one row of one PDF slice in memory and its 8 vector iterations,
+    (b) one vector register, (c) the operations of one iteration of the f32 AA loop, (d) the
+    register groupings tried in \cref{r03:sec:lever-sched}.}\label{r03:fig:simd}
+\end{figure}
+
+\paragraph{Where the changes sit.} \ps{} builds a kernel in stages
+(\cref{r03:fig:pipeline}). It first represents the loop nest as a syntax tree, its
+\term{intermediate representation} (IR). Transformations then rewrite that tree. Finally
+the tree is \term{lowered}: \ps{} replaces generic operations by target-specific ones
+(here RVV intrinsics) and prints C++. The \term{platform} class of a target (\code{RvvCpu} for
+RVV) supplies the target-specific parts. The three changes of this chapter are two new
+transformations and a rewritten instruction selection.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/pipeline}}
+  \caption[The stages of pystencils and the additions]{The stages in which \ps{} builds a
+    kernel for a vector CPU (\texttt{codegen/driver.py}). Teal: added or changed by the work in
+    this report.}\label{r03:fig:pipeline}
+\end{figure}
+
+\section{Software prefetch}\label{r03:sec:ps-prefetch}
+
+\paragraph{Option.} \code{cpu.vectorize.prefetch_distance}: the prefetch distance in bytes.
+The default \code{None} means no prefetching. Defined in
+\ghps{src/pystencils/codegen/config.py}; supported for \code{Target.RISCV_RVV} only.
+
+\paragraph{Where it runs.} \ghps{src/pystencils/codegen/driver.py}: during lowering for vector
+targets, if the option is set, the driver calls
+\code{platform.insert_prefetches(kernel_ast, prefetch_distance)}. This happens after
+\code{prepare_vector_loops} (\cref{r03:sec:ps-rowptr}) and before the instruction selection.
+
+\paragraph{The transformation.} \code{InsertPrefetches}
+(\ghps{src/pystencils/backend/transformations/insert_prefetches.py}, new):
+\begin{itemize}
+  \item In every innermost loop that contains unit-stride vector memory accesses, it inserts
+        one prefetch per distinct address (base pointer plus offset), right before the first
+        statement that accesses memory.
+  \item The prefetch is a write prefetch if the loop writes that address, and a read prefetch
+        otherwise. The prefetched address lies \code{distance_bytes} ahead of the accessed
+        one.
+  \item It skips accesses whose offset depends on a variable that is defined inside the loop
+        at or after the insertion point, and accesses with a stride other than one.
+\end{itemize}
+
+\paragraph{Per platform.} \ghps{src/pystencils/backend/platforms/generic_cpu.py}: the base
+class of vector platforms, \code{GenericVectorCpu}, raises an error
+(\code{MaterializationError}) in \code{insert_prefetches}, so the option fails loudly on x86.
+\ghps{src/pystencils/backend/platforms/rvv.py}: \code{RvvCpu.insert_prefetches} emits calls
+to \code{pystencils::runtime::rvv::prefetch_read} and \code{prefetch_write}.
+
+\paragraph{Runtime functions.} \ps{} ships a C++ header with helper functions for generated
+code, \ghps{src/pystencils/include/pystencils_runtime/rvv.hpp}. If the compiler is told that
+the core has Zicbop (\code{-march=..._zicbop}), the two functions use the compiler's
+\code{__builtin_prefetch}. Otherwise they emit the instructions directly, \code{ori x0, rs, 1}
+and \code{ori x0, rs, 3}, by inline assembly. These are the Zicbop prefetch encodings, which
+are HINTs: cores without Zicbop ignore them (\cref{r03:sec:bg-rvv}). So no build flag is
+needed. This matters because waLBerla's compiler flags do not contain \code{zicbop}, and the
+X60's ISA string does not list it although the core executes the prefetches
+(\cref{r03:sec:mem}). In the waLBerla build, the object file of the \code{explicit_cse_pf}
+sweeps contains 65 such instructions: 42 in \code{StreamCollide} and 23 in \code{InitPdfs}.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/prefetch}}
+  \caption[Software prefetch distance]{Software prefetch along one row (f32): 128~bytes ahead
+    is four vector iterations ahead.}\label{r03:fig:prefetch}
+\end{figure}
+
+\section{Instruction selection: scalar operands and FMA}\label{r03:sec:ps-selector}
+
+\term{Instruction selection} is the lowering step that maps each vector operation of the IR to
+an RVV intrinsic. The original selection, \code{SelectIntrinsicsRvv} in
+\ghps{src/pystencils/backend/platforms/rvv.py}, mapped every operation to the .vv form, and
+kept every constant as a vector. It gained two rewrites, which are always on (described in the
+class's documentation string):
+\begin{description}
+  \item[Scalar operands.] A value is \term{uniform} if it is the same in every lane: constants,
+        broadcasts of a scalar, scalar variables, and $+$, $-$, $\times$, $\div$ and
+        negation of uniform values. Every floating-point vector variable with a uniform value
+        gets a scalar copy, declared right before it. An operation with one uniform operand then
+        uses the .vf form with the scalar copy (\code{vfadd_vf}, \code{vfsub_vf},
+        \code{vfmul_vf}, \code{vfdiv_vf}; \code{vfrsub_vf} or \code{vfrdiv_vf} when the scalar
+        is the left operand). Variables that are assigned again later in the kernel, such as
+        the running sum of a reduction, could change their value; a scan before the rewrite
+        finds them and excludes them.
+  \item[Fused multiply-add.] $a b + c$ becomes \code{vfmacc}, $a b - c$ becomes \code{vfmsac}
+        (also when sympy writes it as $(-1) c + a b$), and $c - a b$ becomes \code{vfnmsac},
+        each in the .vv or the .vf form. A uniform addend $c$ is not fused, because the
+        accumulator of an FMA must be a vector, which would need a splat. The compiler does not
+        form FMAs from intrinsics by itself (\cref{r03:sec:bg-rvv}), so the selection must.
+\end{description}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/selector}}
+  \caption[The new instruction selection]{The new instruction selection on one expression of
+    the generated kernel (the old form is a schematic of the original mapping), and its effect
+    on the registers.}\label{r03:fig:selector}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Effect on the vector loops: instructions per iteration of 8 cells (f32) or 4 cells
+    (f64), compiled with the GCC~16 cross compiler. Spills and reloads: vector registers saved to
+    and loaded from the stack.}\label{r03:tab:selector-insns}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    \textbf{Kernel} & \textbf{before} & \textbf{after} & \textbf{vector instr.} & \textbf{spills + reloads}\\
+    \midrule
+    f32 AA + prefetch, even step & 471 & 341 & 280 $\rightarrow$ 235 & 30 $\rightarrow$ 0\\
+    f32 AA + prefetch, odd step & 556 & 396 & 284 $\rightarrow$ 236 & 34 $\rightarrow$ 0\\
+    f64 AA + prefetch, even step & 473 & 350 & 280 $\rightarrow$ 235 & 30 $\rightarrow$ 0\\
+    f32 pull + prefetch & 458 & 449 & 271 $\rightarrow$ 239 & 3 $\rightarrow$ 0\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The floating-point instructions per iteration drop from 207 to about 150, 64 of them FMAs.
+Under QEMU the f64 checksums are unchanged to 13 digits. In f32 they change by about
+$10^{-8}$ relative, because an FMA rounds once where a multiplication followed by an addition
+rounds twice. On the board the f32 AA kernel with prefetch becomes 22\,\% faster
+(\cref{r03:tab:selector}).
+
+\section{Row pointers and constants in registers}\label{r03:sec:ps-rowptr}
+
+\paragraph{\texttt{HoistRowPointers}}
+(\ghps{src/pystencils/backend/transformations/hoist_row_pointers.py}, new). Consider a
+unit-stride vector access \code{ptr[ctr + rest]} in an innermost loop, where \code{ctr} is the
+loop counter (or a copy of it) and \code{rest} does not change inside the loop. The
+transformation declares \code{row = &ptr[rest]} before the loop and rewrites the access to
+\code{row[ctr]}. Accesses with the same pointer and the same \code{rest} share one row pointer.
+The address computation then happens once per row instead of once per iteration
+(\cref{r03:fig:rowptr}).
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/rowptr}}
+  \caption[Row pointers]{\texttt{HoistRowPointers}: how addresses are formed before and after
+    (f32 AA odd step, GCC~16 cross compiler).}\label{r03:fig:rowptr}
+\end{figure}
+
+\paragraph{Extension point.} \code{GenericVectorCpu.prepare_vector_loops}
+(\ghps{src/pystencils/backend/platforms/generic_cpu.py}) is a new method of the vector
+platforms. The base class leaves the loops unchanged; \code{RvvCpu} applies
+\code{HoistRowPointers}. The driver calls it before it inserts the prefetches, so the
+prefetches use the row pointers too (\cref{r03:lst:aa-odd}).
+
+\paragraph{Constants in registers.} Scalar copies (\cref{r03:sec:ps-selector}) whose value is a
+constant are declared through \code{pystencils::runtime::rvv::in_register(x)}
+(\ghps{src/pystencils/include/pystencils_runtime/rvv.hpp}). This function returns its argument
+after an empty inline-assembly statement, \code{asm("" : "+f"(x))}, which tells the compiler
+that the value may have changed. The compiler can then no longer treat it as a known constant,
+and GCC keeps it in a floating-point register instead of loading it from the constant table for
+every use.
+
+\rthreeneedspace{12\baselineskip}
+\lstinputlisting[style=cpp,caption={[Generated odd AA step with row pointers, prefetch, .vf and FMA]
+  Excerpt of a generated kernel: the odd AA step of the D3Q19 update, f32, prefetch 128~bytes,
+  from the lab file \texttt{misc/x60-lab/lab/src/f32-rvv-cse+aa+bpf=128+vf2+cg.cpp} (the file
+  name is explained in \cref{r03:sec:repro-gen}). The two header comments and the shortened
+  signature are added; all other lines are copied verbatim, and comments starting with
+  ``\texttt{...}'' mark omitted lines.},
+  label={r03:lst:aa-odd},nolol=false]{aa-odd-excerpt.cpp}
+
+The kernel in \cref{r03:lst:aa-odd} has 23 row pointers (19 PDF slots, the density and three
+velocity components), 23 prefetches and 19 loads per iteration, and nine constants that exist
+both as an \code{in_register} scalar and as a vector.
+
+The instruction counts drop (\cref{r03:sec:lever-rp}). In the lab on the board the cycles did
+not; in the application the variants with prefetch became faster: AA by 2.5\,\% (f32) and
+2.2\,\% (f64), pull by 5.2\,\% and 8.7\,\% (\cref{r03:tab:res-cg}). The change was kept
+(\cref{r03:sec:res-cg}).
+
+\section{Tests}\label{r03:sec:ps-tests}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Tests added or changed in \ps{} (directory \texttt{tests/nbackend/}).}\label{r03:tab:ps-tests}
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    \textbf{Test} & \textbf{Checks}\\
+    \midrule
+    \multicolumn{2}{@{}l}{\ghps{tests/nbackend/test_rvv_codegen.py} (runs anywhere: inspects the
+      generated code)}\\
+    \code{test_prefetch_off_by_default} & no prefetch without the option\\
+    \code{test_prefetch_one_per_distinct_access} & one prefetch per distinct access, read or write,
+      distance in elements\\
+    \code{test_prefetch_read_and_written_address_gets_write_prefetch} & write prefetch for an
+      address that is both read and written\\
+    \code{test_prefetch_needs_vector_platform} & the option is refused on other platforms\\
+    \code{test_float_arithmetic} & updated for the new instruction selection\\
+    \code{test_scalar_operands_use_vf_forms} & .vf forms for uniform operands\\
+    \code{test_fused_multiply_add} & the FMA forms\\
+    \code{test_scalar_addend_is_not_fused} & no FMA with a uniform addend\\
+    \code{test_hoisted_constants_are_scalar_operands} & scalar copies of constants, through
+      \code{in_register}\\
+    \code{test_reassigned_vector_symbol_keeps_its_register} & no scalar copy for variables that are
+      assigned again\\
+    \code{test_stencil_accesses_use_row_pointers} & row pointers before the loop, with the stencil
+      offsets moved into them\\
+    \code{test_generated_code_compiles} & cross-compiles the kernels, now including one with
+      prefetch\\
+    \midrule
+    \multicolumn{2}{@{}l}{\ghps{tests/nbackend/test_rvv_execution.py} (runs on RVV hardware only)}\\
+    \code{test_prefetch_does_not_change_results} & identical results with and without prefetch, f32
+      and f64\\
+    \code{test_vf_forms_and_fma_match_numpy} & every form against numpy, within a tolerance in
+      units of the last place (ulp)\\
+    \code{test_stencil_row_pointers_match_generic_cpu} & a 3D stencil with row pointers against
+      the plain C++ target\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Two of these tests were checked by \term{mutation}: the code they protect was broken on purpose,
+and the test had to fail. \code{test_reassigned_vector_symbol_keeps_its_register} fails when the
+exclusion of re-assigned variables is removed, and \code{test_stencil_accesses_use_row_pointers}
+fails when \code{prepare_vector_loops} is disabled. The test results are in
+\cref{r03:sec:ver-ps}.

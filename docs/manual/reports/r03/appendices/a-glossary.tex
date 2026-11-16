@@ -1,0 +1,171 @@
+\chapter{Glossary}\label{r03:app:glossary}
+
+Every term and abbreviation of this report, in alphabetical order, with the section that
+explains it.
+
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}Xr@{}}
+  \toprule
+  \textbf{Term} & \textbf{Meaning} & \textbf{Section}\\
+  \midrule
+  \endhead
+  \code{.vf} form, \code{.vv} form & vector instruction with one scalar and one vector operand, or with two
+    vector operands & \ref{r03:sec:bg-rvv}\\
+  AA pattern, AA streaming & streaming in place on one PDF array, alternating even and odd steps &
+    \ref{r03:sec:bg-stream}\\
+  acceptance test (lab) & the check that the lab reproduces waLBerla's speed within 5\,\% &
+    \ref{r03:sec:lab}\\
+  adopted & in the committed code and measured & \ref{r03:sec:method}\\
+  auto-vectorization & vectorization done by the C++ compiler on plain loops &
+    \ref{r03:sec:bg-stack}\\
+  AVX & x86 vector instruction set; used by the laptop's vector variants & \ref{r03:sec:ver-app}\\
+  backend stall & a cycle in which the core issues nothing because an operand or unit is not
+    ready & \ref{r03:sec:bg-measure}\\
+  bandwidth & bytes moved per second & \ref{r03:sec:bg-mem}\\
+  best of 3 & three runs, the highest MLUP/s is reported & \ref{r03:sec:bg-measure}\\
+  best scalar build & variant \code{scalar_cse_aa}: no vector instructions, but CSE and AA
+    streaming & \ref{r03:sec:goal}\\
+  block & part of the domain handled by one process & \ref{r03:sec:bg-blocks}\\
+  board & the Banana~Pi BPI-F3 with the SpacemiT~K1, where all speeds were measured &
+    \ref{r03:sec:hw}\\
+  BY, GM, GP & parameters of the direction split: rows per block, directions per moment pass,
+    opposite pairs per collision pass & \ref{r03:sec:lever-split}, \ref{r03:sec:wl-split}\\
+  cache line & the 64-byte unit of transfer between memory and caches & \ref{r03:sec:bg-mem}\\
+  \code{cbo.zero} & zeroes a cache line without reading it (Zicboz) & \ref{r03:sec:bg-rvv}\\
+  cell & one point of the lattice; it holds 19 PDFs in D3Q19 & \ref{r03:sec:bg-lbm}\\
+  checksum & sum of $|u|^2$ over all cells (the program calls it the kinetic energy); in the
+    lab also mass and weighted PDF sum & \ref{r03:sec:app}, \ref{r03:sec:lab}\\
+  CMake, CTest, Ninja & build-system generator, its test runner, and a build tool & \ref{r03:sec:wl-tests}, \ref{r03:sec:repro-x86}\\
+  collision & relaxation of a cell's PDFs toward the equilibrium & \ref{r03:sec:bg-lbm}\\
+  CSE & common-subexpression elimination: repeated sub-expressions are computed once & \ref{r03:sec:bg-stack}\\
+  cycle average & 1.6~GHz divided by the cycles per cell over all steps; the fair rate of an AA
+    kernel & \ref{r03:sec:lab}\\
+  cycles per cell & clock cycles per cell update; $1600 / \text{MLUP/s}$ at 1.6~GHz &
+    \ref{r03:sec:bg-measure}\\
+  D3Q19 & LBM lattice with 3 dimensions and 19 directions per cell & \ref{r03:sec:bg-lbm}\\
+  $\delta\rho$ & density minus one, as stored by lbmpy (zero-centred) & \ref{r03:sec:bg-lbm}\\
+  direction split & computing the update in several passes over a few directions at a time &
+    \ref{r03:sec:lever-split}\\
+  DRAM & main memory & \ref{r03:sec:bg-mem}\\
+  e32, e64 & element width of 32 or 64 bits in a vector register & \ref{r03:sec:bg-rvv}\\
+  end to end & the whole application: kernel, halo exchange and time loop & \ref{r03:sec:app}\\
+  equilibrium & the PDF values of a cell in local equilibrium at its $\rho$ and $u$; the target of
+    the collision &
+    \ref{r03:sec:bg-lbm}\\
+  even step, odd step & the two alternating kinds of step of AA streaming & \ref{r03:sec:bg-stream}\\
+  explicit vectorization & vectorization in which \ps{} itself writes vector intrinsics &
+    \ref{r03:sec:bg-stack}\\
+  f32, f64 & single and double precision & \ref{r03:sec:guide}\\
+  fastest step & the fastest single time step of a lab run; overstates AA kernels &
+    \ref{r03:sec:lab}\\
+  field & waLBerla's multi-dimensional array of cell data & \ref{r03:sec:bg-blocks}\\
+  FMA & fused multiply-add: $d \pm a b$ in one instruction, rounded once & \ref{r03:sec:bg-rvv}\\
+  fzyx layout & field layout with the direction index slowest and $x$ fastest &
+    \ref{r03:sec:bg-blocks}\\
+  GCC, Clang & the two C++ compilers used (GCC~14 and Clang~18 on the board, GCC~16 on the laptop) & \ref{r03:sec:hw}\\
+  generated kernel & a kernel produced by lbmpy and \ps{} & \ref{r03:sec:lab}\\
+  ghost layer & one layer of extra cells around a block, holding copies of neighbouring values &
+    \ref{r03:sec:bg-blocks}\\
+  halo exchange & refreshing the ghost layers after a time step & \ref{r03:sec:bg-blocks}\\
+  hand kernel & a kernel written by hand with RVV intrinsics, in the lab & \ref{r03:sec:lab}\\
+  hardware prefetcher & cache unit that detects streams and loads ahead & \ref{r03:sec:bg-mem}\\
+  HINT & an instruction encoding that does nothing architecturally; used for prefetches &
+    \ref{r03:sec:bg-rvv}\\
+  huge pages, THP & 2~MiB memory pages; transparent huge pages are Linux's automatic huge pages &
+    \ref{r03:sec:bg-mem}\\
+  \code{in_register} & \ps{} runtime function that hides a constant's value from the compiler, so
+    it stays in a register & \ref{r03:sec:ps-rowptr}\\
+  in-order core & a core that issues instructions strictly in program order & \ref{r03:sec:bg-mem}\\
+  instruction selection & the step of \ps{} that chooses the intrinsic for each operation &
+    \ref{r03:sec:ps-selector}\\
+  intrinsic & a compiler-provided C function that maps to one machine instruction &
+    \ref{r03:sec:bg-rvv}\\
+  inverse direction $\bar\imath$ & the direction with $c_{\bar\imath} = -c_i$ & \ref{r03:sec:bg-lbm}\\
+  IPC & instructions per cycle & \ref{r03:sec:bg-measure}\\
+  IR & intermediate representation: \ps{}' syntax tree of a kernel & \ref{r03:sec:ps-simd}\\
+  ISA string & the list of instruction-set extensions a core reports & \ref{r03:sec:bg-rvv}\\
+  K1, X60 & the SpacemiT system on a chip, and its cores & \ref{r03:sec:hw}\\
+  kernel lab & program that times one kernel outside waLBerla & \ref{r03:sec:lab}\\
+  L1D, L2 & level-1 data cache (per core) and level-2 cache (per cluster) & \ref{r03:sec:bg-mem}\\
+  lane & one element of a vector register & \ref{r03:sec:bg-rvv}\\
+  laptop & the x86-64 computer for code generation, cross-compilation, QEMU and tests &
+    \ref{r03:sec:hw}\\
+  latency & time until a result (or a memory line) is available & \ref{r03:sec:bg-mem}\\
+  LBM & lattice Boltzmann method & \ref{r03:sec:bg-lbm}\\
+  lbmpy, \ps{}, sweepgen, waLBerla & the code generators and the framework & \ref{r03:sec:bg-stack}\\
+  LMUL & register grouping: one instruction works on 1, 2, 4 or 8 registers & \ref{r03:sec:bg-rvv}\\
+  \code{localCopy}, \code{pack}, \code{unpack} & the operations of a pack info &
+    \ref{r03:sec:bg-blocks}\\
+  lowering & replacing generic operations by target-specific ones and printing code &
+    \ref{r03:sec:ps-simd}\\
+  mass (lab) & sum of the density field, a lab checksum & \ref{r03:sec:lab}\\
+  miss & an access to data not in the cache & \ref{r03:sec:bg-mem}\\
+  misses in flight & cache misses outstanding at the same time & \ref{r03:sec:bg-mem}\\
+  MLUP/s & million lattice-cell updates per second & \ref{r03:sec:bg-measure}\\
+  MPI & Message Passing Interface: communication between processes & \ref{r03:sec:bg-blocks}\\
+  mutation check & breaking code on purpose to show that a test can fail & \ref{r03:sec:ver-wl}\\
+  non-hydrodynamic moments & combinations of PDFs that do not enter the fluid equations &
+    \ref{r03:sec:wl-split}\\
+  output & the density and velocity fields a kernel writes in every step & \ref{r03:sec:bg-lbm}\\
+  pack info & waLBerla class that decides which values cross a block face & \ref{r03:sec:bg-blocks}\\
+  PDF & particle distribution function: one of the 19 values $f_i$ of a cell (not the file
+    format) & \ref{r03:sec:bg-lbm}\\
+  pending & in the code or the lab, but not measured yet & \ref{r03:sec:method}\\
+  periodic & what leaves the domain at one side enters at the opposite side & \ref{r03:sec:bg-blocks}\\
+  plain scalar build & variant \code{scalar}: no vector instructions, the baseline of the goal &
+    \ref{r03:sec:goal}\\
+  platform (\ps{}) & the class that supplies a target's specific code generation &
+    \ref{r03:sec:ps-simd}\\
+  PMU, \code{perf} & performance monitoring unit (hardware event counters), and the Linux tool that
+    reads it & \ref{r03:sec:bg-measure}\\
+  prefab & a ready-made sweepgen generator, such as \code{LbmBulk} & \ref{r03:sec:bg-stack}\\
+  \code{prefetch.r}, \code{prefetch.w} & Zicbop prefetch instructions for reading and writing &
+    \ref{r03:sec:bg-rvv}\\
+  probe & small program that measures one property of the core & \ref{r03:sec:probes}\\
+  pull streaming & streaming with two PDF arrays; each cell reads from its neighbours &
+    \ref{r03:sec:bg-stream}\\
+  QEMU & emulator that runs RISC-V programs on x86 & \ref{r03:sec:bg-measure}\\
+  rejected & measured, no gain, not in the code & \ref{r03:sec:method}\\
+  $\rho$, $u$ & density and velocity of a cell & \ref{r03:sec:bg-lbm}\\
+  row & the cells of one slice with fixed $y$ and $z$ & \ref{r03:sec:bg-blocks}\\
+  row pointer & pointer to the start of a row, computed once before the $x$ loop &
+    \ref{r03:sec:ps-rowptr}\\
+  run A, B, C & the three end-to-end measurements & \ref{r03:sec:res-runs}\\
+  RVV & the RISC-V vector extension & \ref{r03:sec:bg-rvv}\\
+  rv64gc & the general-purpose 64-bit RISC-V instruction set, without vector instructions &
+    \ref{r03:sec:bg-rvv}\\
+  scheduling model & the compiler's description of a core, used to order instructions;
+    \code{-mtune} & \ref{r03:sec:bg-rvv}\\
+  \code{screen} & terminal program whose sessions keep running after the connection drops & \ref{r03:sec:hw}\\
+  session & one unattended board job that measures several variants back to back &
+    \ref{r03:sec:bg-measure}\\
+  session script & the shell script that runs a session (\file{queue_*.sh}) & \ref{r03:sec:hw}\\
+  slice & the contiguous 3D array of one direction's values in the fzyx layout &
+    \ref{r03:sec:bg-blocks}\\
+  slot & the storage place of one direction's value in one cell & \ref{r03:sec:bg-stream}\\
+  software prefetch & an instruction that asks the cache to load a line ahead of use &
+    \ref{r03:sec:bg-mem}\\
+  spill & saving a register to the stack because too few registers are free & \ref{r03:sec:lever-selector}\\
+  splat & copying a scalar into every lane of a vector (\code{vfmv.v.f}) & \ref{r03:sec:bg-rvv}\\
+  SRT, TRT & single- and two-relaxation-time collision & \ref{r03:sec:bg-lbm}\\
+  stream & a sequence of accesses through memory with a constant step & \ref{r03:sec:bg-mem}\\
+  stream/collide kernel & the generated function that performs one time step & \ref{r03:sec:bg-lbm}\\
+  streaming & moving post-collision values to neighbouring cells & \ref{r03:sec:bg-lbm}\\
+  sweep & one pass of a kernel over all cells of a block; in sweepgen also the C++ class that
+    does it & \ref{r03:sec:bg-lbm}, \ref{r03:sec:bg-stack}\\
+  sympy & Python library for symbolic mathematics, used by lbmpy and \ps{} & \ref{r03:sec:ps-selector}\\
+  target (\ps{}) & the kind of hardware code is generated for & \ref{r03:sec:bg-stack}\\
+  TLB & translation lookaside buffer: cache of address translations & \ref{r03:sec:bg-mem}\\
+  uniform value & a value that is the same in every vector lane & \ref{r03:sec:ps-selector}\\
+  unit-stride & accessing consecutive elements & \ref{r03:sec:bg-rvv}\\
+  v8 core & waLBerla's experimental new core library & \ref{r03:sec:bg-stack}\\
+  variant & one way of generating the kernel; one executable of the benchmark & \ref{r03:sec:app}\\
+  VLEN & width of a vector register in bits: 256 on the X60 & \ref{r03:sec:bg-rvv}\\
+  weight $w_i$ & lattice weight of direction $i$ & \ref{r03:sec:bg-lbm}\\
+  weighted PDF sum & lab checksum $\sum (i+1) f_i$ over all cells and directions &
+    \ref{r03:sec:lab}\\
+  write-allocate & a store to an absent cache line first reads that line & \ref{r03:sec:bg-mem}\\
+  zero-centred & lbmpy stores $f_i - w_i$ and $\delta\rho$ & \ref{r03:sec:bg-lbm}\\
+  Zicbop, Zicbom, Zicboz, \code{zvl256b} & RISC-V extensions: prefetch, cache-block management,
+    cache-block zeroing; VLEN $\ge 256$ & \ref{r03:sec:bg-rvv}\\
+  \bottomrule
+\end{xltabular}

@@ -1,0 +1,11 @@
+== lab AA Thu Nov 12 10:35:24 AM CST 2026
+gcc-O3-f32-rvv-cse	aa-base	 	best_mlups=2.552	median_mlups=2.540	cycles_per_cell=629.1	insns_per_cell=50.5	ipc=0.080	energy=3.955785294018e+02	mass=2.621439995539e+05	wsum=2.354173325339e+03
+gcc-O3-f32-rvv-cse+bpf=128	aa-base	 	best_mlups=5.168	median_mlups=5.132	cycles_per_cell=311.4	insns_per_cell=67.9	ipc=0.218	energy=3.955785294018e+02	mass=2.621439995539e+05	wsum=2.354173325339e+03
+gcc-O3-f32-generic-cse_scalar	aa-base	 	best_mlups=1.630	median_mlups=1.620	cycles_per_cell=989.5	insns_per_cell=311.0	ipc=0.314	energy=3.955787355593e+02	mass=2.621439995338e+05	wsum=2.354174490236e+03
+gcc-O3-f32-hand-split@BY-2	aa-base	 -DBY=2	best_mlups=6.964	median_mlups=6.858	cycles_per_cell=233.1	insns_per_cell=66.6	ipc=0.286	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+gcc-O3-f32-hand-aa@BY-2_GM-5_GP-2	aa	AA=1 -DBY=2 -DGM=5 -DGP=2 	best_mlups=8.870	median_mlups=8.717	cycles_per_cell=182.6	insns_per_cell=61.6	ipc=0.337	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+gcc-O3-f32-hand-aa@BY-2_GM-5_GP-3	aa	AA=1 -DBY=2 -DGM=5 -DGP=3 	best_mlups=9.108	median_mlups=8.772	cycles_per_cell=180.3	insns_per_cell=58.6	ipc=0.325	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+gcc-O3-f32-hand-aa@BY-2_GM-7_GP-2	aa	AA=1 -DBY=2 -DGM=7 -DGP=2 	best_mlups=8.982	median_mlups=8.732	cycles_per_cell=181.6	insns_per_cell=59.7	ipc=0.329	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+gcc-O3-f32-hand-aa@BY-4_GM-5_GP-2	aa	AA=1 -DBY=4 -DGM=5 -DGP=2 	best_mlups=7.552	median_mlups=7.394	cycles_per_cell=215.2	insns_per_cell=60.2	ipc=0.280	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+gcc-O3-f32-hand-aa@BY-2_GM-5_GP-1	aa	AA=1 -DBY=2 -DGM=5 -DGP=1 	best_mlups=8.313	median_mlups=8.084	cycles_per_cell=195.8	insns_per_cell=65.7	ipc=0.335	energy=3.955780103707e+02	mass=2.621440000558e+05	wsum=2.336616732401e+03
+== done Thu Nov 12 10:38:33 AM CST 2026

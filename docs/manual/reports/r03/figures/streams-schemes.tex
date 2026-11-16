@@ -1,0 +1,37 @@
+% Memory streams of one cell update in each sweep variant, against the ~8 streams the X60's hardware
+% prefetcher follows. One square = one stream. Bytes per cell for f32.
+\begin{tikzpicture}[every node/.style={font=\scriptsize},
+    st/.style={minimum size=2.4mm,inner sep=0pt,draw=white,line width=0.3pt},
+    R/.style={st,fill=psblue!70},
+    W/.style={st,fill=psorange!80},
+    RW/.style={st,fill=psteal!75},
+    O/.style={st,fill=psgray!55}]
+  \def\rthreeW{0.28}
+  % row: label, then squares
+  \newcommand{\rthreerow}[4]{% y, label, list of style:count, total text
+    \node[anchor=east,align=right,text width=34mm] at (-0.15,#1) {#2};
+    \xdef\rthreeN{0}%
+    \foreach \sty/\cnt in {#3} {
+      \foreach \k in {1,...,\cnt} {
+        \pgfmathsetmacro{\xx}{\rthreeN*\rthreeW+\rthreeW/2}
+        \node[\sty] at (\xx,#1) {};
+        \pgfmathtruncatemacro{\nn}{\rthreeN+1}\xdef\rthreeN{\nn}%
+      }
+    }
+    \node[anchor=west] at (\rthreeN*\rthreeW+0.1,#1) {#4};
+  }
+  \rthreerow{0}{pull, $\approx$260~B/cell}{R/19,W/19,O/4}{42}
+  \rthreerow{-0.55}{AA, $\approx$184~B/cell}{RW/19,O/4}{23}
+  \rthreerow{-1.10}{AA without $\rho$/$u$ output,\\152~B/cell}{RW/19}{19}
+  \rthreerow{-1.75}{split AA, largest pass}{RW/7}{7 (+ L1 scratch)}
+  % the prefetcher's limit
+  \draw[r03landed!80!black,thick,dashed] (8*\rthreeW,0.35) -- (8*\rthreeW,-2.05)
+    node[below,text=r03landed!70!black] {about 8: what the hardware prefetcher follows};
+  % legend
+  \begin{scope}[yshift=-2.75cm]
+    \node[R] at (0.1,0) {}; \node[anchor=west] at (0.2,0) {read};
+    \node[W] at (1.5,0) {}; \node[anchor=west] at (1.6,0) {write (second field)};
+    \node[RW] at (5.0,0) {}; \node[anchor=west] at (5.1,0) {read and written in place};
+    \node[O] at (9.3,0) {}; \node[anchor=west] at (9.4,0) {output $\rho$, $u_x$, $u_y$, $u_z$};
+  \end{scope}
+\end{tikzpicture}

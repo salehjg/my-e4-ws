@@ -1,0 +1,22 @@
+% Slide "The benchmark": the data of one 64^3 block against the L2 cache.
+% Interior cells only: 262,144 cells x (19 PDFs per array x arrays + 4 output values: density
+% and 3 velocity components) x 4 bytes (f32) or 8 bytes (f64).
+%   two PDF arrays (AB pattern, before part 2): f32 168 B/cell = 44.0 MB, f64 88.1 MB
+%   one PDF array (in-place update, part 2):     f32  92 B/cell = 24.1 MB, f64 48.2 MB
+% L2: 512 KiB = 0.52 MB, shared by the 4 cores of a cluster; no L3 (report r03, test system).
+\begin{tikzpicture}
+  \def\u{0.04}  % cm per MB
+  \foreach \y/\lo/\hi/\txt/\lab in {
+      0/0.52/0.52/{L2 cache, shared by 4 cores}/{0.5 MB},
+      -0.95/24.1/44.0/{one block, f32}/{24 to 44 MB},
+      -1.9/48.2/88.1/{one block, f64}/{48 to 88 MB}} {
+    \node[lbl,anchor=south west] at (0,\y+0.33) {\txt};
+    \fill[psgray!30] (0,\y) rectangle (\hi*\u,\y+0.3);
+    \fill[psgray!70] (0,\y) rectangle (\lo*\u,\y+0.3);
+    \node[font=\scriptsize,anchor=west] at (\hi*\u+0.06,\y+0.15) {\lab};
+  }
+  \fill[psblue!70!black] (0,0) rectangle (0.52*\u,0.3);
+  \draw[psgray!60] (0,-1.95) -- (0,0.8);
+  \node[lbl,anchor=north west,align=left] at (0,-2.05)
+    {dark: with the in-place update (one array)\\light: the usual way (two arrays)};
+\end{tikzpicture}

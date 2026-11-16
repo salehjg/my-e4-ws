@@ -1,0 +1,132 @@
+\chapter{Reproducing the Results}\label{r03:app:repro}
+
+All commands run from the workspace root unless noted. \code{.venv-rvv} is the workspace's
+Python environment (at the workspace root) with lbmpy and \ps{}'s dependencies.
+
+\section{pystencils tests on the laptop}\label{r03:sec:repro-ps}
+
+\begin{shcode}
+cd submodules/pystencils
+PYTHONPATH=src ../../.venv-rvv/bin/python -m pytest -q -o addopts="" \
+    -p no:cacheprovider tests/nbackend tests/codegen
+# a81dc547: 435 passed, 15 skipped (13 need RVV hardware, 1 a GPU, 1 islpy)
+\end{shcode}
+
+On the board the RVV test files run natively
+(\file{tests/nbackend/test_rvv_target.py}, \file{test_rvv_codegen.py},
+\file{test_rvv_execution.py}, \file{test_vectorization.py}); the session scripts
+\ghws{misc/x60-lab/queue_e2e_cg.sh} and \ghws{misc/x60-lab/queue_lab3.sh} show the calls.
+
+\section{Generating lab kernels}\label{r03:sec:repro-gen}
+
+The first argument is the output directory, the others are kernel names:
+\begin{shcode}
+PYTHONPATH=submodules/pystencils/src .venv-rvv/bin/python misc/x60-lab/lab/gen.py \
+    misc/x60-lab/lab/src "f32-rvv-cse+aa+bpf=128+vf2+cg" "f32-rvv-cse+aa+bpf=128+vf2+cg+nomacro"
+PYTHONPATH=submodules/pystencils/src .venv-rvv/bin/python misc/x60-lab/lab/gensplit.py \
+    misc/x60-lab/lab/src f32-rvvsplit-by2gm5gp3 f64-rvvsplit-by1gm5gp3
+\end{shcode}
+
+\paragraph{Lab kernel names.} A generated lab kernel's name, which is also its file name in
+\file{misc/x60-lab/lab/src/}, has the form \code{<precision>-<target>-<base>[+<part>...]}
+(\ghws{misc/x60-lab/README.md}):
+\begin{description}
+  \item[\code{<precision>}] \code{f32} or \code{f64}.
+  \item[\code{<target>}] \code{rvv}: RVV kernel from \ps{}; \code{generic}: plain C++ kernel.
+        A \code{generic} kernel whose name contains \code{scalar} is compiled without vector
+        instructions (\code{-march=rv64gc_zicbop}); all others with
+        \code{-march=rv64gcv_zvl256b_zicbop_zicboz}.
+  \item[\code{<base>}] \code{cse}: lbmpy's global CSE on. Any other base turns it off: the
+        generator compares the base with \code{cse} exactly (\ghws{misc/x60-lab/lab/gen.py},
+        function \code{emit}). This matters for \code{cse_scalar}, which is meant as ``CSE, no
+        vector instructions''. The plain file \file{f32-generic-cse_scalar.cpp} is a copy of
+        \file{f32-generic-cse.cpp} (its first line names that kernel), so it has CSE. But the
+        files generated under a \code{cse_scalar+...} name, such as
+        \file{f32-generic-cse_scalar+pf=128.cpp} and \file{f32-generic-cse_scalar+aa.cpp}, have no
+        global CSE: 4 instead of 36 CSE temporaries in the pull kernel, and a checksum that
+        differs from the CSE kernel's in the seventh digit. This was found while writing this
+        report; \cref{r03:tab:pf} is corrected accordingly.
+  \item[\code{+aa}] AA streaming: the file contains an even and an odd kernel; run with
+        \code{AA=1}.
+  \item[\code{+bpf=D}] software prefetch \code{D} bytes ahead, by the \ps{} option of
+        \cref{r03:sec:ps-prefetch}.
+  \item[\code{+pf=D}] software prefetch \code{D} bytes ahead, inserted by \code{edits.py} into the
+        generated source (before the \ps{} option existed).
+  \item[\code{+vf2}] a label only: generated with the new instruction selection
+        (\cref{r03:sec:ps-selector}).
+  \item[\code{+cg}] a label only: generated with row pointers and \code{in_register} in \ps{}
+        (\cref{r03:sec:ps-rowptr}).
+  \item[\code{+rp}, \code{+opq}] the same two changes, applied by \code{edits.py} to the
+        generated source: row pointers, and constants hidden from the compiler.
+  \item[\code{+nomacro}] the density/velocity stores and their prefetches removed: the kernel
+        without output.
+\end{description}
+For example, \code{f32-rvv-cse+aa+bpf=128+vf2+cg} is the f32 RVV AA kernel with CSE, prefetch
+128~bytes ahead, the new instruction selection, row pointers and constants in registers. The
+generated split kernels are named \code{<precision>-rvvsplit-by<BY>gm<GM>gp<GP>[+pf=D][+nomacro]}
+(\cref{r03:sec:wl-split}). Hand kernels are the files in \file{misc/x60-lab/lab/hand/}.
+
+\section{QEMU check of a lab kernel}\label{r03:sec:repro-qemu}
+
+Static cross build of the lab driver with one kernel, run under QEMU at $16^3$ for 4 timed
+and 2 warm-up steps (AA kernels and split kernels need \code{AA=1}):
+\begin{shcode}
+L=misc/x60-lab/lab; INC=submodules/pystencils/src/pystencils/include
+V="f64-rvv-cse+aa+bpf=128+vf2"          # a file pair in $L/src
+riscv64-linux-gnu-g++ -O2 -march=rv64gc -DT=double -c $L/driver.cpp -o driver.o
+riscv64-linux-gnu-g++ -DNDEBUG -std=c++17 -O3 -march=rv64gcv_zvl256b_zicbop \
+    -I$INC -c "$L/src/$V.cpp" -o k.o
+riscv64-linux-gnu-g++ -O2 -march=rv64gc -c "$L/src/$V.wrap.cpp" -o w.o
+riscv64-linux-gnu-g++ -static driver.o w.o k.o -o k.bin
+AA=1 qemu-riscv64 -cpu rv64,v=true,vlen=256,zicbop=true ./k.bin 16 4 2
+\end{shcode}
+Scalar kernels (\code{generic} and \code{scalar} in the name) are compiled with
+\code{-march=rv64gc}; f32 kernels need \code{-DT=float} for the driver. The output line ends
+with the three checksums of \cref{r03:sec:lab}: \code{energy=} (the sum of $|u|^2$),
+\code{mass=} and \code{wsum=} (the weighted PDF sum).
+
+\section{waLBerla on the laptop (x86)}\label{r03:sec:repro-x86}
+
+The laptop builds were configured like the board builds of
+\ghws{scripts/walberla_bench_all.sh}, with Ninja. The command below reproduces the options
+recorded in the CMake cache of the build used for \cref{r03:tab:ver-app}. sweepgen needs
+pystencils-sfg 0.1.1 on the \code{PYTHONPATH}; here it was installed with
+\code{pip install --target}:
+\begin{shcode}
+export PYTHONPATH=<pystencils-sfg 0.1.1 dir>:$PWD/submodules/pystencils/src:$PWD/submodules/walberla/sweepgen/src
+cmake -G Ninja -S submodules/walberla -B wb -DCMAKE_BUILD_TYPE=Release \
+    -DWALBERLA_DOUBLE_ACCURACY=ON -DWALBERLA_ENABLE_V8CORE=ON -DWALBERLA_ENABLE_SWEEPGEN=ON \
+    -DWALBERLA_SWEEPGEN_MANAGED_VENV=OFF -DPython_EXECUTABLE=$PWD/.venv-rvv/bin/python \
+    -DWALBERLA_OPTIMIZE_FOR_LOCALHOST=ON -DWALBERLA_BUILD_WITH_MPI=ON \
+    -DWALBERLA_BUILD_BENCHMARKS=ON -DWALBERLA_BUILD_TESTS=OFF
+ninja -C wb SweepgenLbmCPU_explicit_cse_aa SweepgenLbmCPU_explicit_cse_aa_split
+SWEEPGEN_LBM_OUTPUT=last mpirun -np 8 wb/apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU_explicit_cse_aa_split 32 20 2
+\end{shcode}
+A second build directory with \code{-DWALBERLA_BUILD_TESTS=ON -DWALBERLA_BUILD_BENCHMARKS=OFF}
+runs the tests: \code{ninja TestLbmScenarios_CXX TestHaloExchange TestCommunicationHiding} and
+\code{ctest -R "LbmScenarios|HaloExchange|CommunicationHiding"}.
+
+\begin{pitfall}[Generated sources are not rebuilt by themselves]
+Neither Ninja nor Make tracks the Python sources of sweepgen, lbmpy or \ps{}. After changing
+them, delete the generated files of the affected targets, e.g.
+\file{wb/apps/benchmarks/SweepgenLbmCPU/_gen/<target>/gen/SweepgenLbmCPU.cpp} and the
+matching \file{.hpp}, so that the next build regenerates them. The session scripts do this explicitly.
+\end{pitfall}
+
+\section{On the board}\label{r03:sec:repro-board}
+
+\begin{shcode}
+# one build directory, all default targets, one core, best of 3
+bash scripts/walberla_lbm_bench.sh 64 200 3          # WALBERLA_BUILD=<dir>, TARGETS="..."
+# a lab kernel; AA kernels need AA=1
+cd misc/x60-lab/lab
+RUNENV=AA=1 bash run.sh "f32-rvv-cse+aa+bpf=128+vf2"
+RUNENV=AA=1 bash run.sh f32-rvvsplit-by2gm5gp3
+# a session script, detached, so that it survives a dropped connection
+screen -dmS e2e-final bash misc/x60-lab/queue_e2e_final.sh
+\end{shcode}
+How jobs run on the shared board is described in \cref{r03:sec:hw}. One more pitfall: the
+board's clock runs about 1.7~days behind the laptop's, so files unpacked from an archive made
+on the laptop carry modification times in the future. Make then rebuilds every dependent
+target on every build until the board's clock catches up. The later session scripts reset the
+times of the unpacked files with \code{touch -c}.

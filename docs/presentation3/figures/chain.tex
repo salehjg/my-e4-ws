@@ -1,0 +1,12 @@
+% Slide "What we added": the four pieces that were missing on RISC-V (report r02, chapter "What
+% Was Missing"): compiler flags in the waLBerla build, an RVV target in pystencils, a compile-time
+% check for the register width, and a benchmark program that asks for vector code.
+\begin{tikzpicture}[
+    pc/.style={added,text width=29mm,minimum height=12mm,font=\scriptsize,align=center}]
+  \def\dx{3.6}
+  \node[pc] (a1) at (0,0)     {\textbf{waLBerla build}\\compiler flags\\\code{-march=rv64gcv\_zvl256b}};
+  \node[pc] (a2) at (\dx,0)   {\textbf{pystencils}\\new RVV target:\\C++ with RVV intrinsics};
+  \node[pc] (a3) at (2*\dx,0) {\textbf{safety check}\\compile error unless\\built for 256 bits};
+  \node[pc] (a4) at (3*\dx,0) {\textbf{benchmark program}\\builds the scalar, auto-vec.\\and RVV versions};
+  \foreach \u/\v in {a1/a2,a2/a3,a3/a4} \draw[arr] (\u) -- (\v);
+\end{tikzpicture}

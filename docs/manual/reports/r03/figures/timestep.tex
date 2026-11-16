@@ -1,0 +1,24 @@
+% The timed loop of SweepgenLbmCPU.cpp: pull (two PDF fields) and AA (one field, two kinds of step).
+\begin{tikzpicture}[node distance=4mm and 5mm, every node/.style={font=\scriptsize}]
+  % pull
+  \node[font=\footnotesize\bfseries,anchor=east] (lp) at (-0.3,0) {pull};
+  \node[r03box,text width=34mm] (p1) at (2.2,0)
+    {\texttt{StreamCollide}\\reads \texttt{f}, writes \texttt{f\_tmp}, $\rho$, $u$};
+  \node[r03box,text width=18mm,right=of p1] (p2) {swap \texttt{f}, \texttt{f\_tmp}};
+  \node[r03box,text width=30mm,right=of p2] (p3) {\texttt{streamPullSync}\\halo exchange};
+  \draw[r03arrow] (p1) -- (p2); \draw[r03arrow] (p2) -- (p3);
+  \draw[r03arrow] (p3.east) -- ++(0.35,0) |- ++(0,0.75) -| (p1.north);
+  \node[r03label,anchor=south] at ($(p1.north)!0.5!(p3.north)+(0,0.75)$) {every step};
+
+  % AA
+  \node[font=\footnotesize\bfseries,anchor=east] (la) at (-0.3,-2.0) {AA};
+  \node[r03box,text width=34mm] (a1) at (2.2,-2.0)
+    {\texttt{StreamCollideEven}\\slots of cell $x$, in place};
+  \node[r03box,text width=24mm,right=of a1] (a2) {\texttt{aaPullSync}\\fills ghost layers};
+  \node[r03box,text width=34mm,right=of a2] (a3)
+    {\texttt{StreamCollideOdd}\\reads at $x - c_i$, writes at $x + c_i$};
+  \node[r03box,text width=24mm,right=of a3] (a4) {\texttt{aaPushSync}\\returns ghost writes};
+  \draw[r03arrow] (a1) -- (a2); \draw[r03arrow] (a2) -- (a3); \draw[r03arrow] (a3) -- (a4);
+  \draw[r03arrow] (a4.south) -- ++(0,-0.4) -| (a1.south);
+  \node[r03label,anchor=north] at ($(a1.south)!0.5!(a4.south)+(0,-0.4)$) {two steps};
+\end{tikzpicture}

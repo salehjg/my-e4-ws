@@ -1,0 +1,34 @@
+== f64, 1 core(s), 64^3 cells per core, 200 steps, 3 runs: autovec autovec_cse autovec_cse_aa
+== start Sat Nov 14 11:19:03 AM CST 2026, load: 3.11 3.37 4.84
+== repo (no git), build dir /home/bananapi/saleh/walberla-build
+== build SweepgenLbmCPU_autovec 11:22:14
+   RVV instructions in the sweeps: 182
+== build SweepgenLbmCPU_autovec_cse 11:24:18
+   RVV instructions in the sweeps: 182
+== build SweepgenLbmCPU_autovec_cse_aa 11:26:27
+   RVV instructions in the sweeps: 89
+== run Sat Nov 14 11:28:39 AM CST 2026
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=64 cells=262144 steps=200 output=every seconds=51.4435636144 mlups=1.01915179113 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=64 cells=262144 steps=200 output=every seconds=51.5364627865 mlups=1.01731467713 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec real_t=64 cells=262144 steps=200 output=every seconds=51.466424342 mlups=1.01869909694 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=64 cells=262144 steps=200 output=every seconds=48.7190095504 mlups=1.07614667219 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=64 cells=262144 steps=200 output=every seconds=48.6301827745 mlups=1.078112337 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse real_t=64 cells=262144 steps=200 output=every seconds=48.6860838161 mlups=1.0768744555 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=35.2197685365 mlups=1.48861852814 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=35.239698805 mlups=1.48777662063 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_autovec_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.7994578358 mlups=1.50659818459 energy=395.159209014
+
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | f64, 1 core(s) |
+|---|---|
+| autovec | 1.02 |
+| autovec_cse | 1.08 |
+| autovec_cse_aa | 1.51 |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| f64, 1 core(s) | 3.951592090140e+02 | 3.951592090140e+02 | 0.0e+00 |
+== done Sat Nov 14 11:35:53 AM CST 2026

@@ -1,0 +1,311 @@
+\chapter{Optimisations Tried in the Kernel Lab}\label{r03:ch:levers}
+
+\emph{Every optimisation that was tried, measured on one kernel in the kernel lab, with its
+effect and the decision taken.}
+
+All figures in this chapter are for $64^3$ cells, one core, GCC~14 with \code{-O3}, unless a
+table says otherwise. Each table comes from one session, and speedups are only computed within
+a session, because the board's absolute speed varies by a few percent between sessions
+(\cref{r03:sec:bg-measure}). Tables of AA kernels say whether they show the fastest step or the
+cycle average (\cref{r03:sec:lab}). ``Cycles per cell'' are always averages over all steps.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Optimisations tried in the lab, and the decisions.}\label{r03:tab:levers}
+  \begin{tabularx}{\linewidth}{@{}p{4.4cm}lX@{}}
+    \toprule
+    \textbf{Optimisation} & \textbf{Section} & \textbf{Outcome}\\
+    \midrule
+    software prefetch & \ref{r03:sec:lever-pf} & f32: 653 $\rightarrow$ 311 cycles per cell;
+      \textbf{adopted} as a \ps{} option\\
+    kernel without the density/velocity output & \ref{r03:sec:lever-pf} & 653 $\rightarrow$ 559 on the
+      original kernel; implemented in sweepgen and the application; \textbf{pending}\\
+    direction split (hand kernel) & \ref{r03:sec:lever-split} & 6.98 against 5.2~MLUP/s for the
+      generated kernel with prefetch; led to the next two rows\\
+    AA streaming & \ref{r03:sec:lever-aa} & hand kernel: 180 cycles per cell; generated with
+      prefetch: \sx{1.60} (f32), \sx{1.58} (f64) over pull with prefetch; \textbf{adopted}
+      in sweepgen and waLBerla\\
+    register grouping LMUL 2 and 4 & \ref{r03:sec:lever-sched} & slower (216 against 163 cycles
+      per cell); \textbf{rejected}\\
+    X60 scheduling model (Clang) & \ref{r03:sec:lever-sched} & +24\,\% on the hand kernel, but GCC
+      stays ahead on generated code; \textbf{adopted} as a build flag for Clang\\
+    .vf operands and FMA & \ref{r03:sec:lever-selector} & f32 AA with prefetch: 234 $\rightarrow$
+      192 cycles per cell; \textbf{adopted} in \ps{}\\
+    row pointers, constants in registers & \ref{r03:sec:lever-rp} & lab: fewer instructions, same
+      cycles; application: +2.5\,\% (f32), +2.2\,\% (f64); \textbf{adopted} in \ps{}\\
+    alignment to 32/64~bytes, huge pages & \ref{r03:sec:lever-layout} & 16~bytes (waLBerla's
+      layout) is best for the AA kernels; \textbf{rejected}\\
+    padding between the PDF slices & \ref{r03:sec:lever-layout} & \textbf{pending}\\
+    direction split, generated from lbmpy & \ref{r03:sec:lever-gensplit} & correct under QEMU;
+      \textbf{pending}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\Cref{r03:fig:ladder} shows the lab kernels of this chapter on one scale.
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r03/figures/ladder-chart}
+  \caption[Lab kernels on one scale]{Lab kernels, f32: cycles per cell of the kernel alone
+    (lower is better), averaged over all steps. Grey: the kernels before this work; teal:
+    adopted; light teal: the generated AA kernel before the instruction-selection change; blue:
+    hand kernels. The values come from several sessions, which differ by a few percent. Dashed:
+    the cycles per cell that \sx{8} the plain scalar application would need.}\label{r03:fig:ladder}
+\end{figure}
+
+\section{Software prefetch}\label{r03:sec:lever-pf}
+
+\code{edits.py} inserts one prefetch per distinct field access of the cell loop, \code{D}
+bytes ahead of the address the loop accesses in that iteration: \code{prefetch.r} for the 19
+PDF reads, \code{prefetch.w} for the 23 stores. The kernels are compiled with
+\code{-march=rv64gcv_zvl256b_zicbop_zicboz}.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Software prefetch in the lab (f32, one session, fastest step).}\label{r03:tab:pf}
+  \begin{tabularx}{\linewidth}{@{}Xrrr@{}}
+    \toprule
+    \textbf{Kernel} & \textbf{MLUP/s} & \textbf{cycles/cell} & \textbf{instr./cell}\\
+    \midrule
+    RVV with CSE (as before this work) & 2.47 & 653 & 50.5\\
+    + prefetch 64 / 96~B & 4.95 / 4.98 & 326 / 324 & 68\\
+    \textbf{+ prefetch 128~B} & \textbf{5.19} & \textbf{311} & 68\\
+    + prefetch 256 / 512~B & 4.85 / 4.03 & 332 / 399 & 68\\
+    + prefetch 128~B, reads only & 4.91 & 333 & 58\\
+    scalar with CSE & 1.57 & 1035 & 311\\
+    scalar \emph{without} CSE + prefetch 128~B (one prefetch per 16 cells)$^{a}$ & 1.81 & 887 & 380\\
+    RVV with CSE, density/velocity stores removed (not a complete kernel) & 3.19 & 559 & 48\\
+    \bottomrule
+  \end{tabularx}
+
+  \smallskip
+  \begin{minipage}{0.92\linewidth}\footnotesize
+    $^{a}$ Named \code{f32-generic-cse_scalar+pf=128} in the lab and first recorded as ``scalar
+    with CSE + prefetch'', but generated without global CSE: a naming error in the lab generator,
+    found while writing this report (\cref{r03:sec:repro-gen}).
+  \end{minipage}
+\end{table}
+
+Prefetch alone doubles the vector kernel. 128~bytes ahead is the best distance, and it stayed
+the best in every later measurement.
+
+For the scalar kernel the lab has no clean comparison. The scalar kernel with prefetch was, by
+mistake, generated without CSE (note $a$). It ran 15\,\% faster than the scalar kernel with CSE
+and without prefetch (1.81 against 1.57~MLUP/s), although it executes more instructions per cell
+(380 against 311). So prefetch helps a scalar kernel too, but its gain on the scalar kernel
+\emph{with} CSE was not measured. The application cannot use it in any case: the \ps{} option
+exists for RVV kernels only (\cref{r03:sec:ps-prefetch}).
+
+The last row removes the four stores of density and velocity. The PDF update is unchanged,
+but the kernel no longer writes the output, so it is not a complete kernel for the benchmark,
+which needs the output once at the end. It saves 14\,\% of the cycles. This led to the kernels
+without output of \cref{r03:sec:wl-sweepgen}, which are used in all steps except the last.
+
+\section{Fewer streams: the direction split}\label{r03:sec:lever-split}
+
+\ghws{misc/x60-lab/lab/hand/f32-hand-split.cpp} computes the same update as the generated
+kernel, but in three kinds of pass over a small block of rows instead of one pass over all 19
+directions. The block is BY rows of one $z$-plane (BY is a parameter). For each block:
+\begin{enumerate}
+  \item \textbf{moment passes}: each pass reads the PDFs of a group of GM directions and adds
+        their contributions to density and momentum into a small scratch array, which stays in
+        the L1 cache;
+  \item \textbf{macroscopic pass}: computes $\rho$ and $u$ from the sums and writes the
+        output;
+  \item \textbf{collision passes}: each pass reads a group of directions again, which now hit
+        in L1 or L2, collides them and stores the results.
+\end{enumerate}
+Each pass has only a few live streams, which the hardware prefetcher can follow. With
+BY~=~2 and groups of 5 directions the hand kernel reaches 6.98~MLUP/s (fastest step; 237
+cycles per cell), against 5.2 for the generated kernel with prefetch. L2 misses caused by
+loads drop from 2.45 to 0.70 per cell (hardware counters). Software prefetch makes the split
+kernel slower, because it competes with the hardware prefetcher. Blocks of 8 rows no longer
+fit in L1: 3.85~MLUP/s (measured with prefetch).
+
+\section{In-place AA streaming}\label{r03:sec:lever-aa}
+
+AA streaming (\cref{r03:sec:bg-stream}) reads and writes the same array. That removes the 19
+write streams into the second array: 19 + 4 streams remain instead of 19 + 23
+(\cref{r03:fig:streams-schemes}). It also moves fewer bytes, about 184 instead of about 260
+per cell in f32, because there is no write-allocate of a second array.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/streams-schemes}}
+  \caption[Memory streams per kernel structure]{Concurrent memory streams of one cell update
+    for each kernel structure, against the about 8 that the X60's hardware prefetcher follows.
+    One square is one stream. Bytes per cell for f32.}\label{r03:fig:streams-schemes}
+\end{figure}
+
+\paragraph{Hand kernel.} \ghws{misc/x60-lab/lab/hand/hand-aa.hpp} combines AA streaming with
+the direction split. Its collision passes work on pairs of opposite directions $(i,
+\bar\imath)$: in the AA pattern, the two places a pair writes are the two places it read, so
+both values must be loaded before either is stored. GP is the number of pairs per collision
+pass. In f32 with BY~=~2, GM~=~5 and GP~=~3 the kernel reaches 9.11~MLUP/s (fastest step), 180
+cycles per cell. f64 runs best with one-row blocks (BY~=~1): 4.26~MLUP/s, 416 cycles per cell.
+Memory is no longer the limit (0.22 L2 misses from loads per cell). The largest source of
+stalls is now the issue queue of the vector floating-point unit.
+
+\paragraph{Generated kernel.} lbmpy already implements the AA pattern
+(\code{streaming_pattern="aa"}): it produces one kernel for even and one for odd steps. Generated
+through the \ps{} RVV back end with prefetch 128~bytes:
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{lbmpy's AA kernels generated for RVV (one session, fastest step, instruction
+    selection as it was before \cref{r03:sec:lever-selector}).}\label{r03:tab:genaa}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{f32}} & \multicolumn{2}{c}{\textbf{f64}}\\
+    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+    \textbf{Kernel} & \textbf{MLUP/s} & \textbf{cycles/cell} & \textbf{MLUP/s} & \textbf{cycles/cell}\\
+    \midrule
+    pull + prefetch 128~B & 4.50 & 357 & 2.44 & 682\\
+    AA, no prefetch & 2.81 & 651 & 1.41 & 1290\\
+    \textbf{AA + prefetch 128~B} & \textbf{7.18} & \textbf{235} & \textbf{3.86} & \textbf{451}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The generated AA kernel with prefetch is \sx{1.60} (f32) and \sx{1.58} (f64) faster than pull
+with prefetch. Without prefetch, AA's 23 streams are still too many for the hardware
+prefetcher. Under QEMU the generated f64 AA kernel gives bit-identical results to the generated
+f64 pull kernel, which also confirms the lab driver's ghost-layer handling for AA.
+
+\section{Register grouping and instruction scheduling}\label{r03:sec:lever-sched}
+
+\paragraph{LMUL.} With LMUL~2, each instruction processes two registers, so the kernel needs
+half as many instructions. The hand AA kernel nevertheless becomes slower: 216 instead of 163
+cycles per cell. The X60 executes an LMUL-2 instruction as two consecutive halves, so a chain
+of dependent instructions takes no less time per cell. And with registers grouped in pairs, only
+16 groups remain, so fewer independent chains can be interleaved to hide latencies. LMUL~4 is
+slower still (226--229 cycles per cell), because the kernel no longer fits in the registers.
+Rejected.
+
+\paragraph{X60 scheduling model.} Clang~18 can order instructions for the X60
+(\code{-mtune=spacemit-x60}, \cref{r03:sec:bg-rvv}); GCC~14 cannot.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Compilers and the X60 scheduling model, MLUP/s (one session, fastest step).}\label{r03:tab:tune}
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    \textbf{Kernel} & \textbf{GCC 14} & \textbf{Clang 18} & \textbf{Clang 18, X60 model}\\
+    \midrule
+    f32 scalar with CSE & 1.46 & 1.19 & 1.56\\
+    f32 pull + prefetch & 5.12 & 5.55 & 5.45\\
+    f32 generated AA + prefetch & \textbf{8.99} & 7.41 & 8.09\\
+    f32 hand AA (BY~=~2, GP~=~3) & 10.13 & 8.83 & \textbf{11.10}\\
+    f64 scalar with CSE & 1.03 & 0.97 & 1.07\\
+    f64 pull + prefetch & 2.60 & 2.56 & 2.82\\
+    f64 generated AA + prefetch & \textbf{4.11} & 3.34 & 3.94\\
+    f64 hand AA (BY~=~1, GP~=~3) & 4.27 & 3.81 & \textbf{4.63}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The scheduling model makes every Clang build faster, by 9 to 31\,\%, the scalar baseline
+included. For the generated AA kernels GCC~14 remains faster than Clang with the model, so the
+end-to-end results in \cref{r03:ch:results} are GCC.
+
+\section{Instruction selection: .vf operands and FMA}\label{r03:sec:lever-selector}
+
+\term{Instruction selection} is the step of \ps{} that chooses which RVV intrinsic implements
+each operation. With the original selection, the generated AA loop had 471 instructions per 8
+cells, of which only 280 were vector instructions (inspected with the GCC~16 cross compiler).
+It used no FMA at all, and reloaded 23 vector registers from the stack and saved 7 to it
+(\term{spills}) in every iteration. The reason: the 31 constants of the update were kept as
+vector registers and crowded out the 32 vector registers. \Cref{r03:sec:ps-selector}
+describes the change; its effect on the board (log \file{lab3.log}):
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Original $\rightarrow$ new instruction selection (one session; MLUP/s: fastest step,
+    cycles per cell: average over all steps).}\label{r03:tab:selector}
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    \textbf{Kernel} & \textbf{MLUP/s} & \textbf{cycles/cell} & \textbf{instr./cell}\\
+    \midrule
+    f32 pull + prefetch & 4.85 $\rightarrow$ 4.82 & 334 $\rightarrow$ 337 & 68.0 $\rightarrow$ 64.2\\
+    f64 pull + prefetch & 2.44 $\rightarrow$ 2.59 & 685 $\rightarrow$ 642 & 131.8 $\rightarrow$ 124.2\\
+    f32 AA + prefetch & 7.31 $\rightarrow$ \textbf{8.88} & 234 $\rightarrow$ \textbf{192} & 70.5 $\rightarrow$ 51.5\\
+    f64 AA + prefetch & 3.86 $\rightarrow$ 4.09 & 461 $\rightarrow$ 433 & 138.2 $\rightarrow$ 100.8\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The change pays off where the kernel is no longer waiting for memory (AA with prefetch). In the
+pull kernels the extra instructions had been hidden behind memory stalls.
+
+\section{Row pointers and constants in registers}\label{r03:sec:lever-rp}
+
+After the new instruction selection, two inefficiencies of the compiled code remained in the
+AA loop (GCC~16 cross compiler):
+\begin{itemize}
+  \item An access to the neighbour $x \pm 1$ has an address offset of $\pm 4$~bytes (f32). RVV
+        loads and stores cannot add an offset to an address register, so GCC computes such
+        addresses from the loop counter with an extra addition in every iteration, and spills
+        some of them.
+  \item GCC loads every scalar operand of a .vf instruction from the constant table in memory
+        in every iteration (\code{lla} + \code{flw}), instead of keeping it in one of the
+        floating-point registers, which a vector loop otherwise leaves unused.
+\end{itemize}
+The fix computes a pointer to the start of each row once before the $x$ loop (\term{row
+pointers}), and hides the constants' values from the compiler so that it keeps them in
+registers (\cref{r03:sec:ps-rowptr}). It was tried first as an edit of the generated source,
+then implemented in \ps{}. It reduces the f32 odd AA step from 383 to 305 instructions per 8
+cells.
+
+On the board, with GCC~14, the lab kernels execute 1.7 (f32) to 3.7 (f64) fewer instructions
+per cell, but their cycles do not drop: f32 AA $-0.4$\,\%, f64 AA $-2$\,\%, f32 pull
+$+1.1$\,\% (log \file{lab5.log}, mean of 2 rounds, which differ by up to 2\,\%). In the lab
+the kernels wait for memory, not for integer instructions.
+
+The application disagrees in part. There the variants with prefetch became faster
+(\cref{r03:tab:res-cg}): pull with prefetch by 5.2\,\% (f32) and 8.7\,\% (f64), AA with
+prefetch by 2.5\,\% and 2.2\,\%. One difference between the two measurements: the lab used the
+hand-edited source, the application the code generated by \ps{}. The change was kept
+(\cref{r03:sec:res-cg}).
+
+\section{Alignment, huge pages and padding}\label{r03:sec:lever-layout}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Interior and rows aligned to 16~bytes (waLBerla's layout), 32 or 64~bytes, and
+    32~bytes with transparent huge pages. MLUP/s over all steps (\texttt{mean\_mlups}), mean of 2
+    rounds in one session (log \texttt{lab5.log}).}\label{r03:tab:align}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    \textbf{Kernel} & \textbf{16~B} & \textbf{32~B} & \textbf{64~B} & \textbf{32~B + THP}\\
+    \midrule
+    f32 scalar (pull) & 1.62 & 1.62 & 1.69 & 1.57\\
+    f32 pull + prefetch & 5.16 & 5.25 & 3.67 & 3.93\\
+    f32 AA + prefetch & \textbf{8.92} & 8.34 & 6.81 & 7.55\\
+    f64 scalar (pull) & 0.885 & 1.01 & 1.185 & 1.02\\
+    f64 pull + prefetch & 2.28 & 2.46 & 2.04 & 2.48\\
+    f64 AA + prefetch & \textbf{3.74} & 3.65 & 3.10 & 3.63\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+waLBerla's 16-byte layout is the best one for the AA kernels; 64-byte alignment costs the vector
+kernels 11 to 29\,\%. The scalar pull kernels gain from 64-byte alignment (f64 +34\,\%, f32
++4\,\%), but the best scalar build is an AA kernel, which this does not affect. Rejected.
+
+With huge pages (and 32-byte alignment), the f32 AA odd step is 14\,\% faster and the even step
+24\,\% slower than with 32-byte alignment and 4~KiB pages. A possible explanation is conflicts
+between the 19 PDF slices in the cache sets or the DRAM banks, once 2~MiB pages fix their
+physical offsets to each other. The test of that explanation, extra padding between the
+slices, is pending (\cref{r03:ch:open}).
+
+\section{The direction split, generated from lbmpy}\label{r03:sec:lever-gensplit}
+
+The hand split kernels showed what the structure can do, but they are written by hand, for one
+method. \Cref{r03:sec:wl-split} generates the same structure from lbmpy. Under QEMU the result is
+correct: for every BY, GM and GP tried, the f64 split kernels agree with the generated AA kernel
+in all printed digits. Their inner loops have 418 instructions per 8 cells over all 8 passes
+(even step, f32, BY~=~2, GM~=~5, GP~=~3; GCC~16 cross compiler), against 340 for the generated
+single-pass AA kernel and 469 for the hand kernel. Whether fewer live streams outweigh the extra
+instructions on the board, as they did for the hand kernel, was still being measured
+(\cref{r03:ch:open}).

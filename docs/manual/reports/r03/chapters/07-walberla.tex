@@ -1,0 +1,225 @@
+\chapter{Changes in sweepgen and waLBerla}\label{r03:ch:walberla}
+
+\emph{AA streaming and kernels without output in sweepgen; the halo exchange for AA streaming
+and its faster rewrite in waLBerla's v8 core; the benchmark application; the direction-split
+kernel generated from lbmpy; and the build flags.}
+
+The fork is \href{\rWLurl/tree/\rWLsha}{\texttt{mirrored-walberla}}, branch
+\texttt{rvv-support}, commit \rcommitwl. The changes described here touch 14 files
+(\href{\rWLurl/compare/b78f2d8791589fa38d0e407a3447865cb8ce227f...\rWLsha}{\texttt{b78f2d87..efa2b70c}}:
+1020 lines added, 93 removed).
+
+\section{sweepgen: AA streaming and kernels without output}\label{r03:sec:wl-sweepgen}
+
+Both changes are in the class \code{LbmBulk} in
+\ghwl{sweepgen/src/sweepgen/prefabs/lbm_bulk.py}, which generates the LBM sweeps of a method
+(\cref{r03:sec:bg-stack}).
+\begin{description}
+  \item[AA streaming.] When lbmpy's configuration asks for it
+        (\code{LBMConfig(streaming_pattern="aa")}), \code{LbmBulk} builds lbmpy's update rules
+        for the even and the odd step (\code{Timestep.EVEN} and \code{Timestep.ODD}). It
+        generates two sweeps, \code{StreamCollideEven} and \code{StreamCollideOdd}, that work on
+        one PDF field: no second field and no swap. \code{InitPdfs} writes the PDFs where the
+        even step will read them, so each cell writes only its own slots. Pull streaming is
+        unchanged.
+  \item[Kernels without output.] With \code{output_free_sweeps=True}, \code{LbmBulk} also
+        generates sweeps that update the PDFs but do not store density and velocity:
+        \begin{itemize}
+          \item pull: \code{StreamCollideNoOutput};
+          \item AA: \code{StreamCollideEvenNoOutput} and \code{StreamCollideOddNoOutput}.
+        \end{itemize}
+        They come from lbmpy update rules without output fields. The PDF update is the same,
+        and there are 4 fewer store streams. For pull, sweepgen swaps the field with a
+        temporary buffer that belongs to the sweep object; the extra sweep object therefore has
+        a buffer of its own. Alternating the two sweeps stays correct, at the cost of one more
+        PDF-sized buffer.
+\end{description}
+
+\section{The halo exchange in the v8 core}\label{r03:sec:wl-halo}
+
+\paragraph{Pack infos for AA streaming.} AA streaming needs a different halo exchange from
+pull streaming, because the odd step reads from and writes into the ghost layer. Two new pack
+infos (\cref{r03:sec:bg-blocks}) and functions that create them were added to
+\ghwl{include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp} and
+\ghwl{include/walberla/v8/halo_exchange/fields/PackInfoSelection.hpp}:
+\begin{description}
+  \item[\code{GenericAAPullPackInfo}, created by \code{halo_exchange::aaPullSync<Stencil>}] runs
+        after even steps. The odd step reads slot $\bar\imath$ at $x - c_i$, so the ghost layer
+        must hold the slots of the inverse directions of those the pull exchange
+        (\code{streamPullSync}) sends.
+  \item[\code{GenericAAPushPackInfo}, created by \code{halo_exchange::aaPushSync<Stencil>}] runs
+        after odd steps. The odd step of a border cell writes slot $i$ at $x + c_i$, which can be
+        a ghost cell. This exchange sends those values back to the block that owns that cell.
+        At the edges of a face, some ghost slots were not written by the sending block, because
+        the cell that would write them, $g - c_i$ for ghost cell $g$, lies outside it. The owner
+        receives those values from another neighbour, across an edge. The exchange must
+        therefore skip them; otherwise the order of the unpack operations would decide whether a
+        stale value overwrites the correct one.
+\end{description}
+Slot indices are computed with waLBerla's stencil functions \code{Stencil::idx} and
+\code{Stencil::invDirIdx}.
+
+\paragraph{One slot at a time.} A profile of the f32 AA application showed the two AA pack
+infos' \code{localCopy} at 17.8\,\% of all samples, against 68.8\,\% for the kernels: 21\,\% of
+a time step (\cref{r03:tab:perf}). With one block, every direction of the halo exchange is a
+periodic copy of the block onto itself (\cref{r03:sec:bg-blocks}). The copy looped over the
+cells of a face and, for each cell, over the 5 slots that cross that face. In the fzyx layout
+these 5 slots are in 5 different slices, so on an $x$ face every copied value sat on its own
+cache line. The AA push exchange also tested for every value whether its slot had been written.
+The pull pack info and the two AA pack infos now move one PDF slot at a time
+(\cref{r03:fig:halo}):
+\begin{itemize}
+  \item \code{localCopy}, \code{pack} and \code{unpack} loop over the slots in the outer loop and
+        over the cells in the inner loop (helper functions \code{detail::copySlot},
+        \code{packSlot}, \code{unpackSlot}). In the fzyx layout each pass reads and writes one
+        slice in storage order.
+  \item The MPI message holds one contiguous segment per slot instead of one per cell. Sender
+        and receiver use the same class, so this layout is internal; the message size
+        (\code{packetSize}) is unchanged.
+  \item The AA push exchange computes the cells to copy once per slot, as a box: the interior
+        shifted by $c_i$ and cut to the ghost layer (function \code{writtenGhosts}).
+  \item Execution on GPUs takes the same path, with one kernel launch per slot instead of one per
+        direction.
+\end{itemize}
+The rewrite passes the correctness checks (\cref{r03:sec:ver-wl}); its effect on the
+application's time step was still being measured (\cref{r03:ch:open}).
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/halo-slot}}
+  \caption[Halo copy: cell by cell and slot by slot]{\texttt{localCopy} on an $x$ face, before
+    and after the rewrite. Numbers give the order of the copies.}\label{r03:fig:halo}
+\end{figure}
+
+\section{The benchmark application}\label{r03:sec:wl-app}
+
+\ghwl{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp},
+\ghwl{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py} (the Python script that generates the
+application's kernels) and \ghwl{apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt}:
+\begin{itemize}
+  \item New options of the generator script:
+        \begin{itemize}
+          \item \code{--prefetch-distance N}, for the RVV variants;
+          \item \texttt{-{}-streaming-pattern \{pull,aa\}};
+          \item \code{--split BY,GM,GP}, the direction-split kernel (\cref{r03:sec:wl-split}).
+        \end{itemize}
+        The script always asks \code{LbmBulk} for the kernels without output as well.
+  \item The CMake list of variants is built by a helper function; the variants are listed in
+        \cref{r03:tab:variants}. The compile definitions \code{SWEEPGEN_LBM_AA} and
+        \code{SWEEPGEN_LBM_SPLIT} select the time loop.
+  \item AA time loop: even and odd steps alternate, \code{aaPullSync} after even and
+        \code{aaPushSync} after odd steps (\cref{r03:fig:timestep}).
+  \item The environment variable \code{SWEEPGEN_LBM_OUTPUT=last} makes every step except the
+        last use the kernel without output. The default, \code{every}, writes the output in
+        every step, as before. The result line prints \code{output=every} or
+        \code{output=last}.
+  \item \textbf{Correctness fix.} The pull benchmark as it was before this work ran one halo
+        exchange before the first time step. \code{InitPdfs} places the PDF of direction $i$ of
+        cell $x$ in slot $i$ of cell $x - c_i$; near a block border that is a ghost cell, and
+        these are exactly the values the first pull step reads. The exchange overwrote them with
+        border slots that nothing had written yet, so the result depended on how the domain was
+        divided into blocks: after one step, 382.26 with one block of $64^3$ and 365.71 with 8
+        blocks of $32^3$, where 399.23 is correct. The exchange was removed. Checksums of runs
+        before the fix agree between variants, but are not the physically correct values; the
+        timed loop is unchanged, so speeds are unaffected.
+\end{itemize}
+
+\section{The direction-split kernel, generated from lbmpy}\label{r03:sec:wl-split}
+
+\ghwl{apps/benchmarks/SweepgenLbmCPU/lbm_split.py} (new) generates the structure of the hand
+kernel of \cref{r03:sec:lever-aa} from lbmpy's description of the method. The lab's generator
+\ghws{misc/x60-lab/lab/gensplit.py} imports the same module, so lab and application use one
+implementation. Three parameters choose the structure: BY rows per block, GM directions per
+moment pass, and GP pairs of opposite directions per collision pass.
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r03/figures/split-passes}
+  \caption[Passes of the direction-split AA kernel]{Passes of the direction-split AA kernel for
+    one block of BY rows of one $z$-plane, with GM~=~5 directions per moment pass and GP~=~3
+    pairs per collision pass. Each pass is one kernel generated by \ps{}. \texttt{acc} and
+    \texttt{scr} are scratch arrays of the size of one block.}\label{r03:fig:split}
+\end{figure}
+
+\paragraph{What is generated.} The class \code{SplitAA} builds, for the even and for the odd
+step:
+\begin{itemize}
+  \item \textbf{moment passes}: for a group of directions, load the PDFs with lbmpy's AA read
+        positions and add $\delta\rho = \sum f_i$ and the momentum $j = \sum c_i f_i$ into the
+        scratch array \code{acc} (the first pass assigns, the others add);
+  \item \textbf{a macroscopic pass}: $\rho = \delta\rho + 1$ and $u = j / \rho$, into the scratch
+        array \code{scr}, and in one of two versions also into the output fields;
+  \item \textbf{collision passes}: for a group of opposite pairs (the rest direction joins the
+        first group), load all PDFs of the group, then store $f_i + \omega\,(f^{\mathrm{eq}}_i -
+        f_i)$ at lbmpy's AA write positions.
+\end{itemize}
+Colliding each direction separately is only valid for SRT, where every PDF relaxes on its own;
+the generator rejects methods with more than one relaxation rate.
+
+\paragraph{The equilibrium comes from lbmpy, and is checked.} A first version copied the hand
+kernel's textbook polynomial $t = 3\,c\cdot u + \tfrac92 (c\cdot u)^2 - \tfrac32 u^2$. Its
+symbolic comparison with lbmpy's equilibrium (\code{method.get_equilibrium_terms()}) failed.
+lbmpy's D3Q19 SRT equilibrium differs from the textbook one: for the rest direction it is
+$w_0(\delta\rho - \rho u^2)$ instead of $w_0(\delta\rho - \tfrac32 \rho u^2)$, and for face and
+edge directions it differs by multiples of $u_a^2$, the squared velocity components. The
+difference carries no mass, momentum or second moment, so it only affects the
+\term{non-hydrodynamic moments}: combinations of PDFs that do not enter the fluid equations. The
+generator now:
+\begin{enumerate}
+  \item takes $t_i = (f^{\mathrm{eq}}_i / w_i - \delta\rho) / \rho$ from lbmpy and checks
+        symbolically that $f^{\mathrm{eq}}_i = w_i (\delta\rho + \rho\, t_i)$ for every $i$;
+  \item splits each opposite pair $(i, j)$ into an even part $e = (t_i + t_j)/2$ and an odd part
+        $o = (t_i - t_j)/2$, so that $t_i = e + o$ and $t_j = e - o$: one $e$ and one $o$ per
+        pair;
+  \item lets sympy find common sub-expressions within each pass.
+\end{enumerate}
+The hand kernels therefore compute a slightly different model. Under QEMU (f64, $16^3$ cells,
+20 steps) their $|u|^2$ checksum differs from that of the generated kernels by
+$6\cdot10^{-11}$ relative, and their weighted PDF sum, which sees the non-hydrodynamic moments,
+by 1.3\,\%. This does not affect their speed.
+
+\paragraph{Driver.} \code{SplitAA.driver_code} emits a C++ function with the parameters
+\code{(f, rho, u, n0, n1, n2, strides..., odd, output, omega)}. For each $z$-plane and each block
+of up to BY rows, it moves the field pointers to the block and calls the passes with the
+iteration space $(n_0, \text{rows}, 1)$. The scratch arrays are one \code{static std::vector}
+sized for one block, each array aligned to 64~bytes. The versions with and without output share
+all passes except the macroscopic one, and each version keeps its own order of passes.
+
+\paragraph{In the application.} \code{SweepgenLbmCPU.py --split BY,GM,GP} (RVV variant with AA
+streaming only) generates the passes for the application's vector target, without ghost layers
+of their own (\code{ghost_layers = 0}), and the driver function \code{LBM_SPLIT::streamCollide}.
+The variant \code{explicit_cse_aa_split} uses \code{2,5,3} in single and \code{1,5,3} in double
+precision, the best settings of the hand kernel (\cref{r03:sec:lever-aa}), and defines
+\code{SWEEPGEN_LBM_SPLIT}. The application then calls the driver instead of the AA sweeps; halo
+exchange and initialisation are those of the AA variant.
+
+\section{Build flags: the X60 scheduling model}\label{r03:sec:wl-cmake}
+
+\ghwl{cmake/compileroptions/GNU.cmake} and \ghwl{cmake/compileroptions/Clang.cmake}, in the RISC-V
+branch of the option \code{WALBERLA_OPTIMIZE_FOR_LOCALHOST} (optimise for the build machine):
+\begin{itemize}
+  \item read the core type from \file{/proc/cpuinfo} (\code{uarch : spacemit,x60}
+        $\rightarrow$ \code{-mtune=spacemit-x60});
+  \item add the flag only if the compiler accepts it (CMake's \code{check_cxx_compiler_flag}).
+\end{itemize}
+Neither compiler derives the model from \code{-mcpu=native}: Clang~18 resolves it to a generic
+core. GCC~14 rejects the flag, so GCC builds are unchanged.
+
+\section{Tests}\label{r03:sec:wl-tests}
+
+\ghwl{tests/sweepgen/LbmScenarios/AAMatchesPull.hpp} (new). waLBerla's LBM scenario tests use a
+TRT method with a body force (lbmpy's \code{ForceModel.HE}), generated in
+\ghwl{tests/sweepgen/LbmScenarios/LbmAlgorithms.py}. That script now also generates the method
+with AA streaming, as \code{LBM_AA}. The new test runs pull and AA side by side on a periodic flow
+with a sinusoidal velocity along every axis. After each of 9 time steps it compares $\rho$ and
+$u$ cell by cell (absolute tolerance $10^{-14}$, relative $10^{-12}$). CTest, CMake's test runner,
+runs it with 1, 2 and 4 MPI processes. It therefore covers both the periodic copy of one block
+onto itself (\code{localCopy}) and the exchange between blocks (\code{pack}/\code{unpack}).
+
+\section{Scripts in the workspace}\label{r03:sec:wl-scripts}
+
+\ghws{scripts/walberla_lbm_bench.sh} builds and runs the AA and prefetch variants by default;
+\code{TARGETS} overrides the list. \ghws{scripts/walberla_bench_mpi.sh} (several MPI processes)
+takes \code{CONFIGS}, \code{VARIANTS} and \code{LOGDIR}. \ghws{scripts/walberla_bench_summary.py}
+prints summary tables and knows the new variants. The working tree also adds the split variant to
+these default lists; that edit is newer than \rcommitws.

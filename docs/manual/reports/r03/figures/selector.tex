@@ -1,0 +1,41 @@
+% The new RVV instruction selection (section 6.3) on one expression of the generated AA kernel
+% (xi_23 = xi_22 + 1/8 * u0Mu1^2, Listing r03:lst:aa-odd), and what it does to the registers.
+% Old mapping: one vv intrinsic per IR operation, constants as hoisted vector declarations.
+\begin{tikzpicture}[every node/.style={font=\scriptsize}]
+  \node[font=\footnotesize\bfseries] at (3.6,2.45) {before (one \texttt{vv} intrinsic per operation)};
+  \node[font=\footnotesize\bfseries] at (11.4,2.45) {after (\texttt{.vf} operand, fused multiply-add)};
+  \node[r03code,text width=68mm] (old) at (3.6,1.1) {%
+c8 = vfdiv\_vv(vfmv(1.0f), vfmv(8.0f))   // hoisted\\
+...\\
+t1 = vfmul\_vv(u0Mu1, u0Mu1)\\
+t2 = vfmul\_vv(t1, c8)              // c8 in a vector register\\
+xi\_23 = vfadd\_vv(xi\_22, t2)};
+  \node[r03code,text width=68mm] (new) at (11.4,1.1) {%
+c8\_s = in\_register(1.0f / 8.0f)    // hoisted, FP register\\
+...\\
+t1 = vfmul\_vv(u0Mu1, u0Mu1)\\
+xi\_23 = vfmacc\_vf(xi\_22, c8\_s, t1)  // +c8\_s*t1\\
+\ };
+  \draw[r03arrow] (old.east) -- (new.west);
+
+  % register files
+  \def\rthreeReg#1#2#3#4{% x, y, fill for the first #4 boxes, label
+    \foreach \r in {0,...,31} {
+      \pgfmathtruncatemacro{\rr}{\r}
+      \ifnum\rr<#3 \def\rthreeFC{#4}\else\def\rthreeFC{white}\fi
+      \fill[\rthreeFC] (#1+\r*0.21,#2) rectangle ++(0.19,0.32);
+      \draw[psgray!60,line width=0.2pt] (#1+\r*0.21,#2) rectangle ++(0.19,0.32);
+    }
+  }
+  \node[anchor=west] at (0,-0.25) {32 vector registers (orange: hoisted constants)};
+  \rthreeReg{0}{-0.75}{31}{psorange!45}
+  \node[r03label,anchor=north west,text width=68mm] at (0,-0.95)
+    {31 constants compete with PDFs and temporaries for the 32 registers: 23 reloads + 7 spills
+     per iteration (f32 AA + prefetch, even step)};
+  \node[anchor=west] at (7.8,-0.25) {32 FP registers (teal: constants via \texttt{in\_register})};
+  \rthreeReg{7.8}{-0.75}{9}{psteal!45}
+  \node[r03label,anchor=north west,text width=68mm] at (7.8,-0.95)
+    {scalar operands in the FP registers that a vector loop otherwise leaves idle (9 in the odd
+     step of \cref{r03:lst:aa-odd}); vector spills and reloads 30 $\rightarrow$ 0, instructions
+     471 $\rightarrow$ 341 per iteration (GCC~16)};
+\end{tikzpicture}

@@ -1,0 +1,308 @@
+\chapter{Results}\label{r03:ch:results}
+
+\emph{The end-to-end measurements, the step-by-step gain from the plain scalar build to the
+current state, and the remaining gap to \sx{8}.}
+
+All numbers in this chapter: waLBerla's \code{SweepgenLbmCPU}, $64^3$ cells, one core
+(core~2), best of 3 runs of 200 time steps after 10 warm-up steps, the whole application (kernel,
+halo exchange and time loop). The variants are listed in \cref{r03:tab:variants}.
+
+\section{The three end-to-end runs}\label{r03:sec:res-runs}
+
+The complete application was measured three times, each time after a group of optimisations had
+been adopted. Each run is one session per precision, and speedups are only computed within a
+run.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The end-to-end runs. Start times are the board's clock, which runs about 1.7~days
+    behind the actual date (Appendix~\ref{r03:app:evidence}).}\label{r03:tab:runs}
+  \begin{tabularx}{\linewidth}{@{}lXll@{}}
+    \toprule
+    \textbf{Run} & \textbf{Code measured} & \textbf{Start (board clock)} & \textbf{Logs}\\
+    \midrule
+    A & software prefetch (\cref{r03:sec:ps-prefetch}); GCC and Clang &
+      2026-11-12 08:15 & \file{e2e-gcc-*.log}, \file{e2e-clang-*.log}\\
+    B & A + AA streaming, the corrected initialisation and the new instruction selection
+      (\cref{r03:sec:wl-sweepgen,r03:sec:wl-halo,r03:sec:wl-app,r03:sec:ps-selector}) &
+      2026-11-12 12:56 & \file{e2e-aa-gcc-*.log}\\
+    C & B + row pointers and constants in registers (\cref{r03:sec:ps-rowptr}) &
+      2026-11-12 19:18 & \file{e2e-cg-gcc-*.log}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Run A: software prefetch}\label{r03:sec:res-pf}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Run A: the application with software prefetch, GCC~14 (logs \texttt{e2e-gcc-f32.log},
+    \texttt{e2e-gcc-f64.log}). In parentheses: speedup over the plain scalar build.}\label{r03:tab:res-pf}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Variant} & \textbf{f32 MLUP/s} & \textbf{f64 MLUP/s}\\
+    \midrule
+    \code{scalar} (plain scalar build) & 1.40 (\sx{1.00}) & 0.91 (\sx{1.00})\\
+    \code{scalar_cse} & 1.59 (\sx{1.14}) & 0.97 (\sx{1.06})\\
+    \code{explicit_cse} (RVV, as before this work) & 2.40 (\sx{1.72}) & 1.17 (\sx{1.28})\\
+    \code{explicit_pf} & 4.44 (\sx{3.18}) & 2.08 (\sx{2.28})\\
+    \textbf{\code{explicit_cse_pf}} & \textbf{4.80 (\sx{3.43})} & \textbf{2.32 (\sx{2.54})}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Software prefetch doubles the vector kernel in the complete application, in f32 and in f64, and
+leaves the checksum bit-identical. With Clang~18 the same option gives 3.56~MLUP/s in f32
+(\sx{3.36} its own scalar build) and 1.74 in f64 (\sx{2.41}); Clang is about 25\,\% slower than
+GCC on \code{explicit_cse_pf} (logs \file{e2e-clang-f32.log}, \file{e2e-clang-f64.log}).
+
+\section{Run B: AA streaming and the new instruction selection}\label{r03:sec:res-aa}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Run B: AA streaming and the new instruction selection, GCC~14 (logs
+    \texttt{e2e-aa-gcc-f32.log}, \texttt{e2e-aa-gcc-f64.log}). In parentheses: speedup over the
+    plain scalar build.}\label{r03:tab:res-aa}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{Variant} & \textbf{f32 MLUP/s} & \textbf{f64 MLUP/s}\\
+    \midrule
+    \code{scalar} (plain scalar build) & 1.40 (\sx{1.00}) & 0.95 (\sx{1.00})\\
+    \code{scalar_cse} & 1.59 (\sx{1.14}) & 1.01 (\sx{1.06})\\
+    \code{explicit_cse} & 2.40 (\sx{1.72}) & 1.21 (\sx{1.26})\\
+    \code{explicit_cse_pf} & 4.70 (\sx{3.36}) & 2.37 (\sx{2.48})\\
+    \code{scalar_cse_aa} (best scalar build) & 2.05 (\sx{1.46}) & 1.44 (\sx{1.51})\\
+    \code{explicit_cse_aa} & 3.04 (\sx{2.18}) & 1.63 (\sx{1.71})\\
+    \textbf{\code{explicit_cse_aa_pf}} & \textbf{7.08 (\sx{5.06})} & \textbf{3.95 (\sx{4.14})}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Run C: row pointers and constants in registers}\label{r03:sec:res-cg}
+
+Run C regenerated every RVV variant with the \ps{} change of \cref{r03:sec:ps-rowptr} and
+repeated run B's protocol, in f32 and f64.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Run C against run B, GCC~14 (logs \texttt{e2e-cg-gcc-\{f32,f64\}.log} and
+    \texttt{e2e-aa-gcc-\{f32,f64\}.log}); best values in MLUP/s, as printed (not
+    rounded).}\label{r03:tab:res-cg}
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{f32}} & \multicolumn{3}{c}{\textbf{f64}}\\
+    \cmidrule(lr){2-4}\cmidrule(l){5-7}
+    \textbf{Variant} & \textbf{run C} & \textbf{run B} & \textbf{change} & \textbf{run C} & \textbf{run B} & \textbf{change}\\
+    \midrule
+    \code{scalar} (code unchanged) & 1.383 & 1.398 & $-1.1$\,\% & 0.954 & 0.955 & $-0.1$\,\%\\
+    \code{scalar_cse} (unchanged) & 1.589 & 1.589 & 0.0\,\% & 1.009 & 1.009 & 0.0\,\%\\
+    \code{scalar_cse_aa} (unchanged) & 2.050 & 2.048 & +0.1\,\% & 1.453 & 1.445 & +0.5\,\%\\
+    \code{explicit_cse} & 2.408 & 2.400 & +0.4\,\% & 1.213 & 1.207 & +0.5\,\%\\
+    \code{explicit_cse_aa} & 3.031 & 3.042 & $-0.4$\,\% & 1.660 & 1.630 & +1.8\,\%\\
+    \code{explicit_cse_pf} & 4.944 & 4.700 & \textbf{+5.2\,\%} & 2.572 & 2.367 & \textbf{+8.7\,\%}\\
+    \textbf{\code{explicit_cse_aa_pf}} & \textbf{7.251} & 7.076 & \textbf{+2.5\,\%} & \textbf{4.037} & 3.952 & \textbf{+2.2\,\%}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item The checksums are identical to run B's, digit for digit, in both precisions: the change
+        does not alter the arithmetic.
+  \item The variants with prefetch gain most. The scalar variants, whose code did not change,
+        move by at most 1.1\,\%; this is the run-to-run variation.
+  \item Within run C, \code{explicit_cse_aa_pf} is \sx{5.24} (f32) and \sx{4.23} (f64) the plain
+        scalar build, and \sx{3.54} and \sx{2.78} the best scalar build.
+  \item Whether the change stays was decided by a rule written into the next session script
+        before the results were known (\cref{r03:fig:jobflow}): it stays only if
+        \code{explicit_cse_aa_pf} gains at least 2\,\% in both precisions. Both pass:
+        $7.251 \ge 1.02 \times 7.076 = 7.217$ and $4.037 \ge 1.02 \times 3.952 = 4.031$. The log
+        of the next session script (\file{e2e-halo-stage.log}) confirms that the change stayed
+        installed.
+\end{itemize}
+
+\section{Step by step: from the plain scalar build to the current state}\label{r03:sec:waterfall}
+
+\Cref{r03:tab:waterfall32,r03:tab:waterfall64} add the optimisations one at a time, in the order
+they were adopted, and give the gain of each step. Rows 1 to 5 come from run B
+(\cref{r03:tab:res-aa}); run B contains the earlier variants as well, so all five rows are from
+one session. Row 6 comes from run C, and its ratios use run C's own scalar builds
+(\cref{r03:tab:res-cg}). All ratios are computed from the values as printed in the logs, before
+rounding. Run A measured the prefetch step at 4.80 (f32) and 2.32~MLUP/s (f64)
+(\cref{r03:tab:res-pf}).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Step by step, single precision (GCC~14; rows 1--5 from run B, row 6 from run C).}\label{r03:tab:waterfall32}
+  \begin{tabularx}{\linewidth}{@{}Xrrrr@{}}
+    \toprule
+    \textbf{Step} & \textbf{MLUP/s} & \textbf{gain of} & \textbf{vs plain} & \textbf{vs best}\\
+    & & \textbf{this step} & \textbf{scalar} & \textbf{scalar}\\
+    \midrule
+    1 plain scalar build & 1.40 & & \sx{1.00} &\\
+    2 best scalar build (CSE + AA streaming) & 2.05 & & \sx{1.46} & \sx{1.00}\\
+    3 RVV kernel as before this work & 2.40 & & \sx{1.72} & \sx{1.17}\\
+    4 + software prefetch 128~B (\cref{r03:sec:ps-prefetch}) & 4.70 & \sx{1.96} & \sx{3.36} & \sx{2.30}\\
+    5 + AA streaming and new instruction selection (\cref{r03:sec:wl-sweepgen,r03:sec:ps-selector})
+      & \textbf{7.08} & \sx{1.51} & \textbf{\sx{5.06}} & \textbf{\sx{3.45}}\\
+    6 + row pointers, constants in registers (\cref{r03:sec:ps-rowptr}; run C) & \textbf{7.25} &
+      \sx{1.025} & \textbf{\sx{5.24}} & \textbf{\sx{3.54}}\\
+    \midrule
+    + halo exchange one slot at a time (\cref{r03:sec:wl-halo}) & \multicolumn{4}{l}{pending}\\
+    + no density/velocity output in the timed steps (\cref{r03:sec:wl-sweepgen}) & \multicolumn{4}{l}{pending}\\
+    direction-split kernel instead of the single-pass AA kernel (\cref{r03:sec:wl-split}) &
+      \multicolumn{4}{l}{pending}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Step by step, double precision (GCC~14; rows 1--5 from run B, row 6 from run C).}\label{r03:tab:waterfall64}
+  \begin{tabularx}{\linewidth}{@{}Xrrrr@{}}
+    \toprule
+    \textbf{Step} & \textbf{MLUP/s} & \textbf{gain of} & \textbf{vs plain} & \textbf{vs best}\\
+    & & \textbf{this step} & \textbf{scalar} & \textbf{scalar}\\
+    \midrule
+    1 plain scalar build & 0.95 & & \sx{1.00} &\\
+    2 best scalar build (CSE + AA streaming) & 1.44 & & \sx{1.51} & \sx{1.00}\\
+    3 RVV kernel as before this work & 1.21 & & \sx{1.26} & \sx{0.84}\\
+    4 + software prefetch 128~B & 2.37 & \sx{1.96} & \sx{2.48} & \sx{1.64}\\
+    5 + AA streaming and new instruction selection & \textbf{3.95} & \sx{1.67} & \textbf{\sx{4.14}} & \textbf{\sx{2.74}}\\
+    6 + row pointers, constants in registers (run C) & \textbf{4.04} & \sx{1.022} & \textbf{\sx{4.23}} & \textbf{\sx{2.78}}\\
+    \midrule
+    + the three pending changes & \multicolumn{4}{l}{pending}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r03/figures/speedup-chart}
+  \caption[Speedup per step]{Speedup over the plain scalar build after each step of
+    \cref{r03:tab:waterfall32,r03:tab:waterfall64}; dashed: the goals. The last pair of bars is
+    from run C, all others from run B.}\label{r03:fig:speedup}
+\end{figure}
+
+\paragraph{How step 5 divides.} Step 5 adds two changes at once. In the lab (one session,
+\cref{r03:tab:selector}), f32: AA streaming gives \sx{1.43} (pull with prefetch 334 $\rightarrow$
+AA with prefetch 234 cycles per cell, original instruction selection), then the new instruction
+selection \sx{1.22} (234 $\rightarrow$ 192). f64: AA \sx{1.49} (685 $\rightarrow$ 461), instruction
+selection \sx{1.065} (461 $\rightarrow$ 433). In the application, AA streaming loses part of its
+gain to the halo exchange (\cref{r03:sec:res-labapp}).
+
+\paragraph{Against the best scalar build.} The best scalar build also streams in place and uses
+CSE. Against it, the vector speedup is \sx{3.54} (f32) and \sx{2.78} (f64) in run C. Software
+prefetch exists for vector loops only, so the best scalar build has none. In the lab, a scalar
+kernel with prefetch (but without CSE) was 15\,\% faster than the scalar kernel with CSE
+(\cref{r03:tab:pf}): a scalar prefetch would probably make the best scalar build faster, by an
+amount that was not measured.
+
+\section{Lab and application}\label{r03:sec:res-labapp}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The same kernels in the lab (one session, GCC~14, log \texttt{lab4.log}) and in the
+    application (run B), in MLUP/s. Fastest step, median step, and cycle average (1.6~GHz divided
+    by the cycles per cell counted over all steps).}\label{r03:tab:labapp}
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    & \multicolumn{3}{c}{\textbf{lab}} & \\
+    \cmidrule(lr){2-4}
+    \textbf{Kernel} & \textbf{fastest} & \textbf{median} & \textbf{cycle average} & \textbf{application}\\
+    \midrule
+    f32 AA + prefetch & 8.99 & 7.89 & 8.33 & 7.08 (15\,\% slower)\\
+    f32 pull + prefetch & 5.12 & 5.04 & 5.07 & 4.70 (7\,\% slower)\\
+    f64 AA + prefetch & 4.11 & 3.82 & 3.82 & 3.95 (faster)\\
+    f64 pull + prefetch & 2.60 & 2.45 & 2.50 & 2.37 (5\,\% slower)\\
+    f32 hand AA, Clang with the X60 model & 11.10 & 10.70 & 10.83 &\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Where the f32 AA application loses time.} \code{perf record -e cpu-clock}, f32, 100
+time steps (logs \file{perf-e2e-aa.txt}, \file{perf-e2e-pull.txt}), with the code of run B:
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Profile of the f32 applications: share of all samples per function.}\label{r03:tab:perf}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    \textbf{Function} & \textbf{AA + prefetch} & \textbf{pull + prefetch}\\
+    \midrule
+    kernels & 68.8\,\% (even 34.2, odd 34.7) & 80.1\,\%\\
+    \code{GenericAAPushPackInfo::localCopy} & 9.9\,\% &\\
+    \code{GenericAAPullPackInfo::localCopy} & 7.9\,\% &\\
+    \code{GenericStreamPullPackInfo::localCopy} & & 10.1\,\%\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The halo exchange takes $17.8 / (68.8 + 17.8) = 21$\,\% of an AA time step, which explains the
+15\,\% between the lab kernel and the application. The remaining samples are the program's
+start-up. The slot-by-slot rewrite of \cref{r03:sec:wl-halo} targets exactly this.
+
+\section{Several processes (side note)}\label{r03:sec:res-mpi}
+
+The results of this report are single-core figures. For completeness, the application with the
+code of run B was also run with 4 MPI processes (one cluster of the K1) and 8 (both clusters),
+each process with its own $64^3$ block, 100 time steps (log \file{e2e-mpi.log}):
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{MLUP/s of all processes together with 4 and 8 processes. In parentheses: speedup over
+    the plain scalar build with the same number of processes.}\label{r03:tab:mpi}
+  \begin{tabular}{@{}lllll@{}}
+    \toprule
+    \textbf{Variant} & \textbf{f32, 4} & \textbf{f32, 8} & \textbf{f64, 4} & \textbf{f64, 8}\\
+    \midrule
+    \code{scalar} & 5.42 & 8.07 & 3.44 & 5.15\\
+    \code{scalar_cse_aa} & 7.39 & 12.69 & 5.17 & 7.52\\
+    \code{explicit_cse_pf} & 12.49 & 13.88 & 6.42 & 7.06\\
+    \code{explicit_cse_aa_pf} & 17.99 (\sx{3.32}) & 19.68 (\sx{2.44}) & 9.51 (\sx{2.76}) & 9.88 (\sx{1.92})\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The vector AA kernel gains only 9\,\% (f32) and 4\,\% (f64) from the second cluster. At 184 (f32)
+or 368 (f64) bytes per cell it moves about 3.6~GB/s with 8 processes, against 3.3--3.5~GB/s with
+4. That is about the chip's limit for this many-stream pattern. The scalar builds are not yet at
+that limit and still scale, so the vector speedup on the whole chip is smaller than on one core.
+
+\section{Limit and remaining gap}\label{r03:sec:gap}
+
+\paragraph{Arithmetic limit.} One full-width floating-point instruction per cycle at e32 and e64
+(\cref{r03:sec:ops}): \sx{8} for single and \sx{4} for double precision over scalar.
+
+\paragraph{Where the adopted kernel stands.} An estimate: the adopted f32 AA loop has about 300
+instructions per 8 cells. At the instruction costs of \cref{r03:tab:ops} that is about 290 cycles
+per iteration, or about 36 cycles per cell, if every access hit the L1 cache. The loop takes about
+192 cycles per cell (\cref{r03:tab:selector}), so it is still limited by memory latency, not by
+arithmetic. One core moves about 1.5~GB/s with 23 prefetched streams, while the X60 streams
+6~GB/s with up to 8 streams (\cref{r03:tab:streams}).
+
+\paragraph{The hand kernel shows that \sx{8} is reachable.} The hand-written AA kernel with
+direction split reaches 10.83~MLUP/s by cycle average with Clang and the X60 scheduling model
+(\cref{r03:tab:labapp}). That is \sx{7.7} the plain scalar build's 1.40~MLUP/s (run B). It uses
+the textbook equilibrium (\cref{r03:sec:wl-split}), which does not change its speed.
+
+\begin{keyidea}[Achieved and remaining]
+\begin{itemize}
+  \item \textbf{f64: \sx{4.23} the plain scalar build (run C), the \sx{4} goal is met};
+        \sx{2.78} the best scalar build. Run B gave \sx{4.14} and \sx{2.74}.
+  \item \textbf{f32: \sx{5.24} the plain scalar build (run C)} against the goal of \sx{8};
+        \sx{3.54} the best scalar build. Run B gave \sx{5.06} and \sx{3.45}. From \sx{5.24}, a
+        factor of 1.53 is missing. Candidates, each measured separately:
+        \begin{itemize}
+          \item kernel structure: with GCC, the hand split kernel took 163 instead of the
+                generated kernel's 192 cycles per cell in the same lab session (\sx{1.17}); the
+                generated split kernel (\cref{r03:sec:wl-split}) is pending;
+          \item instruction scheduling: \sx{1.11} more from Clang's X60 model on that kernel;
+          \item the halo exchange, 21\,\% of an AA time step; rewritten
+                (\cref{r03:sec:wl-halo}), pending;
+          \item fewer bytes per cell without the density/velocity output
+                (\cref{r03:sec:wl-sweepgen}), pending.
+        \end{itemize}
+\end{itemize}
+These factors come from separate measurements. Whether they multiply as listed is exactly what
+the pending end-to-end runs measure (\cref{r03:ch:open}).
+\end{keyidea}

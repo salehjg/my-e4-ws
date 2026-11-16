@@ -1,0 +1,83 @@
+% =============================================================================
+%  macros.tex -- macros only report r03 uses. \input by report.tex before
+%  anything else. Do not use these in titles or captions (see preamble.tex).
+%  Names start with r03 or gh so they cannot clash with other reports'.
+% =============================================================================
+
+% ---- Pinned commits -----------------------------------------------------------
+%   Every link in this report points at these commits, so it stays valid when
+%   the branches move on.
+\newcommand{\rWSsha}{c443bf46254124ae1612233d71785692c09424cb}
+\newcommand{\rPSsha}{a81dc547bb289d3a7faf4df5039120e26aec1b2b}
+\newcommand{\rWLsha}{efa2b70c863090ac8108f8f09273ce818484384b}
+\newcommand{\rWSurl}{https://github.com/salehjg/my-e4-ws}
+\newcommand{\rPSurl}{https://github.com/salehjg/mirrored-pystencil2}
+\newcommand{\rWLurl}{https://github.com/salehjg/mirrored-walberla}
+
+%   \ghws{path}, \ghps{path}, \ghwl{path}: a file of the workspace repository, the
+%   pystencils fork or the waLBerla fork at the pinned commit, printed as its path.
+%   Paths are relative to the repository root.
+\newcommand{\ghws}[1]{\href{\rWSurl/blob/\rWSsha/#1}{\nolinkurl{#1}}}
+\newcommand{\ghps}[1]{\href{\rPSurl/blob/\rPSsha/#1}{\nolinkurl{#1}}}
+\newcommand{\ghwl}[1]{\href{\rWLurl/blob/\rWLsha/#1}{\nolinkurl{#1}}}
+%   The same with a different link text: \ghwsas{path}{text}
+\newcommand{\ghwsas}[2]{\href{\rWSurl/blob/\rWSsha/#1}{#2}}
+
+%   Short commit hashes, linked
+\newcommand{\rcommitws}{\href{\rWSurl/commit/\rWSsha}{\texttt{c443bf4}}}
+\newcommand{\rcommitps}{\href{\rPSurl/commit/\rPSsha}{\texttt{a81dc547}}}
+\newcommand{\rcommitwl}{\href{\rWLurl/commit/\rWLsha}{\texttt{efa2b70c}}}
+
+% ---- Numbers ------------------------------------------------------------------
+%   \sx{5.06}: a speedup factor
+\newcommand{\sx}[1]{#1\ensuremath{\times}}
+
+% ---- TikZ styles ----------------------------------------------------------------
+%   Outcome colours, used the same way in every figure of the report:
+%   adopted (in the code at the pinned commits), rejected (tried, dropped),
+%   pending (in the code or the lab, not measured yet), context (a finding, not a change).
+\colorlet{r03landed}{psteal}
+\colorlet{r03rejected}{psred}
+\colorlet{r03pending}{psorange}
+\colorlet{r03context}{psblue}
+\tikzset{
+  r03box/.style={draw=psgray!80,fill=white,rounded corners=1.5pt,align=center,
+    font=\footnotesize,inner sep=3.5pt,minimum height=7mm},
+  r03pass/.style={r03box,fill=psteal!10,draw=psteal!90!black},
+  r03arrow/.style={-{Stealth[length=2mm]},semithick,draw=psgray!90!black},
+  r03label/.style={font=\scriptsize,text=psgray!90!black,align=center},
+  %   outcome boxes
+  r03ok/.style={r03box,fill=r03landed!12,draw=r03landed!90!black,line width=0.6pt},
+  r03no/.style={r03box,fill=r03rejected!8,draw=r03rejected!80!black,line width=0.6pt},
+  r03wait/.style={r03box,fill=r03pending!12,draw=r03pending!90!black,line width=0.6pt},
+  r03info/.style={r03box,fill=r03context!6,draw=r03context!70!black},
+  %   flowchart shapes
+  r03step/.style={r03box,text width=#1},
+  r03step/.default=28mm,
+  r03decide/.style={diamond,aspect=2.2,draw=psgray!80,fill=codebg,align=center,
+    font=\scriptsize,inner sep=1pt},
+  r03code/.style={r03box,fill=codebg,font=\ttfamily\scriptsize,align=left},
+  %   memory cells of the layout figures
+  r03cell/.style={draw=psgray!70,line width=0.3pt,minimum size=4mm,inner sep=0pt,
+    font=\tiny},
+  r03lane/.style={draw=psblue!80!black,fill=psblue!15,minimum height=4mm,
+    minimum width=4mm,inner sep=0pt,font=\tiny},
+}
+%   \rthreekey: the legend of the outcome colours, for running text (not for captions)
+\newcommand{\rthreekey}{%
+  \tikz[baseline=-0.6ex]\node[r03ok,minimum height=3mm,inner sep=1.5pt,font=\scriptsize]{adopted};~%
+  \tikz[baseline=-0.6ex]\node[r03no,minimum height=3mm,inner sep=1.5pt,font=\scriptsize]{rejected};~%
+  \tikz[baseline=-0.6ex]\node[r03wait,minimum height=3mm,inner sep=1.5pt,font=\scriptsize]{pending};~%
+  \tikz[baseline=-0.6ex]\node[r03info,minimum height=3mm,inner sep=1.5pt,font=\scriptsize]{finding}}
+
+% ---- Boxes --------------------------------------------------------------------
+\newtcolorbox{r03pending}[1][Pending: not measured yet]{psbox,
+  colback=psorange!6,colframe=psorange!85,title={#1}}
+
+% ---- Page breaks ----------------------------------------------------------------
+%   \rthreeneedspace{len}: start a new page unless at least len of vertical space is left
+\makeatletter
+\newcommand{\rthreeneedspace}[1]{\par\penalty-100\begingroup
+  \setlength{\dimen@}{#1}\dimen@ii\pagegoal\advance\dimen@ii-\pagetotal
+  \ifdim\dimen@>\dimen@ii\ifdim\dimen@ii>\z@\vfil\fi\penalty-10000\fi\endgroup}
+\makeatother

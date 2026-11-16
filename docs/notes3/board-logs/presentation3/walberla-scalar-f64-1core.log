@@ -1,0 +1,34 @@
+== f64, 1 core(s), 64^3 cells per core, 200 steps, 3 runs: scalar scalar_cse scalar_cse_aa
+== start Sat Nov 14 11:02:35 AM CST 2026, load: 10.32 9.41 8.05
+== repo (no git), build dir /home/bananapi/saleh/walberla-build
+== build SweepgenLbmCPU_scalar 11:05:45
+   RVV instructions in the sweeps: 0
+== build SweepgenLbmCPU_scalar_cse 11:07:43
+   RVV instructions in the sweeps: 0
+== build SweepgenLbmCPU_scalar_cse_aa 11:09:47
+   RVV instructions in the sweeps: 0
+== run Sat Nov 14 11:11:49 AM CST 2026
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=64 cells=262144 steps=200 output=every seconds=51.4234078887 mlups=1.01955125404 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=64 cells=262144 steps=200 output=every seconds=51.5046430443 mlups=1.01794317757 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=64 cells=262144 steps=200 output=every seconds=51.5635571629 mlups=1.01678012311 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=64 cells=262144 steps=200 output=every seconds=48.7592285131 mlups=1.07525901452 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=64 cells=262144 steps=200 output=every seconds=48.7814366759 mlups=1.07476949374 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=64 cells=262144 steps=200 output=every seconds=48.7034124427 mlups=1.07649130462 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.8688124908 mlups=1.50360153544 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.9086799442 mlups=1.5018843475 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.8266169817 mlups=1.50542328092 energy=395.159209014
+
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | f64, 1 core(s) |
+|---|---|
+| scalar | 1.02 (1.00x) |
+| scalar_cse | 1.08 (1.06x) |
+| scalar_cse_aa | 1.51 (1.48x) |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| f64, 1 core(s) | 3.951592090140e+02 | 3.951592090140e+02 | 0.0e+00 |
+== done Sat Nov 14 11:19:03 AM CST 2026

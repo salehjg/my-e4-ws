@@ -1,0 +1,32 @@
+% Cost of concurrent unit-stride read streams on one X60 core (board-logs/p2-stream-sweep.txt
+% and p2-prefetch.txt; mem stream R W, f32 vle32, 4 MB per stream, THP, bases staggered by 4160 B).
+\begin{tikzpicture}
+  \begin{semilogyaxis}[
+      width=0.92\linewidth, height=6.2cm,
+      xlabel={concurrent read streams $R$ (no writes)},
+      ylabel={cycles per 64-byte line},
+      xmin=0, xmax=34, ymin=10, ymax=600,
+      xtick={1,2,4,8,12,16,19,24,32},
+      ytick={10,20,50,100,200,500},
+      yticklabels={10,20,50,100,200,500},
+      grid=major, grid style={psgray!20},
+      tick label style={font=\scriptsize}, label style={font=\footnotesize},
+      every axis plot/.append style={thick},
+    ]
+    % the hardware prefetcher's good zone
+    \fill[r03landed!8] (axis cs:0.5,10) rectangle (axis cs:8.5,600);
+    \node[r03label,anchor=north] at (axis cs:4.5,560) {prefetcher\\follows};
+    \fill[r03rejected!6] (axis cs:19.5,10) rectangle (axis cs:34,600);
+    \node[r03label,anchor=south] at (axis cs:27,14) {prefetcher gives up:\\full DRAM latency per line};
+    \addplot[color=psblue,mark=*,mark size=1.6pt] coordinates {
+      (1,45.1) (2,29.5) (4,25.0) (8,16.9) (12,36.7) (16,34.7) (19,75.3) (24,363.6) (32,363.7)};
+    \node[r03label,anchor=west] at (axis cs:8.3,15.5) {8 streams: 17 (6.0 GB/s)};
+    % the pull sweep's 19 read + 23 write streams, without and with software prefetch
+    \draw[r03rejected,thick,dashed] (axis cs:0,184.3) -- (axis cs:34,184.3);
+    \node[r03label,anchor=south west,text=r03rejected!80!black] at (axis cs:0.4,184.3)
+      {19 read + 23 write (the pull sweep): 184};
+    \draw[r03landed,thick,dashed] (axis cs:0,90.4) -- (axis cs:34,90.4);
+    \node[r03label,anchor=south west,text=r03landed!70!black] at (axis cs:9.5,90.4)
+      {same, with \texttt{prefetch.r} 128~B ahead: 90};
+  \end{semilogyaxis}
+\end{tikzpicture}

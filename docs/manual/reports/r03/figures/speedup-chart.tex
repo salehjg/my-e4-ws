@@ -1,0 +1,31 @@
+% End-to-end speedup over the plain scalar build, per step of the waterfall (GCC 14, 64^3, one core).
+% Run B (board-logs/e2e-aa-gcc-{f32,f64}.log, values as printed); the last pair of bars is run C
+% (board-logs/e2e-cg-gcc-{f32,f64}.log).
+\begin{tikzpicture}
+  \begin{axis}[
+      ybar=2pt, bar width=10pt,
+      width=\linewidth, height=6.4cm,
+      ymin=0, ymax=8.9,
+      ylabel={speedup over the plain scalar build},
+      symbolic x coords={plain,best,before,pf,aa,rp},
+      xtick=data,
+      xticklabels={{plain scalar},{best scalar\\(CSE + AA)},{RVV before\\this work},{+ software\\prefetch},{+ AA, new\\instr. selection},{+ row pointers\\(run C)}},
+      xticklabel style={align=center,font=\scriptsize},
+      tick label style={font=\scriptsize}, label style={font=\footnotesize},
+      enlarge x limits=0.1,
+      legend style={font=\scriptsize,at={(0.02,0.98)},anchor=north west,draw=psgray!50},
+      nodes near coords, nodes near coords style={font=\tiny,rotate=90,anchor=west},
+      point meta=explicit symbolic,
+      ymajorgrids, grid style={psgray!20},
+    ]
+    \addplot[fill=psblue!60,draw=psblue!80!black] coordinates {
+      (plain,1.00)[1.00] (best,1.465)[1.46] (before,1.716)[1.72] (pf,3.362)[3.36] (aa,5.061)[5.06] (rp,5.243)[5.24]};
+    \addplot[fill=psteal!55,draw=psteal!80!black] coordinates {
+      (plain,1.00)[1.00] (best,1.513)[1.51] (before,1.264)[1.26] (pf,2.479)[2.48] (aa,4.139)[4.14] (rp,4.232)[4.23]};
+    \legend{f32, f64}
+    \draw[psblue!80!black,dashed,thick] (axis description cs:0,8/8.9) -- (axis description cs:1,8/8.9)
+      node[pos=0.5,above,font=\scriptsize] {f32 goal: \sx{8}};
+    \draw[psteal!80!black,dashed,thick] (axis description cs:0,4/8.9) -- (axis description cs:1,4/8.9)
+      node[pos=0.2,above,font=\scriptsize] {f64 goal: \sx{4}};
+  \end{axis}
+\end{tikzpicture}

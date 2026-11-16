@@ -1,0 +1,180 @@
+\chapter{Set-up and Measurement}\label{r03:ch:setup}
+
+\emph{The test system, the benchmark application and its variants, the kernel lab and the
+probes: how every number in the rest of the report was measured.}
+
+\section{The test system}\label{r03:sec:hw}
+
+Two computers were used. The \term{board} runs every speed measurement. The
+\term{laptop}, an x86-64 machine, generates code, cross-compiles, runs QEMU and runs the
+waLBerla test suite.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The test system. The board facts were read on the board itself
+    (\texttt{/proc/cpuinfo}, the frequency governor, the compiler versions).}\label{r03:tab:hw}
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    Board & Banana~Pi BPI-F3 with a SpacemiT~K1: 8 SpacemiT~X60 cores
+      (\code{uarch: spacemit,x60}) in two clusters of 4\\
+    Core & in-order RISC-V core with RVV~1.0, VLEN~256; 1.6~GHz, frequency fixed by the
+      \code{performance} governor\\
+    Caches & L1D 32~KiB per core (4-way set associative); L2 512~KiB per cluster
+      (16-way); no L3\\
+    Memory & 4~KiB pages; transparent huge pages in \code{madvise} mode\\
+    ISA string & lists \code{zicbom} and \code{zicboz}, \emph{not} \code{zicbop}
+      (\cref{r03:sec:bg-rvv})\\
+    Board compilers & GCC 14.2.0 and Clang 18.1.8, as shipped with the board's Linux
+      distribution (Bianbu)\\
+    Laptop tools & GCC 16.2.1 cross compiler for RISC-V (\code{riscv64-linux-gnu-g++}), used to
+      read the generated assembly; QEMU~11.1.3 (\code{qemu-riscv64 -cpu
+      rv64,v=true,vlen=256,zicbop=true}); an x86 waLBerla build with MPI for the tests\\
+    Profiling & \code{perf} (\cref{r03:sec:bg-measure}); hardware-event sampling gives no
+      samples on this board, so profiles sample a timer instead (\code{-e cpu-clock}); the
+      X60's vendor events are counted with \ghws{misc/x60-lab/pmu_stat.sh}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\paragraph{How jobs run on the board.} The board is shared with other users. Every
+measurement therefore runs as an unattended shell script, called a \term{session script}
+(\file{misc/x60-lab/queue_*.sh}), which:
+\begin{itemize}
+  \item works only in one user directory and writes its logs there;
+  \item pins the program to one core, core~2 (\code{taskset -c 2}), so that the operating
+        system does not move it between cores;
+  \item runs alone: it starts in a detached \code{screen} terminal session and first waits
+        until the previous session script has finished, so that two measurements never
+        compete for the memory system;
+  \item keeps running when the network connection to the board drops.
+\end{itemize}
+One run of a session script is a \term{session} (\cref{r03:sec:bg-measure}).
+
+\section{The benchmark application}\label{r03:sec:app}
+
+\ghwl{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp} is a waLBerla benchmark built for
+this purpose:
+\begin{itemize}
+  \item D3Q19, SRT collision, compressible equilibrium, with the physical parameters of
+        waLBerla's \code{DoubleShearLayer} example: Reynolds number $30\,000$, initial
+        velocity amplitude $u_0 = 0.04$ (a shear-layer flow, so the velocity field is not
+        trivial);
+  \item a fully periodic domain with one block of $N^3$ cells per MPI process;
+  \item arguments: cells per block and direction (default 64), timed time steps (200) and
+        untimed warm-up steps (10).
+\end{itemize}
+At the end it prints one line with the MLUP/s and a \term{checksum}: the sum of $|u|^2$ over
+all cells, which the program calls the kinetic energy. The sum is formed in double precision
+even in single-precision builds. Two variants that compute the same thing must print the
+same checksum, up to rounding.
+
+\paragraph{Variants.} Each way of generating the kernel is a separate executable, defined in
+\ghwl{apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt}. The executable names are
+\code{SweepgenLbmCPU_} followed by a variant name, which is built from these parts:
+\begin{description}
+  \item[\code{scalar}] plain C++ kernel, compiled with \code{-march=rv64gc}: no vector
+        instructions at all.
+  \item[\code{autovec}] plain C++ kernel, compiled with waLBerla's flags, which allow the
+        compiler to auto-vectorize.
+  \item[\code{explicit}] RVV kernel: \ps{} writes the vector intrinsics
+        (\cref{r03:sec:ps-simd}).
+  \item[\code{_cse}] lbmpy's global common-subexpression elimination is on.
+  \item[\code{_aa}] AA streaming instead of pull (\cref{r03:sec:bg-stream}).
+  \item[\code{_pf}] software prefetching 128~bytes ahead (\cref{r03:sec:ps-prefetch}).
+  \item[\code{_split}] the direction-split AA kernel (\cref{r03:sec:wl-split}).
+\end{description}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The variants of the benchmark at \texttt{efa2b70c}, and the names used for them in
+    the text.}\label{r03:tab:variants}
+  \begin{tabularx}{\linewidth}{@{}lX@{}}
+    \toprule
+    \textbf{Variant} & \textbf{Kernel, and name in the text}\\
+    \midrule
+    \code{scalar} & plain C++, pull: the \textbf{plain scalar build}, the baseline of the
+      goal\\
+    \code{scalar_cse} & plain C++ with CSE, pull\\
+    \code{scalar_cse_aa} & plain C++ with CSE and AA streaming: the \textbf{best scalar
+      build}, which has every non-vector optimisation the application offers\\
+    \code{autovec}, \code{autovec_cse} & plain C++, compiler may auto-vectorize\\
+    \code{explicit}, \code{explicit_cse} & RVV, pull: the vector kernel as it was before this
+      work\\
+    \code{explicit_pf}, \code{explicit_cse_pf} & RVV, pull, software prefetch (``pull +
+      prefetch'')\\
+    \code{explicit_cse_aa} & RVV, AA streaming, no prefetch\\
+    \code{explicit_cse_aa_pf} & RVV, AA streaming, software prefetch (``AA + prefetch''): the
+      fastest variant\\
+    \code{explicit_cse_aa_split} & RVV, AA streaming with the direction-split kernel\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\Cref{r03:fig:timestep} (\cref{r03:sec:bg-stream}) shows the timed loop of the pull and the
+AA variants.
+
+\paragraph{Protocol.} \ghws{scripts/walberla_lbm_bench.sh}\code{ 64 200 3} configures one
+build directory, builds the variants, runs each 3 times on core~2 and prints the best MLUP/s
+and the checksum of each. Unless a table says otherwise, every end-to-end number in this
+report is such a best-of-3 value at $64^3$ cells, 200 timed steps after 10 warm-up steps.
+\term{End to end} means the whole application: the kernel, the halo exchange and the time
+loop.
+
+\section{The kernel lab}\label{r03:sec:lab}
+
+A waLBerla build with all variants takes hours on the board. The \term{kernel lab}
+(\ghws{misc/x60-lab/lab/}) instead times one kernel in a small driver program, so that a
+change can be tested in minutes. It has these parts:
+\begin{description}
+  \item[\ghws{misc/x60-lab/lab/gen.py}] builds the update exactly as sweepgen's \code{LbmBulk}
+        does for the benchmark, and lets \ps{} generate the kernel. The generated loop bodies
+        are identical to those in the waLBerla build. These are the \term{generated kernels}.
+  \item[\file{misc/x60-lab/lab/hand/}] \term{hand kernels}: D3Q19 kernels written by hand
+        with RVV intrinsics, to try code structures that \ps{} cannot generate.
+  \item[\ghws{misc/x60-lab/lab/driver.cpp}] lays out the fields as waLBerla does on RISC-V:
+        fzyx layout, one ghost layer, rows padded to 16~bytes (68 floats for 64 cells plus 2
+        ghost cells), interior aligned to 16~bytes. Between time steps it refreshes the ghost
+        layers periodically; this part is not timed. It counts cycles and instructions around
+        the kernel calls only, and prints three checksums: the sum of $|u|^2$, the sum of the
+        density field (\term{mass}), and a \term{weighted PDF sum}: the stored PDF values of
+        all cells, each multiplied by its direction number plus one, $\sum_{\text{cells}}
+        \sum_{i=0}^{18} (i+1)\,f_i$. The last one changes when any single PDF changes, even
+        if density and velocity do not. Environment variables change the layout (\code{ALIGN},
+        \code{XPAD}, \code{PADF}, \code{THP}); \code{AA=1} runs AA kernels.
+  \item[\ghws{misc/x60-lab/lab/edits.py}] applies source-level changes to a generated kernel,
+        so that an optimisation can be tried before it is implemented in \ps{}.
+  \item[\ghws{misc/x60-lab/lab/run.sh}] builds and runs kernels on the board and appends one
+        line per run to \file{results.tsv}.
+\end{description}
+Each lab kernel has a file name that encodes how it was made; \cref{r03:sec:repro-gen}
+explains the naming.
+
+\paragraph{Acceptance test.} Before it was used for any decision, the lab had to reproduce
+waLBerla's speed (f32, GCC). The RVV kernel with CSE took 653 cycles per cell in the lab and
+682 in waLBerla, which also does the halo exchange; the scalar kernel with CSE took 1035 and
+1033. The values agree within 5\,\%, so lab results carry over to the application.
+
+\begin{pitfall}[For AA kernels, the fastest step overstates the speed]
+The driver first reported the fastest and the median time step. An AA kernel alternates an
+even and an odd step, which are two different functions with different costs, and the
+fastest step is always an even one. The fair rate is the \term{cycle average}: 1.6~GHz divided
+by the cycles per cell counted over all steps. The driver now also prints the rate over all
+steps (\code{mean_mlups}): the same quantity, measured with the clock instead of the cycle
+counter.
+For example, the generated f32 AA kernel with prefetch: fastest step 8.99, cycle average
+8.33~MLUP/s (\cref{r03:tab:labapp}). Tables in this report say which of the two they show.
+\end{pitfall}
+
+\section{Probes}\label{r03:sec:probes}
+
+Two small programs (\file{misc/x60-lab/probes/}) measure the core itself, independent of any
+LBM code:
+\begin{itemize}
+  \item \ghws{misc/x60-lab/probes/mem.cpp} measures the DRAM latency, how many misses
+        overlap, the throughput of many concurrent streams, and the effect of prefetch and
+        cache-block instructions;
+  \item \ghws{misc/x60-lab/probes/ops.cpp} measures the throughput and latency of single
+        vector and scalar instructions.
+\end{itemize}
+Both read the cycle counter through the Linux interface \code{perf_event_open}
+(\ghws{misc/x60-lab/probes/pmu.hpp}).

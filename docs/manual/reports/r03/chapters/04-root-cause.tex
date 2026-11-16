@@ -1,0 +1,168 @@
+\chapter{What Limits the Kernel}\label{r03:ch:root-cause}
+
+\emph{Four measurements locate the limit. It is not memory bandwidth but memory latency: the
+X60's hardware prefetcher follows about 8 streams, and the kernel has 42. The arithmetic limit
+of the vector unit is \sx{8} over scalar in f32 and \sx{4} in f64.}
+
+All measurements in this chapter use the program as it was before this work: the RVV
+variant \code{explicit_cse} and the scalar variant \code{scalar_cse} (\cref{r03:tab:variants}),
+pull streaming, compiled with GCC~14, f32, on core~2.
+
+\section{Not bandwidth}\label{r03:sec:bw}
+
+If the kernel were limited by memory bandwidth, it would move data close to the rate the
+memory system can deliver, and huge pages, which reduce address-translation overhead, would
+matter little. Three observations contradict that:
+\begin{itemize}
+  \item The throughput hardly depends on the grid size: \code{explicit_cse} gives 2.09, 2.18
+        and 2.34~MLUP/s at $16^3$, $32^3$ and $64^3$ cells. All three grids exceed the
+        512~KiB L2 cache, so this alone does not rule out memory as the limit, but it does
+        not look like a bandwidth limit either.
+  \item At $64^3$ the vector kernel spends about 685 cycles per cell at an IPC of 0.13, with
+        only about 15 L1 misses per iteration of 8 cells. It moves about 0.4~GB/s. A
+        two-dimensional LBM kernel (D2Q9, 9 PDFs per cell) moved 1.6~GB/s on one core of the
+        same board in the earlier work.
+  \item Huge pages help little: with \code{GLIBC_TUNABLES=glibc.malloc.hugetlb=1}, which
+        makes the C library request transparent huge pages, the vector kernel gains 7\,\% and
+        the scalar kernel 8\,\%, with half as many TLB misses.
+\end{itemize}
+The bandwidth explanation was therefore withdrawn for the single-core case.
+
+\section{Where the cycles go}\label{r03:sec:cycles}
+
+\paragraph{Profile.} \code{perf record -e cpu-clock} at $64^3$: the kernel takes 88.9\,\% of
+the samples for the vector variant and 91.7\,\% for the scalar one. The halo exchange
+(\code{localCopy} of the pull pack info) takes 5.4\,\% and 4.1\,\%. The hot loop has 371
+instructions per 8 cells. Among them is a single division (\code{vfdiv}): the other nine
+divisions of the source are by constants, and the compiler moves them out of the loop. Most
+samples sit on the 19 PDF loads and on the additions that use the loaded values.
+
+\paragraph{Hardware counters.} The X60's vendor events, counted with
+\ghws{misc/x60-lab/pmu_stat.sh}. The start-up of the program is subtracted: each event is also
+counted in a run with zero time steps (\ghws{misc/x60-lab/pmu_report.py}).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Hardware counters per cell update, benchmark application, $64^3$ cells, f32, GCC.}\label{r03:tab:pmu1}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    \textbf{Counter (meaning)} & \textbf{explicit\_cse} & \textbf{scalar\_cse}\\
+    \midrule
+    cycles & 682 & 1033\\
+    instructions & 61.6 & 337\\
+    \code{stalled_cycle_backend} (backend stall cycles) & 630 & 770\\
+    \code{eu_lsu_load_full} (cycles with the load queue full) & 420 & 297\\
+    \code{l1d_miss} / \code{l2_miss} (misses in L1D / in L2) & 3.49 / 2.97 & 3.44 / 2.98\\
+    \code{l1d_prefetch_hit} (L1D hits on prefetched lines) & 0.36 & 0.36\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+92\,\% of the vector kernel's cycles are backend stalls. Almost every L1 miss is also an L2
+miss, so the data comes from DRAM, and the L1 prefetcher is nearly idle. $682 / 2.97 \approx
+230$ cycles per DRAM line is close to one full memory latency per line: the misses hardly
+overlap. The scalar kernel has the same miss profile. Both kernels are limited by memory
+latency; the scalar one also executes 5.5 times as many instructions.
+
+\section{What the X60 memory system does}\label{r03:sec:mem}
+
+\paragraph{Latency.} A random pointer chase over 128~MB (each load's address comes from the
+previous load, so the misses cannot overlap) takes 357 cycles per miss with huge pages and
+about 500 with 4~KiB pages. With several independent chains, up to about 6 misses overlap;
+this caps random access at about 61 cycles per line.
+
+\paragraph{Streams.} The probe runs $R$ read and $W$ write streams at the same time, each over
+4~MB of f32 vectors, with huge pages. The start addresses are offset by 4160~bytes from each
+other, so that the streams do not compete for the same cache sets.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Cost of concurrent streams on one X60 core (log \texttt{p2-stream-sweep.txt}).}\label{r03:tab:streams}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    \textbf{Streams} & \textbf{cycles per 64-byte line} & \textbf{GB/s}\\
+    \midrule
+    1 read & 45 & 2.2\\
+    8 read & \textbf{17} & \textbf{6.0}\\
+    19 read & 75 & 1.4\\
+    24 / 32 read & 364 & 0.28\\
+    8 read + 8 write & 37 & 2.8\\
+    19 read + 23 write (the pattern of the pull kernel) & \textbf{181--184} & \textbf{0.56}\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The hardware prefetcher handles about 8 read streams well and gives up beyond about 20; then
+every line costs a full DRAM latency. The pull kernel, with 19 read and 23 write streams, is
+exactly in that regime. Scalar loads collapse at the same point, so the effect is not specific
+to vector loads.
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r03/figures/streams-chart}
+  \caption[Cost of concurrent streams on the X60]{Cycles per 64-byte line against the number
+    of concurrent read streams (logs \texttt{p2-stream-sweep.txt} and
+    \texttt{p2-prefetch.txt}). Dashed lines: the 42-stream pattern of the pull kernel, without
+    and with software prefetch.}\label{r03:fig:streams}
+\end{figure}
+
+\paragraph{Remedies tried on the 19 + 23 pattern.}
+\begin{itemize}
+  \item Software prefetch (\code{prefetch.r}) 128~bytes ahead of each read stream: from 181 to
+        90 cycles per line. \code{prefetch.r} and \code{prefetch.w} 256~bytes ahead: 86.
+  \item \textbf{The X60 executes \code{prefetch.r} and \code{prefetch.w} although its ISA
+        string does not list Zicbop.} Because they are HINT encodings
+        (\cref{r03:sec:bg-rvv}), they are safe on any RISC-V core.
+  \item \code{cbo.zero} on the destination lines, which avoids the write-allocate read, does
+        not help: 162 alone, 228 together with prefetch. Loading a value from each line ahead
+        of time (``touch-ahead'') makes it worse: 195--211. Turning transparent huge pages off
+        changes nothing: 179.
+\end{itemize}
+
+\begin{keyidea}[Root cause]
+The X60's hardware prefetcher fails on 42 concurrent streams, and the in-order core keeps only
+about 6 misses in flight. Two kinds of optimisation follow:
+\begin{enumerate}[label=(\alph*)]
+  \item software prefetch, which a code generator can emit cheaply;
+  \item fewer concurrent streams: in-place streaming, or splitting the update into passes that
+        touch only a few streams each.
+\end{enumerate}
+\end{keyidea}
+
+\section{Instruction costs and the arithmetic limit}\label{r03:sec:ops}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{X60 cycles per instruction, LMUL~1, VLEN~256 (log \texttt{p2-ops.txt}). Throughput:
+    cycles between two independent instructions; latency: cycles until the result can be
+    used.}\label{r03:tab:ops}
+  \begin{tabularx}{\linewidth}{@{}Xrrl@{}}
+    \toprule
+    \textbf{Instruction} & \textbf{e32} & \textbf{e64} & \textbf{scalar}\\
+    \midrule
+    \code{vfadd}/\code{vfmul}/\code{vfmacc} throughput & 1.0 & 1.0 & 1.0 (f32), 1.0/1.3 (f64)\\
+    latency add / mul / FMA & 4 / 4 / 5 & 4 / 5 / 6 & 4 (\code{fadd.s})\\
+    .vf forms, throughput & 1.0 & 1.0 &\\
+    \code{vfdiv} throughput / latency & 38 / 38 & 40 / 12 & 15 (\code{fdiv.s}), 24 (\code{fdiv.d})\\
+    \code{vfmv.v.f} (splat) & 4 & 4 &\\
+    \code{vle} from L1, aligned / not aligned to the element size & 2 / 4 & 2 / 4 & 1.3 (\code{flw})\\
+    \code{vse} to L1 & 2.6 & 2.6 & 1.5 (\code{fsw})\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The vector unit completes one full-width (256-bit) floating-point instruction per cycle, at
+e32 and at e64. That is 8 f32 or 4 f64 operations per cycle, against one for the scalar unit.
+The arithmetic limit of vectorization is therefore \sx{8} in single and \sx{4} in double
+precision: the goals of this work are the hardware's limits. Vector memory instructions are
+relatively expensive (one 8-lane load costs as much as 2 to 4 scalar loads), and the one
+division per 8 cells costs 38 cycles.
+
+Two errors in the probe itself were found and fixed while measuring. Linux discards the vector
+configuration on every system call, so the system call that starts the cycle counter must come
+before the instruction that sets up the vector unit (\code{vsetvli}); otherwise the next vector
+instruction aborts the program with \code{SIGILL}. And 64-bit vector loads from an address that
+is only 4-byte aligned abort it with \code{SIGBUS}. A third error, in the latency probe of
+\cref{r03:sec:mem}: its first version kept the chain pointers in an array, which the compiler
+placed on the stack. The store back to the stack serialised the chains, so that misses seemed
+not to overlap at all from 4 chains on. The fixed version keeps the pointers in registers.

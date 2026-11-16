@@ -1,0 +1,14 @@
+== lab3: old vs new RVV selector Thu Nov 12 12:31:16 PM CST 2026
+gcc-O3-f32-rvv-cse	lab3	 	best_mlups=2.216	median_mlups=2.197	cycles_per_cell=726.2	insns_per_cell=50.6	ipc=0.070	energy=3.955785294018e+02	mass=2.621439995539e+05	wsum=2.354173325339e+03
+gcc-O3-f32-rvv-cse+vf2	lab3	 	best_mlups=2.206	median_mlups=2.168	cycles_per_cell=732.2	insns_per_cell=46.2	ipc=0.063	energy=3.955785272950e+02	mass=2.621439995742e+05	wsum=2.354173418826e+03
+gcc-O3-f32-rvv-cse+bpf=128	lab3	 	best_mlups=4.854	median_mlups=4.739	cycles_per_cell=334.1	insns_per_cell=68.0	ipc=0.203	energy=3.955785294018e+02	mass=2.621439995539e+05	wsum=2.354173325339e+03
+gcc-O3-f32-rvv-cse+bpf=128+vf2	lab3	 	best_mlups=4.821	median_mlups=4.690	cycles_per_cell=337.4	insns_per_cell=64.2	ipc=0.190	energy=3.955785272950e+02	mass=2.621439995742e+05	wsum=2.354173418826e+03
+gcc-O3-f64-rvv-cse+bpf=128	lab3	 	best_mlups=2.437	median_mlups=2.288	cycles_per_cell=684.7	insns_per_cell=131.8	ipc=0.192	energy=3.955776514995e+02	mass=2.621440000000e+05	wsum=2.354169291677e+03
+gcc-O3-f64-rvv-cse+bpf=128+vf2	lab3	 	best_mlups=2.591	median_mlups=2.444	cycles_per_cell=642.3	insns_per_cell=124.2	ipc=0.193	energy=3.955776514995e+02	mass=2.621440000000e+05	wsum=2.354169291677e+03
+gcc-O3-f32-rvv-cse+aa	lab3	AA=1 	best_mlups=2.827	median_mlups=2.334	cycles_per_cell=654.0	insns_per_cell=61.0	ipc=0.093	energy=3.955785279371e+02	mass=2.621439995440e+05	wsum=2.354173326206e+03
+gcc-O3-f32-rvv-cse+aa+vf2	lab3	AA=1 	best_mlups=3.095	median_mlups=2.470	cycles_per_cell=608.9	insns_per_cell=42.3	ipc=0.069	energy=3.955785279531e+02	mass=2.621439995828e+05	wsum=2.354173415336e+03
+gcc-O3-f32-rvv-cse+aa+bpf=128	lab3	AA=1 	best_mlups=7.307	median_mlups=6.905	cycles_per_cell=233.6	insns_per_cell=70.5	ipc=0.302	energy=3.955785279371e+02	mass=2.621439995440e+05	wsum=2.354173326206e+03
+gcc-O3-f32-rvv-cse+aa+bpf=128+vf2	lab3	AA=1 	best_mlups=8.879	median_mlups=7.939	cycles_per_cell=191.5	insns_per_cell=51.5	ipc=0.269	energy=3.955785279531e+02	mass=2.621439995828e+05	wsum=2.354173415336e+03
+gcc-O3-f64-rvv-cse+aa+bpf=128	lab3	AA=1 	best_mlups=3.860	median_mlups=3.306	cycles_per_cell=461.1	insns_per_cell=138.2	ipc=0.300	energy=3.955776514995e+02	mass=2.621440000000e+05	wsum=2.354169291677e+03
+gcc-O3-f64-rvv-cse+aa+bpf=128+vf2	lab3	AA=1 	best_mlups=4.091	median_mlups=3.716	cycles_per_cell=433.4	insns_per_cell=100.8	ipc=0.233	energy=3.955776514995e+02	mass=2.621440000000e+05	wsum=2.354169291677e+03
+== done Thu Nov 12 12:35:30 PM CST 2026

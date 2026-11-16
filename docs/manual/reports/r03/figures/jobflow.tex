@@ -1,0 +1,27 @@
+% A guarded session script (misc/x60-lab/queue_e2e_cg.sh; queue_lab3.sh and queue_e2e_halo.sh follow
+% the same pattern): changed files stay installed only if the board's tests pass. Right: the keep rule
+% that queue_e2e_halo.sh applied to the row-pointer change of run C.
+\begin{tikzpicture}[every node/.style={font=\scriptsize},node distance=3mm and 6mm,
+    r03step/.append style={font=\scriptsize}]
+  \node[r03info,r03step=42mm] (s0) {laptop: pack the changed files into an archive and copy it to the board};
+  \node[r03step=42mm,below=of s0] (s1) {start in a detached \texttt{screen}; wait until the previous session script has finished};
+  \node[r03step=42mm,below=of s1] (s2) {back up the board's copies of the files; unpack the archive};
+  \node[r03decide,below=6mm of s2] (g) {\ps{} RVV tests\\on the board\\pass?};
+  \node[r03no,r03step=42mm,right=12mm of g] (r) {restore the backup, remove new files, stop};
+  \node[r03step=42mm,below=6mm of g] (s3) {delete the generated sources, so that they are regenerated};
+  \node[r03step=42mm,below=of s3] (s4) {for f32 and f64: configure, build every variant};
+  \node[r03step=42mm,below=of s4] (s5) {run each variant 3$\times$ on core 2, $64^3$ cells, 200 steps};
+  \node[r03ok,r03step=42mm,below=of s5] (s6) {log: best MLUP/s and checksum of each variant};
+  \foreach \u/\v in {s0/s1,s1/s2,s2/g,s3/s4,s4/s5,s5/s6} \draw[r03arrow] (\u) -- (\v);
+  \draw[r03arrow] (g) -- node[above] {no} (r);
+  \draw[r03arrow] (g) -- node[right] {yes} (s3);
+
+  % the keep rule for the row-pointer change
+  \node[r03decide,right=14mm of s4] (k) {AA + prefetch gained\\$\ge 2$\,\% in f32\\and in f64?};
+  \node[r03box,text width=38mm,font=\scriptsize,above=7mm of k] (kk) {next session script, before it installs its own change};
+  \node[r03box,text width=26mm,font=\scriptsize,below left=8mm and -6mm of k] (keep) {keep the \ps{} change};
+  \node[r03box,text width=26mm,font=\scriptsize,below right=8mm and -6mm of k] (rev) {restore the previous \ps{} files};
+  \draw[r03arrow] (kk) -- (k);
+  \draw[r03arrow] (k) -- node[left] {yes} (keep);
+  \draw[r03arrow] (k) -- node[right] {no} (rev);
+\end{tikzpicture}

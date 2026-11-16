@@ -1,0 +1,183 @@
+\chapter{Verification}\label{r03:ch:verification}
+
+\emph{How each change was shown to compute the same results before its speed was measured.}
+
+Every change was checked for correctness before its speed counted. Five kinds of check were
+used, and \cref{r03:fig:vermap} shows which change each of them covered:
+\begin{enumerate}
+  \item the \ps{} test suite, on the laptop and natively on the board;
+  \item waLBerla's scenario and halo-exchange tests, and \term{mutation checks}: the code under
+        test is broken on purpose, and the test must then fail;
+  \item the application's checksum, which must agree between variants and between different
+        divisions of the domain into blocks;
+  \item QEMU runs of the lab kernels on the laptop;
+  \item the checksums printed by the board runs.
+\end{enumerate}
+Runs marked ``repeated for this report'' were made again on the committed code (\rcommitps,
+\rcommitwl) while this report was written.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/verification-map}}
+  \caption[Which check covered which change]{Which check covered which change. Numbers in brackets
+    are the sections that describe the change.}\label{r03:fig:vermap}
+\end{figure}
+
+Changes to \ps{} reached the board through a guarded session script
+(\cref{r03:fig:jobflow}). It installed the changed files, ran \ps{}'s RVV tests natively on the
+X60, and restored the previous files if any test failed. Only then did it build and measure.
+
+\begin{figure}[htbp]
+  \centering
+  \input{reports/r03/figures/jobflow}
+  \caption[A guarded session script]{A guarded session script: changed files stay installed
+    only if the tests pass on the board. The right-hand part is the rule that decided whether
+    the row-pointer change was kept (\cref{r03:sec:res-cg}).}\label{r03:fig:jobflow}
+\end{figure}
+
+\section{pystencils}\label{r03:sec:ver-ps}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{\ps{} test runs.}\label{r03:tab:ver-ps}
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}Xl@{}}
+    \toprule
+    \textbf{Where, when} & \textbf{Scope} & \textbf{Result}\\
+    \midrule
+    laptop, repeated for this report & \file{tests/nbackend} and \file{tests/codegen} at
+      \texttt{a81dc547} & 435 passed, 15 skipped\\
+    board, with software prefetch & RVV target: code-generation and execution tests, and
+      \file{test_vectorization.py}; compiled and run natively on the X60 & 130 passed\\
+    board, with the new instruction selection & the same (second attempt, see
+      \cref{r03:sec:ver-bugs}) & 145 passed\\
+    board, with row pointers and \code{in_register} & the same & 148 passed\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Of the 15 tests skipped on the laptop, 13 need RVV hardware (those in
+\file{test_rvv_execution.py}), one needs a GPU, and one needs the Python package \code{islpy}.
+The board runs are in the logs \file{pytest-rvv.log}, \file{pytest-vf2.log} and
+\file{pytest-cg.log} (Appendix~\ref{r03:app:evidence}).
+
+\section{waLBerla}\label{r03:sec:ver-wl}
+
+\paragraph{Scenario and halo-exchange tests.} In the laptop's x86 test build (GCC~16, with MPI):
+\begin{shcode}
+ctest -R "LbmScenarios|HaloExchange|CommunicationHiding"
+\end{shcode}
+\textbf{24 of 24 passed} at \texttt{efa2b70c} (repeated for this report, after regenerating the
+scenario sources, which use \code{LbmBulk}). The tests are the LBM scenarios FullyPeriodic,
+AAMatchesPull, MirroredHalfChannel and FreeSlipPipe, and the v8 core's tests
+\code{testHaloExchangeInterfacesHost}, \code{testHostFieldPackInfo},
+\code{testStreamPullPackInfo} and \code{testCommunicationHiding}, each with 1, 2 and 4
+processes.
+
+\paragraph{Mutation checks.} A test that cannot fail proves nothing. The AA halo exchange was
+therefore broken on purpose, in three ways:
+\begin{itemize}
+  \item Without the AA push exchange's check whether a ghost slot was written by the sender,
+        AAMatchesPull fails with 4 processes. It passes with 1 and 2, where the unpack order
+        happens to let the correct value win: exactly the hazard the check removes.
+  \item Sending the direct instead of the inverse slots in the AA pull exchange's \code{pack}
+        fails with 2 and 4 processes.
+  \item After the slot-by-slot rewrite: with \code{writtenGhosts} returning the whole ghost layer
+        (no slots skipped), AAMatchesPull fails with 4 processes, the only case with edges
+        between different blocks.
+\end{itemize}
+
+\section{The application's checksum on x86}\label{r03:sec:ver-app}
+
+The application prints the sum of $|u|^2$ after the run (\cref{r03:sec:app}). In double
+precision all variants must print exactly the same value, for any division of the same domain
+into blocks: scalar and vector, pull and AA, single-pass and split, with and without output in
+the timed steps.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Checksum after N time steps (2 warm-up steps), laptop x86 build at \texttt{efa2b70c},
+    f64, vector variants with x86 AVX instructions (repeated for this report). Each value is
+    printed, to all 12 digits, by all five variants \texttt{scalar\_cse}, \texttt{scalar\_cse\_aa},
+    \texttt{explicit\_cse}, \texttt{explicit\_cse\_aa} and \texttt{explicit\_cse\_aa\_split}, each
+    with \texttt{SWEEPGEN\_LBM\_OUTPUT=every} and \texttt{=last}: 60 runs.}\label{r03:tab:ver-app}
+  \begin{tabular}{@{}lrr@{}}
+    \toprule
+    \textbf{Processes $\times$ block} & \textbf{steps} & \textbf{checksum}\\
+    \midrule
+    $1\times64^3$ and $8\times32^3$ & 20 & 395.489692731\\
+    $1\times64^3$ and $8\times32^3$ & 21 & 395.575509355\\
+    $2\times24^3$ & 101 & 40.7081176884\\
+    $6\times24^3$ & 101 & 125.363104502\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The table covers both kinds of halo traffic, the periodic copy of one block onto itself
+(\code{localCopy}) and the exchange between 2, 6 and 8 processes (\code{pack}/\code{unpack}),
+after even and after odd numbers of steps. The same agreement was recorded when AA streaming was
+first implemented, before the slot-by-slot rewrite and before the split kernel and the kernels
+without output existed.
+
+\section{QEMU runs of the lab kernels}\label{r03:sec:ver-qemu}
+
+The lab driver with one kernel, cross-compiled statically with GCC~16 and run under
+\code{qemu-riscv64 -cpu rv64,v=true,vlen=256,zicbop=true}, prints the three checksums of
+\cref{r03:sec:lab}: $|u|^2$ sum, mass and weighted PDF sum. The recipe is in
+\cref{r03:sec:repro-qemu}.
+\begin{itemize}
+  \item The generated f64 AA kernel with prefetch is bit-identical to the generated f64 pull
+        kernel ($N = 16$ and 32). This confirms lbmpy's AA kernels and the driver's ghost-layer
+        handling for AA at the same time. f32 differs by about $10^{-8}$, because of FMA
+        rounding.
+  \item The new instruction selection leaves the f64 checksums unchanged to 13 digits.
+  \item With row pointers and \code{in_register}, all three checksums are bit-identical to those
+        of the previous kernels, f32 and f64, AA and pull. The kernels without output keep the
+        weighted PDF sum of the kernel they derive from: the PDFs are unchanged.
+  \item The f64 split kernels agree with the generated AA kernel in all printed digits of all
+        three checksums, at $16^3$ cells $\times$ 4 steps and $32^3 \times 10$ steps, for every
+        BY, GM and GP tried. f32 differs by $3.5\cdot10^{-7}$, because the sums are formed in a
+        different order.
+\end{itemize}
+
+\section{Checksums of the board runs}\label{r03:sec:ver-board}
+
+\begin{itemize}
+  \item Run~B (\cref{r03:sec:res-runs}), GCC, f64: all seven variants print the checksum
+        $3.951592090140\cdot10^{2}$: scalar and RVV, pull and AA, with and without prefetch (log
+        \file{e2e-aa-gcc-f64.log}).
+  \item Run~B, GCC, f32: pull and AA agree to $8\cdot10^{-8}$ (RVV) and $4\cdot10^{-8}$ (scalar);
+        \code{explicit_cse} and \code{explicit_cse_pf} agree exactly, as do
+        \code{explicit_cse_aa} and \code{explicit_cse_aa_pf} (log \file{e2e-aa-gcc-f32.log}).
+  \item Run~C, f32 and f64: every checksum is identical to run~B's, digit for digit (logs
+        \file{e2e-cg-gcc-f32.log}, \file{e2e-cg-gcc-f64.log}).
+  \item Acceptance test of the new instruction selection in the lab: checksums of the original
+        and the new kernels within $5\cdot10^{-9}$ (f32) and identical (f64) (log
+        \file{lab3-gate.log}).
+  \item 4 and 8 processes (\cref{r03:sec:res-mpi}): the checksums of all variants differ by at
+        most $2.9\cdot10^{-6}$ (f32) and 0 (f64) (log \file{e2e-mpi.log}).
+\end{itemize}
+
+\section{Errors found on the way}\label{r03:sec:ver-bugs}
+
+\begin{description}
+  \item[Initialisation of the pull benchmark.] The benchmark as it was before this work
+        corrupted border PDFs with a halo exchange before the first step
+        (\cref{r03:sec:wl-app}). Found because the result depended on the division into blocks.
+  \item[A test that could not test.] The first board test of the new instruction selection
+        summed all forms into one expression. sympy simplified it, so the \code{vfrsub_vf} that
+        the test looked for never appeared, and the test failed before any numbers were
+        compared. The guarded session script restored the old instruction selection, as designed
+        (\cref{r03:fig:jobflow}). The test now uses one output per form; the second attempt
+        passed (145 tests).
+  \item[Order of the passes in the split driver.] A first version of \code{lbm_split.py} ran
+        the macroscopic pass of the version without output after the collision passes, so the
+        collision read the previous block's scratch values. The weighted PDF sum under QEMU
+        showed it (7696 instead of 38.72 at $16^3$). Each version now keeps its own order of
+        passes.
+  \item[lbmpy's equilibrium.] Copying the textbook formula would have generated a slightly
+        different model. The symbolic comparison with lbmpy caught it (\cref{r03:sec:wl-split}).
+  \item[Measurement artefacts.] The fastest step of an AA kernel is always an even step
+        (\cref{r03:sec:lab}). Measured by fastest step, the f32 AA kernel seemed 21\,\% slower in
+        the application than in the lab; by cycle average the gap is 15\,\%
+        (\cref{r03:tab:labapp}). The errors found in the probes themselves are described at the end of \cref{r03:sec:ops}.
+\end{description}

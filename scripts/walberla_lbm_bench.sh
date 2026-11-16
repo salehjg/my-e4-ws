@@ -9,7 +9,8 @@
 #   explicit  Target.CurrentCPU = RISCV_RVV, vectorized: our RVV backend
 # each with lbmpy's default optimisation and with global CSE (_cse), plus
 #   explicit_pf / explicit_cse_pf   explicit with software prefetch 128 B ahead (docs/notes3)
-#   scalar_cse_aa / explicit_cse_aa / explicit_cse_aa_pf   in-place AA streaming instead of pull
+#   scalar_cse_aa / autovec_cse_aa / explicit_cse_aa / explicit_cse_aa_pf   in-place AA streaming instead of pull
+#   explicit_cse_aa_split   AA with the direction-split stream/collide (lbm_split.py)
 # TARGETS="..." (env) overrides the list, e.g. TARGETS="SweepgenLbmCPU_explicit_cse_pf".
 #
 # Run it detached, so it survives a lost connection:
@@ -36,7 +37,8 @@ if [[ -z "${TARGETS:-}" ]]; then
     TARGETS=""
     for v in scalar autovec explicit; do TARGETS="${TARGETS} SweepgenLbmCPU_${v} SweepgenLbmCPU_${v}_cse"; done
     TARGETS="${TARGETS} SweepgenLbmCPU_explicit_pf SweepgenLbmCPU_explicit_cse_pf"
-    TARGETS="${TARGETS} SweepgenLbmCPU_scalar_cse_aa SweepgenLbmCPU_explicit_cse_aa SweepgenLbmCPU_explicit_cse_aa_pf"
+    TARGETS="${TARGETS} SweepgenLbmCPU_scalar_cse_aa SweepgenLbmCPU_autovec_cse_aa SweepgenLbmCPU_explicit_cse_aa SweepgenLbmCPU_explicit_cse_aa_pf"
+    TARGETS="${TARGETS} SweepgenLbmCPU_explicit_cse_aa_split"
 fi
 APPDIR="${BUILD}/apps/benchmarks/SweepgenLbmCPU"
 

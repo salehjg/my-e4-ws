@@ -1,0 +1,47 @@
+== start Sat Nov 14 09:29:42 AM CST 2026
+== scalar f32 1 core(s) 09:29:42 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f32-1core.log
+== autovec f32 1 core(s) 09:42:54 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f32-1core.log
+== rvv f32 1 core(s) 09:56:40 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f32-1core.log
+== scalar f32 4 core(s) 10:13:54 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f32-4core.log
+== autovec f32 4 core(s) 10:21:36 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f32-4core.log
+== rvv f32 4 core(s) 10:29:18 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f32-4core.log
+== scalar f32 8 core(s) 10:36:26 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f32-8core.log
+== autovec f32 8 core(s) 10:44:56 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f32-8core.log
+== rvv f32 8 core(s) 10:53:26 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f32-8core.log
+== scalar f64 1 core(s) 11:02:35 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f64-1core.log
+== autovec f64 1 core(s) 11:19:03 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f64-1core.log
+== rvv f64 1 core(s) 11:35:53 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f64-1core.log
+== scalar f64 4 core(s) 11:57:04 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f64-4core.log
+== autovec f64 4 core(s) 12:08:35 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f64-4core.log
+== rvv f64 4 core(s) 12:20:06 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f64-4core.log
+== scalar f64 8 core(s) 12:32:11 -> /home/bananapi/saleh/presentation-logs/walberla-scalar-f64-8core.log
+== autovec f64 8 core(s) 12:46:30 -> /home/bananapi/saleh/presentation-logs/walberla-autovec-f64-8core.log
+== rvv f64 8 core(s) 13:00:52 -> /home/bananapi/saleh/presentation-logs/walberla-rvv-f64-8core.log
+
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | f32 1c | f64 1c | f32 4c | f64 4c | f32 8c | f64 8c |
+|---|---|---|---|---|---|---|
+| scalar | 1.42 (1.00x) | 1.02 (1.00x) | 5.50 (1.00x) | 3.59 (1.00x) | 9.64 (1.00x) | 5.45 (1.00x) |
+| scalar_cse | 1.59 (1.12x) | 1.08 (1.06x) | 5.83 (1.06x) | 3.74 (1.04x) | 9.90 (1.03x) | 5.60 (1.03x) |
+| autovec | 1.41 (1.00x) | 1.02 (1.00x) | 5.51 (1.00x) | 3.57 (0.99x) | 9.64 (1.00x) | 5.44 (1.00x) |
+| autovec_cse | 1.59 (1.12x) | 1.08 (1.06x) | 5.78 (1.05x) | 3.74 (1.04x) | 9.99 (1.04x) | 5.60 (1.03x) |
+| explicit_cse | 2.46 (1.73x) | 1.29 (1.26x) | 7.98 (1.45x) | 4.17 (1.16x) | 12.02 (1.25x) | 5.85 (1.08x) |
+| explicit_cse_pf | 5.01 (3.54x) | 2.75 (2.69x) | 12.46 (2.27x) | 6.90 (1.92x) | 15.72 (1.63x) | 7.57 (1.39x) |
+| scalar_cse_aa | 2.12 (1.49x) | 1.51 (1.48x) | 7.43 (1.35x) | 5.39 (1.50x) | 13.63 (1.41x) | 7.98 (1.47x) |
+| autovec_cse_aa | 2.12 (1.50x) | 1.51 (1.48x) | 7.56 (1.37x) | 5.42 (1.51x) | 13.70 (1.42x) | 8.05 (1.48x) |
+| explicit_cse_aa | 3.03 (2.14x) | 1.52 (1.49x) | 9.34 (1.70x) | 5.24 (1.46x) | 15.45 (1.60x) | 7.75 (1.42x) |
+| explicit_cse_aa_pf | 7.27 (5.13x) | 4.30 (4.22x) | 16.98 (3.09x) | 10.59 (2.95x) | 22.61 (2.35x) | 10.99 (2.02x) |
+| explicit_cse_aa_split | 5.91 (4.17x) | 4.77 (4.68x) | 17.77 (3.23x) | 10.83 (3.02x) | 22.44 (2.33x) | 10.99 (2.02x) |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| f32 1c | 3.951639276460e+02 | 3.951713597040e+02 | 1.9e-05 |
+| f64 1c | 3.951592090140e+02 | 3.951592090140e+02 | 0.0e+00 |
+| f32 4c | 1.590780208510e+03 | 1.590810274090e+03 | 1.9e-05 |
+| f64 4c | 1.590760326940e+03 | 1.590760326940e+03 | 0.0e+00 |
+| f32 8c | 3.181560417020e+03 | 3.181620548170e+03 | 1.9e-05 |
+| f64 8c | 3.181520653870e+03 | 3.181520653870e+03 | 0.0e+00 |
+== ALL DONE Sat Nov 14 01:18:12 PM CST 2026

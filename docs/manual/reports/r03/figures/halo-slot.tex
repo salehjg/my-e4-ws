@@ -1,0 +1,28 @@
+% localCopy on an x face, direction W: the 5 PDF slots with c_x = -1 (D3Q19 slots 3, 7, 9,
+% 13, 17), each in its own slice of the
+% fzyx field. Before: for every cell, all 5 slots (the access order jumps between slices). After: for
+% every slot, all cells of the face (one slice at a time). Numbers = order of the copies.
+\begin{tikzpicture}[every node/.style={font=\scriptsize}]
+  \def\rthreeSlices#1#2#3{% x offset, title, order macro (1 = cell-major, 2 = slot-major)
+    \node[font=\footnotesize\bfseries,anchor=west] at (#1,1.55) {#2};
+    \foreach \q/\slotname in {0/3 (W),1/7 (NW),2/9 (SW),3/13 (TW),4/17 (BW)} {
+      \pgfmathsetmacro{\rthreeSX}{#1+\q*1.45}
+      \node[r03label] at (\rthreeSX+0.5,1.15) {\slotname};
+      \foreach \c in {0,...,3} {
+        \pgfmathsetmacro{\rthreeSY}{0.75-\c*0.42}
+        \draw[psgray!50,line width=0.2pt] (\rthreeSX,\rthreeSY) rectangle ++(1.0,-0.42);
+        \fill[psblue!14] (\rthreeSX+0.62,\rthreeSY) rectangle ++(0.38,-0.42);
+        \ifnum#3=1 \pgfmathtruncatemacro{\rthreeOrd}{\c*5+\q+1}\else\pgfmathtruncatemacro{\rthreeOrd}{\q*4+\c+1}\fi
+        \node[font=\tiny\bfseries,text=psblue!80!black] at (\rthreeSX+0.81,\rthreeSY-0.21) {\rthreeOrd};
+      }
+    }
+  }
+  \rthreeSlices{0}{before: cells outside, slots inside}{1}
+  \rthreeSlices{7.6}{after: slots outside, cells inside}{2}
+  \node[r03label,anchor=north west,text width=146mm] at (0,-1.1)
+    {Columns: the 5 slots with $c_x = -1$ (slot index and direction). Each small grid is one slot's slice of the field, seen on the face (rows: 4 of the 64 cells along
+     $y$); shaded: the column copied. Before, consecutive copies hop between 5 slices, and the AA push
+     variant tests per value whether the slot was written. After, each pass walks one slice; the AA
+     push variant copies a precomputed box per slot (\texttt{writtenGhosts}). On $y$ and $z$ faces the
+     copied runs are contiguous rows of 64 cells.};
+\end{tikzpicture}

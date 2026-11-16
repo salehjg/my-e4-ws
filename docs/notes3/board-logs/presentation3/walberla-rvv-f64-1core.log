@@ -1,0 +1,46 @@
+== f64, 1 core(s), 64^3 cells per core, 200 steps, 3 runs: explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split
+== start Sat Nov 14 11:35:53 AM CST 2026, load: 3.09 3.14 3.74
+== repo (no git), build dir /home/bananapi/saleh/walberla-build
+== build SweepgenLbmCPU_explicit_cse 11:39:03
+   RVV instructions in the sweeps: 808
+== build SweepgenLbmCPU_explicit_cse_pf 11:41:17
+   RVV instructions in the sweeps: 808
+== build SweepgenLbmCPU_explicit_cse_aa 11:43:22
+   RVV instructions in the sweeps: 1183
+== build SweepgenLbmCPU_explicit_cse_aa_pf 11:45:38
+   RVV instructions in the sweeps: 1183
+== build SweepgenLbmCPU_explicit_cse_aa_split 11:47:48
+   RVV instructions in the sweeps: 2047
+== run Sat Nov 14 11:50:39 AM CST 2026
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=64 cells=262144 steps=200 output=every seconds=40.6757577427 mlups=1.28894464196 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=64 cells=262144 steps=200 output=every seconds=40.7207457709 mlups=1.28752062389 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=64 cells=262144 steps=200 output=every seconds=40.7862561556 mlups=1.28545262404 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=64 cells=262144 steps=200 output=every seconds=19.2061234413 mlups=2.7297960549 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=64 cells=262144 steps=200 output=every seconds=19.1486172915 mlups=2.73799403904 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=64 cells=262144 steps=200 output=every seconds=19.0959734139 mlups=2.74554215507 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.4489946377 mlups=1.52192540164 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.655988146 mlups=1.51283523584 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=64 cells=262144 steps=200 output=every seconds=34.7001292206 mlups=1.51091079998 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=64 cells=262144 steps=200 output=every seconds=12.1969297448 mlups=4.29852439073 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=64 cells=262144 steps=200 output=every seconds=12.3035993429 mlups=4.26125709549 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=64 cells=262144 steps=200 output=every seconds=12.3976603329 mlups=4.22892695818 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_split real_t=64 cells=262144 steps=200 output=every seconds=11.7422152865 mlups=4.46498371226 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_split real_t=64 cells=262144 steps=200 output=every seconds=12.2124782374 mlups=4.29305166246 energy=395.159209014
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_split real_t=64 cells=262144 steps=200 output=every seconds=10.9893673709 mlups=4.77086607723 energy=395.159209014
+
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | f64, 1 core(s) |
+|---|---|
+| explicit_cse | 1.29 |
+| explicit_cse_pf | 2.75 |
+| explicit_cse_aa | 1.52 |
+| explicit_cse_aa_pf | 4.30 |
+| explicit_cse_aa_split | 4.77 |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| f64, 1 core(s) | 3.951592090140e+02 | 3.951592090140e+02 | 0.0e+00 |
+== done Sat Nov 14 11:57:04 AM CST 2026

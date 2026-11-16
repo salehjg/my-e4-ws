@@ -1,0 +1,34 @@
+== f32, 4 core(s), 64^3 cells per core, 200 steps, 3 runs: scalar scalar_cse scalar_cse_aa
+== start Sat Nov 14 10:13:54 AM CST 2026, load: 3.08 3.26 3.29
+== repo (no git), build dir /home/bananapi/saleh/walberla-build-gcc-f32
+== build SweepgenLbmCPU_scalar 10:15:59
+   RVV instructions in the sweeps: 0
+== build SweepgenLbmCPU_scalar_cse 10:16:01
+   RVV instructions in the sweeps: 0
+== build SweepgenLbmCPU_scalar_cse_aa 10:16:03
+   RVV instructions in the sweeps: 0
+== run Sat Nov 14 10:16:04 AM CST 2026
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=1048576 steps=200 output=every seconds=38.3102171323 mlups=5.47413237769 energy=1590.8073895
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=1048576 steps=200 output=every seconds=38.1350342182 mlups=5.49927918775 energy=1590.8073895
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=1048576 steps=200 output=every seconds=38.1697272457 mlups=5.49428081186 energy=1590.8073895
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=1048576 steps=200 output=every seconds=36.1806403016 mlups=5.79633744046 energy=1590.81015132
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=1048576 steps=200 output=every seconds=36.2368779884 mlups=5.78734183632 energy=1590.81015132
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=1048576 steps=200 output=every seconds=35.9840102524 mlups=5.82801078949 energy=1590.81015132
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=1048576 steps=200 output=every seconds=28.3951510515 mlups=7.3855990278 energy=1590.81027409
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=1048576 steps=200 output=every seconds=28.2363942131 mlups=7.42712395986 energy=1590.81027409
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=1048576 steps=200 output=every seconds=28.3463421144 mlups=7.39831612676 energy=1590.81027409
+
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | f32, 4 core(s) |
+|---|---|
+| scalar | 5.50 (1.00x) |
+| scalar_cse | 5.83 (1.06x) |
+| scalar_cse_aa | 7.43 (1.35x) |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| f32, 4 core(s) | 1.590807389500e+03 | 1.590810274090e+03 | 1.8e-06 |
+== done Sat Nov 14 10:21:36 AM CST 2026

@@ -1,0 +1,47 @@
+% The SIMD scheme of the generated sweep: fzyx field, x innermost and contiguous, one LMUL-1 vector
+% register (VLEN 256) = 8 f32 / 4 f64 lanes; 64 interior cells = 8 vector iterations per row, plus the
+% scalar remainder loop pystencils always emits (empty here). Counts per iteration: the f32 odd AA
+% kernel of Listing r03:lst:aa-odd (19 loads, 23 stores, 23 prefetches) and table r03:tab:selector-insns (~150 FP ops).
+\begin{tikzpicture}[every node/.style={font=\scriptsize}]
+  \def\rthreeCW{0.2}
+  % ---- (a) one row of one PDF slice ----------------------------------------------------
+  \node[anchor=west,font=\footnotesize\bfseries] at (-0.1,1.25) {(a) one row of one PDF slice in memory};
+  \foreach \i in {0,...,67} {
+    \pgfmathsetmacro{\xx}{\i*\rthreeCW}
+    \ifnum\i=0 \def\rthreeFC{psgray!35}\else\ifnum\i>64 \def\rthreeFC{psgray!35}\else
+      \pgfmathtruncatemacro{\chunk}{mod(div(\i-1,8),2)}
+      \ifnum\chunk=0 \def\rthreeFC{psblue!22}\else\def\rthreeFC{psblue!8}\fi\fi\fi
+    \ifnum\i>65 \def\rthreeFC{white}\fi
+    \fill[\rthreeFC] (\xx,0) rectangle ++(\rthreeCW,0.45);
+    \draw[psgray!60,line width=0.2pt] (\xx,0) rectangle ++(\rthreeCW,0.45);
+  }
+  \foreach \i in {66,67} \fill[pattern=north east lines,pattern color=psgray!60] (\i*\rthreeCW,0) rectangle ++(\rthreeCW,0.45);
+  \draw[decorate,decoration={brace,amplitude=3pt}] (0.2,0.55) -- node[above=2pt] {interior $x = 0 \ldots 63$} (13.0,0.55);
+  \node[anchor=north] at (0.1,-0.02) {ghost};
+  \node[anchor=north east] at (13.6,-0.02) {ghost, 2 pad};
+  \foreach \k in {0,...,7} \node[text=psblue!80!black] at (\k*8*\rthreeCW+0.2+4*\rthreeCW,0.225) {\tiny it.~\the\numexpr\k+1\relax};
+  \node[r03label,anchor=west] at (0,-0.72)
+    {68 floats = 272~B per row (rows padded to 16~B); 19 such slices, one per direction, in the fzyx layout};
+
+  % ---- (b) one vector register ---------------------------------------------------------------
+  \node[anchor=west,font=\footnotesize\bfseries] at (-0.1,-1.25) {(b) one vector register, LMUL 1, VLEN 256: one \texttt{vle32.v} loads one shaded block of (a)};
+  \foreach \l in {0,...,7} \node[r03lane,minimum width=8mm] at (0.8+\l*0.8,-1.9) {$x{+}\l$};
+  \node[anchor=west] at (7.25,-1.9) {\texttt{vfloat32m1\_t}: 8 lanes of 32 bits (f32)};
+  \foreach \l in {0,...,3} \node[r03lane,minimum width=16mm,fill=psteal!15,draw=psteal!80!black] at (1.2+\l*1.6,-2.55) {$x{+}\l$};
+  \node[anchor=west] at (7.25,-2.55) {\texttt{vfloat64m1\_t}: 4 lanes of 64 bits (f64)};
+
+  % ---- (c) one vector iteration ----------------------------------------------------------------
+  \node[anchor=west,font=\footnotesize\bfseries] at (-0.1,-3.3) {(c) one iteration of the vector loop (8 cells, f32)};
+  \node[r03code,text width=138mm,align=left,anchor=north west] at (0,-3.55) {%
+for x in 0, 8, 16, ... (step 8):            // then a scalar remainder loop for the last (64 mod 8 = 0) cells\\
+\ \ 23 prefetches   prefetch\_read/write(\&row\_k[x + 32])     // 128 B ahead, one per access\\
+\ \ 19 loads        v\_i = vle32(\&row\_i[x])                  // one row pointer per slice and offset\\
+\ \ $\approx$150 FP ops moments, equilibrium, relaxation; 64 of them fused (vfmacc, vfmsac, ...)\\
+\ \ 23 stores       vse32(\&row\_k[x], ...)                   // 19 PDF slots + rho + 3 velocity components};
+
+  % ---- (d) register grouping tested ------------------------------------------------------------
+  \node[anchor=west,font=\footnotesize\bfseries] at (-0.1,-5.75) {(d) register grouping (LMUL), tried on the hand AA kernel (Section~\ref{r03:sec:lever-sched})};
+  \node[r03ok,text width=40mm,font=\scriptsize] at (2.1,-6.5) {LMUL 1: one register,\\8 f32 lanes; \textbf{used}};
+  \node[r03no,text width=40mm,font=\scriptsize] at (6.9,-6.5) {LMUL 2: two registers,\\16 lanes; 216 vs 163 cycles/cell};
+  \node[r03no,text width=40mm,font=\scriptsize] at (11.7,-6.5) {LMUL 4: four registers,\\32 lanes; 226--229, spills};
+\end{tikzpicture}

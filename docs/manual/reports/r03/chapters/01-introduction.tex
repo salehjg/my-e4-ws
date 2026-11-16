@@ -1,0 +1,190 @@
+\chapter{Introduction}\label{r03:ch:intro}
+
+\emph{What problem this report addresses, the goal and the rules of comparison, how the work
+was done, and the result in brief. Every technical term used here is explained in
+\cref{r03:ch:background} and listed in the glossary (Appendix~\ref{r03:app:glossary}).}
+
+\section{The problem}\label{r03:sec:problem}
+
+waLBerla is a C++ framework for fluid simulations with the lattice Boltzmann method (LBM).
+Its compute kernels are not written by hand: two Python packages, lbmpy and \ps{}, derive the
+update formulas and generate C++ code from them (\cref{r03:sec:bg-stack}).
+
+The SpacemiT~K1 is an eight-core RISC-V system on a chip, used here on a Banana~Pi BPI-F3
+board. Its cores, the SpacemiT~X60, have a vector unit: the RISC-V Vector extension (RVV),
+which processes 8 single-precision or 4 double-precision numbers with one instruction
+(\cref{r03:sec:bg-rvv}). Earlier work added an RVV code generator to \ps{} and measured
+waLBerla's three-dimensional LBM kernel (D3Q19) with it on one X60 core.\footnote{Report~2 of
+this collection. Its numbers that this report starts from are restated here, so that report
+is not needed to follow this one.} The best vector version of the program was only
+\sx{1.73} faster than the same program without vector instructions in single precision
+(GCC; \sx{1.92} with Clang), and \sx{1.31} faster in double precision (GCC), on a grid of
+$64^3$ cells. At that time the gap to the possible \sx{8} and \sx{4} was attributed to
+memory bandwidth.
+
+This report follows the work that came after. It answers three questions:
+\begin{enumerate}
+  \item What really limits the vectorized kernel on the X60?
+  \item Which changes to the generated code, to the code generators and to waLBerla remove
+        that limit, and by how much?
+  \item How close does the complete application get to \sx{8} (single precision) and
+        \sx{4} (double precision)?
+\end{enumerate}
+
+\section{Goal and rules of comparison}\label{r03:sec:goal}
+
+\paragraph{Goal.} The goal was a speedup of \sx{8} in single precision (f32) and \sx{4} in
+double precision (f64). The speedup is measured in the complete benchmark application, on
+one core, for a grid of $64^3$ cells. It is the ratio of the vector version's throughput to
+that of the \term{plain scalar build}: the same application compiled without vector
+instructions. Throughput is given in MLUP/s, million lattice-cell updates per second.
+\Cref{r03:sec:ops} shows that \sx{8} and \sx{4} are the real arithmetic limits of the
+X60: its vector unit does 8 (f32) or 4 (f64) operations in the time its scalar unit does one.
+
+\paragraph{Fair baseline.} Some of the changes in this report are not specific to vector
+code. Examples are common-subexpression elimination, in-place streaming, the data layout
+and huge memory pages. A scalar program can use them as well. So that such changes do not
+inflate the speedup, they were also applied to the scalar program wherever possible. This
+gives a second baseline, the \term{best scalar build} (\cref{r03:tab:variants}). Every
+result is reported in three ways: the absolute throughput in MLUP/s, the ratio to the plain
+scalar build, and the ratio to the best scalar build.
+
+\paragraph{One core.} The K1 is an embedded system on a chip, and all results are for one
+core. A short side note on several cores is in \cref{r03:sec:res-mpi}.
+
+\section{How the work was done}\label{r03:sec:method}
+
+The work proceeded in five steps:
+\begin{enumerate}
+  \item \textbf{Measure} where the existing program spends its time (\cref{r03:ch:root-cause}).
+  \item \textbf{Characterise} the X60 core with small test programs (\term{probes}) that
+        measure memory and instruction costs (\cref{r03:sec:mem,r03:sec:ops}).
+  \item \textbf{Try} each candidate optimisation in a \term{kernel lab}: a small program
+        that times one kernel outside waLBerla, so that a change can be tested in minutes
+        (\cref{r03:sec:lab,r03:ch:levers}).
+  \item \textbf{Move} the optimisations that pay off into \ps{}, sweepgen and waLBerla
+        (\cref{r03:ch:pystencils,r03:ch:walberla}), and check that the results stay
+        correct (\cref{r03:ch:verification}).
+  \item \textbf{Measure} the complete application again (\cref{r03:ch:results}).
+\end{enumerate}
+
+Every optimisation ends in one of three states, shown in the same colours in all figures:
+\begin{description}
+  \item[Adopted] (teal) in the committed code of \cref{r03:tab:commits}, and measured;
+  \item[Rejected] (red) measured, no gain, not in the code;
+  \item[Pending] (orange) in the code or in the lab, but the measurement that decides it was
+        still running when this report was written (\cref{r03:ch:open}).
+\end{description}
+Findings about the hardware, which are not changes, are shown in blue.
+
+\section{Result in brief}\label{r03:sec:brief}
+
+\begin{keyidea}[Where the application stands]
+waLBerla's benchmark application \code{SweepgenLbmCPU}, $64^3$ cells, one core, GCC~14, the
+whole program (kernel plus data exchange), best of 3 runs of 200 time steps. Latest complete
+measurement (run~C of \cref{r03:sec:res-runs}):
+\begin{itemize}
+  \item \textbf{single precision: 7.25~MLUP/s, \sx{5.24} the plain scalar build}
+        (1.38~MLUP/s), and \sx{3.54} the best scalar build (2.05~MLUP/s);
+  \item \textbf{double precision: 4.04~MLUP/s, \sx{4.23} the plain scalar build}
+        (0.95~MLUP/s), and \sx{2.78} the best scalar build (1.45~MLUP/s).
+\end{itemize}
+The \sx{4} goal for double precision is met, with generated code. The \sx{8} goal for single
+precision is not met yet (\cref{r03:sec:gap}).
+\end{keyidea}
+
+The limit was not memory bandwidth (\cref{r03:ch:root-cause}). The X60 has a hardware
+prefetcher: a unit that detects regular access patterns and loads data before the program
+asks for it. It can follow about 8 such patterns (\term{streams}) at a time. The kernel
+had 42 (19 read and 23 write streams), so almost every access that missed the cache
+waited for the full memory latency. Three optimisations attacked this and were adopted:
+\begin{enumerate}
+  \item \textbf{software prefetching}, a new option of \ps{}: the generated loop requests
+        its data 128~bytes ahead (\cref{r03:sec:ps-prefetch}); about \sx{2} on its own;
+  \item \textbf{in-place streaming (AA pattern)}, in sweepgen and in waLBerla's data
+        exchange: one data array instead of two, 23 streams instead of 42
+        (\cref{r03:sec:wl-sweepgen,r03:sec:wl-halo});
+  \item \textbf{a better RVV instruction selection} in \ps{}: scalar operands and fused
+        multiply-add, which removed all register spills from the loop
+        (\cref{r03:sec:ps-selector}).
+\end{enumerate}
+A fourth adopted change computes each row's addresses once and keeps constants in
+registers (\cref{r03:sec:ps-rowptr}). It adds 2.5\,\% (f32) and 2.2\,\% (f64).
+
+Three more changes are in the code, but their end-to-end measurement was still running
+(\cref{r03:ch:open}):
+\begin{itemize}
+  \item a faster data exchange between neighbouring blocks, which moves one data slice at a
+        time (\cref{r03:sec:wl-halo});
+  \item time steps that skip writing the density and velocity fields
+        (\cref{r03:sec:wl-sweepgen});
+  \item a kernel that splits the update into passes over a few directions at a time,
+        generated from lbmpy (\cref{r03:sec:wl-split}).
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/story}}
+  \caption[Map of the findings and optimisations]{Map of the work. Top: the findings about
+    the hardware, in the order they were made. Below: the optimisations, grouped by what they
+    attack, coloured by outcome (teal adopted, red rejected, orange pending; white: lab
+    experiments that led to an adopted change). Numbers in brackets are sections of this
+    report.}\label{r03:fig:story}
+\end{figure}
+
+\section{Where the code is}\label{r03:sec:code}
+
+All work is committed and pushed to GitHub. Every link in this report points at these
+commits:
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Repositories and commits this report describes.}\label{r03:tab:commits}
+  \begin{tabularx}{\linewidth}{@{}lllX@{}}
+    \toprule
+    \textbf{Repository} & \textbf{Branch} & \textbf{Commit} & \textbf{Contents}\\
+    \midrule
+    \href{\rWSurl}{\texttt{my-e4-ws}} & \texttt{main} & \rcommitws &
+      the workspace: working notes and raw measurement logs (\file{docs/notes3/}), kernel lab
+      and probes (\file{misc/x60-lab/}), benchmark scripts (\file{scripts/})\\
+    \href{\rPSurl}{\texttt{mirrored-pystencil2}} & \texttt{rvv-support} & \rcommitps &
+      \ps{} with the RVV code generator: prefetch option, instruction selection, row
+      pointers. Changes described here:
+      \href{\rPSurl/compare/9a989e1625fbb0272876f550a5f7d3456fdaca25...\rPSsha}{\texttt{9a989e16..a81dc547}}\\
+    \href{\rWLurl}{\texttt{mirrored-walberla}} & \texttt{rvv-support} & \rcommitwl &
+      waLBerla with sweepgen: in-place streaming, data exchange, benchmark application,
+      build flags. Changes described here:
+      \href{\rWLurl/compare/b78f2d8791589fa38d0e407a3447865cb8ce227f...\rWLsha}{\texttt{b78f2d87..efa2b70c}}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+The workspace commit \rcommitws{} includes both forks as Git submodules, at exactly these
+commits. The copies of the raw measurement logs (Appendix~\ref{r03:app:evidence}) and some
+documentation edits are newer than \rcommitws: they are in the working tree, not yet in a
+commit.
+
+\section{How to read this report}\label{r03:sec:guide}
+
+\begin{description}
+  \item[Part I, Background and Diagnosis] \Cref{r03:ch:background} explains the method, the
+        software and the hardware terms. \Cref{r03:ch:setup} describes the board, the
+        benchmark application and the kernel lab. \Cref{r03:ch:root-cause} shows why the
+        vectorized kernel stalls.
+  \item[Part II, Optimisations] \Cref{r03:ch:levers} tests every candidate in the kernel
+        lab. \Cref{r03:ch:pystencils} explains how the generated code is vectorized and what
+        changed in \ps{}; \cref{r03:ch:walberla} what changed in sweepgen and waLBerla.
+  \item[Part III, Evidence] \Cref{r03:ch:verification} shows how each change was checked
+        for correctness, \cref{r03:ch:results} what the application reaches, and
+        \cref{r03:ch:open} what was still being measured.
+\end{description}
+Appendix~\ref{r03:app:glossary} lists every term and abbreviation,
+appendix~\ref{r03:app:file-map} every file that changed, appendix~\ref{r03:app:repro} how
+to reproduce the results, and appendix~\ref{r03:app:evidence} the log file behind each
+number.
+
+\paragraph{Notation.} f32 and f64 stand for single precision (32-bit floating point) and
+double precision (64-bit). A factor such as \sx{5.24} is a speedup: the throughput of one
+version divided by that of another. ``Cycles per cell'' is the number of processor clock
+cycles spent per cell update; at the X60's 1.6~GHz, cycles per cell $= 1600 /
+\text{MLUP/s}$.

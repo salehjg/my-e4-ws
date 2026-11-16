@@ -2,6 +2,9 @@
 
 Usage: python walberla_bench_summary.py LABEL=LOG [LABEL=LOG ...]
 
+A label may be given more than once: its logs are combined into one column (e.g. the scalar,
+autovec and rvv logs of one precision and core count).
+
 For each configuration (e.g. gcc-f64), it reports the best MLUP/s per SweepgenLbmCPU variant,
 the speedup over that configuration's scalar build, and the checksum agreement across
 variants. The checksum is the kinetic energy at the end of the run, so every variant must
@@ -13,12 +16,13 @@ import re
 import sys
 
 VARIANTS = ["scalar", "scalar_cse", "autovec", "autovec_cse", "explicit", "explicit_cse",
-            "explicit_pf", "explicit_cse_pf", "scalar_cse_aa", "explicit_cse_aa", "explicit_cse_aa_pf"]
+            "explicit_pf", "explicit_cse_pf", "scalar_cse_aa", "autovec_cse_aa", "explicit_cse_aa",
+            "explicit_cse_aa_pf", "explicit_cse_aa_split"]
 
 configs = {}
 for arg in sys.argv[1:]:
     label, path = arg.split("=", 1)
-    best, energy = {}, {}
+    best, energy = configs.setdefault(label, ({}, {}))
     p = pathlib.Path(path)
     if p.exists():
         for line in p.read_text().splitlines():
@@ -28,12 +32,13 @@ for arg in sys.argv[1:]:
             v = kv["variant"].replace("SweepgenLbmCPU_", "")
             best[v] = max(best.get(v, 0.0), float(kv["mlups"]))
             energy.setdefault(v, float(kv["energy"]))
-    configs[label] = (best, energy)
 
 print("## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)\n")
 print("| variant | " + " | ".join(configs) + " |")
 print("|---" * (len(configs) + 1) + "|")
 for v in VARIANTS:
+    if not any(v in best for best, _ in configs.values()):
+        continue
     cells = []
     for best, _ in configs.values():
         if v in best:

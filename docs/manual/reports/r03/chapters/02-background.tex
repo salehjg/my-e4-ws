@@ -1,0 +1,275 @@
+\chapter{Background}\label{r03:ch:background}
+
+\emph{The terms the rest of the report relies on: the lattice Boltzmann method and its two
+ways of moving data, how waLBerla stores and exchanges the data, the software that generates
+the kernel, the RISC-V vector extension, the memory system, and the measurement terms. Readers
+who know a section's subject can skip it; the glossary (Appendix~\ref{r03:app:glossary}) repeats
+every definition in one line.}
+
+\section{The lattice Boltzmann method}\label{r03:sec:bg-lbm}
+
+The lattice Boltzmann method (LBM) simulates a fluid on a regular grid of \term{cells}. Each
+cell does not store the fluid's velocity directly. It stores $q$ numbers $f_i$, one per
+\term{lattice direction} $c_i$. Each $f_i$ says how much fluid in the cell moves along
+$c_i$. They are called \term{particle distribution functions}, abbreviated
+\term{PDFs}. (In this report ``PDF'' always means such a value, never the file format.)
+
+\paragraph{D3Q19.} The model used throughout is \term{D3Q19}: three dimensions, 19
+directions per cell. The directions are the rest direction $(0,0,0)$, the 6 face
+neighbours such as $(1,0,0)$, and the 12 edge neighbours such as $(1,1,0)$. Every direction
+$i$ has an \term{inverse direction} $\bar\imath$ with $c_{\bar\imath} = -c_i$. Each
+direction also has a \term{weight} $w_i$ ($1/3$ for the rest direction, $1/18$ for a face,
+$1/36$ for an edge).
+
+\paragraph{Macroscopic values.} The fluid's \term{density} $\rho$ and \term{velocity} $u$
+in a cell follow from its PDFs:
+\[
+  \rho = \sum_i f_i, \qquad \rho\,u = \sum_i c_i f_i .
+\]
+
+\paragraph{A time step} applies two operations to every cell:
+\begin{description}
+  \item[Collision] moves the PDFs of a cell toward an \term{equilibrium} $f^{\mathrm{eq}}_i(\rho,
+        u)$, a fixed polynomial in $u$. The textbook form is $f^{\mathrm{eq}}_i = w_i \rho\,(1 +
+        3\,c_i\cdot u + \tfrac92 (c_i\cdot u)^2 - \tfrac32 u^2)$. With the
+        \term{single-relaxation-time} method (\term{SRT}), all PDFs relax at the same rate
+        $\omega$, which is set by the fluid's viscosity:
+        \[
+          f_i \leftarrow f_i + \omega\,\bigl(f^{\mathrm{eq}}_i - f_i\bigr).
+        \]
+        The \term{two-relaxation-time} method (\term{TRT}) uses one rate for the symmetric and
+        another for the antisymmetric part of each pair $i$, $\bar\imath$. It appears only in
+        the tests (\cref{r03:sec:wl-tests}).
+  \item[Streaming] moves each post-collision value $f_i$ to the neighbouring cell
+        $x + c_i$.
+\end{description}
+One update of all cells is one time step. Collision and streaming of all cells together are
+done by one generated function, the \term{stream/collide kernel}. One pass of that kernel
+over all cells is called a \term{sweep}.
+
+\paragraph{Work per cell.} A D3Q19 cell update loads 19 PDFs, does about 200 floating-point
+operations, and stores 19 PDFs. The benchmark also stores the density and the three velocity
+components into separate output fields, so it makes 23 stores per cell. These density and
+velocity fields are called the \term{output} below; the benchmark only reads them after the
+last step, to compute its checksum (\cref{r03:sec:app}).
+
+\paragraph{Zero-centred storage.} lbmpy stores $f_i - w_i$ instead of $f_i$, and
+$\delta\rho = \rho - 1$ instead of $\rho$. This keeps the stored numbers small and improves
+the rounding behaviour, especially in single precision. It does not change the method.
+
+\section{Two ways to stream: pull and AA}\label{r03:sec:bg-stream}
+
+Streaming moves data between cells. A kernel can do it in two ways, shown in
+\cref{r03:fig:timestep}:
+\begin{description}
+  \item[Pull] uses two PDF arrays. For each cell $x$ and direction $i$, the kernel reads the
+        value that streams into $x$, which is $f_i$ of the neighbour $x - c_i$. It collides
+        the 19 values and writes the results into cell $x$ of the second array. Then the two
+        arrays swap roles. Every value is read from one array and written to another.
+  \item[AA pattern] \autocite{bailey-aa} uses one array, updated in place. It alternates two
+        kinds of step, whose read and write positions are chosen so that each cell writes
+        exactly the storage places it has read (\cref{r03:fig:aa}):
+        \begin{itemize}
+          \item \term{even step}: read $f_i$ from cell $x$, and write the post-collision value
+                of direction $i$ into the place of $\bar\imath$, also in cell $x$;
+          \item \term{odd step}: read $f_{\bar\imath}$ from cell $x - c_i$, and write the
+                post-collision value of direction $i$ into the place of $i$ in cell
+                $x + c_i$.
+        \end{itemize}
+        After an even and an odd step every value is back in its usual place and has moved
+        by two cells.
+\end{description}
+The storage place of one direction's value in one cell is called a \term{slot}: ``slot $i$
+of cell $x$''. AA streaming needs half the memory and, as \cref{r03:sec:lever-aa} shows,
+fewer concurrent memory accesses.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/timestep}}
+  \caption[One time step with pull and with AA streaming]{One time step of the benchmark with
+    pull streaming (two PDF arrays \texttt{f} and \texttt{f\_tmp}, swapped after every step)
+    and with AA streaming (one array, even and odd steps alternating). After every step, a
+    halo exchange (\cref{r03:sec:bg-blocks}) brings the ghost layers up to date. The names
+    in typewriter font are the generated kernels and the waLBerla functions involved.}\label{r03:fig:timestep}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r03/figures/aa-pattern}}
+  \caption[The AA pattern for one pair of directions]{The AA pattern for one pair of
+    directions, east (E, $c = (1,0,0)$) and west (W, $c = (-1,0,0)$), seen from cell $x$.
+    Each cell has one slot per direction; only the E and W slots are drawn. Even step: both
+    values are read from cell $x$ and written back to cell $x$, each into the other's slot.
+    Odd step: values are read from and written to the neighbours.}\label{r03:fig:aa}
+\end{figure}
+
+\section{How waLBerla stores and exchanges the data}\label{r03:sec:bg-blocks}
+
+\paragraph{Fields.} waLBerla stores the PDFs of all cells in a \term{field}: a
+four-dimensional array with the indices $x$, $y$, $z$ and the direction $f$. The benchmark
+uses the \term{fzyx layout}: the direction index varies slowest and $x$ fastest. So the
+values of one direction form one contiguous three-dimensional array, called a
+\term{slice} below; a D3Q19 field has 19 slices. Inside a slice, cells that are neighbours
+in $x$ are neighbours in memory. A \term{row} is the run of cells of one slice with fixed
+$y$ and $z$. Rows are padded to a multiple of 16~bytes.
+
+\paragraph{Blocks and ghost layers.} The simulation domain is cut into \term{blocks}, and
+each process works on its own block. Each block's field has one extra layer of cells
+around it, the \term{ghost layer}. Ghost cells hold copies of the values from the
+neighbouring block, so that the kernel can read across the block border without special
+cases.
+
+\paragraph{Halo exchange.} After every time step the ghost layers must be refreshed: values
+near the border of each block are copied into the ghost layer of its neighbour. This is the
+\term{halo exchange}. Between processes it uses MPI (Message Passing Interface), the standard
+library for sending messages between processes. In waLBerla, a \term{pack info} class
+decides which values cross a block face, in three operations:
+\begin{itemize}
+  \item \code{pack}: copy the values to send into a message buffer;
+  \item \code{unpack}: copy a received buffer into the ghost layer;
+  \item \code{localCopy}: copy directly when sender and receiver are the same process.
+\end{itemize}
+The benchmark's domain is \term{periodic}: what leaves at one side comes back in at the
+opposite side. With a single block, every face of the block is its own neighbour, so the
+whole halo exchange consists of \code{localCopy} calls.
+
+\section{The software that generates the kernel}\label{r03:sec:bg-stack}
+
+\begin{description}
+  \item[lbmpy] (Python) derives the LBM update of one cell symbolically, as a list of
+        assignments, from a description of the method: lattice (D3Q19), collision (SRT or
+        TRT), streaming (pull or AA), output fields \autocite{lbmpy}. Its option
+        \term{global common-subexpression elimination} (\term{CSE}) computes every repeated
+        sub-expression of the whole update once.
+  \item[\ps{}] (Python) turns such assignments into a C++ function that loops over all cells
+        of a field. It supports several \term{targets}: plain C++ for any
+        CPU, x86 vector instructions, RVV (\cref{r03:sec:bg-rvv}) and GPUs. For vector targets
+        it vectorizes the innermost loop itself, by writing vector intrinsics
+        (\cref{r03:sec:bg-rvv}) into the code. This is called \term{explicit vectorization},
+        as opposed to \term{auto-vectorization}, where the C++ compiler tries to vectorize
+        plain loops on its own.
+  \item[sweepgen] (Python, part of waLBerla) wraps generated kernels into C++ \term{sweep}
+        classes that waLBerla can apply to each block. Its building block
+        (\term{prefab}) \code{LbmBulk} generates the standard LBM sweeps of a method:
+        \code{StreamCollide} (one time step) and \code{InitPdfs} (set the PDFs to the
+        equilibrium of given density and velocity fields).
+  \item[waLBerla] (C++) provides blocks, fields, the halo exchange and the time loop
+        \autocite{walberla}. The benchmark uses waLBerla's \term{v8 core}, an experimental
+        new core library in \file{include/walberla/v8/} that is enabled with the CMake option
+        \code{WALBERLA_ENABLE_V8CORE}.
+\end{description}
+The path from physics to machine code is therefore: lbmpy (formulas) $\rightarrow$ \ps{}
+(loop kernel in C++) $\rightarrow$ sweepgen (sweep class) $\rightarrow$ the C++ compiler
+$\rightarrow$ the waLBerla application.
+
+\section{RISC-V and its vector extension}\label{r03:sec:bg-rvv}
+
+\paragraph{RISC-V} is an open instruction set. \code{rv64gc} names its general-purpose 64-bit
+form with integer multiplication, atomics, single- and double-precision floating point, and
+compressed instructions. A program compiled with \code{-march=rv64gc} uses no vector
+instructions; this is how the plain scalar build is compiled. Further \term{extensions} add
+instructions; a core lists the extensions it supports in its \term{ISA string}, shown in
+\file{/proc/cpuinfo} on Linux.
+
+\paragraph{The vector extension (RVV)} adds 32 vector registers. Their width in bits, the
+\term{VLEN}, depends on the core; on the X60 it is 256. A register is divided into
+\term{lanes} of the \term{element width}: 8 lanes of 32 bits (written \term{e32}, used for f32)
+or 4 lanes of 64 bits (\term{e64}, for f64). One vector instruction operates on all lanes.
+The \term{register grouping} \term{LMUL} lets one instruction operate on 2, 4 or 8 registers at
+once, as one long register; LMUL~1 means one register.
+
+\paragraph{Instructions used in this report.}
+\begin{description}
+  \item[\code{vle32}, \code{vse32}] load and store a register's worth of consecutive 32-bit
+        values (\term{unit-stride} access); \code{vle64}/\code{vse64} for 64-bit values.
+  \item[\code{vfadd}, \code{vfmul}, \code{vfdiv}] floating-point add, multiply, divide. The
+        \term{.vv form} takes two vector operands; the \term{.vf form} takes a vector and a
+        scalar floating-point register, whose value is used in every lane.
+        \code{vfrsub}/\code{vfrdiv} are the .vf forms with the operands reversed
+        ($s - v$, $s / v$).
+  \item[\code{vfmv.v.f}] copies a scalar into every lane of a vector register (a
+        \term{splat} or broadcast).
+  \item[\code{vfmacc}, \code{vfmsac}, \code{vfnmsac}] \term{fused multiply-add} (\term{FMA}):
+        $d \leftarrow d + a b$, $d \leftarrow a b - d$, $d \leftarrow d - a b$ in one
+        instruction, rounded once instead of twice.
+\end{description}
+C++ code uses these instructions through \term{intrinsics}: functions that the compiler
+provides (header \file{riscv_vector.h}) and translates to one instruction each
+\autocite{rvv-intrinsics}. For example,
+\code{__riscv_vle32_v_f32m1} loads 8 floats into a value of type \code{vfloat32m1_t}
+(f32, LMUL~1). The compiler allocates registers and orders the instructions, but it treats
+each intrinsic as a fixed operation: it does not merge a multiply and an add into an FMA by
+itself.
+
+\paragraph{Other extensions named in this report.}
+\begin{description}
+  \item[Zicbop] cache-block prefetch: \code{prefetch.r} and \code{prefetch.w} ask the cache to
+        load a line for reading or writing. They are encoded as \term{HINTs}: instruction
+        encodings that do nothing architecturally (here \code{ori x0, rs, imm}, which writes to
+        the always-zero register). A core without Zicbop therefore executes them as no-ops.
+  \item[Zicbom, Zicboz] cache-block management and zeroing; \code{cbo.zero} sets a whole
+        cache line to zero without reading it from memory.
+  \item[\code{zvl256b}] in a \code{-march} string: VLEN is at least 256 bits, so the compiler
+        may assume 8 f32 lanes.
+\end{description}
+
+\paragraph{Scheduling model.} A compiler orders instructions using a description of the target
+core's latencies and execution units, its \term{scheduling model}. The option
+\code{-mtune=<core>} selects it. Clang~18 has a model for the X60
+(\code{-mtune=spacemit-x60}); GCC~14 does not.
+
+\section{The memory system}\label{r03:sec:bg-mem}
+
+\begin{description}
+  \item[Cache line] the unit in which data moves between memory and the caches: 64~bytes on
+        the X60.
+  \item[Caches] each X60 core has a 32~KiB level-1 data cache (\term{L1D}). Four cores share
+        a 512~KiB level-2 cache (\term{L2}). There is no third level. An access to a line that
+        is not in a cache is a \term{miss}; the line then comes from the next level or from
+        main memory (\term{DRAM}). A DRAM access takes several hundred cycles
+        (\term{latency}).
+  \item[In-order core] the X60 issues instructions in program order. When an instruction needs
+        the result of a load that missed, it waits, and so does everything after it. The core
+        can keep only a few misses outstanding at once (\term{misses in flight}).
+  \item[Stream] a sequence of accesses that walks through memory with a constant step. Each
+        row-by-row pass through one slice of the PDF field is one stream; a kernel that reads
+        19 slices and writes 23 arrays has 42 concurrent streams.
+  \item[Hardware prefetcher] a unit in the cache that detects streams and loads their next
+        lines before the program asks for them, so that the misses overlap. It can track only
+        a limited number of streams at once.
+  \item[Software prefetch] an instruction placed in the program that asks the cache to load a
+        line that will be needed soon, without waiting for it (\code{prefetch.r},
+        \code{prefetch.w}).
+  \item[Write-allocate] a store to a line that is not in the cache first loads that line from
+        memory. Writing a second array therefore costs memory reads as well.
+  \item[Bandwidth] bytes moved per second (GB/s).
+  \item[Pages, TLB, huge pages] programs use virtual addresses, which the core translates in
+        units of \term{pages} (4~KiB). Recent translations are kept in the \term{TLB}
+        (translation lookaside buffer). \term{Huge pages} of 2~MiB need fewer translations.
+        Linux can provide them automatically, as \term{transparent huge pages} (\term{THP});
+        in its \code{madvise} mode only for memory that asks for them.
+\end{description}
+
+\section{Measurement terms}\label{r03:sec:bg-measure}
+
+\begin{description}
+  \item[MLUP/s] million lattice-cell updates per second: cells $\times$ time steps / seconds /
+        $10^6$.
+  \item[Cycles per cell, instructions per cell] clock cycles or executed instructions divided
+        by cells $\times$ time steps. At 1.6~GHz, cycles per cell $= 1600 / \text{MLUP/s}$.
+  \item[IPC] instructions per cycle.
+  \item[PMU, perf] the \term{performance monitoring unit} (PMU) counts hardware events such as
+        cycles, instructions and cache misses. Linux's \code{perf} tool reads it:
+        \code{perf stat} counts events, \code{perf record} samples where the program spends
+        its time, \code{perf annotate} shows the samples per instruction. The X60 has
+        vendor-specific events in addition, such as \code{l2_miss}; \cref{r03:tab:pmu1}
+        explains the ones used.
+  \item[Backend stall] a cycle in which the core issues no instruction because an operand or an
+        execution resource is not ready.
+  \item[Best of 3] each program is run three times, and the highest MLUP/s is reported.
+  \item[Session] one unattended job on the board that measures a group of variants back to back
+        (\cref{r03:sec:hw}). The board's absolute speed varies by a few percent from session to
+        session, so speedups are always computed between values of the same session.
+  \item[QEMU] an emulator that runs RISC-V programs on an x86 computer, including the vector
+        extension. It checks correctness, not speed.
+\end{description}

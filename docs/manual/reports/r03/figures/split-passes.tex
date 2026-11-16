@@ -1,0 +1,22 @@
+% Passes of the direction-split AA stream/collide for one block of BY rows of one z-plane
+% (lbm_split.py, BY=2 GM=5 GP=3 as in the f32 build). Used in chapter 06.
+\begin{tikzpicture}[node distance=3mm and 4mm]
+  \node[r03pass,text width=17mm] (m0) {m0\\[-1pt]\scriptsize dirs 0--4};
+  \node[r03pass,text width=17mm,right=of m0] (m1) {m1\\[-1pt]\scriptsize dirs 5--9};
+  \node[r03pass,text width=17mm,right=of m1] (m2) {m2\\[-1pt]\scriptsize dirs 10--14};
+  \node[r03pass,text width=17mm,right=of m2] (m3) {m3\\[-1pt]\scriptsize dirs 15--18};
+  \node[r03box,text width=20mm,below=9mm of m1.south east,anchor=north] (acc)
+    {\texttt{acc}\\[-1pt]\scriptsize $\delta\rho$, $j_x$, $j_y$, $j_z$};
+  \node[r03pass,text width=20mm,right=12mm of acc] (macro) {macro\\[-1pt]\scriptsize $\rho$, $u$ (+ outputs)};
+  \node[r03box,text width=24mm,right=8mm of macro] (scr)
+    {\texttt{scr}\\[-1pt]\scriptsize $\delta\rho$, $\rho$, $u_x$, $u_y$, $u_z$};
+  \node[r03pass,text width=20mm,below=9mm of acc] (c0) {c0\\[-1pt]\scriptsize rest + 3 pairs};
+  \node[r03pass,text width=20mm,right=of c0] (c1) {c1\\[-1pt]\scriptsize 3 pairs};
+  \node[r03pass,text width=20mm,right=of c1] (c2) {c2\\[-1pt]\scriptsize 3 pairs};
+  \foreach \m in {m0,m1,m2,m3} \draw[r03arrow] (\m.south) -- (acc.north);
+  \draw[r03arrow] (acc) -- (macro);
+  \draw[r03arrow] (macro) -- (scr);
+  \foreach \c in {c0,c1,c2} \draw[r03arrow] (scr.south) -- (\c.north);
+  \node[r03label,above=1mm of m1.north east] {moment passes: read the PDFs of a few directions, accumulate};
+  \node[r03label,below=1mm of c1.south] {collision passes: reload the PDFs (L1/L2), relax, store in place};
+\end{tikzpicture}

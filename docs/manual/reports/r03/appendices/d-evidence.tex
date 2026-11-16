@@ -1,0 +1,110 @@
+\chapter{Evidence}\label{r03:app:evidence}
+
+Every number in this report comes from one of three sources:
+\begin{enumerate}
+  \item the raw logs written on the board, copied unchanged to \file{docs/notes3/board-logs/}
+        (newer than \rcommitws; the folder's \file{README.md} lists them);
+  \item runs made while writing this report, on the committed code, marked ``repeated for this
+        report'' in the text;
+  \item the working log of the project, \ghws{docs/notes3/rvv-8x-speedup-progress-fable5.2.md},
+        for the instruction counts read from cross-compiled assembly on the laptop. It records
+        the work day by day, in numbered work steps. This report does not use those step numbers
+        and can be read without the log.
+\end{enumerate}
+
+\paragraph{Board clock.} The board's clock runs about 1.7~days behind the laptop's. All times in
+the board logs, and the start times in \cref{r03:tab:runs}, are board-clock times (2026-11-12);
+the same work happened on 2026-11-13 and 2026-11-14 by the laptop's clock. The logs were copied
+at board-clock 2026-11-12 20:08, except \file{e2e-cg-gcc-f32.log} (20:29),
+\file{e2e-cg-gcc-f64.log} and \file{e2e-halo-stage.log} (21:26), which were copied after they
+were complete.
+
+\section*{Session scripts}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The session scripts in \texttt{misc/x60-lab/}, what they measured, and where the results
+    are used. Runs that are not listed were started by hand with
+    \texttt{scripts/walberla\_lbm\_bench.sh} or \texttt{misc/x60-lab/lab/run.sh}.}\label{r03:tab:sessions}
+  \begin{tabularx}{\linewidth}{@{}lXl@{}}
+    \toprule
+    \textbf{Script} & \textbf{Measures} & \textbf{Used in}\\
+    \midrule
+    \file{queue_aa_tests.sh} & hand AA kernels (f32); \ps{} RVV tests with prefetch &
+      \ref{r03:sec:lever-aa}, \ref{r03:sec:ver-ps}\\
+    \file{queue_aa64.sh} & hand AA kernels (f64), hardware counters & \ref{r03:sec:lever-aa}\\
+    \file{queue_lab2.sh} & generated AA kernels, LMUL, Clang's X60 model &
+      \ref{r03:sec:lever-aa}, \ref{r03:sec:lever-sched}\\
+    \file{queue_lab3.sh}, \file{queue_vf2_gate.sh} & new instruction selection: acceptance test,
+      \ps{} tests, comparison & \ref{r03:sec:lever-selector}, \ref{r03:sec:ver-ps}\\
+    \file{queue_e2e_aa.sh} & run B; 4 and 8 processes & \ref{r03:sec:res-aa},
+      \ref{r03:sec:res-mpi}\\
+    \file{queue_lab4.sh} & compilers and scheduling models; lab against application &
+      \ref{r03:sec:lever-sched}, \ref{r03:sec:res-labapp}\\
+    \file{queue_perf_e2e.sh} & profiles of the AA and pull applications & \ref{r03:sec:res-labapp}\\
+    \file{queue_lab5.sh} & row pointers and constants as source edits; alignment, huge pages &
+      \ref{r03:sec:lever-rp}, \ref{r03:sec:lever-layout}\\
+    \file{queue_e2e_cg.sh} & \ps{} tests and run C & \ref{r03:sec:ver-ps}, \ref{r03:sec:res-cg}\\
+    \file{queue_e2e_halo.sh} & keep rule for run C's change; slot-by-slot halo exchange end to end
+      & \ref{r03:sec:res-cg}, pending (\ref{r03:sec:open-jobs})\\
+    \file{queue_lab6.sh}, \file{queue_lab7.sh}, \file{queue_e2e_final.sh} & pending measurements
+      & \ref{r03:sec:open-jobs}\\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section*{Board logs}
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File in \texttt{docs/notes3/board-logs/}} & \textbf{Used for}\\
+  \midrule
+  \endhead
+  \file{ann-explicit_cse-f32.txt}, \file{pmu-gcc-f32-explicit_cse.tsv},
+    \file{pmu-gcc-f32-scalar_cse.tsv} & profile and hardware counters of the original program,
+    \cref{r03:sec:cycles}\\
+  \file{p2-stream-sweep.txt}, \file{p2-stream-levers.txt}, \file{p2-prefetch.txt} & memory
+    probe, \cref{r03:sec:mem}\\
+  \file{p2-ops.txt} & instruction probe, \cref{r03:sec:ops}\\
+  \file{lab/results.tsv} & every lab run made with \file{run.sh}, one line each
+    (\cref{r03:tab:pf} and the hand split kernel, \cref{r03:sec:lever-split})\\
+  \file{pmu-lab-*.tsv} & hardware counters of lab kernels, \cref{r03:sec:lever-split,r03:sec:lever-aa}\\
+  \file{e2e-gcc-f32.log}, \file{e2e-gcc-f64.log}, \file{e2e-clang-f32.log},
+    \file{e2e-clang-f64.log} & run A, \cref{r03:tab:res-pf}\\
+  \file{pytest-rvv.log} & \ps{} tests on the board with prefetch, \cref{r03:tab:ver-ps}\\
+  \file{lab-aa.log}, \file{lab-aa64.log}, \file{pmu-aa.log} & hand AA kernels,
+    \cref{r03:sec:lever-aa}\\
+  \file{lab2.log} & \cref{r03:tab:genaa}; LMUL and scheduling, \cref{r03:sec:lever-sched}\\
+  \file{lab3.log}, \file{lab3-gate.log}, \file{lab3.ok}, \file{pytest-vf2.log} &
+    \cref{r03:tab:selector}; acceptance tests, \cref{r03:sec:ver-ps,r03:sec:ver-board}\\
+  \file{e2e-aa-stage.log}, \file{e2e-aa-gcc-f32.log}, \file{e2e-aa-gcc-f64.log} &
+    run B, \cref{r03:tab:res-aa,r03:tab:waterfall32,r03:tab:waterfall64}\\
+  \file{lab4.log} & \cref{r03:tab:tune,r03:tab:labapp}; the hand kernel's 163.9 and 147.8 cycles
+    per cell (\cref{r03:fig:ladder})\\
+  \file{lab5.log} & \cref{r03:sec:lever-rp}, \cref{r03:tab:align}\\
+  \file{perf-e2e-aa.txt}, \file{perf-e2e-pull.txt} & \cref{r03:tab:perf}\\
+  \file{e2e-mpi.log}, \file{walberla-mpi-np*-gcc-*.log} & \cref{r03:tab:mpi}\\
+  \file{pytest-cg.log} & \ps{} tests on the board with row pointers, 148 passed\\
+  \file{e2e-cg-gcc-f32.log}, \file{e2e-cg-gcc-f64.log} & run C, \cref{r03:tab:res-cg}\\
+  \file{e2e-halo-stage.log} & the keep rule's decision for run C's change, \cref{r03:sec:res-cg}\\
+  \bottomrule
+\end{xltabular}
+
+\section*{Runs made for this report}
+On the laptop, at \rcommitps{} and \rcommitwl:
+\begin{itemize}
+  \item \ps{} \file{tests/nbackend} and \file{tests/codegen}: 435 passed, 15 skipped
+        (\cref{r03:sec:ver-ps});
+  \item waLBerla \code{ctest -R "LbmScenarios|HaloExchange|CommunicationHiding"}: 24 of 24
+        passed, with test programs built after the last change to the pack-info header
+        (\cref{r03:sec:ver-wl});
+  \item the application's checksum matrix of \cref{r03:tab:ver-app}: 60 runs, after regenerating
+        the five variants' sources;
+  \item cross-checks of the committed sources: the counts in \cref{r03:lst:aa-odd} (9 constants,
+        23 row pointers, 23 prefetches, 19 loads, 23 stores in the vector loop); the submodule
+        commits recorded in \rcommitws; the branch heads on GitHub (\code{git ls-remote}), which
+        match the three commits;
+  \item the lab kernel files behind the naming error of \cref{r03:sec:repro-gen}: the number of
+        CSE temporaries in each file, and the checksums in \file{lab/results.tsv}.
+\end{itemize}
+On the board: the compiler versions, core count, governor, frequency and ISA string of
+\cref{r03:tab:hw}.

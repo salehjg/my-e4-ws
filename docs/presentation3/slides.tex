@@ -1,0 +1,525 @@
+% =============================================================================
+%  slides.tex: 15 minute overview of the RISC-V vector (RVV) work in
+%  pystencils and waLBerla, for listeners who know software but not this
+%  project. Build with ./build.sh (output: build/slides.pdf).
+%
+%  Sources of every number: docs/manual/reports/r02 (making RVV work) and
+%  docs/manual/reports/r03 (making it fast), which cite the raw board logs in
+%  docs/notes3/board-logs/. The results slides and the prefetch and in-place
+%  takeaways use one session with every build on 1, 4 and 8 cores (GCC 14, 64^3
+%  cells per core, best of 3 runs of 200 steps): docs/notes3/board-logs/presentation3/,
+%  written by scripts/walberla_bench_presentation.sh. The backup table "one step at a
+%  time" keeps the history from r03 "run B" and "run C".
+%
+%  Writing rules: plain English, short sentences, no em/en dashes as
+%  punctuation, every name explained where it first appears and again in the
+%  glossary at the end.
+% =============================================================================
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault,lining]{FiraSans}
+\usepackage[varqu]{inconsolata}
+\usefonttheme{professionalfonts}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,tabularx}
+\usepackage{pifont}
+\usepackage{appendixnumberbeamer}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds,decorations.pathreplacing,patterns}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% ---- Colours (the same as in docs/manual, so slides and reports match) --------
+\definecolor{psblue}{HTML}{1F5FA8}
+\definecolor{psteal}{HTML}{127A72}
+\definecolor{psorange}{HTML}{C8641A}
+\definecolor{psred}{HTML}{B3261E}
+\definecolor{psgray}{HTML}{5F6368}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{psviolet}{HTML}{7A3E9D}   % generated code (build-run figure)
+\newif\ifbrmarkers                       % markers in figures/build-run.tex
+%   Meaning of the colours in every figure:
+%   teal = added and measured, orange = in the code but not measured yet,
+%   red = tried and dropped (or: what was wrong before), blue = facts about the hardware.
+
+% ---- Beamer look ------------------------------------------------------------------
+\setbeamersize{text margin left=8mm,text margin right=8mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{normal text}{fg=black!88}
+\setbeamercolor{structure}{fg=psblue}
+\setbeamercolor{frametitle}{fg=psblue!80!black}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamercolor{itemize item}{fg=psblue}
+\setbeamercolor{itemize subitem}{fg=psgray}
+\setbeamertemplate{itemize item}{\raisebox{0.15ex}{\small$\bullet$}}
+\setbeamertemplate{itemize subitem}{\raisebox{0.1ex}{\scriptsize$\circ$}}
+\setlength{\leftmargini}{1.1em}
+\setlength{\leftmarginii}{1.1em}
+\setbeamercolor{takeaway}{bg=psblue!8,fg=black!88}
+
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip\vskip3mm
+  \hbox to \textwidth{%
+    \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}\insertframetitle\hfil
+    {\usebeamerfont{footline}\scriptsize\color{psgray}\insertsectionhead}}%
+  \vskip1.5mm
+  {\color{psblue!40}\hrule height 0.5pt}%
+  \vskip1mm}
+
+\setbeamertemplate{footline}{%
+  \hbox to \paperwidth{\hspace*{8mm}{\color{psgray}\tiny RISC-V vectors in pystencils and waLBerla}%
+    \hfil{\color{psgray}\tiny\insertframenumber\,/\,\inserttotalframenumber}\hspace*{8mm}}%
+  \vskip2.5mm}
+
+% ---- Macros -------------------------------------------------------------------------
+\newcommand{\presenter}{Saleh}            % edit: name on the title slide
+\newcommand{\sx}[1]{#1\ensuremath{\times}} % a speedup factor, e.g. \sx{5.24}
+\newcommand{\term}[1]{\textcolor{psblue!85!black}{\textbf{#1}}} % a name, defined right here
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\yes}{\textcolor{psteal}{\ding{51}}}
+\newcommand{\no}{\textcolor{psgray!70}{$\cdot$}}
+\newcommand{\tagdot}[1]{\tikz[baseline=-0.6ex]\fill[#1] (0,0) circle (0.9mm);} % colour dot
+%   \todo{text}: a measurement or fact that is still missing. Shown in red; build with
+%   ./build.sh final to hide all of them (it defines \hidetodos). ./build.sh lists them.
+\newif\ifshowtodos \showtodostrue
+\ifdefined\hidetodos \showtodosfalse \fi
+\newcommand{\todo}[1]{\ifshowtodos{\scriptsize\textcolor{psred}{\textbf{[TODO: #1]}}}\fi}
+%   \takeaway{text}: the one sentence to remember, at the bottom of a slide
+\newcommand{\takeaway}[1]{\par\vfill
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt,rounded=true]{takeaway}
+    \small #1
+  \end{beamercolorbox}}
+
+% ---- TikZ styles shared by the figures ------------------------------------------------
+\tikzset{
+  box/.style={draw=psgray!80,fill=white,rounded corners=2pt,align=center,
+    font=\footnotesize,inner sep=3pt,minimum height=7mm},
+  added/.style={box,fill=psteal!12,draw=psteal!90!black,line width=0.6pt},
+  pending/.style={box,fill=psorange!12,draw=psorange!90!black,line width=0.6pt},
+  wrong/.style={box,fill=psred!7,draw=psred!80!black,line width=0.6pt},
+  info/.style={box,fill=psblue!7,draw=psblue!70!black},
+  quiet/.style={box,fill=psgray!8,draw=psgray!60,text=psgray!90!black},
+  arr/.style={-{Stealth[length=2mm]},semithick,draw=psgray!90!black},
+  lbl/.style={font=\scriptsize,text=psgray!90!black,align=center},
+  codebox/.style={box,fill=codebg,font=\ttfamily\scriptsize,align=left,inner sep=4pt},
+}
+
+\title{Vector instructions for a generated fluid simulation on RISC-V}
+\subtitle{What we added to pystencils and waLBerla, how it works,\\and what it gives on one SpacemiT X60 core}
+\author{\presenter}
+\date{November 2026}
+
+\begin{document}
+
+% =============================================================================
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    % a strip of 8 "vector lanes" along the top edge
+    \foreach \k in {0,...,7}
+      \fill[psblue!\the\numexpr 25+8*\k\relax] ([xshift=\k*20mm]current page.north west) rectangle ++(19.6mm,-3mm);
+    \node[anchor=north west,text width=136mm,align=left,inner sep=0pt,
+          execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}]
+      at ([xshift=12mm,yshift=-22mm]current page.north west) {%
+      {\LARGE\bfseries\color{psblue!80!black}\inserttitle\par}
+      \vspace{5mm}
+      {\large\color{black!75}\insertsubtitle\par}
+      \vspace{14mm}
+      {\normalsize\insertauthor\par}
+      \vspace{1mm}
+      {\normalsize\color{psgray}\insertdate\par}};
+  \end{tikzpicture}
+\end{frame}
+
+% =============================================================================
+% =============================================================================
+\section{Background}
+
+\begin{frame}{The benchmark: a fluid in a periodic box}
+  \vspace{1mm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.40\textwidth}
+    \centering\input{figures/shearlayer}
+    \column{0.57\textwidth}
+    \centering\resizebox{!}{4.1cm}{\input{figures/lbm}}
+  \end{columns}
+
+  \vspace{3mm}
+  {\small \term{waLBerla}: C++ fluid simulation framework. \term{Lattice Boltzmann method}, 19
+  numbers per cell (\term{D3Q19}). 200 time steps; speed in \term{MLUP/s}, million cell updates per
+  second.\par}
+  \takeaway{Per cell and time step: 19 loads, about 200 operations, 19 stores.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{The hardware, and how the work is split}
+  \vspace{3mm}
+  \centering\input{figures/k1}
+
+  \vspace{4mm}
+  \raggedright
+  {\small One \term{MPI} process and one block per core. After every step, neighbouring blocks swap
+  their border cells (\term{halo exchange}).\par}
+  \takeaway{One 256-bit operation per cycle: at best \sx{8} (f32) and \sx{4} (f64). These are our
+    goals.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{From source code to a running simulation}
+  \vspace{1mm}
+  \centering\input{figures/build-run}
+  \takeaway{Python only runs while the program is built. The program that runs is plain C++.}
+\end{frame}
+
+% =============================================================================
+\section{Part 1: make it work}
+
+\begin{frame}{What we added, and the builds we compare}
+  \vspace{2mm}
+  \centering\input{figures/chain}
+
+  \vspace{5mm}
+  {\footnotesize\renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{build} & \textbf{kernel} & \textbf{compiler flags}\\
+    \midrule
+    plain scalar & plain C++ & \code{-march=rv64gc}: no vector instructions\\
+    auto-vectorized & plain C++ & \code{-march=rv64gcv\_zvl256b}: GCC may vectorize\\
+    best scalar & plain C++ with \term{CSE} and the in-place update & \code{-march=rv64gc}\\
+    \textbf{RVV} & \textbf{RVV intrinsics from pystencils} & \code{-march=rv64gcv\_zvl256b}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{2mm}
+  {\scriptsize\color{psgray}Speedup: MLUP/s divided by that of the plain scalar build, same
+  session. CSE: each repeated part of the formulas is computed once.\par}
+  \takeaway{Users change nothing: ``optimise for this machine'' now gives RVV code, as it gives AVX
+    code on x86.}
+\end{frame}
+
+% =============================================================================
+\section{Part 2: make it fast}
+
+\begin{frame}{The real limit: too many data streams}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    \centering\input{figures/streams}
+    \column{0.45\textwidth}
+    \vspace{4mm}
+    \begin{itemize}\small
+      \item \term{Stream}: one array read or written in order. Our loop has 42 (19 read, 19
+            written, 4 outputs). Fewer: update in place (23), drop the outputs (19), split the loop.
+      \item Plot: a test loop reading $N$ arrays. Up to 8 the \term{hardware prefetcher} keeps up;
+            past 20 it gives up, and each cache line waits for memory.
+    \end{itemize}
+  \end{columns}
+  \takeaway{The core waits, it does not compute: 92\,\% of the time, at only 0.4\,GB/s.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Gains: one-session run (docs/notes3/board-logs/presentation3/): prefetch = explicit_cse ->
+%  explicit_cse_pf, in place = explicit_cse_pf -> explicit_cse_aa_pf, split = explicit_cse_aa_pf ->
+%  explicit_cse_aa_split. Instruction choice: kernel lab, f32 in place, 234 -> 192 cycles per cell.
+%  Row addresses: r03 run C against run B. Halo copy: e2e-halo against e2e-cg. No output:
+%  e2e-final-last against e2e-final. Dropped ones: report r03.
+\begin{frame}{All the optimizations we tried}
+  \vspace{1mm}
+  {\footnotesize\renewcommand{\arraystretch}{1.12}
+  \newcommand{\kept}{\textcolor{psteal!85!black}{\textbf{kept}}}
+  \newcommand{\dropped}{\textcolor{psred!85!black}{dropped}}
+  \newcommand{\optional}{\textcolor{psorange!90!black}{option}}
+  \newcommand{\open}{\textcolor{psorange!90!black}{open}}
+  \begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}Xll@{}}
+    \toprule
+    \textbf{optimization} & \textbf{what it does} & \textbf{gain, f32 / f64} & \textbf{result}\\
+    \midrule
+    software prefetch & load each array 128 bytes ahead (\term{Zicbop}) & \sx{2.04} / \sx{2.13} & \kept\\
+    in-place update & AB: read A, write B. AA: read and write A & \sx{1.45} / \sx{1.57} & \kept\\
+    instruction choice & scalar operands, fused multiply-add & kernel \sx{1.22} (f32) & \kept\\
+    row addresses once per row & compute row start addresses once & +2.5 / +2.2\,\% & \kept\\
+    halo copy per direction & copy only the values that cross a border & +2 to 6\,\% & \kept\\
+    no density, velocity output & write them only in the last step & +15 / +22\,\% & \optional\\
+    split loop & passes over a few directions at a time & $-$19 / +11\,\% & \open\\
+    \midrule
+    2 or 4 registers per instruction & longer vectors per instruction & slower & \dropped\\
+    arrays aligned to 64 bytes & start each array on a cache line & 11 to 29\,\% slower & \dropped\\
+    zeroing cache lines before writes & skip reading lines that are overwritten & no gain & \dropped\\
+    Clang with X60 tuning & the other compiler, tuned for this core & slower than GCC & \dropped\\
+    \bottomrule
+  \end{tabularx}\par}
+
+  \vspace{1.5mm}
+  {\scriptsize\color{psgray}Whole program on one core, each against the same build without it.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Update in place: the AA pattern}
+  \vspace{1mm}
+  {\small The name: the usual way reads array A and writes array B (AB). This way only uses A (AA).\par}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.4\textwidth}
+    {\small\bfseries AB pattern (before)\par}
+    \vspace{3mm}
+    \centering\input{figures/ab}
+
+    \vspace{1mm}
+    {\small\textbf{42 streams}, 260 bytes per cell\par}
+    \column{0.56\textwidth}
+    {\small\bfseries AA pattern: one array, two kinds of step\par}
+    \vspace{1mm}
+    \centering\input{figures/aa-pattern}
+
+    \vspace{1mm}
+    {\small\textbf{23 streams}, 184 bytes per cell\par}
+  \end{columns}
+  \takeaway{New sweepgen kernels and halo exchange. Whole program, with prefetch: \sx{1.45}
+    (f32), \sx{1.57} (f64).}
+\end{frame}
+
+% =============================================================================
+\section{Results and limits}
+
+\begin{frame}{Results: the whole program on one core}
+  \vspace{1mm}
+  \centering\input{figures/speedup}
+
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}Grey: MLUP/s, f32 / f64. Hatched: auto-vectorized. $64^3$ cells, 200 steps,
+  best of 3 runs, one session.\par}
+  \takeaway{f64 reaches its \sx{4} goal. f32 is at \sx{5.13} of the possible \sx{8}.
+    Auto-vectorization gives nothing.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Several cores: the shared memory becomes the limit}
+  \vspace{1mm}
+  \centering\input{figures/multicore}
+
+  \vspace{1mm}
+  \raggedright
+  \begin{itemize}\small
+    \item Each core runs one process with its own $64^3$ block.
+    \item From 4 to 8 cores RVV gains 33\,\% (f32) and 4\,\% (f64): all cores together move
+          at most about 4\,GB/s.
+  \end{itemize}
+  {\scriptsize\color{psgray}One session, best of 3 runs of 200 steps. Hatched: the best scalar
+  build, auto-vectorized.\par}
+  \takeaway{8 cores: RVV is \sx{2.35} (f32) and \sx{2.02} (f64) the plain scalar build, \sx{1.66}
+    and \sx{1.38} the best scalar build.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  All builds, one session: docs/notes3/board-logs/presentation3/ (board 2026-11-14), table at
+%  the end of walberla-presentation.log. scripts/walberla_bench_presentation.sh reruns it.
+\begin{frame}{Numbers: every build in one session}
+  \vspace{1mm}
+  \centering
+  {\footnotesize\renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{1 core}} & \multicolumn{2}{c}{\textbf{4 cores}}
+      & \multicolumn{2}{c}{\textbf{8 cores}}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+    MLUP/s, all cores together & f32 & f64 & f32 & f64 & f32 & f64\\
+    \midrule
+    plain scalar & 1.42 & 1.02 & 5.50 & 3.59 & 9.64 & 5.45\\
+    scalar, CSE & 1.59 & 1.08 & 5.83 & 3.74 & 9.90 & 5.60\\
+    scalar, CSE, in place (best scalar) & 2.12 & 1.51 & 7.43 & 5.39 & 13.63 & 7.98\\
+    \midrule
+    auto-vectorized & 1.41 & 1.02 & 5.51 & 3.57 & 9.64 & 5.44\\
+    auto-vectorized, CSE & 1.59 & 1.08 & 5.78 & 3.74 & 9.99 & 5.60\\
+    auto-vectorized, CSE, in place & 2.12 & 1.51 & 7.56 & 5.42 & 13.70 & 8.05\\
+    \midrule
+    RVV, CSE & 2.46 & 1.29 & 7.98 & 4.17 & 12.02 & 5.85\\
+    RVV, CSE, prefetch & 5.01 & 2.75 & 12.46 & 6.90 & 15.72 & 7.57\\
+    RVV, CSE, in place & 3.03 & 1.52 & 9.34 & 5.24 & 15.45 & 7.75\\
+    \textbf{RVV, CSE, in place, prefetch (now)} & \textbf{7.27} & \textbf{4.30} & \textbf{16.98}
+      & \textbf{10.59} & \textbf{22.61} & \textbf{10.99}\\
+    RVV, CSE, in place, prefetch, split loop & 5.91 & 4.77 & 17.77 & 10.83 & 22.44 & 10.99\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{3mm}
+  \raggedright
+  {\scriptsize\color{psgray}
+  Whole program, one process per core with its own $64^3$ block, GCC~14, best of 3 runs of 200
+  time steps. The f64 checksums are identical across all builds, the f32 ones agree to
+  $2\cdot 10^{-5}$. One script reruns all of it in about 4 hours:
+  \code{scripts/walberla\_bench\_presentation.sh}.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Where the code and the details are}
+  \vspace{1mm}
+  \small
+  \begin{tabularx}{\textwidth}{@{}l l X@{}}
+    \toprule
+    Repository & Branch, commit & Contents\\
+    \midrule
+    \href{https://github.com/salehjg/mirrored-pystencil2/tree/rvv-support}{\code{mirrored-pystencil2}}
+      & \code{rvv-support}, \code{a81dc547} & pystencils: RVV target, prefetch, instruction choice\\
+    \href{https://github.com/salehjg/mirrored-walberla/tree/rvv-support}{\code{mirrored-walberla}}
+      & \code{rvv-support}, \code{efa2b70c} & waLBerla: flags, in-place update, benchmark\\
+    \href{https://github.com/salehjg/my-e4-ws}{\code{my-e4-ws}} & \code{main}, \code{c443bf4}
+      & workspace: both forks, scripts, raw logs\\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{4mm}
+  Written reports in the workspace, \code{docs/manual/} (\code{./build.sh}):
+  \begin{itemize}\small
+    \item Report 2: RISC-V vector support in waLBerla (part 1 of this talk, about 60 pages).
+    \item Report 3: toward \sx{8} with RVV on the SpacemiT K1 (part 2, about 45 pages), with
+          the log file behind every number.
+  \end{itemize}
+  \vfill
+  \centering{\Huge\bfseries\color{psred}Thank you\par}
+  \vspace{2mm}
+\end{frame}
+
+% =============================================================================
+\appendix
+\section{Backup}
+
+\begin{frame}{Glossary (1/2)}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{1.5pt}
+      \item[AA pattern] in-place update: one array (A) is read and written; even and odd steps alternate.
+      \item[AB pattern] the usual update: read array A, write array B, then swap.
+      \item[Auto-vectorization] the compiler turns a plain loop into vector code by itself.
+      \item[Best scalar build] no vector instructions, but with the other improvements (CSE, AA pattern).
+      \item[Block] a box of cells; waLBerla cuts the domain into blocks, here one per process.
+      \item[Build time] when the program is compiled; here code generation happens too.
+      \item[Cache line] the unit the memory system moves: 64 bytes on the X60.
+      \item[CSE] common sub-expression elimination: compute each repeated part of a formula once.
+      \item[D3Q19] the LBM model used: 3 dimensions, 19 directions per cell.
+      \item[f32, f64] single (32-bit) and double (64-bit) precision floating point.
+    \end{description}
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{1.5pt}
+      \item[FMA] fused multiply-add: $a \cdot b + c$ in one instruction, rounded once.
+      \item[Generator script] a Python file per program that says which kernels to generate.
+      \item[Ghost layer] a one-cell copy of the neighbour block's border around each block.
+      \item[Halo exchange] refreshing the ghost layers after each time step.
+      \item[Hardware prefetcher] part of the cache that spots regular access patterns and loads data early.
+      \item[Intrinsic] a C/C++ function that the compiler turns into one machine instruction.
+      \item[K1, X60] the SpacemiT chip on the board, and its core type.
+      \item[Kernel] the generated loop that updates all cells once.
+      \item[Kernel lab] a small program that times one kernel alone, without waLBerla.
+    \end{description}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Glossary (2/2)}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{1.5pt}
+      \item[Lane] one number's slot in a vector register: 8 for f32, 4 for f64.
+      \item[LBM] lattice Boltzmann method: fluid simulation on a grid of cells.
+      \item[lbmpy] Python package that derives the LBM formulas for one cell.
+      \item[MLUP/s] million cell updates per second.
+      \item[MPI] the standard library for messages between processes, also between computers.
+      \item[Plain scalar build] the same program compiled without any vector instructions.
+      \item[pystencils] Python package that turns formulas into a C++ loop over all cells.
+      \item[QEMU] an emulator that runs RISC-V programs on an x86 computer.
+      \item[RISC-V] an open instruction set architecture.
+    \end{description}
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{1.5pt}
+      \item[Run time] when the compiled program runs.
+      \item[RVV] the RISC-V vector extension.
+      \item[Software prefetch] an instruction that asks the cache to load data that will be needed soon.
+      \item[Spill] saving a register to memory and loading it back, for lack of registers.
+      \item[SRT] single relaxation time: the simplest LBM collision model.
+      \item[Stream] a walk through one array in order.
+      \item[sweepgen] part of waLBerla: wraps generated kernels into C++ classes.
+      \item[.vf form] an RVV instruction form with one vector and one scalar operand.
+      \item[waLBerla] open-source C++ framework for fluid simulations.
+      \item[Zicbop] the RISC-V extension with the prefetch instructions.
+    \end{description}
+  \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Numbers: one step at a time}
+  \vspace{1mm}
+  \centering
+  {\small
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{f32}} & \multicolumn{2}{c}{\textbf{f64}}\\
+    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+    Step & MLUP/s & vs plain & MLUP/s & vs plain\\
+    \midrule
+    plain scalar build & 1.40 & \sx{1.00} & 0.95 & \sx{1.00}\\
+    best scalar build (CSE, in-place update) & 2.05 & \sx{1.46} & 1.44 & \sx{1.51}\\
+    RVV code at the start of part 2 & 2.40 & \sx{1.72} & 1.21 & \sx{1.26}\\
+    + software prefetch & 4.70 & \sx{3.36} & 2.37 & \sx{2.48}\\
+    + in-place update and new instruction choice & 7.08 & \sx{5.06} & 3.95 & \sx{4.14}\\
+    + row addresses once per row (second session) & 7.25 & \sx{5.24} & 4.04 & \sx{4.23}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{3mm}
+  \raggedright
+  {\scriptsize\color{psgray}
+  Whole program (kernel, halo exchange, time loop), $64^3$ cells, one core, GCC~14, best of 3
+  runs of 200 time steps. Rows 1 to 5 are from one session; the last row is from a second
+  session and is compared with that session's own scalar build (1.38 and 0.95\,MLUP/s). The
+  part 1 measurement (\sx{1.73}, \sx{1.31}) is an earlier session. Lab: hand-written split loop
+  10.83\,MLUP/s (cycle average, Clang with X60 tuning) against 1.40 for the plain scalar build:
+  \sx{7.7}. The results slides use a later session with every build (table at the end of the talk).\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{How we know the results are still correct}
+  \vspace{1mm}
+  \centering
+  {\footnotesize
+  \begin{tabular}{@{}l>{\centering\arraybackslash}p{2.6cm}>{\centering\arraybackslash}p{2.2cm}>{\centering\arraybackslash}p{1.6cm}@{}}
+    \toprule
+    Change & waLBerla tests on x86, 1, 2, 4 processes & same checksum, whole program
+      & emulator (QEMU)\\
+    \midrule
+    software prefetch & \no & \yes & \no\\
+    in-place update, halo exchange & \yes & \yes & \yes\\
+    instruction choice & \no & \yes & \yes\\
+    row addresses & \no & \yes & \yes\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{4mm}
+  \raggedright
+  \begin{itemize}\small
+    \item 24 of 24 waLBerla tests pass on x86. In f64 every build gives the same checksum, bit
+          for bit, on 1, 4 and 8 cores.
+    \item Tests broken on purpose fail, as they should.
+    \item Found and fixed: the original benchmark's start-up gave results that depended on
+          the number of blocks.
+  \end{itemize}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Where each change lives}
+  \centering{\brmarkerstrue\resizebox{0.88\textwidth}{!}{\input{figures/build-run}}}
+
+  \vspace{1.5mm}
+  {\scriptsize\renewcommand{\arraystretch}{0.95}
+  \begin{tabular}{@{}lll@{}}
+    \tagdot{psblue}\ \textbf{part 1: make it work} & \tagdot{psteal}\ \textbf{part 2: make it fast}
+      & \tagdot{psteal}\ \textbf{part 2: the last three changes}\\
+    1 RISC-V compiler flags & 5 prefetch, instruction choice, row addresses & 10 no density and velocity output\\
+    2 RVV target in pystencils & 6 in-place kernels \quad 7 their halo exchange & 11 halo copy per direction\\
+    3 benchmark program \quad 4 Clang fix & 8 X60 flag for Clang \quad 9 in-place time loop & 12 split kernel\\
+  \end{tabular}\par}
+\end{frame}
+
+\end{document}

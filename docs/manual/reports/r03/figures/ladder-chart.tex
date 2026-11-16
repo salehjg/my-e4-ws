@@ -1,0 +1,32 @@
+% Lab kernels, f32, kernel alone: cycles per cell (cycle counters; lower is better). Sessions differ by a
+% few percent. Sources: lab/results.tsv, lab3.log, lab4.log (appendix D). Target: 8x the application's plain scalar build
+% (1.398 MLUP/s, run B) = 1600 / (8 * 1.398) = 143 cycles per cell.
+\begin{tikzpicture}
+  \begin{axis}[
+      xbar, bar width=7pt, bar shift=0pt,
+      width=0.66\linewidth, height=7.4cm,
+      xmin=0, xmax=1180,
+      xlabel={cycles per cell, f32, kernel alone (lower is better)},
+      symbolic y coords={hcl,hgcc,gaan,gaao,split,pf,expl,scal},
+      ytick={hcl,hgcc,gaan,gaao,split,pf,expl,scal},
+      yticklabels={{hand AA + split, Clang with X60 model},{hand AA + split, GCC},
+        {generated AA + prefetch, new instr. selection},{generated AA + prefetch, original selection},
+        {hand direction split (pull)},{generated pull + prefetch 128 B},
+        {generated pull (before this work)},{scalar with CSE}},
+      yticklabel style={font=\scriptsize,align=right},
+      tick label style={font=\scriptsize}, label style={font=\footnotesize},
+      enlarge y limits=0.08,
+      nodes near coords, nodes near coords style={font=\tiny,anchor=west},
+      xmajorgrids, grid style={psgray!20},
+      clip=false,
+      extra x ticks={143}, extra x tick labels={},
+      extra x tick style={grid=major,major grid style={r03rejected,dashed,thick}},
+    ]
+    \addplot[fill=psgray!45,draw=psgray!80!black] coordinates {(1035,scal) (653,expl)};
+    \addplot[fill=r03landed!55,draw=r03landed!80!black] coordinates {(311,pf) (192.1,gaan)};
+    \addplot[fill=psblue!35,draw=psblue!70!black] coordinates {(237,split) (163.9,hgcc) (147.8,hcl)};
+    \addplot[fill=r03landed!25,draw=r03landed!70!black] coordinates {(234,gaao)};
+    \node[font=\scriptsize,text=r03rejected!80!black,anchor=south west] at (rel axis cs:0.1212,1)
+      {\sx{8} the plain scalar build: 143 cycles per cell};
+  \end{axis}
+\end{tikzpicture}

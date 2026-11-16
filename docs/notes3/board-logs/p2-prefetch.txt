@@ -1,0 +1,17 @@
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=90.4 GBps=1.131
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=256 pfw=0 zero=0 scalar=0 cyc_per_line=95.7 GBps=1.069
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=102.2 GBps=1.002
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=1024 pfw=0 zero=0 scalar=0 cyc_per_line=103.1 GBps=0.993
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=2048 pfw=0 zero=0 scalar=0 cyc_per_line=105.6 GBps=0.968
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=4096 pfw=0 zero=0 scalar=0 cyc_per_line=108.8 GBps=0.941
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=256 pfw=256 zero=0 scalar=0 cyc_per_line=86.0 GBps=1.190
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=512 zero=0 scalar=0 cyc_per_line=114.4 GBps=0.893
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=1024 pfw=1024 zero=0 scalar=0 cyc_per_line=115.4 GBps=0.886
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=1 scalar=0 cyc_per_line=227.8 GBps=0.449
+stream R=0 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=512 zero=0 scalar=0 cyc_per_line=99.3 GBps=1.030
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=190.7 GBps=0.537
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=1024 pfw=0 zero=0 scalar=0 cyc_per_line=180.8 GBps=0.566
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=105.8 GBps=0.967
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=23.7 GBps=4.296
+stream R=19 W=23 mb=4 thp=0 stagger=4160 pf=0 pfr=512 pfw=512 zero=0 scalar=0 cyc_per_line=120.7 GBps=0.848
+stream R=19 W=23 mb=4 thp=1 stagger=0 pf=0 pfr=512 pfw=512 zero=0 scalar=0 cyc_per_line=847.5 GBps=0.121

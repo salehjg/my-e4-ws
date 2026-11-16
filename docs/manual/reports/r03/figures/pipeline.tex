@@ -1,0 +1,29 @@
+% The pystencils kernel-creation pipeline (codegen/driver.py, DefaultKernelCreationDriver.__call__)
+% for a vector CPU target, with the parts added or changed by this work highlighted (teal).
+\begin{tikzpicture}[every node/.style={font=\scriptsize},node distance=3.2mm]
+  \node[r03box,text width=46mm,font=\scriptsize] (a) {update of one cell\\(assignments from lbmpy)};
+  \node[r03box,text width=46mm,font=\scriptsize,below=of a] (b) {loop nest over all cells; innermost loop ($x$)\\to be vectorized: 8 lanes (f32), 4 (f64)};
+  \node[r03box,text width=46mm,font=\scriptsize,below=of b] (c) {create the loops: vector loop\\+ scalar loop for the remainder};
+  \node[r03box,text width=46mm,font=\scriptsize,below=of c] (d) {general optimisations: fold constants,\\move loop-invariant code out of loops};
+  \node[r03ok,text width=46mm,font=\scriptsize,below=of d] (e) {\texttt{prepare\_vector\_loops}\\(RVV: \texttt{HoistRowPointers})};
+  \node[r03ok,text width=46mm,font=\scriptsize,below=of e] (f) {\texttt{insert\_prefetches}\\(only with \texttt{prefetch\_distance})};
+  \node[r03ok,text width=46mm,font=\scriptsize,below=of f] (g) {instruction selection\\(\texttt{SelectIntrinsicsRvv})};
+  \node[r03ok,text width=46mm,font=\scriptsize,below=of g] (h) {print C++ code; helper functions in\\\texttt{pystencils\_runtime/rvv.hpp}};
+  \foreach \u/\v in {a/b,b/c,c/d,d/e,e/f,f/g,g/h} \draw[r03arrow] (\u) -- (\v);
+  \draw[decorate,decoration={brace,amplitude=4pt,mirror}] ([xshift=-2mm]e.north west) -- node[left=5pt,align=right] {lowering\\(vector targets)} ([xshift=-2mm]g.south west);
+
+  % what each new part does
+  \node[r03ok,text width=66mm,font=\scriptsize,anchor=west] (e2) at ([xshift=9mm]e.east)
+    {\texttt{row = \&ptr[rest]} before the $x$ loop; accesses become \texttt{row[x]}
+     (\cref{r03:fig:rowptr}). Other platforms: no change.};
+  \node[r03ok,text width=66mm,font=\scriptsize,anchor=west] (f2) at ([xshift=9mm]f.east)
+    {one \texttt{prefetch\_read/write(\&row[x + D])} per distinct access, before the first memory
+     statement (\cref{r03:fig:prefetch}). Other platforms refuse.};
+  \node[r03ok,text width=66mm,font=\scriptsize,anchor=west] (g2) at ([xshift=9mm]g.east)
+    {new: scalar copies of uniform values, .vf forms, fused multiply-add, constants through
+     \texttt{in\_register} (\cref{r03:fig:selector})};
+  \node[r03ok,text width=66mm,font=\scriptsize,anchor=west] (h2) at ([xshift=9mm]h.east)
+    {new runtime functions: \texttt{prefetch\_read}, \texttt{prefetch\_write}
+     (Zicbop HINTs), \texttt{in\_register}};
+  \foreach \u in {e,f,g,h} \draw[psgray!70,dashed] (\u.east) -- (\u2.west);
+\end{tikzpicture}

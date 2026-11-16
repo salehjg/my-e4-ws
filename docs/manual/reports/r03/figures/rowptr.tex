@@ -1,0 +1,25 @@
+% HoistRowPointers: before, every access computes its address from the base pointer inside the
+% x loop, and GCC shares one pointer register between neighbours such as x-1 and x+1, adding the offset
+% in every iteration (RVV loads/stores have no immediate offset); after, one row pointer per distinct
+% (pointer, rest) is set once per row. Instruction counts: f32 AA odd step, GCC 16 cross.
+\begin{tikzpicture}[every node/.style={font=\scriptsize}]
+  \node[font=\footnotesize\bfseries] at (3.6,2.35) {before};
+  \node[font=\footnotesize\bfseries] at (11.4,2.35) {after \texttt{HoistRowPointers}};
+  \node[r03code,text width=72mm] (b) at (3.6,0.9) {%
+for z, y:\\
+\ \ for x in 0, 8, ...:\\
+\ \ \ \ v3 = vle32(\&f[x - 1 + y*s1 + z*s2 + 3*s3])\\
+\ \ \ \ v4 = vle32(\&f[x + 1 + y*s1 + z*s2 + 4*s3])\\
+\ \ \ \ ...  // GCC: pointers based on x, +-4 B added\\
+\ \ \ \ \ \ \ \ \ // per iteration (addi), extra addresses spilled};
+  \node[r03code,text width=70mm] (a) at (11.4,0.9) {%
+for z, y:\\
+\ \ row3 = \&f[-1 + y*s1 + z*s2 + 3*s3]   // once per row\\
+\ \ row4 = \&f[+1 + y*s1 + z*s2 + 4*s3]\\
+\ \ for x in 0, 8, ...:\\
+\ \ \ \ v3 = vle32(\&row3[x])    // pointer + x only\\
+\ \ \ \ v4 = vle32(\&row4[x])};
+  \draw[r03arrow] (b.east) -- (a.west);
+  \node[r03no,text width=60mm] at (3.6,-0.75) {383 instructions per 8 cells (odd step)};
+  \node[r03ok,text width=60mm] at (11.4,-0.75) {305 instructions per 8 cells (odd step); 23 row pointers};
+\end{tikzpicture}

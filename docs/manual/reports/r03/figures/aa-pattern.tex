@@ -1,0 +1,37 @@
+% The AA pattern for the pair E (c = +x) / W (c = -x) around cell x, as in lbmpy's AA accessors and
+% hand/hand-aa.hpp: even step reads slot i at x and writes slot inv(i) at x; odd step reads slot
+% inv(i) at x - c_i and writes slot i at x + c_i.
+\begin{tikzpicture}[every node/.style={font=\scriptsize},
+    slot/.style={draw=psgray!80,fill=codebg,minimum width=8mm,minimum height=6mm,inner sep=0pt},
+    coll/.style={circle,draw=psgray!90,fill=white,inner sep=1.5pt,align=center},
+    rd/.style={-{Stealth[length=1.8mm]},thick,draw=psblue!85!black,dashed},
+    wr/.style={-{Stealth[length=1.8mm]},thick,draw=psorange!90!black}]
+  % three cells per panel, two slots per cell; prefixes e (even) and o (odd)
+  \foreach \p/\px in {e/0, o/7.4} {
+    \foreach \c/\lab in {0/$x-1$, 1/$x$, 2/$x+1$} {
+      \node[slot] (\p W\c) at (\px+\c*2.1+0.4,0) {W};
+      \node[slot] (\p E\c) at (\px+\c*2.1+1.2,0) {E};
+      \node[r03label] at (\px+\c*2.1+0.8,-0.55) {cell \lab};
+    }
+    \node[coll] (\p col) at (\px+2.9,1.6) {collide\\at $x$};
+  }
+  \node[font=\footnotesize\bfseries] at (2.9,2.45) {even step: in place};
+  \node[font=\footnotesize\bfseries] at (10.3,2.45) {odd step: from and to the neighbours};
+
+  % even: read E and W at x, write post-collision E into slot W and W into slot E, both at x
+  \draw[rd] (eE1.north) to[bend right=12] (ecol);
+  \draw[rd] (eW1.north) to[bend left=12] (ecol);
+  \draw[wr] (ecol.west) to[bend right=40] node[pos=0.35,left,text=psorange!90!black] {E} (eW1.north west);
+  \draw[wr] (ecol.east) to[bend left=40] node[pos=0.35,right,text=psorange!90!black] {W} (eE1.north east);
+
+  % odd: direction E is read from slot W at x-1 and written to slot E at x+1; W the other way
+  \draw[rd] (oW0.north) to[bend left=8] (ocol);
+  \draw[rd] (oE2.north) to[bend right=8] (ocol);
+  \draw[wr] (ocol.east) to[bend left=25] node[pos=0.5,above,text=psorange!90!black] {E} (oE2.north west);
+  \draw[wr] (ocol.west) to[bend right=25] node[pos=0.5,above,text=psorange!90!black] {W} (oW0.north east);
+
+  % legend
+  \draw[rd] (0.6,-1.2) -- ++(0.7,0) node[right,text=black] {read (pre-collision value)};
+  \draw[wr] (5.4,-1.2) -- ++(0.7,0) node[right,text=black]
+    {write (post-collision value of the direction named on the arrow)};
+\end{tikzpicture}

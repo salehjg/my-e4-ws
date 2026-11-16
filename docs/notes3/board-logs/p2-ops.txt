@@ -1,0 +1,41 @@
+== e32 m1
+vfadd.vv tput                  1.02 cycles/insn
+vfadd.vv lat                   4.07 cycles/insn
+vfmul.vv tput                  1.01 cycles/insn
+vfmul.vv lat                   4.06 cycles/insn
+vfmacc.vv tput                 1.01 cycles/insn
+vfmacc.vv lat                  5.03 cycles/insn
+vfadd.vf tput                  1.01 cycles/insn
+vfdiv.vv tput                 38.18 cycles/insn
+vfdiv.vv lat                  38.09 cycles/insn
+vfrec7.v tput                  4.03 cycles/insn
+vfmv.v.f tput                  4.02 cycles/insn
+vle32.v tput (L1)              2.01 cycles/insn
+vle32.v +1 elem (L1)           4.02 cycles/insn
+vse32.v tput (L1)              2.59 cycles/insn
+== e64 m1
+vfadd.vv tput                  1.01 cycles/insn
+vfadd.vv lat                   4.02 cycles/insn
+vfmul.vv tput                  1.01 cycles/insn
+vfmul.vv lat                   5.02 cycles/insn
+vfmacc.vv tput                 1.01 cycles/insn
+vfmacc.vv lat                  6.02 cycles/insn
+vfadd.vf tput                  1.03 cycles/insn
+vfdiv.vv tput                 40.07 cycles/insn
+vfdiv.vv lat                  12.03 cycles/insn
+vfrec7.v tput                  4.02 cycles/insn
+vfmv.v.f tput                  4.02 cycles/insn
+vle64.v tput (L1)              2.01 cycles/insn
+vle64.v +1 elem (L1)           4.02 cycles/insn
+vse64.v tput (L1)              2.58 cycles/insn
+== scalar
+fadd.s tput                    1.02 cycles/insn
+fadd.s lat                     4.01 cycles/insn
+fmul.s tput                    1.02 cycles/insn
+fmadd.s tput                   5.02 cycles/insn
+fdiv.s tput                   15.19 cycles/insn
+fadd.d tput                    1.03 cycles/insn
+fmul.d tput                    1.26 cycles/insn
+fdiv.d tput                   23.50 cycles/insn
+flw tput (L1)                  1.27 cycles/insn
+fsw tput (L1)                  1.54 cycles/insn

@@ -1,0 +1,50 @@
+% Slide "Results": whole-program speedup over the plain scalar build, GCC 14, 64^3 cells, one
+% core, best of 3 runs of 200 steps. All bars from one session (board 2026-11-14,
+% scripts/walberla_bench_presentation.sh, logs docs/notes3/board-logs/presentation3/
+% walberla-{scalar,autovec,rvv}-{f32,f64}-1core.log). Under each group: MLUP/s, f32 / f64.
+%   plain = scalar (1.417 / 1.020 MLUP/s), plain auto = autovec, best = scalar_cse_aa,
+%   best auto = autovec_cse_aa (auto-vectorized bars hatched), RVV AB = explicit_cse,
+%   + prefetch = explicit_cse_pf, + in place = explicit_cse_aa_pf.
+%   RVV now vs best scalar: 7.268 / 2.116 = 3.44 (f32), 4.299 / 1.505 = 2.86 (f64).
+% Every RVV bar already has the new instruction choice and row addresses.
+\begin{tikzpicture}
+  \begin{axis}[
+      ybar=2pt, bar width=9pt,
+      width=\textwidth, height=5.5cm,
+      ymin=0, ymax=8.9,
+      ylabel={speedup over plain scalar},
+      symbolic x coords={plain,plainav,best,bestav,rvv,pf,aa},
+      xtick={plain,plainav,best,bestav,rvv,pf,aa},
+      xticklabels={
+        {plain scalar\\[1pt]\textcolor{psgray}{1.42 / 1.02}},
+        {plain scalar,\\auto-vectorized\\[1pt]\textcolor{psgray}{1.41 / 1.02}},
+        {best scalar\\[1pt]\textcolor{psgray}{2.12 / 1.51}},
+        {best scalar,\\auto-vectorized\\[1pt]\textcolor{psgray}{2.12 / 1.51}},
+        {RVV,\\AB pattern\\[1pt]\textcolor{psgray}{2.46 / 1.29}},
+        {RVV,\\+ prefetch\\[1pt]\textcolor{psgray}{5.01 / 2.75}},
+        {\textbf{RVV now}: + in place\\(AA pattern)\\[1pt]\textcolor{psgray}{\textbf{7.27 / 4.30}}}},
+      xticklabel style={align=center,font=\scriptsize,anchor=north},
+      tick label style={font=\scriptsize}, label style={font=\scriptsize},
+      enlarge x limits=0.07,
+      legend style={font=\scriptsize,at={(0.01,0.78)},anchor=north west,draw=psgray!50},
+      nodes near coords, nodes near coords style={font=\tiny,anchor=south},
+      point meta=explicit symbolic,
+      ymajorgrids, grid style={psgray!20},
+    ]
+    \addplot[fill=psblue!60,draw=psblue!80!black,bar shift=-5.5pt] coordinates {
+      (plain,1.00)[1.00] (best,1.493)[1.49] (rvv,1.734)[1.73] (pf,3.538)[3.54] (aa,5.130)[\textbf{5.13}]};
+    \addplot[fill=psteal!55,draw=psteal!80!black,bar shift=5.5pt] coordinates {
+      (plain,1.00)[1.00] (best,1.477)[1.48] (rvv,1.264)[1.26] (pf,2.693)[2.69] (aa,4.216)[\textbf{4.22}]};
+    \addplot[pattern=north east lines,pattern color=psblue!80!black,draw=psblue!80!black,
+      bar shift=-5.5pt,forget plot] coordinates {(plainav,0.997)[1.00] (bestav,1.496)[1.50]};
+    \addplot[pattern=north east lines,pattern color=psteal!80!black,draw=psteal!80!black,
+      bar shift=5.5pt,forget plot] coordinates {(plainav,0.999)[1.00] (bestav,1.478)[1.48]};
+    \legend{f32, f64}
+    \draw[psblue!80!black,dashed,thick] (axis description cs:0,8/8.9) -- (axis description cs:1,8/8.9)
+      node[pos=0.45,above,font=\scriptsize] {f32 goal \sx{8}};
+    \draw[psteal!80!black,dashed,thick] (axis description cs:0,4/8.9) -- (axis description cs:1,4/8.9)
+      node[pos=0.45,above,font=\scriptsize] {f64 goal \sx{4}};
+    \node[font=\scriptsize,anchor=south east,align=right] at (axis cs:aa,6.15)
+      {vs best scalar: \sx{3.44} (f32), \sx{2.86} (f64)};
+  \end{axis}
+\end{tikzpicture}

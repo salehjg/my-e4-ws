@@ -1,0 +1,45 @@
+% =============================================================================
+%  Report r03 -- Toward 8x: the waLBerla D3Q19 sweep with RVV on the SpacemiT K1
+%  (written 2026-11-14)
+%
+%  Self-contained: every term is defined in the report itself (chapter 2 and the
+%  glossary, appendix A); no knowledge of other reports, plans or logs is assumed.
+%  Sources of the numbers: the raw board logs in docs/notes3/board-logs/, the
+%  working log docs/notes3/rvv-8x-speedup-progress-fable5.2.md, and the code at
+%  workspace c443bf4, pystencils a81dc547 and waLBerla efa2b70c (appendix D).
+%
+%  Chapters and appendices are \include'd, so single chapters can be built with
+%  \includeonly in manual.tex, e.g. \includeonly{reports/r03/chapters/04-root-cause}.
+% =============================================================================
+\input{reports/r03/macros}
+\lstset{inputpath=reports/r03/listings}
+
+\reporttitle[{Why the vectorized lattice Boltzmann kernel was slow on the SpacemiT~X60 core,
+  and the changes to pystencils, sweepgen and waLBerla that made it faster\\[0.4em]
+  \normalsize workspace \texttt{c443bf4}, \ps{} \texttt{a81dc547} and waLBerla
+  \texttt{efa2b70c}, branch \texttt{rvv-support}}]
+  {Toward 8\texorpdfstring{$\times$}{x}: the D3Q19 Sweep with RVV on the SpacemiT K1}{2026-11-14}
+
+\reportpart{Background and Diagnosis}
+\include{reports/r03/chapters/01-introduction}
+\include{reports/r03/chapters/02-background}
+\include{reports/r03/chapters/03-setup}
+\include{reports/r03/chapters/04-root-cause}
+
+\reportpart{Optimisations}
+\include{reports/r03/chapters/05-lab}
+\include{reports/r03/chapters/06-pystencils}
+\include{reports/r03/chapters/07-walberla}
+
+\reportpart{Evidence}
+\include{reports/r03/chapters/08-verification}
+\include{reports/r03/chapters/09-results}
+\include{reports/r03/chapters/10-open}
+
+\reportappendix
+\include{reports/r03/appendices/a-glossary}
+\include{reports/r03/appendices/b-file-map}
+\include{reports/r03/appendices/c-reproduce}
+\include{reports/r03/appendices/d-evidence}
+
+\printbibliography[heading=bibintoc]

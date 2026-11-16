@@ -1,0 +1,8 @@
+f32-rvv-cse+vf2: energy 3.955785272950e+02 vs 395.5785294018 rel 5.33e-09 ok
+f32-rvv-cse+bpf=128+vf2: energy 3.955785272950e+02 vs 395.5785294018 rel 5.33e-09 ok
+f64-rvv-cse+bpf=128+vf2: energy 3.955776514995e+02 vs 395.5776514995 rel 0.00e+00 ok
+f32-rvv-cse+aa+vf2: energy 3.955785279531e+02 vs 395.5785279371 rel 4.04e-11 ok
+f32-rvv-cse+aa+bpf=128+vf2: energy 3.955785279531e+02 vs 395.5785279371 rel 4.04e-11 ok
+f64-rvv-cse+aa+bpf=128+vf2: energy 3.955776514995e+02 vs 395.5776514995 rel 0.00e+00 ok
+GATE1 ok
+lab3 gates failed (gate1=0 gate2=1) Thu Nov 12 12:42:04 PM CST 2026: old selector restored

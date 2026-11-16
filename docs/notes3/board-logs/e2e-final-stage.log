@@ -1,0 +1,55 @@
+== stage Fri Nov 13 01:25:29 AM CST 2026
+submodules/walberla/sweepgen/src/sweepgen/prefabs/lbm_bulk.py
+tar: submodules/walberla/sweepgen/src/sweepgen/prefabs/lbm_bulk.py: time stamp 2026-11-14 18:04:25 is 146335.783260851 s in the future
+submodules/walberla/apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py
+tar: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py: time stamp 2026-11-14 18:11:02 is 146732.781878184 s in the future
+submodules/walberla/apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp
+tar: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp: time stamp 2026-11-14 18:11:18 is 146748.781127226 s in the future
+submodules/walberla/apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt
+tar: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt: time stamp 2026-11-14 18:11:18 is 146748.780693892 s in the future
+submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py
+tar: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py: time stamp 2026-11-14 18:09:09 is 146619.780403684 s in the future
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse_aa/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse_aa/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build-gcc-f32/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_pf/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse_aa/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar/gen/SweepgenLbmCPU.cpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_autovec/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_aa_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_cse_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_explicit_pf/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse_aa/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar_cse/gen/SweepgenLbmCPU.hpp'
+removed '/home/bananapi/saleh/walberla-build/apps/benchmarks/SweepgenLbmCPU/_gen/SweepgenLbmCPU_scalar/gen/SweepgenLbmCPU.hpp'

@@ -2,7 +2,16 @@
 
 Working log for [`rvv-8x-speedup-plan-fable5.2.md`](rvv-8x-speedup-plan-fable5.2.md).
 Each entry is one loop: hypothesis → experiment → measurement → conclusion → next action.
-Nothing is committed.
+
+The work up to Loop 14 is committed and pushed (by the user, 2026-11-14):
+- this repository: [`c443bf4`](https://github.com/salehjg/my-e4-ws/tree/c443bf46254124ae1612233d71785692c09424cb)
+  (`docs/notes3/`, `misc/x60-lab/`, `scripts/`);
+- pystencils, branch `rvv-support`: [`a81dc547`](https://github.com/salehjg/mirrored-pystencil2/tree/a81dc547bb289d3a7faf4df5039120e26aec1b2b)
+  (changes since notes2: `9a989e16..a81dc547`);
+- waLBerla, branch `rvv-support`: [`efa2b70c`](https://github.com/salehjg/mirrored-walberla/tree/efa2b70c863090ac8108f8f09273ce818484384b)
+  (changes since notes2: `b78f2d87..efa2b70c`).
+
+The report `docs/manual/reports/r03/` summarises this log.
 
 ## Status
 
@@ -13,7 +22,7 @@ Nothing is committed.
 | 2 X60 characterisation probes | done (Loops 2, 5) |
 | 3 D3Q19 kernel lab | done (Loop 3): reproduces waLBerla within 5% |
 | 4 lever experiments | over the generated kernel: software prefetch 2.1× (Loop 3), direction split 2.8× (Loop 4), AA + split 3.6× = 9.11 MLUP/s f32 (Loop 7) |
-| 5 land winners in the stack | software prefetch (Loop 6); in-place AA streaming in sweepgen + v8 halo exchange + app, with a regression test (Loop 9); RVV selector .vf operands + FMA (Loop 10); pull-init bug fixed (Loop 9); X60 `-mtune` in CMake (Loop 11); row pointers + constants in registers (Loop 12, board gate pending) |
+| 5 land winners in the stack | software prefetch (Loop 6); in-place AA streaming in sweepgen + v8 halo exchange + app, with a regression test (Loop 9); RVV selector .vf operands + FMA (Loop 10); pull-init bug fixed (Loop 9); X60 `-mtune` in CMake (Loop 11); row pointers + constants in registers (Loop 12; board pytest 148 passed; end to end AA + pf f32 +2.5%, f64 +2.2%, kept); halo exchange one slot at a time (Loop 13, end-to-end run pending); sweeps without ρ/u output and the direction-split AA stream/collide generated from lbmpy, in sweepgen and the app (Loop 14, lab and end-to-end runs pending) |
 | 6 end-to-end verification | GCC f32/f64 1-core matrices (Loops 6, 9): **f32 5.06×, f64 4.14×** the plain scalar build (3.45× / 2.74× the best scalar sweep); 4-process runs (Loop 12); board RVV tests 145 passed (Loop 10); waterfall in "Phase 6: result" |
 
 Starting point (waLBerla `SweepgenLbmCPU`, 64³, one core, from notes2): best explicit vs
@@ -286,6 +295,16 @@ every 16th cell. Kernel flags `-O3 -march=rv64gcv_zvl256b_zicbop_zicboz`.
 Checksums: the explicit+pf energy is bit-identical to explicit (3.955785294018e+02). The
 scalar+pf energy differs by 1.7e-7 relative (GCC contracts differently around the `if`).
 
+**Correction (2026-11-14, found while writing report r03).** The row "scalar_cse + pf 128 B" is
+a kernel *without* global CSE. `gen.py` turns CSE on only when the base name is exactly `cse`
+(`update_rule(dtype, base == "cse")`), so every file generated under a `cse_scalar+...` name
+(`f32-generic-cse_scalar+pf=128`, `+pf=256`, `+aa`, `+aa+nomacro`, and the f64 ones) has
+`cse_global=False`: 4 instead of 36 `xi_` temporaries in the pull kernel. The plain
+`f32-generic-cse_scalar.cpp` is a copy of `f32-generic-cse.cpp` (its header names that kernel)
+and does have CSE. The 1.7e-7 checksum difference comes from the missing CSE, not from
+contraction. So the lab never measured prefetch on the scalar kernel *with* CSE; the +15% below
+compares scalar without CSE + prefetch against scalar with CSE without prefetch.
+
 **Conclusion.** Software prefetch alone doubles the explicit kernel (2.47 → 5.19 MLUP/s):
 **3.3× the plain scalar baseline**, 2.9× scalar with the same prefetch lever. IPC is still
 only 0.22, so the kernel is still memory-stall bound. Next lever: fewer concurrent streams
@@ -453,6 +472,8 @@ GCC f32:
 - Fairness note: the prefetch option is RVV-only, so the waLBerla scalar build cannot use
   it. In the lab, the same lever on the scalar kernel gives +15% (1.57 → 1.81). Against a
   prefetching scalar baseline the f32 ratio would be about 4.8 / (1.59 × 1.15) ≈ 2.6×.
+  (Correction: the 1.81 kernel has no global CSE, see the Loop 3 correction; the +15% is not a
+  clean prefetch-only comparison.)
 
 GCC f64 (same run settings; all eight variants give the same energy, 3.775155682480e+02):
 
@@ -997,7 +1018,8 @@ The pull kernel gains less: with 42 streams it keeps some pointer spills.
 - New codegen tests in `tests/nbackend/test_rvv_codegen.py`:
   - `test_stencil_accesses_use_row_pointers`, which fails with the hook disabled.
   - `test_hoisted_constants_are_scalar_operands` now also checks the `in_register` wrapping.
-- Local: `tests/nbackend tests/codegen` 435 passed, 13 skipped.
+- Local: `tests/nbackend tests/codegen` 435 passed, 15 skipped (13 need RVV hardware, 1 a GPU,
+  1 `islpy`).
 - Clang 18 compiles the helper as well.
 - Board (`queue_e2e_cg.sh`): the RVV pytest files with the change, 148 passed.
 
@@ -1025,8 +1047,45 @@ The pull kernel gains less: with 42 streams it keeps some pointer spills.
   explanation that I could check. The likely cause is the order of the memory
   instructions, which changes with the register allocation.
 - The pystencils version (`HoistRowPointers`, `in_register`) is measured end to end by
-  `queue_e2e_cg.sh` (pending). `queue_e2e_halo.sh` reverts it before the next build unless
-  that run is at least 2% faster for both f32 and f64 AA + pf.
+  `queue_e2e_cg.sh`. `queue_e2e_halo.sh` reverts it before the next build unless that run is
+  at least 2% faster for both f32 and f64 AA + pf.
+
+**End to end, GCC f32** (`board-logs/e2e-cg-gcc-f32.log`, same protocol as Loop 9; every
+explicit target regenerated with the change):
+
+| variant | e2e-cg MLUP/s | Loop 9 MLUP/s | change |
+|---|---|---|---|
+| scalar (unchanged code) | 1.383 | 1.398 | −1.1% |
+| scalar_cse (unchanged) | 1.589 | 1.589 | 0.0% |
+| scalar_cse_aa (unchanged) | 2.050 | 2.048 | +0.1% |
+| explicit_cse | 2.408 | 2.400 | +0.4% |
+| explicit_cse_aa | 3.031 | 3.042 | −0.4% |
+| explicit_cse_pf | 4.944 | 4.700 | **+5.2%** |
+| explicit_cse_aa_pf | **7.251** | 7.076 | **+2.5%** |
+
+- Energies are identical to Loop 9's, digit for digit.
+- In the application, the change helps exactly the prefetching variants; the variants
+  without prefetch move as little as the unchanged scalar builds. Within the e2e-cg session,
+  explicit_cse_aa_pf is 5.24× the plain scalar build and 3.54× the best scalar sweep.
+- f32 passes `queue_e2e_halo.sh`'s 2% rule (7.251 ≥ 1.02 × 7.076 = 7.217).
+
+**End to end, GCC f64** (`board-logs/e2e-cg-gcc-f64.log`):
+
+| variant | e2e-cg MLUP/s | Loop 9 MLUP/s | change |
+|---|---|---|---|
+| scalar (unchanged code) | 0.954 | 0.955 | −0.1% |
+| scalar_cse (unchanged) | 1.009 | 1.009 | 0.0% |
+| scalar_cse_aa (unchanged) | 1.453 | 1.445 | +0.5% |
+| explicit_cse | 1.213 | 1.207 | +0.5% |
+| explicit_cse_aa | 1.660 | 1.630 | +1.8% |
+| explicit_cse_pf | 2.572 | 2.367 | **+8.7%** |
+| explicit_cse_aa_pf | **4.037** | 3.952 | **+2.2%** |
+
+- All seven energies are identical to Loop 9's (395.159209014).
+- f64 passes the 2% rule as well (4.037 ≥ 1.02 × 3.952 = 4.031), so `queue_e2e_halo.sh` kept
+  the change (`board-logs/e2e-halo-stage.log`: "pystencils: as left by e2e-cg").
+- Within the e2e-cg session, f64 explicit_cse_aa_pf is 4.23× the plain scalar build and 2.78×
+  the best scalar sweep.
 
 **5. Field alignment and huge pages: the waLBerla layout is already the best one for the
 vector kernels.** Lab (`queue_lab5.sh`), interior origin aligned to ALIGN bytes and rows
@@ -1042,13 +1101,16 @@ padded to ALIGN bytes. waLBerla today: 16 B. Mean MLUP/s of 2 rounds:
 | f64 AA + pf | **3.74** | 3.65 | 3.10 | 3.63 |
 
 - For the AA kernels, 16 B (today's layout) is the fastest. 64-byte alignment, which
-  sounds right for the cache, costs the vector kernels 17 to 29%.
-- The f64 scalar kernel gains 34% from 64-byte alignment, which is the opposite trend. It
-  is the only kernel that gains. The landed AA scalar baseline does not use the pull
-  kernel, so this does not change the honest baseline, but it shows that the layout
-  effects here are large and kernel specific.
-- Huge pages (THP) make the f32 AA odd step 7% faster (10.0 MLUP/s, fewer TLB misses as in
-  Loop 0) but the even step 30% slower, and the f32 pull kernel 25% slower. With 4 K pages
+  sounds right for the cache, costs the vector kernels 11 to 29% (f64 pull −11%, f64 AA
+  −17%, f32 AA −24%, f32 pull −29%).
+- The scalar pull kernels gain from 64-byte alignment (f64 +34%, f32 +4%), the opposite
+  trend. The landed AA scalar baseline does not use the pull kernel, so this does not
+  change the honest baseline, but it shows that the layout effects here are large and
+  kernel specific.
+- Huge pages (THP; the THP runs use the 32-B layout) make the f32 AA odd step 7% faster
+  (10.0 MLUP/s, fewer TLB misses as in Loop 0) but the even step 30% slower, both against the
+  16-B layout without THP; against 32 B without THP: +14% and −24%. The f32 pull kernel is
+  25% slower than with 32 B and no THP. With 4 K pages
   the physical addresses of the 19 PDF slices are random beyond bit 12. With 2 MB pages
   they keep the virtual offsets, which points to cache set or DRAM bank conflicts
   between the slices. Loop 13 tests padding between the PDF slices.
@@ -1138,8 +1200,9 @@ section 5 of Loop 12.
 - The timed steps of the application need neither ρ nor u: the energy checksum reads u
   once, after the loop. A sweep without the four output stores has 19 instead of 23
   streams and moves 152 instead of 184 B per cell (f32 AA).
-- It was measured once in Loop 3, on the pull kernel without prefetch: 559 against about
-  629 cycles per cell. It was never measured on the landed kernels.
+- It was measured once in Loop 3, on the pull kernel without prefetch: 559 against 653
+  cycles per cell in the same table (3.19 against 2.47 MLUP/s). It was never measured on
+  the landed kernels.
 - `edits.py nomacro` now also removes the outputs' prefetch hints and matches the row
   pointers of Loop 12.
 - Variants:
@@ -1196,6 +1259,60 @@ section 5 of Loop 12.
   - f32: BY ∈ {1, 2, 4}, GM ∈ {5, 7}, GP ∈ {2, 3, 5}, + prefetch 128 B, + nomacro;
   - f64: BY ∈ {1, 2}, GM ∈ {5, 7}, GP ∈ {2, 3}, + prefetch, + nomacro.
 
+**3. Both levers in sweepgen and the app** (`submodules/walberla`, in `efa2b70c`).
+- sweepgen `prefabs/lbm_bulk.py`: `LbmBulk(..., output_free_sweeps=True)` also generates
+  `StreamCollideNoOutput` (pull) or `StreamCollideEvenNoOutput` / `StreamCollideOddNoOutput`
+  (AA), from lbmpy update rules with `output={}`.
+  - For pull, the extra sweep object has its own shadow buffer (sweepgen's
+    `ShadowBufferCache` swaps the field with a per-sweep buffer), so mixing the two sweeps
+    stays correct, at the cost of one more PDF buffer.
+- App `SweepgenLbmCPU.cpp`: with `SWEEPGEN_LBM_OUTPUT=last` in the environment, every step
+  except the last runs the output-free sweep; the default (`every`) is unchanged. The
+  result line prints `output=every|last`. Every target contains both sweep sets, so the
+  scalar baselines get the lever too.
+- `apps/benchmarks/SweepgenLbmCPU/lbm_split.py` (new): `SplitAA`, the generator of the
+  split passes and their driver. `misc/x60-lab/lab/gensplit.py` now imports it, so the lab
+  and the app share one implementation.
+  - `SweepgenLbmCPU.py --split BY,GM,GP` (explicit variant, AA only) emits the passes
+    (pystencils, the app's vector target, `ghost_layers = 0`) and
+    `LBM_SPLIT::streamCollide(f, rho, u, sizes, strides, odd, output, omega)`.
+    The macroscopic pass exists in both output flavours; the driver picks one per call.
+  - The driver handles a last block with fewer than BY rows. Its scratch is a
+    `static std::vector` sized for the block, with 64-byte aligned components.
+  - CMake target `SweepgenLbmCPU_explicit_cse_aa_split`: `--split=2,5,3` in single
+    precision and `1,5,3` in double precision (the hand kernel's best settings, Loop 7).
+    Defines `SWEEPGEN_LBM_SPLIT`, so the app calls the split driver instead of the AA
+    sweeps.
+- A bug caught by the checksums: the first version of the shared module listed the
+  output-free macroscopic pass after the collision passes, so in `nomacro` mode the
+  collision read the previous block's scratch. QEMU's weighted PDF sum showed it (7696
+  instead of 38.72 at 16³). Now each output flavour keeps its own pass order.
+
+**4. Verification of the committed tree** (laptop, x86, GCC 16, AVX for the explicit
+variants, f64).
+- App, energy after N steps (2 warm-up steps), for every variant, decomposition, step count
+  and output mode:
+
+| processes × block | steps | scalar_cse | scalar_cse_aa | explicit_cse | explicit_cse_aa | explicit_cse_aa_split |
+|---|---|---|---|---|---|---|
+| 1 × 64³ / 8 × 32³ | 20 | 395.489692731 | = | = | = | = |
+| 1 × 64³ / 8 × 32³ | 21 | 395.575509355 | = | = | = | = |
+| 2 × 24³ | 101 | 40.7081176884 | = | = | = | = |
+| 6 × 24³ | 101 | 125.363104502 | = | = | = | = |
+
+  Every cell holds for `output=every` and for `output=last` (60 runs, all 12 printed
+  digits equal per row).
+- `ctest -R "LbmScenarios|HaloExchange|CommunicationHiding"`: 24 of 24 passed, after
+  regenerating the scenario sources (they use `LbmBulk`).
+- pystencils `tests/nbackend tests/codegen`: 435 passed, 15 skipped (13 need RVV hardware).
+- QEMU (lab variants regenerated from the shared module): the f64 split kernels agree with
+  the generated AA kernel in all printed digits for every BY/GM/GP; `+nomacro` keeps the
+  weighted PDF sum of its base.
+
+**Board job:** `queue_e2e_final.sh` (after lab7): regenerates every target, then GCC
+f32/f64 one-core matrices including the split target, once with `output=every` and once
+with `output=last`, and a perf profile of the f32 split application.
+
 ## Phase 6: result (waterfall, ceiling, remaining gap)
 
 waLBerla `SweepgenLbmCPU`, 64³ cells, one core (core 2), GCC 14 `-O3`, best of 3 × 200 steps,
@@ -1203,20 +1320,27 @@ end to end (sweep + halo exchange + timing loop).
 - **Plain scalar** = the same application built for `rv64gc` (`SweepgenLbmCPU_scalar`).
 - **Best scalar** = the same non-vector levers applied to the scalar build, as the plan's
   honesty clause requires: global CSE and in-place AA streaming (`SweepgenLbmCPU_scalar_cse_aa`).
-  Software prefetch is emitted in vector loops only. Its scalar counterpart gave +15% in the
-  lab (Loop 3) and is not in the application.
+  Software prefetch is emitted in vector loops only. A scalar kernel with prefetch (but, by a
+  lab naming error, without CSE; see the Loop 3 correction) was 15% faster than scalar_cse in the
+  lab (Loop 3); scalar prefetch is not in the application.
 
-**Waterfall, f32** (session of Loop 9; the notes2 starting point was 1.73×):
+**Waterfall, f32** (session of Loop 9; the notes2 starting point was 1.73×; ratios from the
+unrounded best values of `board-logs/e2e-aa-gcc-{f32,f64}.log`):
 
 | step | lever (loop) | MLUP/s | lever gain | vs plain scalar | vs best scalar |
 |---|---|---|---|---|---|
 | plain scalar build | | 1.40 | | 1.00× | |
 | best scalar (CSE + AA) | | 2.05 | | 1.46× | 1.00× |
 | explicit RVV sweep before notes3 | | 2.40 | | 1.72× | 1.17× |
-| + software prefetch 128 B | `prefetch_distance` (3, 6) | 4.70 | ×1.96 | 3.36× | 2.29× |
+| + software prefetch 128 B | `prefetch_distance` (3, 6) | 4.70 | ×1.96 | 3.36× | 2.30× |
 | + in-place AA streaming and `.vf`/FMA selector | sweepgen/v8 halo (9), pystencils (10) | **7.08** | ×1.51 | **5.06×** | **3.45×** |
-| + row pointers, constants in registers | pystencils (12) | pending | | | |
+| + row pointers, constants in registers (e2e-cg session) | pystencils (12) | **7.25** | ×1.025 | 5.24× | 3.54× |
+| + halo exchange one slot at a time | v8 pack infos (13) | pending (`e2e-halo`) | | | |
+| + no ρ/u output in the timed steps | sweepgen, app (14) | pending (`e2e-final`) | | | |
+| direction-split AA stream/collide instead | lbm_split.py (14) | pending (`lab7`, `e2e-final`) | | | |
 
+- The row-pointer row is a different session (e2e-cg); its ratios use that session's scalar
+  builds (1.383 and 2.050 MLUP/s), which moved by −1.1% and +0.1% against Loop 9.
 - In the lab, the ×1.51 step splits into AA ×1.43 (pull + pf 334 → AA + pf 234 cycles per
   cell, old selector) and selector ×1.22 (234 → 192). In the application, AA loses part of
   this to its overhead outside the sweep (Loop 12, section 1).
@@ -1232,16 +1356,19 @@ end to end (sweep + halo exchange + timing loop).
 | plain scalar build | 0.95 | | 1.00× | |
 | best scalar (CSE + AA) | 1.44 | | 1.51× | 1.00× |
 | explicit RVV sweep before notes3 | 1.21 | | 1.26× | 0.84× |
-| + software prefetch 128 B | 2.37 | ×1.96 | 2.48× | 1.65× |
+| + software prefetch 128 B | 2.37 | ×1.96 | 2.48× | 1.64× |
 | + AA streaming and `.vf`/FMA selector | **3.95** | ×1.67 | **4.14×** | **2.74×** |
 | + row pointers, constants in registers | pending | | | |
+| + row pointers, constants in registers (e2e-cg session) | **4.04** | ×1.022 | 4.23× | 2.78× |
+| + halo one slot at a time / no ρ/u output / split | pending | | | |
 
 In the lab: AA ×1.49 (685 → 461 cycles per cell), selector ×1.065 (461 → 433).
 
-**Multi-core** (4 processes = one cluster, 64³ per process, Loop 12): AA + pf reaches 17.99
-MLUP/s f32 (3.32× plain scalar) and 9.51 f64 (2.76×). Both move about 3.3–3.5 GB/s, which
-is the cluster's limit for this many-stream pattern, so the vector gain shrinks when all
-cores share memory.
+**Side note, several processes** (Loop 12; the result is the single-core figure, the K1 is
+one embedded SoC): with 4 processes (one cluster) AA + pf reaches 17.99 MLUP/s f32 (3.32×
+the scalar build with 4 processes) and 9.51 f64 (2.76×); with 8 processes 19.68 (2.44×) and
+9.88 (1.92×). About 3.6 GB/s is the chip's limit for this many-stream pattern, so the
+vector gain shrinks when all cores share memory.
 
 **Hardware ceiling (Loops 2, 5):**
 - Arithmetic: the vector FP unit retires one m1 instruction per cycle at e32 and e64, i.e.
@@ -1252,17 +1379,25 @@ cores share memory.
 - Memory: about 1.5 GB/s on one core for 23 software-prefetched streams (184 B per cell).
   The X60 streams 6 GB/s only with ≤ 8 streams. The hand-written direction-split AA kernel
   reaches 10.8 MLUP/s (cycle average, Clang + X60 tuning), which is 7.7× the plain scalar
-  build's rate: **8× f32 is reachable on this hardware, with a kernel structure that
-  pystencils does not generate yet.**
+  build's rate: **8× f32 is reachable on this hardware with that kernel structure.** The
+  hand kernel relaxes towards the textbook equilibrium, not lbmpy's (Loop 14), which does
+  not change its speed. Since Loop 14 the same structure is generated from lbmpy
+  (`lbm_split.py`); its speed on the board is pending (`lab7`, `e2e-final`).
 
 **Achieved vs goal and remaining gap:**
 - f64: **4.14× the plain scalar build, the 4× goal.** 2.74× the best scalar sweep, i.e.
-  69% of the 4× arithmetic ceiling.
+  69% of the 4× arithmetic ceiling (Loop 9). With the Loop 12 code generation, the e2e-cg
+  session measured 4.04 MLUP/s: 4.23× and 2.78×.
 - f32: 5.06× the plain scalar build (goal 8×), 3.45× the best scalar sweep (43% of the 8×
-  ceiling). The remaining factor of 1.58 to 8× splits into:
+  ceiling), Loop 9. With the Loop 12 code generation, the e2e-cg session measured 7.25 MLUP/s,
+  5.24× its plain scalar build and 3.54× its best scalar sweep. The remaining factor of 1.58
+  (from 5.06×) to 8× splits into:
   - Kernel structure: direction split inside the AA kernel. The hand kernel takes 163
-    instead of 192 cycles per cell with GCC (×1.17). This needs a loop-fission pass in
-    pystencils/lbmpy that splits the moment, collision and store passes by direction groups.
+    instead of 192 cycles per cell with GCC (×1.17, lab4 session). Loop 14 generates this
+    structure from lbmpy (`lbm_split.py`, at the generator-script level rather than as a
+    pystencils pass); measurement pending.
   - Scheduling: ×1.11 more from Clang's X60 model on that kernel.
-  - Application overhead around the AA sweep: 15% (halo exchange; profile pending, see Loop
-    12).
+  - Application overhead around the AA sweep: the halo exchange takes 21% of an AA time
+    step (perf, Loop 12 section 6). Loop 13 rewrites it; measurement pending.
+  - Fewer bytes per cell: the output-free sweep (Loop 14) removes 4 of 23 streams;
+    measurement pending.

@@ -1,0 +1,6 @@
+== stage Thu Nov 12 09:25:23 PM CST 2026
+explicit_cse_aa_pf f32: e2e-aa 7.08, e2e-cg 7.25
+explicit_cse_aa_pf f64: e2e-aa 3.95, e2e-cg 4.04
+pystencils: as left by e2e-cg
+submodules/walberla/include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp
+tar: submodules/walberla/include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp: time stamp 2026-11-14 17:40:25 is 159301.708232137 s in the future

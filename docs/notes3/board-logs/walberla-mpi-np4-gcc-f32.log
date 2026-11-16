@@ -1,0 +1,14 @@
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=1048576 steps=100 seconds=19.4998564674 mlups=5.37735240131 energy=1591.49505457
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=1048576 steps=100 seconds=19.3292435361 mlups=5.42481653793 energy=1591.49505457
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=1048576 steps=100 seconds=18.3650460219 mlups=5.70962903524 energy=1591.49649317
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse real_t=32 cells=1048576 steps=100 seconds=18.1217515776 mlups=5.78628393347 energy=1591.49649317
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=1048576 steps=100 seconds=13.2309225225 mlups=7.92519189961 energy=1591.4919473
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse real_t=32 cells=1048576 steps=100 seconds=13.2241119274 mlups=7.92927347979 energy=1591.4919473
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=1048576 steps=100 seconds=8.39354433655 mlups=12.4926486113 energy=1591.4919473
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=1048576 steps=100 seconds=8.50231192506 mlups=12.3328338132 energy=1591.4919473
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=1048576 steps=100 seconds=14.2135640146 mlups=7.37729114894 energy=1591.49663141
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=1048576 steps=100 seconds=14.1829163198 mlups=7.39323264944 energy=1591.49663141
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=32 cells=1048576 steps=100 seconds=10.8844154271 mlups=9.63373740213 energy=1591.49221036
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa real_t=32 cells=1048576 steps=100 seconds=10.9467457373 mlups=9.57888330617 energy=1591.49221036
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=1048576 steps=100 seconds=5.82859597418 mlups=17.9901987485 energy=1591.49221036
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=1048576 steps=100 seconds=5.83026666977 mlups=17.9850435562 energy=1591.49221036

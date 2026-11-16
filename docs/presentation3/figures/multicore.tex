@@ -1,0 +1,40 @@
+% Several cores: MLUP/s of all cores together, one 64^3 block per MPI process, GCC 14, best of
+% 3 runs of 200 steps. 1, 4 and 8 cores from one session (board 2026-11-14,
+% scripts/walberla_bench_presentation.sh, logs docs/notes3/board-logs/presentation3/
+% walberla-{scalar,autovec,rvv}-{f32,f64}-{1,4,8}core.log).
+% plain scalar = scalar, best scalar = scalar_cse_aa, auto-vec. in place = autovec_cse_aa
+% (hatched), RVV now = explicit_cse_aa_pf.
+% Memory traffic of RVV now (184 bytes per cell in f32, 368 in f64): 4 cores 3.1 / 3.9 GB/s,
+% 8 cores 4.2 / 4.0 GB/s.
+\begin{tikzpicture}
+  \pgfplotsset{mc/.style={
+      ybar=1pt, bar width=6pt, width=6.9cm, height=4.7cm, ymin=0,
+      symbolic x coords={1,4,8}, xtick=data,
+      xticklabels={1 core,4 cores,8 cores},
+      enlarge x limits=0.22,
+      tick label style={font=\scriptsize}, label style={font=\scriptsize},
+      title style={font=\small\bfseries,yshift=-1.5ex},
+      ymajorgrids, grid style={psgray!20},
+      nodes near coords, point meta=explicit symbolic,
+      nodes near coords style={font=\tiny,rotate=90,anchor=west},
+    },
+    pl/.style={fill=psgray!30,draw=psgray},
+    bs/.style={fill=psgray!75,draw=psgray!90!black},
+    av/.style={pattern=north east lines,pattern color=psgray!90!black,draw=psgray!90!black},
+    rv/.style={fill=psteal!70,draw=psteal!80!black}}
+  \begin{axis}[mc, name=a32, ymax=35, title={f32}, ylabel={MLUP/s, all cores together},
+      legend style={font=\tiny,at={(0.02,0.98)},anchor=north west,draw=psgray!50},
+      legend columns=2]
+    \addplot[pl] coordinates {(1,1.42)[1.4] (4,5.50)[5.5] (8,9.64)[9.6]};
+    \addplot[bs] coordinates {(1,2.12)[2.1] (4,7.43)[7.4] (8,13.63)[13.6]};
+    \addplot[av] coordinates {(1,2.12)[2.1] (4,7.56)[7.6] (8,13.70)[13.7]};
+    \addplot[rv] coordinates {(1,7.27)[7.3] (4,16.98)[17.0] (8,22.61)[22.6]};
+    \legend{plain scalar, best scalar, auto-vec.\ in place, RVV now}
+  \end{axis}
+  \begin{axis}[mc, at={(a32.east)}, anchor=west, xshift=1.0cm, ymax=17.5, title={f64}]
+    \addplot[pl] coordinates {(1,1.02)[1.0] (4,3.59)[3.6] (8,5.45)[5.4]};
+    \addplot[bs] coordinates {(1,1.51)[1.5] (4,5.39)[5.4] (8,7.98)[8.0]};
+    \addplot[av] coordinates {(1,1.51)[1.5] (4,5.42)[5.4] (8,8.05)[8.1]};
+    \addplot[rv] coordinates {(1,4.30)[4.3] (4,10.59)[10.6] (8,10.99)[11.0]};
+  \end{axis}
+\end{tikzpicture}

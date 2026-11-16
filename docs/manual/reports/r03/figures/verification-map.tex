@@ -1,0 +1,30 @@
+% Which check covered which change (chapter 8). Filled dot: done, ring: pending, dash: not applicable.
+\begin{tikzpicture}[every node/.style={font=\scriptsize},
+    d/.style={circle,fill=r03landed!85!black,minimum size=2.2mm,inner sep=0pt},
+    p/.style={circle,draw=r03pending!90!black,thick,minimum size=2.2mm,inner sep=0pt},
+    n/.style={label={center:{\textcolor{psgray}{--}}}}]
+  \def\rthreeColW{2.05}
+  \foreach \t [count=\j] in {{\ps{} tests\\(laptop)},{RVV execution\\tests (board)},{QEMU: lab\\kernels},
+      {x86: application,\\scenario tests},{mutation\\checks},{board: end to end,\\lab acceptance}} {
+    \node[align=center,font=\scriptsize\bfseries,text width=19mm] at (2.9+\j*\rthreeColW,0.45) {\t};
+  }
+  \foreach \row/\name/\marks [count=\i] in {
+      1/{software prefetch (\ref{r03:sec:ps-prefetch})}/{d,d,n,n,n,d},
+      2/{AA streaming (\ref{r03:sec:wl-sweepgen}, \ref{r03:sec:wl-halo})}/{n,n,d,d,d,d},
+      3/{.vf operands and FMA (\ref{r03:sec:ps-selector})}/{d,d,d,n,d,d},
+      4/{row pointers, \texttt{in\_register} (\ref{r03:sec:ps-rowptr})}/{d,d,d,n,d,d},
+      5/{halo one slot at a time (\ref{r03:sec:wl-halo})}/{n,n,n,d,d,p},
+      6/{no density/velocity output (\ref{r03:sec:wl-sweepgen})}/{n,n,d,d,n,p},
+      7/{split AA, generated (\ref{r03:sec:wl-split})}/{n,n,d,d,n,p}} {
+    \pgfmathsetmacro{\y}{-\row*0.5}
+    \node[anchor=west,text width=44mm] at (-0.25,\y) {\name};
+    \foreach \m [count=\j] in \marks {
+      \node[\m] at (2.9+\j*\rthreeColW,\y) {};
+    }
+  }
+  \draw[psgray!50] (-0.25,-0.18) -- (15.4,-0.18);
+  \node[anchor=west,r03label] at (-0.25,-4.05)
+    {\tikz\fill[r03landed!85!black] (0,0) circle (1.1mm); done \quad
+     \tikz\draw[r03pending!90!black,thick] (0,0) circle (1.1mm); pending (measurement queued) \quad
+     -- not applicable};
+\end{tikzpicture}

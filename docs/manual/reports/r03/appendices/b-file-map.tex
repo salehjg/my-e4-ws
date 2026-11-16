@@ -1,0 +1,91 @@
+\chapter{File Map}\label{r03:app:file-map}
+
+Every file that belongs to this work, by repository. Paths link to the file at the commit of
+\cref{r03:tab:commits} on GitHub.
+
+\section*{pystencils fork (\texttt{submodules/pystencils}, branch \texttt{rvv-support}, \texttt{a81dc547})}
+Changed in \texttt{9a989e16..a81dc547}:
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.4cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Change}\\
+  \midrule
+  \endhead
+  \ghps{src/pystencils/codegen/config.py} & option \code{cpu.vectorize.prefetch_distance}\\
+  \ghps{src/pystencils/codegen/driver.py} & calls \code{prepare_vector_loops} and \code{insert_prefetches}
+    before the instruction selection\\
+  \ghps{src/pystencils/backend/transformations/insert_prefetches.py} & new: \code{InsertPrefetches}\\
+  \ghps{src/pystencils/backend/transformations/hoist_row_pointers.py} & new: \code{HoistRowPointers}\\
+  \ghps{src/pystencils/backend/transformations/__init__.py} & exports the two transformations\\
+  \ghps{src/pystencils/backend/platforms/generic_cpu.py} & new methods of the vector platforms:
+    \code{prepare_vector_loops} (no change) and \code{insert_prefetches} (refuses)\\
+  \ghps{src/pystencils/backend/platforms/rvv.py} & \code{RvvCpu} implements both methods;
+    \code{SelectIntrinsicsRvv}: .vf operands, FMA, \code{in_register}\\
+  \ghps{src/pystencils/include/pystencils_runtime/rvv.hpp} & \code{prefetch_read}, \code{prefetch_write},
+    \code{in_register}\\
+  \ghps{tests/nbackend/test_rvv_codegen.py} & code-generation tests (\cref{r03:tab:ps-tests})\\
+  \ghps{tests/nbackend/test_rvv_execution.py} & execution tests on RVV hardware\\
+  \bottomrule
+\end{xltabular}
+
+\section*{waLBerla fork (\texttt{submodules/walberla}, branch \texttt{rvv-support}, \texttt{efa2b70c})}
+Changed in \texttt{b78f2d87..efa2b70c}:
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.4cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Change}\\
+  \midrule
+  \endhead
+  \ghwl{sweepgen/src/sweepgen/prefabs/lbm_bulk.py} & AA pattern; \code{output_free_sweeps}\\
+  \ghwl{include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp} & AA pull/push pack infos;
+    slot-wise \code{localCopy}/\code{pack}/\code{unpack}\\
+  \ghwl{include/walberla/v8/halo_exchange/fields/PackInfoSelection.hpp} & factories \code{aaPullSync},
+    \code{aaPushSync}\\
+  \ghwl{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.py} & \code{--prefetch-distance},
+    \code{--streaming-pattern}, \code{--split}; output-free sweeps\\
+  \ghwl{apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp} & AA time loop, \code{SWEEPGEN_LBM_OUTPUT},
+    \code{SWEEPGEN_LBM_SPLIT}; initialisation fix\\
+  \ghwl{apps/benchmarks/SweepgenLbmCPU/lbm_split.py} & new: \code{SplitAA}\\
+  \ghwl{apps/benchmarks/SweepgenLbmCPU/CMakeLists.txt} & variant helper; prefetch, AA and split
+    targets\\
+  \ghwl{apps/benchmarks/SweepgenLbmCPU/README.md} & variants and usage (the split target and
+    \code{SWEEPGEN_LBM_OUTPUT} are documented in the working tree, newer than \texttt{efa2b70c})\\
+  \ghwl{cmake/compileroptions/GNU.cmake}, \ghwl{cmake/compileroptions/Clang.cmake} & \code{-mtune}
+    from \file{/proc/cpuinfo} when the compiler accepts it\\
+  \ghwl{tests/sweepgen/LbmScenarios/AAMatchesPull.hpp} & new: AA against pull, cell by cell\\
+  \ghwl{tests/sweepgen/LbmScenarios/LbmAlgorithms.py} & generates the scenario method with AA too
+    (\code{LBM_AA})\\
+  \ghwl{tests/sweepgen/LbmScenarios/CMakeLists.txt},
+    \ghwl{tests/sweepgen/LbmScenarios/TestLbmScenarios.in.cpp} & register the new scenario\\
+  \bottomrule
+\end{xltabular}
+
+\section*{Workspace (\texttt{my-e4-ws}, branch \texttt{main}, \texttt{c443bf4})}
+\begin{xltabular}{\linewidth}{@{}>{\raggedright\arraybackslash}p{7.4cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{File} & \textbf{Role}\\
+  \midrule
+  \endhead
+  \ghws{docs/notes3/rvv-8x-speedup-plan-fable5.2.md} & the working plan the work started from
+    (not needed to read this report)\\
+  \ghws{docs/notes3/rvv-8x-speedup-progress-fable5.2.md} & the day-by-day working log
+    (Appendix~\ref{r03:app:evidence})\\
+  \file{docs/notes3/board-logs/} & copies of the raw board logs (working tree only,
+    appendix~\ref{r03:app:evidence})\\
+  \ghws{misc/x60-lab/README.md} & lab overview, usage, results\\
+  \ghws{misc/x60-lab/probes/mem.cpp}, \ghws{misc/x60-lab/probes/ops.cpp},
+    \ghws{misc/x60-lab/probes/pmu.hpp} & memory and instruction probes\\
+  \ghws{misc/x60-lab/pmu_stat.sh}, \ghws{misc/x60-lab/pmu_report.py} & counting the X60's vendor
+    events, and the per-cell table\\
+  \ghws{misc/x60-lab/lab/gen.py} & generated lab kernels (as in waLBerla)\\
+  \ghws{misc/x60-lab/lab/gensplit.py} & generated split kernels (uses \code{lbm_split.py})\\
+  \ghws{misc/x60-lab/lab/edits.py} & source-level edits of generated kernels\\
+  \ghws{misc/x60-lab/lab/driver.cpp}, \ghws{misc/x60-lab/lab/run.sh} & lab driver and runner\\
+  \ghws{misc/x60-lab/lab/hand/hand-aa.hpp}, \ghws{misc/x60-lab/lab/hand/f32-hand-aa.cpp},
+    \ghws{misc/x60-lab/lab/hand/f64-hand-aa.cpp}, \ghws{misc/x60-lab/lab/hand/f32-hand-split.cpp}
+    & hand-written kernels\\
+  \file{misc/x60-lab/lab/src/} & 122 generated lab sources (kernel and wrapper per variant)\\
+  \file{misc/x60-lab/queue_*.sh} & the session scripts (\cref{r03:tab:sessions})\\
+  \ghws{scripts/walberla_lbm_bench.sh} & one build directory, all targets, one core, best of N\\
+  \ghws{scripts/walberla_bench_mpi.sh}, \ghws{scripts/walberla_bench_summary.py} & several MPI
+    processes; summary tables\\
+  \bottomrule
+\end{xltabular}

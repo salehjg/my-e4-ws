@@ -1,0 +1,34 @@
+== configure Thu Nov 12 11:31:14 PM CST 2026
+== build SweepgenLbmCPU_scalar 23:33:08
+== build SweepgenLbmCPU_scalar_cse_aa 23:39:05
+== build SweepgenLbmCPU_explicit_cse_pf 23:45:01
+== build SweepgenLbmCPU_explicit_cse_aa_pf 23:51:11
+
+== RVV instructions in the generated sweeps (gen/SweepgenLbmCPU.cpp.o)
+SweepgenLbmCPU_scalar: 0
+SweepgenLbmCPU_scalar_cse_aa: 0
+SweepgenLbmCPU_explicit_cse_pf: 528
+SweepgenLbmCPU_explicit_cse_aa_pf: 701
+
+== run Thu Nov 12 11:57:20 PM CST 2026, 64^3 cells, 200 steps, 3 reps, core 2
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=35.7434265303 mlups=1.46680956722 energy=395.170616114
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=37.3891948626 mlups=1.40224469108 energy=395.170616114
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar real_t=32 cells=262144 steps=200 seconds=37.157270179 mlups=1.41099708744 energy=395.170616114
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=262144 steps=200 seconds=22.3870223875 mlups=2.34192824273 energy=395.171359704
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=262144 steps=200 seconds=22.1280531073 mlups=2.36933632371 energy=395.171359704
+SweepgenLbmCPU variant=SweepgenLbmCPU_scalar_cse_aa real_t=32 cells=262144 steps=200 seconds=22.2863085497 mlups=2.35251162763 energy=395.171359704
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=12.0027698549 mlups=4.368058426 energy=395.169192047
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=14.7390282548 mlups=3.5571408843 energy=395.169192047
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_pf real_t=32 cells=262144 steps=200 seconds=12.60561744 mlups=4.15916159995 energy=395.169192047
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=262144 steps=200 seconds=11.4740845056 mlups=4.56932315378 energy=395.169160354
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=262144 steps=200 seconds=16.3435943578 mlups=3.20791123741 energy=395.169160354
+SweepgenLbmCPU variant=SweepgenLbmCPU_explicit_cse_aa_pf real_t=32 cells=262144 steps=200 seconds=15.2056861318 mlups=3.44797331378 energy=395.169160354
+
+== Summary: best MLUP/s of 3 runs
+| variant | MLUP/s | vs scalar | kinetic energy (checksum) |
+|---|---|---|---|
+| scalar | 1.47 | 1.00x | 3.951706161140e+02 |
+| scalar_cse_aa | 2.37 | 1.62x | 3.951713597040e+02 |
+| explicit_cse_pf | 4.37 | 2.98x | 3.951691920470e+02 |
+| explicit_cse_aa_pf | 4.57 | 3.12x | 3.951691603540e+02 |
+== done Fri Nov 13 12:02:01 AM CST 2026

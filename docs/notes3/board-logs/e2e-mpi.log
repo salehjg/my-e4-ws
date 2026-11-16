@@ -1,0 +1,56 @@
+== start Thu Nov 12 03:03:10 PM CST 2026
+== np=4 gcc-f32 done 15:06:41
+== np=4 gcc-f64 done 15:12:35
+
+### 4 MPI processes, 64^3 cells per process, 100 steps
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | gcc-f32 | gcc-f64 |
+|---|---|---|
+| scalar | 5.42 (1.00x) | 3.44 (1.00x) |
+| scalar_cse | 5.79 (1.07x) | 3.61 (1.05x) |
+| autovec | - | - |
+| autovec_cse | - | - |
+| explicit | - | - |
+| explicit_cse | 7.93 (1.46x) | 4.05 (1.18x) |
+| explicit_pf | - | - |
+| explicit_cse_pf | 12.49 (2.30x) | 6.42 (1.86x) |
+| scalar_cse_aa | 7.39 (1.36x) | 5.17 (1.50x) |
+| explicit_cse_aa | 9.63 (1.78x) | 4.82 (1.40x) |
+| explicit_cse_aa_pf | 17.99 (3.32x) | 9.51 (2.76x) |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| gcc-f32 | 1.591491947300e+03 | 1.591496631410e+03 | 2.9e-06 |
+| gcc-f64 | 1.591472226260e+03 | 1.591472226260e+03 | 0.0e+00 |
+
+== np=8 gcc-f32 done 15:17:33
+== np=8 gcc-f64 done 15:26:15
+
+### 8 MPI processes, 64^3 cells per process, 100 steps
+## waLBerla end-to-end: SweepgenLbmCPU, best MLUP/s (speedup vs the same config's scalar)
+
+| variant | gcc-f32 | gcc-f64 |
+|---|---|---|
+| scalar | 8.07 (1.00x) | 5.15 (1.00x) |
+| scalar_cse | 9.29 (1.15x) | 5.31 (1.03x) |
+| autovec | - | - |
+| autovec_cse | - | - |
+| explicit | - | - |
+| explicit_cse | 11.10 (1.38x) | 5.53 (1.07x) |
+| explicit_pf | - | - |
+| explicit_cse_pf | 13.88 (1.72x) | 7.06 (1.37x) |
+| scalar_cse_aa | 12.69 (1.57x) | 7.52 (1.46x) |
+| explicit_cse_aa | 14.19 (1.76x) | 6.99 (1.36x) |
+| explicit_cse_aa_pf | 19.68 (2.44x) | 9.88 (1.92x) |
+
+### Checksum (kinetic energy) agreement across variants
+
+| config | min | max | relative spread |
+|---|---|---|---|
+| gcc-f32 | 3.182983894590e+03 | 3.182993262810e+03 | 2.9e-06 |
+| gcc-f64 | 3.182944452520e+03 | 3.182944452520e+03 | 0.0e+00 |
+
+== ALL DONE Thu Nov 12 03:26:15 PM CST 2026
