@@ -1,3 +1,11 @@
-.idea
-walberla-rvv-support/scripts/.perfcache/
-my-e4-ws.zip
+# Repo-wide rules: apply in every project folder of this repository.
+# Project-specific rules live in each project's own .gitignore.
+
+# Editors / IDEs
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv*/
