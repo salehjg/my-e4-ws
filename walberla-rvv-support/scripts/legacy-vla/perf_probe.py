@@ -15,9 +15,9 @@ disassemble, and repeated runs of the same config skip recompilation.
 Board only. Keep all paths under /home/bananapi/saleh/.
 
 Examples:
-    python scripts/rvv_perf_probe.py --kind collide --target rvv --mode fixed \
+    python scripts/legacy-vla/perf_probe.py --kind collide --target rvv --mode fixed \
         --dtype f64 --vector-bits --perf
-    python scripts/rvv_perf_probe.py --kind stream --target generic --dtype f32
+    python scripts/legacy-vla/perf_probe.py --kind stream --target generic --dtype f32
 """
 import argparse
 import os
@@ -30,7 +30,7 @@ import time
 import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, "..", "submodules", "pystencils", "src"))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "submodules", "pystencils", "src"))
 
 import pystencils as ps  # noqa: E402
 from pystencils.jit.cpu import CpuJit, GccInfo, ClangInfo  # noqa: E402

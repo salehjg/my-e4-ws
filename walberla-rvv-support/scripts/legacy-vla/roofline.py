@@ -14,7 +14,7 @@ it empirically:
 Board only — GFLOP/s under QEMU is meaningless.
 
 Usage:
-    python scripts/rvv_roofline.py [--compiler gcc|clang] [--vlen 256] [--n 16384]
+    python scripts/legacy-vla/roofline.py [--compiler gcc|clang] [--vlen 256] [--n 16384]
 """
 import argparse
 import os
@@ -25,7 +25,7 @@ import numpy as np
 import sympy as sp
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, "..", "submodules", "pystencils", "src"))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "submodules", "pystencils", "src"))
 
 import pystencils as ps  # noqa: E402
 from pystencils.jit.cpu import CpuJit, GccInfo, ClangInfo  # noqa: E402

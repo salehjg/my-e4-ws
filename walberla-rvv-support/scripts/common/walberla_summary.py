@@ -1,6 +1,6 @@
-"""Combine walberla_lbm_bench.sh logs into one markdown summary.
+"""Combine the result logs of walberla-e2e/bench.sh and presentation3/run.sh into one markdown summary.
 
-Usage: python walberla_bench_summary.py LABEL=LOG [LABEL=LOG ...]
+Usage: python scripts/common/walberla_summary.py LABEL=LOG [LABEL=LOG ...]
 
 A label may be given more than once: its logs are combined into one column (e.g. the scalar,
 autovec and rvv logs of one precision and core count).

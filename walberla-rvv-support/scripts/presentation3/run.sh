@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Build some SweepgenLbmCPU variants (submodules/walberla/apps/benchmarks/SweepgenLbmCPU) and time
 # them on the board, on one core or on several cores with MPI. Called by the three experiment
-# scripts walberla_bench_{scalar,autovec,rvv}.sh, which only choose the variants.
+# scripts {scalar,autovec,rvv}.sh next to this one, which only choose the variants.
 #
-# Usage: bash scripts/walberla_bench_run.sh <f32|f64> <cores> <variant>...
+# Usage: bash scripts/presentation3/run.sh <f32|f64> <cores> <variant>...
 #   cores = 1   one process, pinned to core CPU (default 2)
 #   cores > 1   that many MPI processes, one per core (4 = one cluster of the K1, 8 = the whole chip)
 # Every process gets its own CELLS^3 block, so the total work grows with the core count.
@@ -20,7 +20,8 @@ set -u
 
 PREC="$1"; CORES="$2"; shift 2
 VARIANTS="$*"
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 BASE="$(dirname "${REPO}")"                 # /home/bananapi/saleh on the board: we only write here
 VENV="${VENV:-${BASE}/venv}"
 CELLS="${CELLS:-64}"
@@ -96,6 +97,6 @@ for v in ${VARIANTS}; do
 done
 
 echo
-python "${REPO}/scripts/walberla_bench_summary.py" "${PREC}, ${CORES} core(s)=${RESULTS}"
+python "${REPO}/scripts/common/walberla_summary.py" "${PREC}, ${CORES} core(s)=${RESULTS}"
 rm -f "${RESULTS}"
 echo "== done $(date)"

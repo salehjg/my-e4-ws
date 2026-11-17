@@ -4,7 +4,7 @@ and print a hash of the output field.
 
 Run the *same* process under `qemu-riscv64 -cpu rv64,v=true,vlen=N` for several N and
 compare the printed hashes: a correct vector-length-agnostic kernel produces
-bit-identical field output at every VLEN. See scripts/run_vlen_sweep.sh.
+bit-identical field output at every VLEN. See vlen_sweep.sh next to this file.
 """
 import os
 import sys
@@ -13,7 +13,7 @@ import hashlib
 import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, "..", "submodules", "pystencils", "src"))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "submodules", "pystencils", "src"))
 
 from pystencils import (  # noqa: E402
     Target,

@@ -11,7 +11,8 @@ The logs of the jobs queued after `e2e-cg` (`e2e-halo`, `lab6`, `lab7`, `e2e-fin
 
 The loop numbers refer to [`../rvv-8x-speedup-progress-fable5.2.md`](../rvv-8x-speedup-progress-fable5.2.md).
 The job scripts that wrote them are in `misc/x60-lab/` (`queue_*.sh`, `lab/run.sh`, `pmu_stat.sh`)
-and `scripts/` (`walberla_lbm_bench.sh`, `walberla_bench_mpi.sh`).
+and `scripts/walberla-e2e/` (`bench.sh`, `mpi.sh`; at the time `scripts/walberla_lbm_bench.sh` and
+`scripts/walberla_bench_mpi.sh`).
 
 | file | contents | loop |
 |---|---|---|
@@ -40,6 +41,6 @@ and `scripts/` (`walberla_lbm_bench.sh`, `walberla_bench_mpi.sh`).
 | `e2e-final-stage.log`, `e2e-final-gcc-{f32,f64}.log` | waLBerla end to end, every target regenerated, incl. the direction-split AA target | 14 |
 | `e2e-final-last-gcc-{f32,f64}.log` | the same binaries with `SWEEPGEN_LBM_OUTPUT=last` (no density/velocity output before the last step) | 14 |
 | `perf-final-split.{run,txt}` | profile of the f32 split application, output only in the last step | 14 |
-| `presentation3/` | all whole-program numbers of `docs/presentation3` in one session (board time 2026-11-14 09:29 to 13:18 CST): scalar, autovec and rvv experiments, f32 and f64, 1, 4 and 8 cores, written by `scripts/walberla_bench_presentation.sh`; combined table at the end of `walberla-presentation.log` | - |
+| `presentation3/` | all whole-program numbers of `docs/presentation3` in one session (board time 2026-11-14 09:29 to 13:18 CST): scalar, autovec and rvv experiments, f32 and f64, 1, 4 and 8 cores, written by `scripts/presentation3/all.sh` (at the time `scripts/walberla_bench_presentation.sh`); combined table at the end of `walberla-presentation.log` | - |
 | `lab/results.tsv` | every lab run (`lab/run.sh`), one line each | 3–12 |
 | `queue_clang_e2e.sh`, `queue_mpi.sh` | two job scripts that were kept on the board only | 6 |

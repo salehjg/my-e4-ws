@@ -54,7 +54,7 @@ for b in walberla-build-gcc-f32:f32 walberla-build:f64; do
    for v in explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf; do
       rm -f "${gen}/SweepgenLbmCPU_${v}"/gen/SweepgenLbmCPU.{cpp,hpp}
    done
-   TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla_lbm_bench.sh 64 200 3 > "${OUT}/e2e-cg-gcc-${tag}.log" 2>&1
+   TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla-e2e/bench.sh 64 200 3 > "${OUT}/e2e-cg-gcc-${tag}.log" 2>&1
    for v in explicit_cse_pf explicit_cse_aa_pf; do
       f="${gen}/SweepgenLbmCPU_${v}/gen/SweepgenLbmCPU.cpp"
       echo "${v}: row pointers $(grep -c '_row' "${f}"), in_register $(grep -c 'in_register' "${f}"), .vf $(grep -c '_vf_' "${f}")" \

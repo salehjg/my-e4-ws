@@ -11,7 +11,7 @@ import sys
 import numpy as np
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, "..", "submodules", "pystencils", "src"))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "submodules", "pystencils", "src"))
 
 import pystencils as ps  # noqa: E402
 

@@ -12,12 +12,13 @@
 # disassemble exactly that configuration's kernels and count RVV instructions -- this proves
 # that "scalar" really contains none and the others do.
 #
-# Usage (on the board, from anywhere):  bash scripts/lbm_baselines.sh [REPS]
+# Usage (on the board, from anywhere):  bash scripts/pystencils-lbm/baselines.sh [REPS]
 # Output: per-run log lines + a markdown summary table at the end (stdout).
 set -u
 
 REPS="${1:-3}"
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 LB="${REPO}/python/learn-lb-pystencil/lb-pystencils.py"
 #   Next to the repo, not in $HOME: the board is shared, we only write under /home/bananapi/saleh
 CACHE_ROOT="${CACHE_ROOT:-$(dirname "${REPO}")/.cache/lbm-baselines}"

@@ -3,7 +3,7 @@
 #
 #   {GCC, Clang} x {f64, f32}, each in its own waLBerla build dir (the precision is a waLBerla
 #   build option, WALBERLA_DOUBLE_ACCURACY), each with the six SweepgenLbmCPU executables
-#   built and run by walberla_lbm_bench.sh: scalar / autovec / explicit RVV, each with and
+#   built and run by bench.sh: scalar / autovec / explicit RVV, each with and
 #   without lbmpy's global CSE.
 #
 # After the benchmarks (so they do not disturb the timings): waLBerla's own LBM scenario
@@ -12,11 +12,12 @@
 #
 # Start it detached, so it survives a lost connection or a laptop shutdown:
 #   cd /home/bananapi/saleh && screen -dmS walberla-all bash -c \
-#       "bash my-e4-ws/scripts/walberla_bench_all.sh > walberla-all.log 2>&1"
+#       "bash my-e4-ws/scripts/walberla-e2e/all.sh > walberla-all.log 2>&1"
 # Results: /home/bananapi/saleh/walberla-bench*.log; summary at the end of walberla-all.log.
 set -u
 
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 BASE="$(dirname "${REPO}")"                 # /home/bananapi/saleh: we only write here
 VENV="${VENV:-${BASE}/venv}"
 CELLS="${CELLS:-64}"
@@ -59,7 +60,7 @@ for cfg in "clang-f64 clang clang++ ON" "gcc-f32 gcc g++ OFF" "clang-f32 clang c
         echo "CONFIGURE FAILED ${name}"; tail -20 "${dir}.configure.log"; continue
     fi
     echo "== ${name}: build + run $(date)"
-    WALBERLA_BUILD="${dir}" bash "${REPO}/scripts/walberla_lbm_bench.sh" "${CELLS}" "${STEPS}" "${REPS}" \
+    WALBERLA_BUILD="${dir}" bash "${HERE}/bench.sh" "${CELLS}" "${STEPS}" "${REPS}" \
         > "${BASE}/walberla-bench-${name}.log" 2>&1
     tail -12 "${BASE}/walberla-bench-${name}.log"
 done
@@ -75,7 +76,7 @@ tail -15 "${BASE}/walberla-lbmscenarios.log"
 
 #   3. Combined summary
 echo
-python "${REPO}/scripts/walberla_bench_summary.py" \
+python "${REPO}/scripts/common/walberla_summary.py" \
     "gcc-f64=${BASE}/walberla-bench.log" \
     "clang-f64=${BASE}/walberla-bench-clang-f64.log" \
     "gcc-f32=${BASE}/walberla-bench-gcc-f32.log" \

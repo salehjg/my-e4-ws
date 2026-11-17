@@ -66,14 +66,14 @@ Commit \texttt{e9712d59} (first attempt: \cmakeopt{WALBERLA_RISCV_RVV},
   \endhead
   \file{push.to.sh}, \file{run.on.bananapi.sh}, \file{test.on.bananapi.sh} & sync to the
     board, run commands and tests there (\cref{r02:sec:push})\\
-  \file{scripts/walberla_lbm_bench.sh} & build and run the six benchmark variants in one
+  \file{scripts/walberla-e2e/bench.sh} & build and run the six benchmark variants in one
     build directory\\
-  \file{scripts/walberla_bench_all.sh} & the compiler $\times$ precision matrix, LBM
+  \file{scripts/walberla-e2e/all.sh} & the compiler $\times$ precision matrix, LBM
     scenario tests, summary\\
-  \file{scripts/walberla_bench_mpi.sh}, \file{walberla_bench_followup.sh} & multi-core
+  \file{scripts/walberla-e2e/mpi.sh}, \file{followup.sh} & multi-core
     runs; reruns after failures\\
-  \file{scripts/walberla_bench_summary.py} & combined result tables\\
-  \file{scripts/lbm_baselines.sh}, \file{lbm_rvv_check.py},
+  \file{scripts/common/walberla_summary.py} & combined result tables\\
+  \file{scripts/pystencils-lbm/baselines.sh}, \file{rvv_check.py},
     \file{python/learn-lb-pystencil/lb-pystencils.py} & D2Q9 harness: correctness and
     baselines outside waLBerla\\
   \file{misc/rvv-vs-autovec/} & standalone kernel experiments (gathers, splats, FMA,

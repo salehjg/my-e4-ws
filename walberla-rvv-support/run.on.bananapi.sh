@@ -3,7 +3,7 @@
 # root, with the board venv's python first on PATH and our pystencils on PYTHONPATH.
 #
 # Usage:   bash run.on.bananapi.sh <command...>
-# Example: bash run.on.bananapi.sh python scripts/lbm_rvv_check.py
+# Example: bash run.on.bananapi.sh python scripts/pystencils-lbm/rvv_check.py
 #          NO_PUSH=1 bash run.on.bananapi.sh python python/learn-lb-pystencil/lb-pystencils.py --target rvv --no-plot
 set -euo pipefail
 

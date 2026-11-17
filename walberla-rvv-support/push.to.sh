@@ -55,7 +55,7 @@ rsync -az --delete --delete-excluded \
     --exclude '.idea' \
     --exclude '__pycache__' \
     --exclude '.pytest_cache' \
-    --exclude 'scripts/.perfcache' \
+    --exclude '.perfcache' \
     --exclude '*.zip' \
     "${HERE}/" "${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR}/"
 

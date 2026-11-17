@@ -8,7 +8,7 @@
 %  docs/notes3/board-logs/. The results slides and the prefetch and in-place
 %  takeaways use one session with every build on 1, 4 and 8 cores (GCC 14, 64^3
 %  cells per core, best of 3 runs of 200 steps): docs/notes3/board-logs/presentation3/,
-%  written by scripts/walberla_bench_presentation.sh. The backup table "one step at a
+%  written by scripts/presentation3/all.sh. The backup table "one step at a
 %  time" keeps the history from r03 "run B" and "run C".
 %
 %  Writing rules: plain English, short sentences, no em/en dashes as
@@ -313,7 +313,7 @@
 
 % -----------------------------------------------------------------------------
 %  All builds, one session: docs/notes3/board-logs/presentation3/ (board 2026-11-14), table at
-%  the end of walberla-presentation.log. scripts/walberla_bench_presentation.sh reruns it.
+%  the end of walberla-presentation.log. scripts/presentation3/all.sh reruns it.
 \begin{frame}{Numbers: every build in one session}
   \vspace{1mm}
   \centering
@@ -348,7 +348,7 @@
   Whole program, one process per core with its own $64^3$ block, GCC~14, best of 3 runs of 200
   time steps. The f64 checksums are identical across all builds, the f32 ones agree to
   $2\cdot 10^{-5}$. One script reruns all of it in about 4 hours:
-  \code{scripts/walberla\_bench\_presentation.sh}.\par}
+  \code{scripts/presentation3/all.sh}.\par}
 \end{frame}
 
 % -----------------------------------------------------------------------------

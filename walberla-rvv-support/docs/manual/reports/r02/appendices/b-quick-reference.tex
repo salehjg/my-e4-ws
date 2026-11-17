@@ -55,7 +55,7 @@ Sweep("MySweep", assignments, gen_config)     # or LbmBulk(sfg, name, lbm_config
 \section*{Board commands}
 \begin{shcode}
 bash push.to.sh bananapi                                    # rsync the workspace
-bash run.on.bananapi.sh python scripts/lbm_rvv_check.py     # any command, remote repo root
+bash run.on.bananapi.sh python scripts/pystencils-lbm/rvv_check.py   # any command, repo root
 bash test.on.bananapi.sh -q tests/nbackend/test_rvv_codegen.py   # pystencils tests on the board
 taskset -c 2 ./SweepgenLbmCPU_explicit_cse 64 200 10        # one core
 mpirun -np 8 --bind-to core --map-by core ./SweepgenLbmCPU_explicit_cse 64 100 10

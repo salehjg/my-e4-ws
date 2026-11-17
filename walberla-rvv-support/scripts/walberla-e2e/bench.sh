@@ -14,14 +14,15 @@
 # TARGETS="..." (env) overrides the list, e.g. TARGETS="SweepgenLbmCPU_explicit_cse_pf".
 #
 # Run it detached, so it survives a lost connection:
-#   screen -dmS walberla-bench bash -c "bash scripts/walberla_lbm_bench.sh > ../walberla-bench.log 2>&1"
-# Usage: bash scripts/walberla_lbm_bench.sh [CELLS=64] [STEPS=200] [REPS=3]
+#   screen -dmS walberla-bench bash -c "bash scripts/walberla-e2e/bench.sh > ../walberla-bench.log 2>&1"
+# Usage: bash scripts/walberla-e2e/bench.sh [CELLS=64] [STEPS=200] [REPS=3]
 set -u
 
 CELLS="${1:-64}"
 STEPS="${2:-200}"
 REPS="${3:-3}"
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 BUILD="${WALBERLA_BUILD:-$(dirname "${REPO}")/walberla-build}"
 CPU="${CPU:-2}"
 #   -j2: the heaviest waLBerla translation units need ~1.3 GB each, the board has 3.7 GB

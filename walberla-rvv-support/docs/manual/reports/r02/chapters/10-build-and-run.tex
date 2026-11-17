@@ -52,7 +52,7 @@ MPI implementation (Open MPI 4.1.6), and \code{llvm-objdump} for inspecting bina
 \section{Configure}\label{r02:sec:configure}
 
 \rneedspace{12\baselineskip}
-\begin{shcode}[nolol=false,caption={[Configuring a benchmark build directory]Configuring a benchmark build directory (from \texttt{scripts/walberla\_bench\_all.sh}).},label=r02:lst:configure]
+\begin{shcode}[nolol=false,caption={[Configuring a benchmark build directory]Configuring a benchmark build directory (from \texttt{scripts/walberla-e2e/all.sh}).},label=r02:lst:configure]
 cmake -S /home/bananapi/saleh/my-e4-ws/submodules/walberla \
       -B /home/bananapi/saleh/walberla-build-gcc-f64 \
       -DCMAKE_BUILD_TYPE=Release \
@@ -104,24 +104,24 @@ The full measurement matrix takes several hours and runs from scripts started in
   \toprule
   \textbf{Script} & \textbf{What it does}\\
   \midrule
-  \file{scripts/walberla_lbm_bench.sh} & in one build directory: build the six variants,
+  \file{scripts/walberla-e2e/bench.sh} & in one build directory: build the six variants,
     count RVV instructions in each generated sweep object, run each three times on core
     2, print a summary table\\
-  \file{scripts/walberla_bench_all.sh} & configure and run the \{GCC, Clang\} $\times$
+  \file{scripts/walberla-e2e/all.sh} & configure and run the \{GCC, Clang\} $\times$
     \{f64, f32\} matrix, one build directory each; then waLBerla's
     \code{TestLbmScenarios_CXX}; then a combined summary\\
-  \file{scripts/walberla_bench_mpi.sh} & every executable of every configuration with 4
+  \file{scripts/walberla-e2e/mpi.sh} & every executable of every configuration with 4
     and 8 MPI processes\\
-  \file{scripts/walberla_bench_followup.sh} & rerun failed configurations, then the
+  \file{scripts/walberla-e2e/followup.sh} & rerun failed configurations, then the
     multi-core runs\\
-  \file{scripts/walberla_bench_summary.py} & merge logs into one markdown table with
+  \file{scripts/common/walberla_summary.py} & merge logs into one markdown table with
     speedups and checksum agreement\\
   \bottomrule
 \end{tabularx}
 \end{center}
 \begin{shcode}
 cd /home/bananapi/saleh && screen -dmS walberla-all bash -c \
-    "bash my-e4-ws/scripts/walberla_bench_all.sh > walberla-all.log 2>&1"
+    "bash my-e4-ws/scripts/walberla-e2e/all.sh > walberla-all.log 2>&1"
 \end{shcode}
 Each script waits for the previous \code{screen} session to finish before it starts, so
 two benchmarks never compete for the cores.

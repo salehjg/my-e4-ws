@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Multi-core end-to-end runs of the SweepgenLbmCPU executables, after the single-core
-# matrix (walberla_bench_all.sh) has finished. Production waLBerla runs use all cores. The
+# matrix (all.sh) has finished. Production waLBerla runs use all cores. The
 # cores share the memory bandwidth, so the vectorization gain can differ from one core.
 #
 # For every configuration's build dir, each of the six executables runs with NP MPI
@@ -9,10 +9,11 @@
 #
 # Start detached:
 #   cd /home/bananapi/saleh && screen -dmS walberla-mpi bash -c \
-#       "bash my-e4-ws/scripts/walberla_bench_mpi.sh > walberla-mpi.log 2>&1"
+#       "bash my-e4-ws/scripts/walberla-e2e/mpi.sh > walberla-mpi.log 2>&1"
 set -u
 
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 BASE="$(dirname "${REPO}")"
 CELLS="${CELLS:-64}"
 STEPS="${STEPS:-100}"
@@ -50,7 +51,7 @@ for np in ${NPS}; do
     done
     echo
     echo "### ${np} MPI processes, ${CELLS}^3 cells per process, ${STEPS} steps"
-    python "${REPO}/scripts/walberla_bench_summary.py" "${labels[@]}"
+    python "${REPO}/scripts/common/walberla_summary.py" "${labels[@]}"
     echo
 done
 echo "== ALL DONE $(date)"

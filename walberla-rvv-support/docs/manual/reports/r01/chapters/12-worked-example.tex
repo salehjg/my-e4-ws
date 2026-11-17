@@ -75,10 +75,10 @@ innermost loop runs over \code{ctr_0} ($x$), and the population index enters as
         It has command-line switches for the target (\code{generic}/\code{rvv}),
         precision, compiler and fused or split kernels, and is validated against the
         NumPy reference in \file{python/learn-lb-numpy}.
-        \file{scripts/lbm_rvv_check.py} compares the RVV and generic collide kernels.
+        \file{scripts/pystencils-lbm/rvv_check.py} compares the RVV and generic collide kernels.
         The harness numbers quoted in \cref{r01:ch:rvv-backend} were measured with
         \file{lb-pystencils.py}, the waLBerla numbers with the
-        \file{scripts/walberla_*.sh} benchmarks.
+        benchmarks in \file{scripts/walberla-e2e/}.
 \end{itemize}
 
 \section{Further reading}

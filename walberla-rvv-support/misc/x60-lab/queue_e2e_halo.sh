@@ -30,7 +30,7 @@ T=""
 for v in ${V}; do T="${T} SweepgenLbmCPU_${v}"; done
 BUILDS="walberla-build-gcc-f32:f32 walberla-build:f64"
 
-#  MLUP/s of explicit_cse_aa_pf in the summary table of a walberla_lbm_bench.sh log
+#  MLUP/s of explicit_cse_aa_pf in the summary table of a scripts/walberla-e2e/bench.sh log
 aa_pf() { awk -F'|' '$2 ~ /^ explicit_cse_aa_pf $/ { gsub(/ /, "", $3); print $3 }' "$1"; }
 {
    echo "== stage $(date)"
@@ -64,7 +64,7 @@ aa_pf() { awk -F'|' '$2 ~ /^ explicit_cse_aa_pf $/ { gsub(/ /, "", $3); print $3
 } > "${OUT}/e2e-halo-stage.log" 2>&1 || exit 1
 
 for b in ${BUILDS}; do
-   TARGETS="${T}" WALBERLA_BUILD="${BASE}/${b%%:*}" bash scripts/walberla_lbm_bench.sh 64 200 3 \
+   TARGETS="${T}" WALBERLA_BUILD="${BASE}/${b%%:*}" bash scripts/walberla-e2e/bench.sh 64 200 3 \
       > "${OUT}/e2e-halo-gcc-${b#*:}.log" 2>&1
 done
 
@@ -84,7 +84,7 @@ THPV=""
 for v in scalar scalar_cse_aa explicit_cse_pf explicit_cse_aa_pf; do THPV="${THPV} SweepgenLbmCPU_${v}"; done
 for b in ${BUILDS}; do
    GLIBC_TUNABLES=glibc.malloc.hugetlb=1 TARGETS="${THPV}" WALBERLA_BUILD="${BASE}/${b%%:*}" \
-      bash scripts/walberla_lbm_bench.sh 64 200 3 > "${OUT}/e2e-halo-thp-gcc-${b#*:}.log" 2>&1
+      bash scripts/walberla-e2e/bench.sh 64 200 3 > "${OUT}/e2e-halo-thp-gcc-${b#*:}.log" 2>&1
 done
 
 echo "== e2e-halo done $(date)" >> "${OUT}/e2e-halo-thp-gcc-f64.log"

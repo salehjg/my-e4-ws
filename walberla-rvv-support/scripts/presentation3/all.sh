@@ -6,13 +6,14 @@
 #
 # Start it on the board, detached, so it survives a lost connection:
 #   cd /home/bananapi/saleh/my-e4-ws && screen -dmS walberla-presentation bash -c \
-#       "bash scripts/walberla_bench_presentation.sh > ../walberla-presentation.log 2>&1"
+#       "bash scripts/presentation3/all.sh > ../walberla-presentation.log 2>&1"
 # One log per experiment in LOGDIR (default ../presentation-logs):
 #   walberla-<scalar|autovec|rvv>-<f32|f64>-<1|4|8>core.log
 # and the combined table at the end of this script's output.
 set -u
 
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "${HERE}/../.." && pwd)"
 LOGDIR="${LOGDIR:-$(dirname "${REPO}")/presentation-logs}"
 mkdir -p "${LOGDIR}"
 echo "== start $(date)"
@@ -24,7 +25,7 @@ for prec in f32 f64; do
             echo "== ${exp} ${prec} ${cores} core(s) $(date +%T) -> ${log}"
             #   Regenerate the kernels once per build dir, in the first (one core) pass
             regen=0; [[ "${cores}" == 1 ]] && regen=1
-            REGEN="${regen}" bash "${REPO}/scripts/walberla_bench_${exp}.sh" "${prec}" "${cores}" > "${log}" 2>&1
+            REGEN="${regen}" bash "${HERE}/${exp}.sh" "${prec}" "${cores}" > "${log}" 2>&1
         done
     done
 done
@@ -38,5 +39,5 @@ for cores in 1 4 8; do
         done
     done
 done
-python3 "${REPO}/scripts/walberla_bench_summary.py" "${labels[@]}"
+python3 "${REPO}/scripts/common/walberla_summary.py" "${labels[@]}"
 echo "== ALL DONE $(date)"

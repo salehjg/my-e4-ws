@@ -41,8 +41,8 @@ BUILDS="walberla-build-gcc-f32:f32 walberla-build:f64"
 
 for b in ${BUILDS}; do
    dir="${BASE}/${b%%:*}"; tag=${b#*:}
-   TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla_lbm_bench.sh 64 200 3 > "${OUT}/e2e-final-gcc-${tag}.log" 2>&1
-   SWEEPGEN_LBM_OUTPUT=last TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla_lbm_bench.sh 64 200 3 \
+   TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla-e2e/bench.sh 64 200 3 > "${OUT}/e2e-final-gcc-${tag}.log" 2>&1
+   SWEEPGEN_LBM_OUTPUT=last TARGETS="${T}" WALBERLA_BUILD="${dir}" bash scripts/walberla-e2e/bench.sh 64 200 3 \
       > "${OUT}/e2e-final-last-gcc-${tag}.log" 2>&1
 done
 

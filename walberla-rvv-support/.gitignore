@@ -1,8 +1,8 @@
 # Rules for walberla-rvv-support/ only; paths are relative to this folder.
 # Repo-wide rules (.idea, __pycache__, venvs) are in the root .gitignore.
 
-# Cache written by the perf scripts in scripts/
-/scripts/.perfcache/
+# Cache written by the perf probe in scripts/legacy-vla/
+/scripts/**/.perfcache/
 
 # Archive left over from the old zip-based push.to.sh
 my-e4-ws.zip
