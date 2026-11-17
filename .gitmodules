@@ -1,6 +1,6 @@
 [submodule "submodules/pystencils"]
 	path = submodules/pystencils
-	url = https://i10git.cs.fau.de/pycodegen/pystencils.git
+	url = https://github.com/salehjg/mirrored-pystencil2.git
 [submodule "submodules/walberla"]
 	path = submodules/walberla
-	url = https://i10git.cs.fau.de/walberla/walberla.git
+	url = https://github.com/salehjg/mirrored-walberla.git
