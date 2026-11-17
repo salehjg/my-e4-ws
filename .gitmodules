@@ -1,6 +1,6 @@
 [submodule "submodules/pystencils"]
-	path = submodules/pystencils
+	path = walberla-rvv-support/submodules/pystencils
 	url = https://github.com/salehjg/mirrored-pystencil2.git
 [submodule "submodules/walberla"]
-	path = submodules/walberla
+	path = walberla-rvv-support/submodules/walberla
 	url = https://github.com/salehjg/mirrored-walberla.git
