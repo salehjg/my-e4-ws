@@ -1,0 +1,31 @@
+% Slide 13: the new RVV instruction choice on one expression of the generated kernel
+% (x = y + 1/8 * t1), and the effect on the registers (r03, figure "selector").
+\begin{tikzpicture}
+  \node[font=\scriptsize\bfseries,anchor=south west] at (0,1.0) {before: one vector instruction per operation};
+  \node[codebox,text width=60mm,anchor=north west] (old) at (0,1.0) {%
+c8 = vector(1/8)\ \ \ \ \ \ \textcolor{psgray}{// held in a vector register}\\
+t2 = vfmul\_vv(t1, c8)\\
+x\ \ = vfadd\_vv(y, t2)};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (7.6,1.0) {after: scalar operand, fused multiply-add};
+  \node[codebox,text width=60mm,anchor=north west] (new) at (7.6,1.0) {%
+c8 = 1/8\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{// held in a scalar register}\\
+x\ \ = vfmacc\_vf(y, c8, t1)\ \textcolor{psgray}{// x = y + c8*t1}\\
+\ };
+  \draw[arr] (old.east) -- (new.west);
+
+  % register files
+  \newcommand{\regs}[4]{% x, y, how many filled, fill colour
+    \foreach \r in {0,...,31} {
+      \pgfmathtruncatemacro{\rr}{\r}
+      \ifnum\rr<#3 \def\fc{#4}\else\def\fc{white}\fi
+      \fill[\fc] (#1+\r*0.188,#2) rectangle ++(0.17,0.3);
+      \draw[psgray!60,line width=0.2pt] (#1+\r*0.188,#2) rectangle ++(0.17,0.3);
+    }
+  }
+  \regs{0}{-0.75}{31}{psorange!50}
+  \node[lbl,anchor=north west,align=left] at (0,-0.85)
+    {32 vector registers, 31 taken by constants:\\30 spills to memory per iteration};
+  \regs{7.6}{-0.75}{9}{psteal!50}
+  \node[lbl,anchor=north west,align=left] at (7.6,-0.85)
+    {constants move to the 32 scalar registers, which the loop\\did not use; vector registers free for data: 0 spills};
+\end{tikzpicture}

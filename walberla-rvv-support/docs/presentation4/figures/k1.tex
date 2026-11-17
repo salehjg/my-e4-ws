@@ -1,0 +1,38 @@
+% Slide "The hardware, and how the work is split": the SpacemiT K1 on the Banana Pi BPI-F3
+% (report r03, table "test system"): 8 X60 cores at 1.6 GHz in two clusters of 4; L1D 32 KiB per
+% core, L2 512 KiB per cluster, no L3; 4 GB memory, about 357 cycles per DRAM miss (pointer chase,
+% huge pages). The benchmark runs one MPI process with one 64^3 block per core.
+% Right: one X60 core's 256-bit vector register as 8 f32 or 4 f64 lanes.
+\begin{tikzpicture}[
+    core/.style={box,minimum width=0.98cm,minimum height=1.15cm,fill=white,draw=psblue!70!black,
+      font=\tiny,align=center,inner sep=1pt},
+    l2/.style={box,fill=psblue!14,draw=psblue!70!black,font=\tiny,minimum height=4.5mm,inner sep=1pt},
+    ln/.style={draw=white,line width=0.6pt,minimum height=4.5mm,inner sep=0pt,font=\tiny}]
+  % ---- the chip -------------------------------------------------------------------
+  \draw[psblue!70!black,fill=psblue!4,rounded corners=3pt] (0,0) rectangle (9.1,2.75);
+  \node[anchor=north west,font=\scriptsize\bfseries,text=psblue!80!black] at (0.1,2.72)
+    {SpacemiT K1: 8 X60 cores, 1.6\,GHz};
+  \foreach \c/\xo in {0/0.2,1/4.65} {
+    \foreach \k in {0,...,3} {
+      \pgfmathtruncatemacro{\n}{4*\c+\k}
+      \node[core] at (\xo+0.53+\k*1.06,1.55) {\textbf{core \n}\\[1pt]$64^3$ cells\\[1pt]{\color{psgray}L1: 32\,KB}};
+    }
+    \node[l2,minimum width=4.18cm] (l\c) at (\xo+2.12,0.42) {L2: 512\,KB, shared by 4 cores};
+  }
+  % ---- main memory -------------------------------------------------------------------
+  \node[box,fill=psgray!12,minimum width=9.1cm,minimum height=5mm,font=\scriptsize,anchor=north]
+    (mem) at (4.55,-0.3) {main memory, 4\,GB: about 360 cycles per access, and the in-order core waits};
+  \foreach \c in {0,1} \draw[<->,semithick,psgray!90!black] (l\c.south) -- (l\c.south |- mem.north);
+
+  % ---- one core's vector register --------------------------------------------------
+  \begin{scope}[shift={(9.75,0.25)}]
+    \def\w{0.52}
+    \node[font=\scriptsize\bfseries,anchor=south west,inner sep=0pt] at (0,2.1) {one \term{RVV} vector register: 256 bits};
+    \foreach \k in {0,...,7}
+      \node[ln,fill=psblue!30,minimum width=\w cm] at (\k*\w+\w/2,1.6) {f32};
+    \foreach \k in {0,...,3}
+      \node[ln,fill=psorange!30,minimum width=2*\w cm] at (\k*2*\w+\w,0.95) {f64};
+    \node[lbl,anchor=north west,align=left] at (0,0.6)
+      {one instruction works on all lanes:\\8 numbers in f32, 4 in f64};
+  \end{scope}
+\end{tikzpicture}

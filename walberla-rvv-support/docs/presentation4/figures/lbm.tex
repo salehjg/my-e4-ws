@@ -1,0 +1,28 @@
+% Slide 3: the two halves of an LBM time step, drawn in 2D (9 directions) for readability.
+% The real model, D3Q19, is 3D with 19 directions.
+\begin{tikzpicture}[
+    pdf/.style={-{Stealth[length=1.5mm]},thick,draw=psblue!85!black},
+    mv/.style={-{Stealth[length=1.5mm]},thick,draw=psteal!85!black}]
+  % ---- collide: one cell, one value per direction (arrow length = value)
+  \draw[psgray!70,fill=codebg] (0,0.55) rectangle (2.2,2.75);
+  \coordinate (c) at (1.1,1.65);
+  \foreach \dx/\dy/\l in {1/0/0.85, 1/1/0.55, 0/1/0.75, -1/1/0.45, -1/0/0.9, -1/-1/0.6, 0/-1/0.7, 1/-1/0.5} {
+    \draw[pdf] (c) -- ++({\dx*\l},{\dy*\l});
+  }
+  \fill[psblue!85!black] (c) circle (1.4pt);
+  \node[lbl,anchor=north,text width=26mm] at (1.1,0.45) {\textbf{collide}: mix the values of one cell};
+
+  % ---- stream: each value moves to the neighbour in its direction
+  \begin{scope}[xshift=2.75cm]
+    \foreach \i in {0,1,2} \foreach \j in {0,1,2}
+      \draw[psgray!70,fill=white] (\i*1.1,\j*1.1) rectangle ++(1.1,1.1);
+    \fill[codebg] (1.1,1.1) rectangle ++(1.1,1.1);
+    \draw[psgray!70] (1.1,1.1) rectangle ++(1.1,1.1);
+    \coordinate (s) at (1.65,1.65);
+    \foreach \dx/\dy in {1/0, 1/1, 0/1, -1/1, -1/0, -1/-1, 0/-1, 1/-1}
+      \draw[mv,shorten <=1.5mm] (s) -- ++({\dx*1.05},{\dy*1.05});
+    \fill[psteal!85!black] (s) circle (1.4pt);
+    \node[lbl,anchor=north,text width=33mm] at (1.65,-0.1) {\textbf{stream}: each value moves to the neighbour in its direction};
+  \end{scope}
+  \node[lbl,anchor=south,text width=60mm] at (3.4,3.35) {2D sketch with 9 directions; the real model is 3D with 19};
+\end{tikzpicture}

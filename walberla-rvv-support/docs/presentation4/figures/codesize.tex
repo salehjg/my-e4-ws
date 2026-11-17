@@ -1,0 +1,13 @@
+% Size of the pystencils RVV code generator (report r02, chapter "Design Decisions"): the first
+% attempt (any register width) had about 2600 lines, the final one about 760 lines of source
+% (1270 with tests) and measured the same speed within noise.
+\begin{tikzpicture}
+  \def\u{0.0024} % cm per line
+  \foreach \y/\n/\txt/\col in {0/2600/{first version: any register width}/psgray!45,
+                               -0.85/760/{final version: 256 bits fixed, like AVX}/psteal!70} {
+    \node[lbl,anchor=south west] at (0,\y+0.36) {\txt};
+    \fill[\col] (0,\y) rectangle (\n*\u,\y+0.34);
+    \node[font=\scriptsize,anchor=west] at (\n*\u+0.05,\y+0.17) {about \n\ lines};
+  }
+  \node[lbl,anchor=north west] at (0,-0.95) {same speed; the final one copies the rules of the AVX generator};
+\end{tikzpicture}
