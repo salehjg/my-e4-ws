@@ -1,0 +1,39 @@
+== clang f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar scalar_cse scalar_cse_aa autovec autovec_cse autovec_cse_aa explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split
+== start Mon Nov 16 04:29:15 AM CST 2026, host k1, load: 5.18 3.93 3.66
+== Bianbu clang version 18.1.8 (11bb4)
+== configure /home/bananapi/saleh/presentation4/build-clang-f64-scalar (clang, f64, scalar)
+== build SweepgenLdcCPU_scalar in build-clang-f64-scalar 04:35:42
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== build SweepgenLdcCPU_scalar_cse in build-clang-f64-scalar 05:03:49
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== build SweepgenLdcCPU_scalar_cse_aa in build-clang-f64-scalar 05:05:56
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== configure /home/bananapi/saleh/presentation4/build-clang-f64 (clang, f64, vector)
+== build SweepgenLdcCPU_autovec in build-clang-f64 05:14:36
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 3832, generated sweeps 91
+== build SweepgenLdcCPU_autovec_cse in build-clang-f64 05:44:04
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 3832, generated sweeps 91
+== build SweepgenLdcCPU_autovec_cse_aa in build-clang-f64 05:46:20
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4158, generated sweeps 54
+== build SweepgenLdcCPU_explicit_cse in build-clang-f64 05:48:46
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4481, generated sweeps 740
+== build SweepgenLdcCPU_explicit_cse_pf in build-clang-f64 05:50:57
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4476, generated sweeps 735
+== build SweepgenLdcCPU_explicit_cse_aa in build-clang-f64 05:53:17
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 5267, generated sweeps 1163
+== build SweepgenLdcCPU_explicit_cse_aa_pf in build-clang-f64 05:55:49
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 5270, generated sweeps 1166
+== build SweepgenLdcCPU_explicit_cse_aa_split in build-clang-f64 05:58:12
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 7732, generated sweeps 3665
+== build only, done Mon Nov 16 06:00:58 AM CST 2026

@@ -1,0 +1,28 @@
+== gcc f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar_cse_aa
+== start Mon Nov 16 06:20:13 PM CST 2026, host k1, load: 2.23 2.08 2.02
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 06:20:13 PM CST 2026
+   sha256 5d976a488e318c22 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=38.64598165902769 mlups=1.3566429871694732 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=36.410143136978149 t_comm=0.0052649974822998047 t_bc=2.229933500289917
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=39.050525418409158 mlups=1.3425888496569132 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=36.78303599357605 t_comm=0.0051312446594238281 t_bc=2.2616357803344727
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=38.493248256707012 mlups=1.3620258714036917 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=36.238255262374878 t_comm=0.0052568912506103516 t_bc=2.249138355255127
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar_cse_aa | 1.36 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647609 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar_cse_aa | 5.8% / 0.0% |
+== done Mon Nov 16 06:22:20 PM CST 2026

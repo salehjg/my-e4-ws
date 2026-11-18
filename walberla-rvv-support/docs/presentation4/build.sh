@@ -5,6 +5,8 @@
 #  Usage:  ./build.sh [command]
 #
 #    pdf        (default) build build/slides.pdf with latexmk; \todo notes are shown in red
+#               (show it with: pdfpc build/slides.pdf; the films need build/figures/cavity-movie*/cavity.avi,
+#               which every build copies there)
 #    final      build build/slides.pdf with all \todo notes hidden (for presenting)
 #    png        build the PDF, then render every slide to build/png/ (needs pdftoppm)
 #    todos      list the open \todo notes in the sources
@@ -51,6 +53,14 @@ build_pdf() {
         grep -n -A3 -E '^(.*:[0-9]+:|!)' "$BUILD_DIR/$MAIN.log" | head -40 >&2 || tail -40 "$BUILD_DIR/latexmk.out" >&2
         exit 1
     fi
+    # The film slide's \movie only links its videos by relative paths figures/<film>/cavity.avi
+    # (pdfpc plays them), so the videos go next to the PDF as well.
+    for film in cavity-movie cavity-movie-board; do     # laptop (x86) and board (RVV) film
+        if [[ -f "figures/$film/cavity.avi" ]]; then
+            mkdir -p "$BUILD_DIR/figures/$film"
+            cp -p "figures/$film/cavity.avi" "$BUILD_DIR/figures/$film/"
+        fi
+    done
     # Text that runs off a slide only shows up as a warning, so list those.
     grep -a -E '^Overfull' "$BUILD_DIR/$MAIN.log" || true
     local warnings

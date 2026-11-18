@@ -1,6 +1,6 @@
 # presentation4: lid-driven cavity benchmark on the K1, with GCC and Clang
 
-Plan written by Opus 5.5 on 2026-11-17. Status: **written, not started**. The running log is
+Plan written by Opus 5.5 on 2026-11-17. Status: **in progress** (see the amendments at the end). The running log is
 `presentation4-progress-opus5.5.md` in this folder.
 
 ## Context
@@ -247,3 +247,25 @@ compiler, the tree choice, flag recording and the extra fields.
 - Generated boundary code is identical across families (diff).
 - UniformGridCPU's edge/corner precedence: read in the boundary-collection template.
 - The `getFactors3D` block grid for np 4 and 8: printed by the app.
+
+## Amendments during the work (evidence in the progress log)
+
+1. **Criterion 2 ("all variants bit-identical, f64") was wrong and is replaced.** Measured on x86, the variants do not
+   produce bit-identical fields: CSE vs no CSE, pull vs AA and scalar vs explicit round differently. All energies
+   agree to ≤ 6e-16 relative. presentation3's "identical checksums" were 12 printed digits, not bit identity.
+   Now:
+   - every variant must meet the oracle criterion (1) on its own;
+   - criterion 3 (decomposition) stays bit-exact and holds;
+   - repeated runs of one executable must give the same `fieldhash` (determinism, `summary.py`).
+2. **f32 thresholds:** max(2× the scalar f32 build's error, 4 f32 machine epsilons = 4.77e-7). The scalar f32 errors
+   lie below 4 eps, and equally accurate variants scatter by more than 2× at that level. The thresholds stay orders
+   of magnitude below the errors that real wall bugs produce (mutation tests: ≥ 1e-2).
+3. The `_pf` variants cannot be generated for x86 (prefetch is RVV-only), so the x86 checks cover 9 of the 11
+   variants and the board checks all 11.
+4. Additional checks:
+   - `check_walls.py`: the wall kernels are byte-identical across variants.
+   - A link-count comparison with the oracle inside `verify.sh`.
+   - The executable sha256 in every verify and timing log, so the timed binaries are provably the verified ones.
+     For that reason `all.sh` does not regenerate; `prepare.sh` does.
+5. Board stage scripts: `prepare.sh <f32|f64>` (stages 2 and 3: build, audit, verify, GCC against Clang) and
+   `extras.sh` (warm-up stability; scalar variants in the vector tree against the scalar tree).

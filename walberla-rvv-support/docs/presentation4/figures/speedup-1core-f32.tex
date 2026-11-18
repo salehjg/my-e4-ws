@@ -1,0 +1,28 @@
+% Slide "Results: one core, f32": whole-program speedup over the plain scalar build of the same
+% compiler, lid-driven cavity (SweepgenLdcCPU), f32, 64^3 cells, one core, best of 3 runs of 200 steps.
+% One session (board, scripts/presentation4/all.sh, logs docs/presentation4/board-logs/board/
+% ldc-{gcc,clang}-{scalar,autovec,rvv}-f32-1core.log), printed by
+%   python3 scripts/presentation4/slide_numbers.py --tex docs/presentation4/board-logs/board
+% Bars and numbers: GCC 14.2. Diamonds, right of each bar: Clang 18.1 against its own plain scalar.
+% Groups (style onecore, preamble of slides.tex): plain = scalar, plainav = autovec,
+% best = scalar_cse_aa, bestav = autovec_cse_aa (auto-vectorized: hatched), rvv = explicit_cse,
+% pf = explicit_cse_pf, aa = explicit_cse_aa_pf, split = explicit_cse_aa_split (no software prefetch: 0 hints).
+% The MLUP/s of the same runs: figures/mlups-1core.tex. Same y scale as speedup-1core-f64.tex.
+\begin{tikzpicture}
+  \begin{axis}[onecore, ybar, bar width=16pt, height=5.35cm, ymax=8.9,
+      ylabel={speedup over plain scalar},
+      nodes near coords style={font=\tiny,anchor=south},
+      legend style={at={(0.01,0.86)},anchor=north west}]
+    \addplot[fill=psblue!60,draw=psblue!80!black,bar shift=0pt] coordinates {
+      (plain,1.000)[1.00] (best,1.447)[1.45] (rvv,1.693)[1.69] (pf,3.313)[3.31] (aa,4.738)[4.74]
+      (split,5.548)[\textbf{5.55}]};
+    \addplot[clang1,clang1legend,xshift=14pt] coordinates {
+      (plain,1.000) (plainav,0.999) (best,1.554) (bestav,1.542) (rvv,1.642) (pf,3.093) (aa,4.551)
+      (split,5.550)};
+    \addplot[pattern=north east lines,pattern color=psblue!80!black,draw=psblue!80!black,
+      bar shift=0pt,forget plot] coordinates {(plainav,0.997)[1.00] (bestav,1.449)[1.45]};
+    \legend{GCC, Clang}
+    \draw[psblue!80!black,dashed,thick] (axis description cs:0,8/8.9) -- (axis description cs:1,8/8.9)
+      node[pos=0.45,above,font=\scriptsize] {f32 goal \sx{8}};
+  \end{axis}
+\end{tikzpicture}

@@ -1,0 +1,133 @@
+== start Mon Nov 16 09:42:10 AM CST 2026
+   verified 29d176d9876b2e76 /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+   verified b04256301b725f46 /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+   verified 6c86e49b9fef4d7e /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+   verified e90e8b4b14dda4ce /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+   verified 6ee16e29c8399e93 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+   verified 1ad6a279c7191d78 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+   verified b9b593d0d47675ed /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+   verified ddd9e6e659320046 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+   verified c89950706f0ffd9c /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+   verified d48953de35d72c41 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+   verified 864a7d8042e9a3f8 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+   verified 7a3605edac99ce64 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+   verified 725b22a4c0258b91 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+   verified 5d976a488e318c22 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+   verified edd2e7db214eca55 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+   verified f7162b2fe19da341 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+   verified fada853000048960 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+   verified 5c5a35fde48972ca /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+   verified 36a606cf5e9f0560 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+   verified 4cc7d6a9f3d1d81c /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+   verified 790a01ce74bcda12 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+   verified 2f2e70e6783c8d93 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+   verified 5e424e3b1ce597f7 /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+   verified d489a791f7cb4a05 /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+   verified 370f888731ce992b /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+   verified bf9a3cac4302a27b /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+   verified 59204ec95dca0dd4 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+   verified 4881f365309611d6 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+   verified 03d338a80f03c18b /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+   verified c004de908a542518 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+   verified fec690069b9c6130 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+   verified 6ca2150a6fe9a1a9 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+   verified f3545c38599581a0 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+   verified ffc8f206daeae393 /home/bananapi/saleh/presentation4/build-clang-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+   verified b9c8bd2ba8a1a47d /home/bananapi/saleh/presentation4/build-clang-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+   verified 24a422aeb70a107d /home/bananapi/saleh/presentation4/build-clang-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+   verified 4f25112bdd7a271f /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+   verified 60b92f7331094bdd /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+   verified a25954d9a682acf2 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+   verified d00d865e0039124a /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+   verified 10387e777f9e1f76 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+   verified d16d02494957d906 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+   verified 6badbaa73dfd19d8 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+   verified e68647f83aa429dd /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+== gcc scalar f32 1 core(s) 09:42:13 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f32-1core.log
+== gcc autovec f32 1 core(s) 09:47:33 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f32-1core.log
+== gcc rvv f32 1 core(s) 09:52:53 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f32-1core.log
+== gcc scalar f32 4 core(s) 09:56:40 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f32-4core.log
+== gcc autovec f32 4 core(s) 10:02:26 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f32-4core.log
+== gcc rvv f32 4 core(s) 10:08:11 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f32-4core.log
+== gcc scalar f32 8 core(s) 10:13:13 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f32-8core.log
+== gcc autovec f32 8 core(s) 10:20:09 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f32-8core.log
+== gcc rvv f32 8 core(s) 10:27:05 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f32-8core.log
+== gcc scalar f64 1 core(s) 10:34:58 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f64-1core.log
+== gcc autovec f64 1 core(s) 10:42:54 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f64-1core.log
+== gcc rvv f64 1 core(s) 10:50:55 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f64-1core.log
+== gcc scalar f64 4 core(s) 10:57:58 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f64-4core.log
+== gcc autovec f64 4 core(s) 11:06:40 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f64-4core.log
+== gcc rvv f64 4 core(s) 11:15:20 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f64-4core.log
+== gcc scalar f64 8 core(s) 11:24:32 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-scalar-f64-8core.log
+== gcc autovec f64 8 core(s) 11:36:08 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-autovec-f64-8core.log
+== gcc rvv f64 8 core(s) 11:47:41 -> /home/bananapi/saleh/presentation4/logs/ldc-gcc-rvv-f64-8core.log
+== clang scalar f32 1 core(s) 12:02:30 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f32-1core.log
+== clang autovec f32 1 core(s) 12:07:41 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f32-1core.log
+== clang rvv f32 1 core(s) 12:12:53 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f32-1core.log
+== clang scalar f32 4 core(s) 12:16:49 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f32-4core.log
+== clang autovec f32 4 core(s) 12:22:25 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f32-4core.log
+== clang rvv f32 4 core(s) 12:28:01 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f32-4core.log
+== clang scalar f32 8 core(s) 12:33:11 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f32-8core.log
+== clang autovec f32 8 core(s) 12:40:04 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f32-8core.log
+== clang rvv f32 8 core(s) 12:46:55 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f32-8core.log
+== clang scalar f64 1 core(s) 12:54:59 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f64-1core.log
+== clang autovec f64 1 core(s) 13:02:46 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f64-1core.log
+== clang rvv f64 1 core(s) 13:10:36 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f64-1core.log
+== clang scalar f64 4 core(s) 13:17:51 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f64-4core.log
+== clang autovec f64 4 core(s) 13:26:20 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f64-4core.log
+== clang rvv f64 4 core(s) 13:34:46 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f64-4core.log
+== clang scalar f64 8 core(s) 13:44:17 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-scalar-f64-8core.log
+== clang autovec f64 8 core(s) 13:55:50 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-autovec-f64-8core.log
+== clang rvv f64 8 core(s) 14:07:21 -> /home/bananapi/saleh/presentation4/logs/ldc-clang-rvv-f64-8core.log
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f32 1c | gcc f64 1c | clang f32 1c | clang f64 1c | gcc f32 4c | gcc f64 4c | clang f32 4c | clang f64 4c | gcc f32 8c | gcc f64 8c | clang f32 8c | clang f64 8c |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| scalar | 1.38 (1.00x) | 0.92 (1.00x) | 1.36 (1.00x) | 0.89 (1.00x) | 5.27 (1.00x) | 3.39 (1.00x) | 5.23 (1.00x) | 3.39 (1.00x) | 8.77 (1.00x) | 5.17 (1.00x) | 8.54 (1.00x) | 5.15 (1.00x) |
+| scalar_cse | 1.57 (1.13x) | 0.97 (1.06x) | 1.68 (1.23x) | 1.00 (1.12x) | 5.62 (1.06x) | 3.56 (1.05x) | 5.97 (1.14x) | 3.68 (1.08x) | 9.12 (1.04x) | 5.33 (1.03x) | 9.38 (1.10x) | 5.29 (1.03x) |
+| scalar_cse_aa | 2.00 (1.45x) | 1.46 (1.58x) | 2.11 (1.55x) | 1.58 (1.77x) | 7.30 (1.38x) | 5.16 (1.52x) | 7.66 (1.47x) | 5.49 (1.62x) | 12.50 (1.42x) | 7.59 (1.47x) | 12.91 (1.51x) | 7.79 (1.51x) |
+| autovec | 1.38 (1.00x) | 0.91 (0.99x) | 1.36 (1.00x) | 0.89 (1.00x) | 5.31 (1.01x) | 3.42 (1.01x) | 5.23 (1.00x) | 3.41 (1.01x) | 8.79 (1.00x) | 5.21 (1.01x) | 8.66 (1.01x) | 5.15 (1.00x) |
+| autovec_cse | 1.57 (1.13x) | 0.96 (1.04x) | 1.68 (1.24x) | 0.99 (1.11x) | 5.57 (1.06x) | 3.56 (1.05x) | 5.91 (1.13x) | 3.69 (1.09x) | 9.17 (1.05x) | 5.32 (1.03x) | 9.47 (1.11x) | 5.31 (1.03x) |
+| autovec_cse_aa | 2.01 (1.45x) | 1.44 (1.57x) | 2.10 (1.54x) | 1.58 (1.77x) | 7.27 (1.38x) | 5.16 (1.52x) | 7.66 (1.47x) | 5.59 (1.65x) | 12.52 (1.43x) | 7.63 (1.48x) | 12.90 (1.51x) | 7.86 (1.52x) |
+| explicit_cse | 2.34 (1.69x) | 1.14 (1.24x) | 2.23 (1.64x) | 1.10 (1.23x) | 7.69 (1.46x) | 4.00 (1.18x) | 7.52 (1.44x) | 3.87 (1.14x) | 10.82 (1.23x) | 5.61 (1.09x) | 10.64 (1.25x) | 5.49 (1.06x) |
+| explicit_cse_pf | 4.58 (3.31x) | 2.42 (2.64x) | 4.20 (3.09x) | 2.16 (2.41x) | 12.35 (2.34x) | 6.59 (1.95x) | 11.88 (2.27x) | 6.35 (1.87x) | 13.89 (1.58x) | 7.09 (1.37x) | 13.40 (1.57x) | 6.95 (1.35x) |
+| explicit_cse_aa | 2.91 (2.11x) | 1.47 (1.60x) | 2.90 (2.13x) | 1.62 (1.81x) | 9.28 (1.76x) | 5.00 (1.47x) | 9.12 (1.75x) | 4.86 (1.43x) | 13.72 (1.56x) | 7.29 (1.41x) | 13.47 (1.58x) | 7.09 (1.38x) |
+| explicit_cse_aa_pf | 6.56 (4.74x) | 3.89 (4.23x) | 6.19 (4.55x) | 3.63 (4.06x) | 17.91 (3.40x) | 9.89 (2.92x) | 17.19 (3.29x) | 9.43 (2.78x) | 19.40 (2.21x) | 10.29 (1.99x) | 18.79 (2.20x) | 9.95 (1.93x) |
+| explicit_cse_aa_split | 7.68 (5.55x) | 4.71 (5.12x) | 7.54 (5.55x) | 4.43 (4.96x) | 18.31 (3.47x) | 10.06 (2.97x) | 17.90 (3.43x) | 9.79 (2.89x) | 19.49 (2.22x) | 10.35 (2.00x) | 19.21 (2.25x) | 10.18 (1.98x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366614821193197 | 11.366655858343641 | 3.6e-06 | 262143.99988484383 | 262144.00021189451 | 6 of 11 variants |
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647622 | 1.1e-15 | 262143.99999999857 | 262143.99999999857 | 6 of 11 variants |
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366614821193197 | 11.366654124957959 | 3.5e-06 | 262143.99982398748 | 262144.00016909838 | 6 of 11 variants |
+| clang f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647614 | 11.366594364647623 | 7.8e-16 | 262143.99999999857 | 262143.99999999857 | 6 of 11 variants |
+| gcc f32 4c | 2x2x1 blocks, 128x128x64, 200 steps | 24.240291693351804 | 24.240386372541415 | 3.9e-06 | 1048576.0000436306 | 1048576.0008801818 | 6 of 11 variants |
+| gcc f64 4c | 2x2x1 blocks, 128x128x64, 200 steps | 24.240249953164128 | 24.240249953164138 | 4.4e-16 | 1048575.9999999994 | 1048575.9999999994 | 6 of 11 variants |
+| clang f32 4c | 2x2x1 blocks, 128x128x64, 200 steps | 24.240291693351804 | 24.240383829177464 | 3.8e-06 | 1048576.0000436306 | 1048576.0008262396 | 6 of 11 variants |
+| clang f64 4c | 2x2x1 blocks, 128x128x64, 200 steps | 24.240249953164131 | 24.240249953164138 | 2.9e-16 | 1048575.9999999994 | 1048575.9999999994 | 6 of 11 variants |
+| gcc f32 8c | 2x2x2 blocks, 128x128x128, 200 steps | 49.525466503677478 | 49.525661585948285 | 3.9e-06 | 2097151.9998188615 | 2097152.0012856126 | 6 of 11 variants |
+| gcc f64 8c | 2x2x2 blocks, 128x128x128, 200 steps | 49.525378876420817 | 49.525378876420845 | 5.7e-16 | 2097152.0000000056 | 2097152.0000000056 | 6 of 11 variants |
+| clang f32 8c | 2x2x2 blocks, 128x128x128, 200 steps | 49.525466503677478 | 49.525657011198874 | 3.8e-06 | 2097151.9996540546 | 2097152.0012108088 | 6 of 11 variants |
+| clang f64 8c | 2x2x2 blocks, 128x128x128, 200 steps | 49.525378876420817 | 49.525378876420845 | 5.7e-16 | 2097152.0000000056 | 2097152.0000000056 | 6 of 11 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f32 1c | gcc f64 1c | clang f32 1c | clang f64 1c | gcc f32 4c | gcc f64 4c | clang f32 4c | clang f64 4c | gcc f32 8c | gcc f64 8c | clang f32 8c | clang f64 8c |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| scalar | 5.3% / 0.0% | 3.4% / 0.0% | 5.6% / 0.0% | 3.5% / 0.0% | 4.6% / 2.7% | 2.8% / 2.0% | 4.5% / 2.9% | 2.7% / 2.1% | 5.6% / 4.2% | 3.2% / 4.1% | 4.8% / 6.7% | 2.7% / 3.7% |
+| scalar_cse | 6.0% / 0.0% | 3.6% / 0.0% | 6.9% / 0.0% | 3.9% / 0.0% | 4.2% / 1.8% | 3.1% / 2.1% | 4.3% / 2.6% | 3.0% / 2.4% | 5.7% / 4.1% | 3.1% / 3.5% | 5.5% / 7.7% | 3.1% / 5.8% |
+| scalar_cse_aa | 8.3% / 0.0% | 5.8% / 0.0% | 8.8% / 0.0% | 6.2% / 0.0% | 6.1% / 3.9% | 4.2% / 3.1% | 6.2% / 4.9% | 4.2% / 3.4% | 8.2% / 5.6% | 4.7% / 4.5% | 7.6% / 8.4% | 4.5% / 5.4% |
+| autovec | 5.3% / 0.0% | 3.4% / 0.0% | 5.6% / 0.0% | 3.5% / 0.0% | 4.5% / 2.4% | 2.9% / 2.1% | 4.4% / 4.6% | 2.7% / 2.1% | 5.5% / 4.1% | 3.2% / 3.7% | 5.2% / 5.8% | 3.0% / 4.3% |
+| autovec_cse | 6.1% / 0.0% | 3.6% / 0.0% | 6.9% / 0.0% | 3.9% / 0.0% | 4.8% / 2.7% | 3.0% / 2.1% | 5.1% / 3.1% | 2.9% / 2.3% | 5.6% / 3.6% | 3.2% / 4.2% | 5.6% / 5.9% | 2.9% / 5.9% |
+| autovec_cse_aa | 8.3% / 0.0% | 5.7% / 0.0% | 8.9% / 0.0% | 6.4% / 0.0% | 6.1% / 4.1% | 4.5% / 4.2% | 6.2% / 4.6% | 4.6% / 4.7% | 8.2% / 5.5% | 4.7% / 4.3% | 7.8% / 9.0% | 4.8% / 4.9% |
+| explicit_cse | 9.0% / 0.0% | 4.2% / 0.0% | 9.1% / 0.0% | 4.3% / 0.0% | 6.7% / 4.8% | 3.4% / 2.8% | 6.5% / 4.4% | 3.2% / 2.5% | 6.1% / 4.0% | 3.2% / 3.8% | 6.1% / 5.2% | 3.1% / 3.9% |
+| explicit_cse_pf | 17.7% / 0.0% | 8.9% / 0.0% | 17.2% / 0.0% | 8.6% / 0.0% | 10.8% / 7.1% | 5.7% / 5.0% | 10.2% / 7.2% | 5.4% / 4.6% | 8.9% / 7.1% | 4.7% / 5.4% | 8.5% / 7.7% | 4.3% / 4.6% |
+| explicit_cse_aa | 12.1% / 0.0% | 5.8% / 0.0% | 12.1% / 0.0% | 6.5% / 0.0% | 7.6% / 8.1% | 4.3% / 8.3% | 7.1% / 5.9% | 3.9% / 3.9% | 8.3% / 8.3% | 3.8% / 4.3% | 8.2% / 9.8% | 4.0% / 7.3% |
+| explicit_cse_aa_pf | 27.2% / 0.1% | 15.3% / 0.0% | 25.7% / 0.1% | 14.7% / 0.0% | 15.4% / 10.8% | 8.7% / 7.3% | 14.0% / 11.8% | 8.2% / 8.5% | 12.6% / 10.0% | 6.1% / 8.5% | 12.1% / 11.5% | 6.3% / 8.2% |
+| explicit_cse_aa_split | 31.9% / 0.1% | 18.6% / 0.0% | 31.2% / 0.1% | 17.9% / 0.1% | 15.7% / 10.9% | 8.9% / 8.3% | 14.9% / 14.5% | 8.6% / 9.2% | 12.7% / 8.6% | 6.5% / 7.8% | 11.9% / 10.9% | 6.4% / 9.9% |
+
+== timed executables not in a verify log: 0
+== ALL DONE Mon Nov 16 02:22:33 PM CST 2026

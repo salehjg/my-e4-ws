@@ -1,0 +1,2280 @@
+== probe tag=a R=1 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=0.3 GBps=2.065
+perf,31915373,,cycles,13688209,68.00,,
+perf,22264020,,instructions,17627250,88.00,0.70,insn per cycle
+perf,841197,,l1d_prefetch_hit,19996417,100.00,,
+perf,200845,,l1d_prefetch_refill,19996417,100.00,,
+== probe tag=a R=1 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.8 GBps=2.082
+perf,31883,,l1d_load_miss,19893209,100.00,,
+perf,30656,,l2_miss,19893209,100.00,,
+perf,499064,,l2_load_access,19893209,100.00,,
+perf,11839007,,stalled_cycle_backend,19893209,100.00,,
+== probe tag=a R=1 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,21293940,,cycles,13325083,100.00,,
+perf,11403532,,instructions,13325083,100.00,0.54,insn per cycle
+perf,54653,,l1d_prefetch_hit,13325083,100.00,,
+perf,4170,,l1d_prefetch_refill,13325083,100.00,,
+== probe tag=a R=1 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,30105,,l1d_load_miss,13383542,100.00,,
+perf,26036,,l2_miss,13383542,100.00,,
+perf,99379,,l2_load_access,13383542,100.00,,
+perf,9526938,,stalled_cycle_backend,13383542,100.00,,
+== probe tag=a R=2 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=32.0 GBps=3.202
+perf,45780832,,cycles,22703168,79.00,,
+perf,32658130,,instructions,26669044,93.00,0.71,insn per cycle
+perf,1631039,,l1d_prefetch_hit,28632711,100.00,,
+perf,397425,,l1d_prefetch_refill,28632711,100.00,,
+== probe tag=a R=2 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.9 GBps=3.120
+perf,33234,,l1d_load_miss,28772290,100.00,,
+perf,33466,,l2_miss,28772290,100.00,,
+perf,900525,,l2_load_access,28772290,100.00,,
+perf,17533134,,stalled_cycle_backend,28772290,100.00,,
+== probe tag=a R=2 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,32666646,,cycles,20435167,100.00,,
+perf,19157324,,instructions,20435167,100.00,0.59,insn per cycle
+perf,56421,,l1d_prefetch_hit,20435167,100.00,,
+perf,4260,,l1d_prefetch_refill,20435167,100.00,,
+== probe tag=a R=2 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,30990,,l1d_load_miss,20334000,100.00,,
+perf,27894,,l2_miss,20334000,100.00,,
+perf,106550,,l2_load_access,20334000,100.00,,
+perf,13996229,,stalled_cycle_backend,20334000,100.00,,
+== probe tag=a R=4 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=25.7 GBps=3.905
+perf,76218959,,cycles,35749458,74.00,,
+perf,50733049,,instructions,39716292,83.00,0.67,insn per cycle
+perf,2712266,,l1d_prefetch_hit,43695625,91.00,,
+perf,790608,,l1d_prefetch_refill,47698000,100.00,,
+== probe tag=a R=4 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=25.5 GBps=3.955
+perf,37726,,l1d_load_miss,46883624,100.00,,
+perf,37366,,l2_miss,46883624,100.00,,
+perf,1703018,,l2_load_access,46883624,100.00,,
+perf,31002926,,stalled_cycle_backend,46883624,100.00,,
+== probe tag=a R=4 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,54211733,,cycles,33916374,100.00,,
+perf,34513579,,instructions,33916374,100.00,0.64,insn per cycle
+perf,65993,,l1d_prefetch_hit,33916374,100.00,,
+perf,4275,,l1d_prefetch_refill,33916374,100.00,,
+== probe tag=a R=4 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,32517,,l1d_load_miss,33737875,100.00,,
+perf,31566,,l2_miss,33737875,100.00,,
+perf,118457,,l2_load_access,33737875,100.00,,
+perf,22299799,,stalled_cycle_backend,33737875,100.00,,
+== probe tag=a R=6 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.5 GBps=4.273
+perf,104004766,,cycles,49096876,75.00,,
+perf,69751899,,instructions,53100251,81.00,0.67,insn per cycle
+perf,3015215,,l1d_prefetch_hit,57089042,87.00,,
+perf,969479,,l1d_prefetch_refill,61056292,93.00,,
+== probe tag=a R=6 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=21.9 GBps=4.601
+perf,42937,,l1d_load_miss,64574998,100.00,,
+perf,41135,,l2_miss,64574998,100.00,,
+perf,2504240,,l2_load_access,64574998,100.00,,
+perf,43316905,,stalled_cycle_backend,64574998,100.00,,
+== probe tag=a R=6 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,75411452,,cycles,47161792,100.00,,
+perf,49707162,,instructions,47161792,100.00,0.66,insn per cycle
+perf,73889,,l1d_prefetch_hit,47161792,100.00,,
+perf,4348,,l1d_prefetch_refill,47161792,100.00,,
+== probe tag=a R=6 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,34628,,l1d_load_miss,47105708,100.00,,
+perf,33187,,l2_miss,47105708,100.00,,
+perf,131011,,l2_load_access,47105708,100.00,,
+perf,30543237,,stalled_cycle_backend,47105708,100.00,,
+== probe tag=a R=8 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.2 GBps=5.249
+perf,127714398,,cycles,63958667,80.00,,
+perf,87051733,,instructions,67948084,85.00,0.68,insn per cycle
+perf,4072583,,l1d_prefetch_hit,71955251,90.00,,
+perf,1268789,,l1d_prefetch_refill,75936124,94.00,,
+== probe tag=a R=8 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.2 GBps=5.273
+perf,89985,,l1d_load_miss,79945167,100.00,,
+perf,43601,,l2_miss,79945167,100.00,,
+perf,3354714,,l2_load_access,79945167,100.00,,
+perf,52719651,,stalled_cycle_backend,79945167,100.00,,
+== probe tag=a R=8 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,97135547,,cycles,60741708,100.00,,
+perf,65000121,,instructions,60741708,100.00,0.67,insn per cycle
+perf,79328,,l1d_prefetch_hit,60741708,100.00,,
+perf,4377,,l1d_prefetch_refill,60741708,100.00,,
+== probe tag=a R=8 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,35823,,l1d_load_miss,60584208,100.00,,
+perf,37956,,l2_miss,60584208,100.00,,
+perf,140142,,l2_load_access,60584208,100.00,,
+perf,39011923,,stalled_cycle_backend,60584208,100.00,,
+== probe tag=a R=10 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=22.9 GBps=2.436
+perf,205947644,,cycles,81410790,63.00,,
+perf,127269192,,instructions,93388041,72.00,0.62,insn per cycle
+perf,3276252,,l1d_prefetch_hit,105370416,81.00,,
+perf,1577897,,l1d_prefetch_refill,117420791,91.00,,
+== probe tag=a R=10 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=41.5 GBps=2.455
+perf,908576,,l1d_load_miss,126178749,100.00,,
+perf,156751,,l2_miss,126178749,100.00,,
+perf,5202800,,l2_load_access,126178749,100.00,,
+perf,103790309,,stalled_cycle_backend,126178749,100.00,,
+== probe tag=a R=10 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,117997173,,cycles,73773416,100.00,,
+perf,80198475,,instructions,73773416,100.00,0.68,insn per cycle
+perf,86266,,l1d_prefetch_hit,73773416,100.00,,
+perf,4292,,l1d_prefetch_refill,73773416,100.00,,
+== probe tag=a R=10 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,37863,,l1d_load_miss,74179625,100.00,,
+perf,42418,,l2_miss,74179625,100.00,,
+perf,150170,,l2_load_access,74179625,100.00,,
+perf,47545745,,stalled_cycle_backend,74179625,100.00,,
+== probe tag=a R=12 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=22.5 GBps=2.657
+perf,232298879,,cycles,97360959,66.00,,
+perf,145417384,,instructions,109346291,75.00,0.63,insn per cycle
+perf,3949197,,l1d_prefetch_hit,121297708,83.00,,
+perf,1710766,,l1d_prefetch_refill,133304584,91.00,,
+== probe tag=a R=12 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.9 GBps=2.692
+perf,1090201,,l1d_load_miss,144209624,100.00,,
+perf,132955,,l2_miss,144209624,100.00,,
+perf,6747431,,l2_load_access,144209624,100.00,,
+perf,117778768,,stalled_cycle_backend,144209624,100.00,,
+== probe tag=a R=12 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,139647678,,cycles,87300498,100.00,,
+perf,95501110,,instructions,87300498,100.00,0.68,insn per cycle
+perf,94122,,l1d_prefetch_hit,87300498,100.00,,
+perf,4268,,l1d_prefetch_refill,87300498,100.00,,
+== probe tag=a R=12 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,38791,,l1d_load_miss,87249833,100.00,,
+perf,43876,,l2_miss,87249833,100.00,,
+perf,162748,,l2_load_access,87249833,100.00,,
+perf,55412958,,stalled_cycle_backend,87249833,100.00,,
+== probe tag=a R=14 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=33.7 GBps=2.138
+perf,296554918,,cycles,117612165,63.00,,
+perf,172635549,,instructions,137620958,74.00,0.58,insn per cycle
+perf,4948074,,l1d_prefetch_hit,153616749,82.00,,
+perf,1852070,,l1d_prefetch_refill,169573458,91.00,,
+== probe tag=a R=14 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.1 GBps=2.167
+perf,1199537,,l1d_load_miss,182806043,100.00,,
+perf,105532,,l2_miss,182806043,100.00,,
+perf,8026071,,l2_load_access,182806043,100.00,,
+perf,161157221,,stalled_cycle_backend,182806043,100.00,,
+== probe tag=a R=14 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,160977730,,cycles,100638959,100.00,,
+perf,110773223,,instructions,100638959,100.00,0.69,insn per cycle
+perf,101456,,l1d_prefetch_hit,100638959,100.00,,
+perf,4647,,l1d_prefetch_refill,100638959,100.00,,
+== probe tag=a R=14 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,40067,,l1d_load_miss,100404958,100.00,,
+perf,45265,,l2_miss,100404958,100.00,,
+perf,171008,,l2_load_access,100404958,100.00,,
+perf,63533884,,stalled_cycle_backend,100404958,100.00,,
+== probe tag=a R=16 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=18.2 GBps=2.718
+perf,301037975,,cycles,128358833,68.00,,
+perf,185106487,,instructions,144367624,76.00,0.61,insn per cycle
+perf,5684870,,l1d_prefetch_hit,160334500,85.00,,
+perf,1915688,,l1d_prefetch_refill,176302417,93.00,,
+== probe tag=a R=16 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.1 GBps=2.750
+perf,1341252,,l1d_load_miss,187975126,100.00,,
+perf,110043,,l2_miss,187975126,100.00,,
+perf,9126397,,l2_load_access,187975126,100.00,,
+perf,156006778,,stalled_cycle_backend,187975126,100.00,,
+== probe tag=a R=16 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,181959595,,cycles,113747874,100.00,,
+perf,125944741,,instructions,113747874,100.00,0.69,insn per cycle
+perf,108765,,l1d_prefetch_hit,113747874,100.00,,
+perf,4580,,l1d_prefetch_refill,113747874,100.00,,
+== probe tag=a R=16 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,41711,,l1d_load_miss,113802166,100.00,,
+perf,48539,,l2_miss,113802166,100.00,,
+perf,182634,,l2_load_access,113802166,100.00,,
+perf,71886729,,stalled_cycle_backend,113802166,100.00,,
+== probe tag=a R=17 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.1 GBps=2.130
+perf,357596242,,cycles,143796374,64.00,,
+perf,208473151,,instructions,163763000,73.00,0.58,insn per cycle
+perf,6245526,,l1d_prefetch_hit,183741167,82.00,,
+perf,1984487,,l1d_prefetch_refill,203755083,91.00,,
+== probe tag=a R=17 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.3 GBps=2.158
+perf,1432148,,l1d_load_miss,221840666,100.00,,
+perf,123791,,l2_miss,221840666,100.00,,
+perf,9663030,,l2_load_access,221840666,100.00,,
+perf,201715500,,stalled_cycle_backend,221840666,100.00,,
+== probe tag=a R=17 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,192263197,,cycles,120186083,100.00,,
+perf,133557005,,instructions,120186083,100.00,0.69,insn per cycle
+perf,111128,,l1d_prefetch_hit,120186083,100.00,,
+perf,4561,,l1d_prefetch_refill,120186083,100.00,,
+== probe tag=a R=17 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,41579,,l1d_load_miss,120096166,100.00,,
+perf,48794,,l2_miss,120096166,100.00,,
+perf,184988,,l2_load_access,120096166,100.00,,
+perf,75549529,,stalled_cycle_backend,120096166,100.00,,
+== probe tag=a R=18 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=28.2 GBps=2.081
+perf,380604224,,cycles,150116166,63.00,,
+perf,221114727,,instructions,174080625,73.00,0.58,insn per cycle
+perf,6802102,,l1d_prefetch_hit,198087373,83.00,,
+perf,2093663,,l1d_prefetch_refill,218141333,91.00,,
+== probe tag=a R=18 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.4 GBps=2.105
+perf,1540433,,l1d_load_miss,236699083,100.00,,
+perf,127078,,l2_miss,236699083,100.00,,
+perf,10273376,,l2_load_access,236699083,100.00,,
+perf,214399743,,stalled_cycle_backend,236699083,100.00,,
+== probe tag=a R=18 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,203191803,,cycles,127015832,100.00,,
+perf,141227581,,instructions,127015832,100.00,0.70,insn per cycle
+perf,112189,,l1d_prefetch_hit,127015832,100.00,,
+perf,4500,,l1d_prefetch_refill,127015832,100.00,,
+== probe tag=a R=18 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,43070,,l1d_load_miss,126946583,100.00,,
+perf,51227,,l2_miss,126946583,100.00,,
+perf,191439,,l2_load_access,126946583,100.00,,
+perf,79852160,,stalled_cycle_backend,126946583,100.00,,
+== probe tag=a R=19 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=30.6 GBps=1.965
+perf,415065707,,cycles,159727210,61.00,,
+perf,231576675,,instructions,187738583,72.00,0.56,insn per cycle
+perf,6291075,,l1d_prefetch_hit,211736418,81.00,,
+perf,2058713,,l1d_prefetch_refill,235737291,90.00,,
+== probe tag=a R=19 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=51.4 GBps=1.986
+perf,1685404,,l1d_load_miss,257891249,100.00,,
+perf,169022,,l2_miss,257891249,100.00,,
+perf,10841878,,l2_load_access,257891249,100.00,,
+perf,239808338,,stalled_cycle_backend,257891249,100.00,,
+== probe tag=a R=19 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,213974697,,cycles,133761375,100.00,,
+perf,148838049,,instructions,133761375,100.00,0.70,insn per cycle
+perf,117297,,l1d_prefetch_hit,133761375,100.00,,
+perf,4578,,l1d_prefetch_refill,133761375,100.00,,
+== probe tag=a R=19 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,42892,,l1d_load_miss,133608791,100.00,,
+perf,53367,,l2_miss,133608791,100.00,,
+perf,195524,,l2_load_access,133608791,100.00,,
+perf,83994849,,stalled_cycle_backend,133608791,100.00,,
+== probe tag=a R=20 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=44.5 GBps=1.241
+perf,572053637,,cycles,182080209,50.00,,
+perf,275842197,,instructions,226075000,63.00,0.48,insn per cycle
+perf,6218587,,l1d_prefetch_hit,270025418,75.00,,
+perf,1947310,,l1d_prefetch_refill,314038669,87.00,,
+== probe tag=a R=20 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=110.5 GBps=0.925
+perf,2650403,,l1d_load_miss,563574373,100.00,,
+perf,1649592,,l2_miss,563574373,100.00,,
+perf,8690260,,l2_load_access,563574373,100.00,,
+perf,696265491,,stalled_cycle_backend,563574373,100.00,,
+== probe tag=a R=20 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,224065465,,cycles,140062541,100.00,,
+perf,156450506,,instructions,140062541,100.00,0.70,insn per cycle
+perf,119841,,l1d_prefetch_hit,140062541,100.00,,
+perf,4529,,l1d_prefetch_refill,140062541,100.00,,
+== probe tag=a R=20 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,44356,,l1d_load_miss,140454124,100.00,,
+perf,54971,,l2_miss,140454124,100.00,,
+perf,200546,,l2_load_access,140454124,100.00,,
+perf,88369583,,stalled_cycle_backend,140454124,100.00,,
+== probe tag=a R=21 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=130.6 GBps=0.464
+perf,1390124614,,cycles,291508458,33.00,,
+perf,377227162,,instructions,439565417,50.00,0.27,insn per cycle
+perf,3222686,,l1d_prefetch_hit,583497249,66.00,,
+perf,738159,,l1d_prefetch_refill,727345666,83.00,,
+== probe tag=a R=21 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=158.8 GBps=0.644
+perf,3737842,,l1d_load_miss,906628456,100.00,,
+perf,3351676,,l2_miss,906628456,100.00,,
+perf,6129797,,l2_load_access,906628456,100.00,,
+perf,1213105898,,stalled_cycle_backend,906628456,100.00,,
+== probe tag=a R=21 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,234958728,,cycles,146885668,100.00,,
+perf,164139885,,instructions,146885668,100.00,0.70,insn per cycle
+perf,124255,,l1d_prefetch_hit,146885668,100.00,,
+perf,4654,,l1d_prefetch_refill,146885668,100.00,,
+== probe tag=a R=21 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,45548,,l1d_load_miss,147368290,100.00,,
+perf,56256,,l2_miss,147368290,100.00,,
+perf,206970,,l2_load_access,147368290,100.00,,
+perf,92765175,,stalled_cycle_backend,147368290,100.00,,
+== probe tag=a R=22 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=216.0 GBps=0.279
+perf,1830342618,,cycles,351957831,30.00,,
+perf,406387174,,instructions,551822581,48.00,0.22,insn per cycle
+perf,219643,,l1d_prefetch_hit,751788248,65.00,,
+perf,9831,,l1d_prefetch_refill,951728871,82.00,,
+== probe tag=a R=22 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=277.8 GBps=0.368
+perf,4183869,,l1d_load_miss,1039891204,100.00,,
+perf,3988797,,l2_miss,1039891204,100.00,,
+perf,5549640,,l2_load_access,1039891204,100.00,,
+perf,1412402361,,stalled_cycle_backend,1039891204,100.00,,
+== probe tag=a R=22 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,245618696,,cycles,153533624,100.00,,
+perf,171743386,,instructions,153533624,100.00,0.70,insn per cycle
+perf,124559,,l1d_prefetch_hit,153533624,100.00,,
+perf,4690,,l1d_prefetch_refill,153533624,100.00,,
+== probe tag=a R=22 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,45837,,l1d_load_miss,153656749,100.00,,
+perf,57608,,l2_miss,153656749,100.00,,
+perf,211207,,l2_load_access,153656749,100.00,,
+perf,96445430,,stalled_cycle_backend,153656749,100.00,,
+== probe tag=a R=23 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=218.7 GBps=0.280
+perf,1909959712,,cycles,365673751,30.00,,
+perf,424315685,,instructions,573595371,47.00,0.22,insn per cycle
+perf,119022,,l1d_prefetch_hit,781329081,65.00,,
+perf,9738,,l1d_prefetch_refill,989207166,82.00,,
+== probe tag=a R=23 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.6 GBps=0.284
+perf,4661846,,l1d_load_miss,1180574121,100.00,,
+perf,4652628,,l2_miss,1180574121,100.00,,
+perf,4885737,,l2_load_access,1180574121,100.00,,
+perf,1622447170,,stalled_cycle_backend,1180574121,100.00,,
+== probe tag=a R=23 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,256623180,,cycles,160417374,100.00,,
+perf,179423223,,instructions,160417374,100.00,0.70,insn per cycle
+perf,131088,,l1d_prefetch_hit,160417374,100.00,,
+perf,4847,,l1d_prefetch_refill,160417374,100.00,,
+== probe tag=a R=23 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,46963,,l1d_load_miss,160283834,100.00,,
+perf,58588,,l2_miss,160283834,100.00,,
+perf,217803,,l2_load_access,160283834,100.00,,
+perf,100563139,,stalled_cycle_backend,160283834,100.00,,
+== probe tag=a R=24 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=221.6 GBps=0.276
+perf,2011301765,,cycles,385279538,30.00,,
+perf,438529443,,instructions,605131620,47.00,0.22,insn per cycle
+perf,241802,,l1d_prefetch_hit,825145329,65.00,,
+perf,10551,,l1d_prefetch_refill,1045130160,82.00,,
+== probe tag=a R=24 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.7 GBps=0.280
+perf,4864514,,l1d_load_miss,1243450078,100.00,,
+perf,4853742,,l2_miss,1243450078,100.00,,
+perf,5097230,,l2_load_access,1243450078,100.00,,
+perf,1715632954,,stalled_cycle_backend,1243450078,100.00,,
+== probe tag=a R=24 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,267157141,,cycles,167009958,100.00,,
+perf,187067571,,instructions,167009958,100.00,0.70,insn per cycle
+perf,136328,,l1d_prefetch_hit,167009958,100.00,,
+perf,4888,,l1d_prefetch_refill,167009958,100.00,,
+== probe tag=a R=24 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,46842,,l1d_load_miss,166944999,100.00,,
+perf,60220,,l2_miss,166944999,100.00,,
+perf,223464,,l2_load_access,166944999,100.00,,
+perf,104706551,,stalled_cycle_backend,166944999,100.00,,
+== probe tag=a R=28 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=223.4 GBps=0.276
+perf,2347515954,,cycles,448965249,30.00,,
+perf,514985507,,instructions,704819794,47.00,0.22,insn per cycle
+perf,271146,,l1d_prefetch_hit,960678242,65.00,,
+perf,11498,,l1d_prefetch_refill,1216299993,82.00,,
+== probe tag=a R=28 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=365.9 GBps=0.279
+perf,5687400,,l1d_load_miss,1453888412,100.00,,
+perf,5668631,,l2_miss,1453888412,100.00,,
+perf,5966745,,l2_load_access,1453888412,100.00,,
+perf,2013101829,,stalled_cycle_backend,1453888412,100.00,,
+== probe tag=a R=28 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,309363559,,cycles,193384041,100.00,,
+perf,217531092,,instructions,193384041,100.00,0.70,insn per cycle
+perf,146861,,l1d_prefetch_hit,193384041,100.00,,
+perf,4847,,l1d_prefetch_refill,193384041,100.00,,
+== probe tag=a R=28 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,50583,,l1d_load_miss,194202916,100.00,,
+perf,69960,,l2_miss,194202916,100.00,,
+perf,240950,,l2_load_access,194202916,100.00,,
+perf,121803947,,stalled_cycle_backend,194202916,100.00,,
+== probe tag=a R=32 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=224.2 GBps=0.275
+perf,2686642054,,cycles,512864080,30.00,,
+perf,579066262,,instructions,808835915,48.00,0.22,insn per cycle
+perf,295569,,l1d_prefetch_hit,1100546951,65.00,,
+perf,11756,,l1d_prefetch_refill,1392199408,82.00,,
+== probe tag=a R=32 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=366.1 GBps=0.280
+perf,6489661,,l1d_load_miss,1660312326,100.00,,
+perf,6457927,,l2_miss,1660312326,100.00,,
+perf,6769987,,l2_load_access,1660312326,100.00,,
+perf,2317827418,,stalled_cycle_backend,1660312326,100.00,,
+== probe tag=a R=32 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,351890480,,cycles,219968374,100.00,,
+perf,248010150,,instructions,219968374,100.00,0.70,insn per cycle
+perf,161970,,l1d_prefetch_hit,219968374,100.00,,
+perf,4919,,l1d_prefetch_refill,219968374,100.00,,
+== probe tag=a R=32 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,52712,,l1d_load_miss,220191708,100.00,,
+perf,71490,,l2_miss,220191708,100.00,,
+perf,264055,,l2_load_access,220191708,100.00,,
+perf,137463930,,stalled_cycle_backend,220191708,100.00,,
+== probe tag=b1 R=1 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=0.3 GBps=2.071
+perf,31721208,,cycles,13405666,67.00,,
+perf,22103705,,instructions,17337875,87.00,0.70,insn per cycle
+perf,838832,,l1d_prefetch_hit,19865291,100.00,,
+perf,200687,,l1d_prefetch_refill,19865291,100.00,,
+== probe tag=b1 R=1 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.9 GBps=2.058
+perf,31961,,l1d_load_miss,19893541,100.00,,
+perf,31079,,l2_miss,19893541,100.00,,
+perf,498470,,l2_load_access,19893541,100.00,,
+perf,11800109,,stalled_cycle_backend,19893541,100.00,,
+== probe tag=b1 R=1 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,21229303,,cycles,13294958,100.00,,
+perf,11407842,,instructions,13294958,100.00,0.54,insn per cycle
+perf,55542,,l1d_prefetch_hit,13294958,100.00,,
+perf,4279,,l1d_prefetch_refill,13294958,100.00,,
+== probe tag=b1 R=1 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,30346,,l1d_load_miss,13360791,100.00,,
+perf,26314,,l2_miss,13360791,100.00,,
+perf,100091,,l2_load_access,13360791,100.00,,
+perf,9502085,,stalled_cycle_backend,13360791,100.00,,
+== probe tag=b1 R=2 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=54.6 GBps=1.842
+perf,55394808,,cycles,22985584,66.00,,
+perf,32487512,,instructions,26966042,77.00,0.59,insn per cycle
+perf,1300731,,l1d_prefetch_hit,30672877,88.00,,
+perf,390040,,l1d_prefetch_refill,34681793,100.00,,
+== probe tag=b1 R=2 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=53.5 GBps=1.880
+perf,56889,,l1d_load_miss,34153667,100.00,,
+perf,62499,,l2_miss,34153667,100.00,,
+perf,925461,,l2_load_access,34153667,100.00,,
+perf,26072239,,stalled_cycle_backend,34153667,100.00,,
+== probe tag=b1 R=2 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,32649183,,cycles,20430333,100.00,,
+perf,19172232,,instructions,20430333,100.00,0.59,insn per cycle
+perf,60249,,l1d_prefetch_hit,20430333,100.00,,
+perf,4308,,l1d_prefetch_refill,20430333,100.00,,
+== probe tag=b1 R=2 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,30694,,l1d_load_miss,20216042,100.00,,
+perf,27241,,l2_miss,20216042,100.00,,
+perf,104535,,l2_load_access,20216042,100.00,,
+perf,13899654,,stalled_cycle_backend,20216042,100.00,,
+== probe tag=b1 R=4 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=45.1 GBps=1.959
+perf,97298104,,cycles,37208916,61.00,,
+perf,56133930,,instructions,45212375,74.00,0.58,insn per cycle
+perf,2439983,,l1d_prefetch_hit,52910041,86.00,,
+perf,596030,,l1d_prefetch_refill,56902082,93.00,,
+== probe tag=b1 R=4 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=50.9 GBps=1.973
+perf,79458,,l1d_load_miss,59519626,100.00,,
+perf,120026,,l2_miss,59519626,100.00,,
+perf,1743555,,l2_load_access,59519626,100.00,,
+perf,48944173,,stalled_cycle_backend,59519626,100.00,,
+== probe tag=b1 R=4 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,53756567,,cycles,33618334,100.00,,
+perf,34386126,,instructions,33618334,100.00,0.64,insn per cycle
+perf,67440,,l1d_prefetch_hit,33618334,100.00,,
+perf,4255,,l1d_prefetch_refill,33618334,100.00,,
+== probe tag=b1 R=4 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,33181,,l1d_load_miss,33893375,100.00,,
+perf,32471,,l2_miss,33893375,100.00,,
+perf,120413,,l2_load_access,33893375,100.00,,
+perf,22333263,,stalled_cycle_backend,33893375,100.00,,
+== probe tag=b1 R=6 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=33.9 GBps=2.308
+perf,130244727,,cycles,51490999,63.00,,
+perf,79507748,,instructions,59465501,72.00,0.61,insn per cycle
+perf,3633225,,l1d_prefetch_hit,67462834,82.00,,
+perf,831149,,l1d_prefetch_refill,75447334,92.00,,
+== probe tag=b1 R=6 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=43.3 GBps=2.345
+perf,81777,,l1d_load_miss,80031208,100.00,,
+perf,178877,,l2_miss,80031208,100.00,,
+perf,2540810,,l2_load_access,80031208,100.00,,
+perf,65543750,,stalled_cycle_backend,80031208,100.00,,
+== probe tag=b1 R=6 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,75413159,,cycles,47152001,100.00,,
+perf,49681714,,instructions,47152001,100.00,0.66,insn per cycle
+perf,72971,,l1d_prefetch_hit,47152001,100.00,,
+perf,4348,,l1d_prefetch_refill,47152001,100.00,,
+== probe tag=b1 R=6 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,33795,,l1d_load_miss,47125042,100.00,,
+perf,34240,,l2_miss,47125042,100.00,,
+perf,127361,,l2_load_access,47125042,100.00,,
+perf,30643667,,stalled_cycle_backend,47125042,100.00,,
+== probe tag=b1 R=8 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12.9 GBps=2.737
+perf,156281815,,cycles,65910374,67.00,,
+perf,97088900,,instructions,73917791,75.00,0.62,insn per cycle
+perf,4344379,,l1d_prefetch_hit,81895374,83.00,,
+perf,844611,,l1d_prefetch_refill,89889123,91.00,,
+== probe tag=b1 R=8 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.3 GBps=2.726
+perf,61398,,l1d_load_miss,98088123,100.00,,
+perf,238547,,l2_miss,98088123,100.00,,
+perf,3317963,,l2_load_access,98088123,100.00,,
+perf,76774024,,stalled_cycle_backend,98088123,100.00,,
+== probe tag=b1 R=8 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,97043022,,cycles,60676833,100.00,,
+perf,64974052,,instructions,60676833,100.00,0.67,insn per cycle
+perf,83852,,l1d_prefetch_hit,60676833,100.00,,
+perf,4425,,l1d_prefetch_refill,60676833,100.00,,
+== probe tag=b1 R=8 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,35536,,l1d_load_miss,60519750,100.00,,
+perf,38248,,l2_miss,60519750,100.00,,
+perf,138669,,l2_load_access,60519750,100.00,,
+perf,38951086,,stalled_cycle_backend,60519750,100.00,,
+== probe tag=b1 R=10 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=57.2 GBps=1.292
+perf,273960433,,cycles,91483000,53.00,,
+perf,142238248,,instructions,111466375,65.00,0.52,insn per cycle
+perf,4856717,,l1d_prefetch_hit,131451041,76.00,,
+perf,1417101,,l1d_prefetch_refill,151522790,88.00,,
+== probe tag=b1 R=10 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=75.3 GBps=1.356
+perf,463222,,l1d_load_miss,167334125,100.00,,
+perf,446510,,l2_miss,167334125,100.00,,
+perf,4153852,,l2_load_access,167334125,100.00,,
+perf,169899200,,stalled_cycle_backend,167334125,100.00,,
+== probe tag=b1 R=10 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,117708026,,cycles,73576250,100.00,,
+perf,80172645,,instructions,73576250,100.00,0.68,insn per cycle
+perf,88497,,l1d_prefetch_hit,73576250,100.00,,
+perf,4350,,l1d_prefetch_refill,73576250,100.00,,
+== probe tag=b1 R=10 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,37836,,l1d_load_miss,74056625,100.00,,
+perf,41958,,l2_miss,74056625,100.00,,
+perf,153441,,l2_load_access,74056625,100.00,,
+perf,47293147,,stalled_cycle_backend,74056625,100.00,,
+== probe tag=b1 R=12 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.1 GBps=1.524
+perf,300162107,,cycles,107978667,57.00,,
+perf,162034590,,instructions,127851874,68.00,0.54,insn per cycle
+perf,5493033,,l1d_prefetch_hit,147839791,78.00,,
+perf,1525839,,l1d_prefetch_refill,167829249,89.00,,
+== probe tag=b1 R=12 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=66.1 GBps=1.545
+perf,652041,,l1d_load_miss,186137581,100.00,,
+perf,448353,,l2_miss,186137581,100.00,,
+perf,5264606,,l2_load_access,186137581,100.00,,
+perf,179305795,,stalled_cycle_backend,186137581,100.00,,
+== probe tag=b1 R=12 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,139379771,,cycles,87138083,100.00,,
+perf,95437105,,instructions,87138083,100.00,0.68,insn per cycle
+perf,93727,,l1d_prefetch_hit,87138083,100.00,,
+perf,4346,,l1d_prefetch_refill,87138083,100.00,,
+== probe tag=b1 R=12 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,39194,,l1d_load_miss,87322041,100.00,,
+perf,44558,,l2_miss,87322041,100.00,,
+perf,160570,,l2_load_access,87322041,100.00,,
+perf,55623480,,stalled_cycle_backend,87322041,100.00,,
+== probe tag=b1 R=14 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=41.2 GBps=1.493
+perf,350796705,,cycles,123464168,56.00,,
+perf,189162748,,instructions,147452167,67.00,0.54,insn per cycle
+perf,6332592,,l1d_prefetch_hit,171484334,78.00,,
+perf,1673876,,l1d_prefetch_refill,195489000,89.00,,
+== probe tag=b1 R=14 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=68.2 GBps=1.498
+perf,787628,,l1d_load_miss,219375538,100.00,,
+perf,404408,,l2_miss,219375538,100.00,,
+perf,6505582,,l2_load_access,219375538,100.00,,
+perf,214667079,,stalled_cycle_backend,219375538,100.00,,
+== probe tag=b1 R=14 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,160451616,,cycles,100306625,100.00,,
+perf,110669396,,instructions,100306625,100.00,0.69,insn per cycle
+perf,99886,,l1d_prefetch_hit,100306625,100.00,,
+perf,4524,,l1d_prefetch_refill,100306625,100.00,,
+== probe tag=b1 R=14 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,40559,,l1d_load_miss,100613375,100.00,,
+perf,46716,,l2_miss,100613375,100.00,,
+perf,175683,,l2_load_access,100613375,100.00,,
+perf,63437844,,stalled_cycle_backend,100613375,100.00,,
+== probe tag=b1 R=16 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=36.4 GBps=1.766
+perf,365351412,,cycles,132618165,57.00,,
+perf,204703652,,instructions,156659416,68.00,0.56,insn per cycle
+perf,6845516,,l1d_prefetch_hit,180633207,78.00,,
+perf,1767366,,l1d_prefetch_refill,204659665,89.00,,
+== probe tag=b1 R=16 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=57.6 GBps=1.757
+perf,980237,,l1d_load_miss,227653957,100.00,,
+perf,433517,,l2_miss,227653957,100.00,,
+perf,7570846,,l2_load_access,227653957,100.00,,
+perf,211408050,,stalled_cycle_backend,227653957,100.00,,
+== probe tag=b1 R=16 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,181987376,,cycles,113768498,100.00,,
+perf,125993897,,instructions,113768498,100.00,0.69,insn per cycle
+perf,106862,,l1d_prefetch_hit,113768498,100.00,,
+perf,4597,,l1d_prefetch_refill,113768498,100.00,,
+== probe tag=b1 R=16 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,41599,,l1d_load_miss,113714042,100.00,,
+perf,49146,,l2_miss,113714042,100.00,,
+perf,184701,,l2_load_access,113714042,100.00,,
+perf,71755473,,stalled_cycle_backend,113714042,100.00,,
+== probe tag=b1 R=17 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=35.9 GBps=1.515
+perf,421201755,,cycles,147745583,56.00,,
+perf,223072391,,instructions,179785290,68.00,0.53,insn per cycle
+perf,7449470,,l1d_prefetch_hit,207698083,78.00,,
+perf,1858084,,l1d_prefetch_refill,235694290,89.00,,
+== probe tag=b1 R=17 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=66.9 GBps=1.529
+perf,1060078,,l1d_load_miss,268941835,100.00,,
+perf,467034,,l2_miss,268941835,100.00,,
+perf,8192253,,l2_load_access,268941835,100.00,,
+perf,276091169,,stalled_cycle_backend,268941835,100.00,,
+== probe tag=b1 R=17 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,201031958,,cycles,125670791,100.00,,
+perf,133650207,,instructions,125670791,100.00,0.66,insn per cycle
+perf,117754,,l1d_prefetch_hit,125670791,100.00,,
+perf,4676,,l1d_prefetch_refill,125670791,100.00,,
+== probe tag=b1 R=17 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,43002,,l1d_load_miss,123832791,100.00,,
+perf,63502,,l2_miss,123832791,100.00,,
+perf,193019,,l2_load_access,123832791,100.00,,
+perf,79990676,,stalled_cycle_backend,123832791,100.00,,
+== probe tag=b1 R=18 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=41.4 GBps=1.500
+perf,450700489,,cycles,158141415,56.00,,
+perf,236486377,,instructions,190110413,67.00,0.52,insn per cycle
+perf,7833261,,l1d_prefetch_hit,222053122,78.00,,
+perf,1925206,,l1d_prefetch_refill,254050874,90.00,,
+== probe tag=b1 R=18 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=67.7 GBps=1.510
+perf,1151830,,l1d_load_miss,281908998,100.00,,
+perf,480809,,l2_miss,281908998,100.00,,
+perf,8698157,,l2_load_access,281908998,100.00,,
+perf,281538249,,stalled_cycle_backend,281908998,100.00,,
+== probe tag=b1 R=18 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,207647540,,cycles,129805166,100.00,,
+perf,141213871,,instructions,129805166,100.00,0.68,insn per cycle
+perf,117742,,l1d_prefetch_hit,129805166,100.00,,
+perf,4660,,l1d_prefetch_refill,129805166,100.00,,
+== probe tag=b1 R=18 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,43721,,l1d_load_miss,127232040,100.00,,
+perf,52451,,l2_miss,127232040,100.00,,
+perf,194307,,l2_load_access,127232040,100.00,,
+perf,80169683,,stalled_cycle_backend,127232040,100.00,,
+== probe tag=b1 R=19 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=46.0 GBps=1.335
+perf,520073163,,cycles,169659752,52.00,,
+perf,261232060,,instructions,209705335,64.00,0.50,insn per cycle
+perf,7931121,,l1d_prefetch_hit,249712420,76.00,,
+perf,1919303,,l1d_prefetch_refill,289501502,88.00,,
+== probe tag=b1 R=19 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=68.9 GBps=1.484
+perf,1293981,,l1d_load_miss,304520748,100.00,,
+perf,529613,,l2_miss,304520748,100.00,,
+perf,9133889,,l2_load_access,304520748,100.00,,
+perf,310792274,,stalled_cycle_backend,304520748,100.00,,
+== probe tag=b1 R=19 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,213971739,,cycles,133759542,100.00,,
+perf,148919737,,instructions,133759542,100.00,0.70,insn per cycle
+perf,117353,,l1d_prefetch_hit,133759542,100.00,,
+perf,4747,,l1d_prefetch_refill,133759542,100.00,,
+== probe tag=b1 R=19 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,43580,,l1d_load_miss,133428957,100.00,,
+perf,51807,,l2_miss,133428957,100.00,,
+perf,195696,,l2_load_access,133428957,100.00,,
+perf,83758143,,stalled_cycle_backend,133428957,100.00,,
+== probe tag=b1 R=20 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=43.6 GBps=1.336
+perf,620654763,,cycles,189926588,48.00,,
+perf,281490280,,instructions,241894837,62.00,0.45,insn per cycle
+perf,7543810,,l1d_prefetch_hit,292525919,75.00,,
+perf,1814419,,l1d_prefetch_refill,340492921,87.00,,
+== probe tag=b1 R=20 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=72.9 GBps=1.401
+perf,2136099,,l1d_load_miss,519125166,100.00,,
+perf,1531268,,l2_miss,519125166,100.00,,
+perf,8135297,,l2_load_access,519125166,100.00,,
+perf,629059962,,stalled_cycle_backend,519125166,100.00,,
+== probe tag=b1 R=20 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,224720260,,cycles,140489874,100.00,,
+perf,156579098,,instructions,140489874,100.00,0.70,insn per cycle
+perf,121395,,l1d_prefetch_hit,140489874,100.00,,
+perf,4843,,l1d_prefetch_refill,140489874,100.00,,
+== probe tag=b1 R=20 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,44368,,l1d_load_miss,140195374,100.00,,
+perf,52730,,l2_miss,140195374,100.00,,
+perf,202363,,l2_load_access,140195374,100.00,,
+perf,88009175,,stalled_cycle_backend,140195374,100.00,,
+== probe tag=b1 R=21 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=73.1 GBps=0.793
+perf,1011776370,,cycles,246506496,38.00,,
+perf,342405986,,instructions,345575330,54.00,0.34,insn per cycle
+perf,6164281,,l1d_prefetch_hit,441542873,69.00,,
+perf,1322368,,l1d_prefetch_refill,537485288,84.00,,
+== probe tag=b1 R=21 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.2 GBps=0.284
+perf,4257438,,l1d_load_miss,1078431454,100.00,,
+perf,4236280,,l2_miss,1078431454,100.00,,
+perf,4468165,,l2_load_access,1078431454,100.00,,
+perf,1474549972,,stalled_cycle_backend,1078431454,100.00,,
+== probe tag=b1 R=21 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,234714372,,cycles,146718042,100.00,,
+perf,164041569,,instructions,146718042,100.00,0.70,insn per cycle
+perf,122834,,l1d_prefetch_hit,146718042,100.00,,
+perf,4668,,l1d_prefetch_refill,146718042,100.00,,
+== probe tag=b1 R=21 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,44960,,l1d_load_miss,146828999,100.00,,
+perf,55641,,l2_miss,146828999,100.00,,
+perf,204912,,l2_load_access,146828999,100.00,,
+perf,92148396,,stalled_cycle_backend,146828999,100.00,,
+== probe tag=b1 R=22 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=212.6 GBps=0.282
+perf,1816167963,,cycles,350427292,30.00,,
+perf,405840901,,instructions,550109497,48.00,0.22,insn per cycle
+perf,231739,,l1d_prefetch_hit,746132037,65.00,,
+perf,10837,,l1d_prefetch_refill,942028832,82.00,,
+== probe tag=b1 R=22 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=358.5 GBps=0.285
+perf,4459411,,l1d_load_miss,1124389289,100.00,,
+perf,4435566,,l2_miss,1124389289,100.00,,
+perf,4679736,,l2_load_access,1124389289,100.00,,
+perf,1538630402,,stalled_cycle_backend,1124389289,100.00,,
+== probe tag=b1 R=22 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,246211553,,cycles,153930124,100.00,,
+perf,171897920,,instructions,153930124,100.00,0.70,insn per cycle
+perf,124991,,l1d_prefetch_hit,153930124,100.00,,
+perf,4735,,l1d_prefetch_refill,153930124,100.00,,
+== probe tag=b1 R=22 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,45382,,l1d_load_miss,153462416,100.00,,
+perf,56116,,l2_miss,153462416,100.00,,
+perf,209288,,l2_load_access,153462416,100.00,,
+perf,96301718,,stalled_cycle_backend,153462416,100.00,,
+== probe tag=b1 R=23 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=219.6 GBps=0.280
+perf,1904344400,,cycles,362654872,30.00,,
+perf,425080317,,instructions,570637833,47.00,0.22,insn per cycle
+perf,117806,,l1d_prefetch_hit,778563412,65.00,,
+perf,10318,,l1d_prefetch_refill,986313208,82.00,,
+== probe tag=b1 R=23 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.0 GBps=0.284
+perf,4662065,,l1d_load_miss,1178663038,100.00,,
+perf,4635141,,l2_miss,1178663038,100.00,,
+perf,4886261,,l2_load_access,1178663038,100.00,,
+perf,1619068333,,stalled_cycle_backend,1178663038,100.00,,
+== probe tag=b1 R=23 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,256428852,,cycles,160312915,100.00,,
+perf,179523778,,instructions,160312915,100.00,0.70,insn per cycle
+perf,130108,,l1d_prefetch_hit,160312915,100.00,,
+perf,4652,,l1d_prefetch_refill,160312915,100.00,,
+== probe tag=b1 R=23 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,46539,,l1d_load_miss,160214166,100.00,,
+perf,57744,,l2_miss,160214166,100.00,,
+perf,216725,,l2_load_access,160214166,100.00,,
+perf,100442615,,stalled_cycle_backend,160214166,100.00,,
+== probe tag=b1 R=24 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=218.5 GBps=0.279
+perf,1997022598,,cycles,384041836,30.00,,
+perf,436304303,,instructions,603960499,48.00,0.22,insn per cycle
+perf,236198,,l1d_prefetch_hit,819973375,65.00,,
+perf,10531,,l1d_prefetch_refill,1035550289,82.00,,
+== probe tag=b1 R=24 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=361.9 GBps=0.283
+perf,4863197,,l1d_load_miss,1237338413,100.00,,
+perf,4837653,,l2_miss,1237338413,100.00,,
+perf,5094822,,l2_load_access,1237338413,100.00,,
+perf,1705535607,,stalled_cycle_backend,1237338413,100.00,,
+== probe tag=b1 R=24 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,271115685,,cycles,169497165,100.00,,
+perf,187155309,,instructions,169497165,100.00,0.69,insn per cycle
+perf,135212,,l1d_prefetch_hit,169497165,100.00,,
+perf,4842,,l1d_prefetch_refill,169497165,100.00,,
+== probe tag=b1 R=24 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,47423,,l1d_load_miss,167096416,100.00,,
+perf,60367,,l2_miss,167096416,100.00,,
+perf,222559,,l2_load_access,167096416,100.00,,
+perf,104742609,,stalled_cycle_backend,167096416,100.00,,
+== probe tag=b1 R=28 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=222.1 GBps=0.276
+perf,2342148020,,cycles,443950377,30.00,,
+perf,513122632,,instructions,699862624,47.00,0.22,insn per cycle
+perf,130830,,l1d_prefetch_hit,955800331,65.00,,
+perf,10589,,l1d_prefetch_refill,1211522711,82.00,,
+== probe tag=b1 R=28 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.5 GBps=0.281
+perf,5683079,,l1d_load_miss,1448864455,100.00,,
+perf,5637589,,l2_miss,1448864455,100.00,,
+perf,5943603,,l2_load_access,1448864455,100.00,,
+perf,2008173339,,stalled_cycle_backend,1448864455,100.00,,
+== probe tag=b1 R=28 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,309335010,,cycles,193366457,100.00,,
+perf,217505509,,instructions,193366457,100.00,0.70,insn per cycle
+perf,151139,,l1d_prefetch_hit,193366457,100.00,,
+perf,4802,,l1d_prefetch_refill,193366457,100.00,,
+== probe tag=b1 R=28 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,49737,,l1d_load_miss,193444750,100.00,,
+perf,64679,,l2_miss,193444750,100.00,,
+perf,238481,,l2_load_access,193444750,100.00,,
+perf,121062028,,stalled_cycle_backend,193444750,100.00,,
+== probe tag=b1 R=32 stagger=1600 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=218.6 GBps=0.278
+perf,2666322315,,cycles,507178294,30.00,,
+perf,578185318,,instructions,799092087,47.00,0.22,insn per cycle
+perf,136070,,l1d_prefetch_hit,1091055593,65.00,,
+perf,11453,,l1d_prefetch_refill,1382849837,82.00,,
+== probe tag=b1 R=32 stagger=1600 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=363.9 GBps=0.281
+perf,6493601,,l1d_load_miss,1651571869,100.00,,
+perf,6440772,,l2_miss,1651571869,100.00,,
+perf,6783745,,l2_load_access,1651571869,100.00,,
+perf,2301540312,,stalled_cycle_backend,1651571869,100.00,,
+== probe tag=b1 R=32 stagger=1600 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,351799628,,cycles,219916332,100.00,,
+perf,248022321,,instructions,219916332,100.00,0.71,insn per cycle
+perf,159435,,l1d_prefetch_hit,219916332,100.00,,
+perf,5025,,l1d_prefetch_refill,219916332,100.00,,
+== probe tag=b1 R=32 stagger=1600 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=1600 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,53208,,l1d_load_miss,219785208,100.00,,
+perf,69425,,l2_miss,219785208,100.00,,
+perf,260884,,l2_load_access,219785208,100.00,,
+perf,137136732,,stalled_cycle_backend,219785208,100.00,,
+== probe tag=b2 R=1 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.8 GBps=2.098
+perf,31737341,,cycles,15934875,80.00,,
+perf,21749389,,instructions,19904126,100.00,0.69,insn per cycle
+perf,840267,,l1d_prefetch_hit,19904126,100.00,,
+perf,200675,,l1d_prefetch_refill,19904126,100.00,,
+== probe tag=b2 R=1 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.8 GBps=2.058
+perf,31583,,l1d_load_miss,19808294,100.00,,
+perf,30630,,l2_miss,19808294,100.00,,
+perf,497585,,l2_load_access,19808294,100.00,,
+perf,11663513,,stalled_cycle_backend,19808294,100.00,,
+== probe tag=b2 R=1 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,20891307,,cycles,13065291,100.00,,
+perf,11329248,,instructions,13065291,100.00,0.54,insn per cycle
+perf,55812,,l1d_prefetch_hit,13065291,100.00,,
+perf,4171,,l1d_prefetch_refill,13065291,100.00,,
+== probe tag=b2 R=1 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,29396,,l1d_load_miss,13232791,100.00,,
+perf,26146,,l2_miss,13232791,100.00,,
+perf,96720,,l2_load_access,13232791,100.00,,
+perf,9419545,,stalled_cycle_backend,13232791,100.00,,
+== probe tag=b2 R=2 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=32.0 GBps=3.203
+perf,45511814,,cycles,22040708,77.00,,
+perf,32250094,,instructions,25993292,91.00,0.71,insn per cycle
+perf,1631821,,l1d_prefetch_hit,28476667,100.00,,
+perf,397428,,l1d_prefetch_refill,28476667,100.00,,
+== probe tag=b2 R=2 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.1 GBps=3.207
+perf,33161,,l1d_load_miss,28738084,100.00,,
+perf,33145,,l2_miss,28738084,100.00,,
+perf,900754,,l2_load_access,28738084,100.00,,
+perf,17568377,,stalled_cycle_backend,28738084,100.00,,
+== probe tag=b2 R=2 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,32869528,,cycles,20571749,100.00,,
+perf,19200347,,instructions,20571749,100.00,0.58,insn per cycle
+perf,59025,,l1d_prefetch_hit,20571749,100.00,,
+perf,4198,,l1d_prefetch_refill,20571749,100.00,,
+== probe tag=b2 R=2 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,31247,,l1d_load_miss,20399666,100.00,,
+perf,27835,,l2_miss,20399666,100.00,,
+perf,107909,,l2_load_access,20399666,100.00,,
+perf,14016796,,stalled_cycle_backend,20399666,100.00,,
+== probe tag=b2 R=4 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=26.0 GBps=3.867
+perf,75331089,,cycles,35225583,74.00,,
+perf,51002489,,instructions,39194499,83.00,0.68,insn per cycle
+perf,2775513,,l1d_prefetch_hit,43169874,91.00,,
+perf,790650,,l1d_prefetch_refill,47161791,100.00,,
+== probe tag=b2 R=4 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=25.5 GBps=3.951
+perf,36620,,l1d_load_miss,46669332,100.00,,
+perf,36783,,l2_miss,46669332,100.00,,
+perf,1697950,,l2_load_access,46669332,100.00,,
+perf,30866316,,stalled_cycle_backend,46669332,100.00,,
+== probe tag=b2 R=4 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,53894714,,cycles,33706250,100.00,,
+perf,34372667,,instructions,33706250,100.00,0.64,insn per cycle
+perf,63749,,l1d_prefetch_hit,33706250,100.00,,
+perf,4259,,l1d_prefetch_refill,33706250,100.00,,
+== probe tag=b2 R=4 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,33733,,l1d_load_miss,34137083,100.00,,
+perf,32530,,l2_miss,34137083,100.00,,
+perf,125355,,l2_load_access,34137083,100.00,,
+perf,22556207,,stalled_cycle_backend,34137083,100.00,,
+== probe tag=b2 R=6 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=23.2 GBps=4.339
+perf,103887112,,cycles,49035792,75.00,,
+perf,69573127,,instructions,53029375,81.00,0.67,insn per cycle
+perf,2990869,,l1d_prefetch_hit,57013167,87.00,,
+perf,966961,,l1d_prefetch_refill,60982792,93.00,,
+== probe tag=b2 R=6 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=23.2 GBps=4.361
+perf,40960,,l1d_load_miss,64818833,100.00,,
+perf,40339,,l2_miss,64818833,100.00,,
+perf,2503266,,l2_load_access,64818833,100.00,,
+perf,43424662,,stalled_cycle_backend,64818833,100.00,,
+== probe tag=b2 R=6 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,75713170,,cycles,47342833,100.00,,
+perf,49759576,,instructions,47342833,100.00,0.66,insn per cycle
+perf,74371,,l1d_prefetch_hit,47342833,100.00,,
+perf,4295,,l1d_prefetch_refill,47342833,100.00,,
+== probe tag=b2 R=6 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,34386,,l1d_load_miss,47220542,100.00,,
+perf,34648,,l2_miss,47220542,100.00,,
+perf,129679,,l2_load_access,47220542,100.00,,
+perf,30676155,,stalled_cycle_backend,47220542,100.00,,
+== probe tag=b2 R=8 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.5 GBps=5.173
+perf,128608559,,cycles,64493708,80.00,,
+perf,87317482,,instructions,68480874,85.00,0.68,insn per cycle
+perf,4155393,,l1d_prefetch_hit,72485956,90.00,,
+perf,1286646,,l1d_prefetch_refill,76452414,95.00,,
+== probe tag=b2 R=8 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.7 GBps=5.133
+perf,77963,,l1d_load_miss,80130291,100.00,,
+perf,43124,,l2_miss,80130291,100.00,,
+perf,3344631,,l2_load_access,80130291,100.00,,
+perf,53091138,,stalled_cycle_backend,80130291,100.00,,
+== probe tag=b2 R=8 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,97327752,,cycles,60865998,100.00,,
+perf,64929105,,instructions,60865998,100.00,0.67,insn per cycle
+perf,80157,,l1d_prefetch_hit,60865998,100.00,,
+perf,4395,,l1d_prefetch_refill,60865998,100.00,,
+== probe tag=b2 R=8 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,35913,,l1d_load_miss,60665917,100.00,,
+perf,38843,,l2_miss,60665917,100.00,,
+perf,140021,,l2_load_access,60665917,100.00,,
+perf,39101347,,stalled_cycle_backend,60665917,100.00,,
+== probe tag=b2 R=10 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=23.3 GBps=2.372
+perf,204504558,,cycles,84062125,65.00,,
+perf,124328716,,instructions,96059709,75.00,0.61,insn per cycle
+perf,3574267,,l1d_prefetch_hit,108053708,84.00,,
+perf,1604731,,l1d_prefetch_refill,120014501,93.00,,
+== probe tag=b2 R=10 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=42.0 GBps=2.427
+perf,907620,,l1d_load_miss,127624750,100.00,,
+perf,167486,,l2_miss,127624750,100.00,,
+perf,5188249,,l2_load_access,127624750,100.00,,
+perf,106012687,,stalled_cycle_backend,127624750,100.00,,
+== probe tag=b2 R=10 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,118725051,,cycles,74233958,100.00,,
+perf,80276691,,instructions,74233958,100.00,0.68,insn per cycle
+perf,88829,,l1d_prefetch_hit,74233958,100.00,,
+perf,4411,,l1d_prefetch_refill,74233958,100.00,,
+== probe tag=b2 R=10 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,37796,,l1d_load_miss,74150416,100.00,,
+perf,42104,,l2_miss,74150416,100.00,,
+perf,152111,,l2_load_access,74150416,100.00,,
+perf,47587479,,stalled_cycle_backend,74150416,100.00,,
+== probe tag=b2 R=12 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24.3 GBps=2.638
+perf,236649777,,cycles,100065709,67.00,,
+perf,146473686,,instructions,112021001,75.00,0.62,insn per cycle
+perf,4169076,,l1d_prefetch_hit,124018875,83.00,,
+perf,1773813,,l1d_prefetch_refill,136001459,91.00,,
+== probe tag=b2 R=12 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=38.3 GBps=2.664
+perf,1089155,,l1d_load_miss,144883167,100.00,,
+perf,131626,,l2_miss,144883167,100.00,,
+perf,6748827,,l2_load_access,144883167,100.00,,
+perf,118743916,,stalled_cycle_backend,144883167,100.00,,
+== probe tag=b2 R=12 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,139045830,,cycles,86920792,100.00,,
+perf,95394485,,instructions,86920792,100.00,0.69,insn per cycle
+perf,93225,,l1d_prefetch_hit,86920792,100.00,,
+perf,4547,,l1d_prefetch_refill,86920792,100.00,,
+== probe tag=b2 R=12 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,38828,,l1d_load_miss,87232334,100.00,,
+perf,44004,,l2_miss,87232334,100.00,,
+perf,159590,,l2_load_access,87232334,100.00,,
+perf,55556578,,stalled_cycle_backend,87232334,100.00,,
+== probe tag=b2 R=14 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=20.8 GBps=2.104
+perf,293495176,,cycles,118168832,64.00,,
+perf,174316341,,instructions,134153040,73.00,0.59,insn per cycle
+perf,4881975,,l1d_prefetch_hit,150058123,81.00,,
+perf,1863409,,l1d_prefetch_refill,168432293,91.00,,
+== probe tag=b2 R=14 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.0 GBps=2.172
+perf,1198279,,l1d_load_miss,182444000,100.00,,
+perf,103899,,l2_miss,182444000,100.00,,
+perf,8024446,,l2_load_access,182444000,100.00,,
+perf,161017892,,stalled_cycle_backend,182444000,100.00,,
+== probe tag=b2 R=14 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,160534887,,cycles,100343541,100.00,,
+perf,110664684,,instructions,100343541,100.00,0.69,insn per cycle
+perf,99618,,l1d_prefetch_hit,100343541,100.00,,
+perf,4573,,l1d_prefetch_refill,100343541,100.00,,
+== probe tag=b2 R=14 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,40402,,l1d_load_miss,100585125,100.00,,
+perf,46040,,l2_miss,100585125,100.00,,
+perf,172975,,l2_load_access,100585125,100.00,,
+perf,63758041,,stalled_cycle_backend,100585125,100.00,,
+== probe tag=b2 R=16 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=18.6 GBps=2.677
+perf,303511934,,cycles,125929791,66.00,,
+perf,187838661,,instructions,141885707,74.00,0.62,insn per cycle
+perf,5513472,,l1d_prefetch_hit,157882165,83.00,,
+perf,1862938,,l1d_prefetch_refill,173867498,91.00,,
+== probe tag=b2 R=16 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.4 GBps=2.727
+perf,1339281,,l1d_load_miss,189176537,100.00,,
+perf,108850,,l2_miss,189176537,100.00,,
+perf,9124908,,l2_load_access,189176537,100.00,,
+perf,157474887,,stalled_cycle_backend,189176537,100.00,,
+== probe tag=b2 R=16 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,182136947,,cycles,113872207,100.00,,
+perf,126060969,,instructions,113872207,100.00,0.69,insn per cycle
+perf,106698,,l1d_prefetch_hit,113872207,100.00,,
+perf,4646,,l1d_prefetch_refill,113872207,100.00,,
+== probe tag=b2 R=16 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,42139,,l1d_load_miss,113794668,100.00,,
+perf,48463,,l2_miss,113794668,100.00,,
+perf,186492,,l2_load_access,113794668,100.00,,
+perf,71675957,,stalled_cycle_backend,113794668,100.00,,
+== probe tag=b2 R=17 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=30.7 GBps=2.134
+perf,353914811,,cycles,141458957,63.00,,
+perf,207962064,,instructions,161473707,72.00,0.59,insn per cycle
+perf,6059951,,l1d_prefetch_hit,181486416,81.00,,
+perf,1981980,,l1d_prefetch_refill,201463332,90.00,,
+== probe tag=b2 R=17 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.4 GBps=2.156
+perf,1426978,,l1d_load_miss,220680955,100.00,,
+perf,108417,,l2_miss,220680955,100.00,,
+perf,9655739,,l2_load_access,220680955,100.00,,
+perf,200145258,,stalled_cycle_backend,220680955,100.00,,
+== probe tag=b2 R=17 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,194497848,,cycles,121607333,100.00,,
+perf,133803887,,instructions,121607333,100.00,0.69,insn per cycle
+perf,111406,,l1d_prefetch_hit,121607333,100.00,,
+perf,4479,,l1d_prefetch_refill,121607333,100.00,,
+== probe tag=b2 R=17 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,41463,,l1d_load_miss,120153583,100.00,,
+perf,49149,,l2_miss,120153583,100.00,,
+perf,182591,,l2_load_access,120153583,100.00,,
+perf,75638320,,stalled_cycle_backend,120153583,100.00,,
+== probe tag=b2 R=18 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.6 GBps=2.066
+perf,380734405,,cycles,146201083,61.00,,
+perf,222771637,,instructions,170195167,71.00,0.59,insn per cycle
+perf,6569009,,l1d_prefetch_hit,194181999,81.00,,
+perf,2092798,,l1d_prefetch_refill,218202291,91.00,,
+== probe tag=b2 R=18 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.6 GBps=2.103
+perf,1533615,,l1d_load_miss,236924457,100.00,,
+perf,118245,,l2_miss,236924457,100.00,,
+perf,10254992,,l2_load_access,236924457,100.00,,
+perf,214512223,,stalled_cycle_backend,236924457,100.00,,
+== probe tag=b2 R=18 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,203806799,,cycles,127426790,100.00,,
+perf,141376870,,instructions,127426790,100.00,0.69,insn per cycle
+perf,115616,,l1d_prefetch_hit,127426790,100.00,,
+perf,4692,,l1d_prefetch_refill,127426790,100.00,,
+== probe tag=b2 R=18 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,43205,,l1d_load_miss,127118707,100.00,,
+perf,52232,,l2_miss,127118707,100.00,,
+perf,190885,,l2_load_access,127118707,100.00,,
+perf,80109527,,stalled_cycle_backend,127118707,100.00,,
+== probe tag=b2 R=19 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=30.6 GBps=1.762
+perf,504456319,,cycles,171934374,54.00,,
+perf,258149836,,instructions,207919248,65.00,0.51,insn per cycle
+perf,7037582,,l1d_prefetch_hit,243864248,77.00,,
+perf,2094369,,l1d_prefetch_refill,279820664,88.00,,
+== probe tag=b2 R=19 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=52.8 GBps=1.937
+perf,1748222,,l1d_load_miss,281070041,100.00,,
+perf,280457,,l2_miss,281070041,100.00,,
+perf,10620649,,l2_load_access,281070041,100.00,,
+perf,274713589,,stalled_cycle_backend,281070041,100.00,,
+== probe tag=b2 R=19 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,213585321,,cycles,133516917,100.00,,
+perf,148837350,,instructions,133516917,100.00,0.70,insn per cycle
+perf,119265,,l1d_prefetch_hit,133516917,100.00,,
+perf,4647,,l1d_prefetch_refill,133516917,100.00,,
+== probe tag=b2 R=19 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,43287,,l1d_load_miss,133506000,100.00,,
+perf,52566,,l2_miss,133506000,100.00,,
+perf,193260,,l2_load_access,133506000,100.00,,
+perf,83941699,,stalled_cycle_backend,133506000,100.00,,
+== probe tag=b2 R=20 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=29.1 GBps=1.860
+perf,652650668,,cycles,192629959,47.00,,
+perf,293546278,,instructions,248679918,60.00,0.45,insn per cycle
+perf,6990766,,l1d_prefetch_hit,304689002,74.00,,
+perf,1923054,,l1d_prefetch_refill,356639209,87.00,,
+== probe tag=b2 R=20 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=80.9 GBps=1.262
+perf,2221924,,l1d_load_miss,419965623,100.00,,
+perf,921535,,l2_miss,419965623,100.00,,
+perf,10018589,,l2_load_access,419965623,100.00,,
+perf,478148913,,stalled_cycle_backend,419965623,100.00,,
+== probe tag=b2 R=20 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,224787108,,cycles,140523250,100.00,,
+perf,156532258,,instructions,140523250,100.00,0.70,insn per cycle
+perf,117964,,l1d_prefetch_hit,140523250,100.00,,
+perf,4424,,l1d_prefetch_refill,140523250,100.00,,
+== probe tag=b2 R=20 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,44008,,l1d_load_miss,140286040,100.00,,
+perf,54143,,l2_miss,140286040,100.00,,
+perf,199025,,l2_load_access,140286040,100.00,,
+perf,88297715,,stalled_cycle_backend,140286040,100.00,,
+== probe tag=b2 R=21 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=92.8 GBps=0.654
+perf,1156364316,,cycles,260622749,35.00,,
+perf,358679026,,instructions,376657833,51.00,0.31,insn per cycle
+perf,4628818,,l1d_prefetch_hit,492601166,67.00,,
+perf,1225744,,l1d_prefetch_refill,608494872,83.00,,
+== probe tag=b2 R=21 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=362.0 GBps=0.283
+perf,4260026,,l1d_load_miss,1081926121,100.00,,
+perf,4255405,,l2_miss,1081926121,100.00,,
+perf,4478395,,l2_load_access,1081926121,100.00,,
+perf,1477760751,,stalled_cycle_backend,1081926121,100.00,,
+== probe tag=b2 R=21 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,234857394,,cycles,146809623,100.00,,
+perf,164108281,,instructions,146809623,100.00,0.70,insn per cycle
+perf,124398,,l1d_prefetch_hit,146809623,100.00,,
+perf,4543,,l1d_prefetch_refill,146809623,100.00,,
+== probe tag=b2 R=21 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,46139,,l1d_load_miss,147165333,100.00,,
+perf,55029,,l2_miss,147165333,100.00,,
+perf,211685,,l2_load_access,147165333,100.00,,
+perf,92375284,,stalled_cycle_backend,147165333,100.00,,
+== probe tag=b2 R=22 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=185.2 GBps=0.326
+perf,1752486026,,cycles,343412001,31.00,,
+perf,402917188,,instructions,535262036,48.00,0.23,insn per cycle
+perf,1088658,,l1d_prefetch_hit,723130159,65.00,,
+perf,185729,,l1d_prefetch_refill,910766038,82.00,,
+== probe tag=b2 R=22 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=224.0 GBps=0.456
+perf,4091899,,l1d_load_miss,1005554414,100.00,,
+perf,3818875,,l2_miss,1005554414,100.00,,
+perf,5828022,,l2_load_access,1005554414,100.00,,
+perf,1359852473,,stalled_cycle_backend,1005554414,100.00,,
+== probe tag=b2 R=22 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,245595040,,cycles,153523124,100.00,,
+perf,171772632,,instructions,153523124,100.00,0.70,insn per cycle
+perf,125552,,l1d_prefetch_hit,153523124,100.00,,
+perf,4650,,l1d_prefetch_refill,153523124,100.00,,
+== probe tag=b2 R=22 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,46312,,l1d_load_miss,153802457,100.00,,
+perf,57851,,l2_miss,153802457,100.00,,
+perf,212874,,l2_load_access,153802457,100.00,,
+perf,96637353,,stalled_cycle_backend,153802457,100.00,,
+== probe tag=b2 R=23 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=215.0 GBps=0.282
+perf,1920530349,,cycles,366335957,30.00,,
+perf,424742453,,instructions,578045332,48.00,0.22,insn per cycle
+perf,241365,,l1d_prefetch_hit,788784039,65.00,,
+perf,10321,,l1d_prefetch_refill,996463249,82.00,,
+== probe tag=b2 R=23 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=356.7 GBps=0.287
+perf,4668115,,l1d_load_miss,1178788703,100.00,,
+perf,4673585,,l2_miss,1178788703,100.00,,
+perf,4914286,,l2_load_access,1178788703,100.00,,
+perf,1618038712,,stalled_cycle_backend,1178788703,100.00,,
+== probe tag=b2 R=23 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,265855999,,cycles,166183083,100.00,,
+perf,179472984,,instructions,166183083,100.00,0.68,insn per cycle
+perf,137910,,l1d_prefetch_hit,166183083,100.00,,
+perf,4769,,l1d_prefetch_refill,166183083,100.00,,
+== probe tag=b2 R=23 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,49101,,l1d_load_miss,167787166,100.00,,
+perf,72806,,l2_miss,167787166,100.00,,
+perf,236088,,l2_load_access,167787166,100.00,,
+perf,110604057,,stalled_cycle_backend,167787166,100.00,,
+== probe tag=b2 R=24 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=216.5 GBps=0.282
+perf,1985269490,,cycles,384788711,30.00,,
+perf,434429492,,instructions,600694663,48.00,0.22,insn per cycle
+perf,204877,,l1d_prefetch_hit,816675746,65.00,,
+perf,10068,,l1d_prefetch_refill,1032437788,82.00,,
+== probe tag=b2 R=24 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=358.0 GBps=0.286
+perf,4866557,,l1d_load_miss,1231676829,100.00,,
+perf,4872731,,l2_miss,1231676829,100.00,,
+perf,5113887,,l2_load_access,1231676829,100.00,,
+perf,1696794113,,stalled_cycle_backend,1231676829,100.00,,
+== probe tag=b2 R=24 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,267059690,,cycles,166946875,100.00,,
+perf,187019651,,instructions,166946875,100.00,0.70,insn per cycle
+perf,137834,,l1d_prefetch_hit,166946875,100.00,,
+perf,4768,,l1d_prefetch_refill,166946875,100.00,,
+== probe tag=b2 R=24 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,46164,,l1d_load_miss,166608208,100.00,,
+perf,58785,,l2_miss,166608208,100.00,,
+perf,217921,,l2_load_access,166608208,100.00,,
+perf,104402315,,stalled_cycle_backend,166608208,100.00,,
+== probe tag=b2 R=28 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=221.6 GBps=0.277
+perf,2343234485,,cycles,445344875,30.00,,
+perf,512878192,,instructions,701127745,47.00,0.22,insn per cycle
+perf,129835,,l1d_prefetch_hit,957138162,65.00,,
+perf,10753,,l1d_prefetch_refill,1213001116,82.00,,
+== probe tag=b2 R=28 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.2 GBps=0.281
+perf,5682958,,l1d_load_miss,1447385366,100.00,,
+perf,5660128,,l2_miss,1447385366,100.00,,
+perf,5941576,,l2_load_access,1447385366,100.00,,
+perf,2003413714,,stalled_cycle_backend,1447385366,100.00,,
+== probe tag=b2 R=28 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,309605325,,cycles,193543791,100.00,,
+perf,217584350,,instructions,193543791,100.00,0.70,insn per cycle
+perf,146742,,l1d_prefetch_hit,193543791,100.00,,
+perf,4939,,l1d_prefetch_refill,193543791,100.00,,
+== probe tag=b2 R=28 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,49377,,l1d_load_miss,193310375,100.00,,
+perf,64511,,l2_miss,193310375,100.00,,
+perf,237411,,l2_load_access,193310375,100.00,,
+perf,120913974,,stalled_cycle_backend,193310375,100.00,,
+== probe tag=b2 R=32 stagger=12352 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=218.8 GBps=0.275
+perf,2686962406,,cycles,509087001,30.00,,
+perf,578987694,,instructions,804856916,47.00,0.22,insn per cycle
+perf,297474,,l1d_prefetch_hit,1100581746,65.00,,
+perf,11872,,l1d_prefetch_refill,1392430495,82.00,,
+== probe tag=b2 R=32 stagger=12352 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=366.1 GBps=0.280
+perf,6491825,,l1d_load_miss,1660382784,100.00,,
+perf,6462287,,l2_miss,1660382784,100.00,,
+perf,6770728,,l2_load_access,1660382784,100.00,,
+perf,2318376648,,stalled_cycle_backend,1660382784,100.00,,
+== probe tag=b2 R=32 stagger=12352 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,351766186,,cycles,219890875,100.00,,
+perf,248114239,,instructions,219890875,100.00,0.71,insn per cycle
+perf,163414,,l1d_prefetch_hit,219890875,100.00,,
+perf,5016,,l1d_prefetch_refill,219890875,100.00,,
+== probe tag=b2 R=32 stagger=12352 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=12352 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,53082,,l1d_load_miss,220147915,100.00,,
+perf,70324,,l2_miss,220147915,100.00,,
+perf,262390,,l2_load_access,220147915,100.00,,
+perf,137480043,,stalled_cycle_backend,220147915,100.00,,
+== probe tag=c R=1 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=0.0 GBps=1.692
+perf,33555794,,cycles,13077541,62.00,,
+perf,22514118,,instructions,17078334,81.00,0.67,insn per cycle
+perf,841051,,l1d_prefetch_hit,21061999,100.00,,
+perf,200745,,l1d_prefetch_refill,21061999,100.00,,
+== probe tag=c R=1 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=57.9 GBps=1.705
+perf,31119,,l1d_load_miss,20855000,100.00,,
+perf,29559,,l2_miss,20855000,100.00,,
+perf,496543,,l2_load_access,20855000,100.00,,
+perf,11753595,,stalled_cycle_backend,20855000,100.00,,
+== probe tag=c R=1 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,21400434,,cycles,13395417,100.00,,
+perf,11395359,,instructions,13395417,100.00,0.53,insn per cycle
+perf,54969,,l1d_prefetch_hit,13395417,100.00,,
+perf,4295,,l1d_prefetch_refill,13395417,100.00,,
+== probe tag=c R=1 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,29737,,l1d_load_miss,13099709,100.00,,
+perf,24327,,l2_miss,13099709,100.00,,
+perf,97978,,l2_load_access,13099709,100.00,,
+perf,9243196,,stalled_cycle_backend,13099709,100.00,,
+== probe tag=c R=2 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=0.2 GBps=2.531
+perf,49038860,,cycles,22780707,74.00,,
+perf,34063608,,instructions,26709707,86.00,0.69,insn per cycle
+perf,1632858,,l1d_prefetch_hit,30714582,100.00,,
+perf,397543,,l1d_prefetch_refill,30714582,100.00,,
+== probe tag=c R=2 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=39.4 GBps=2.541
+perf,33562,,l1d_load_miss,30982502,100.00,,
+perf,34636,,l2_miss,30982502,100.00,,
+perf,902190,,l2_load_access,30982502,100.00,,
+perf,18736320,,stalled_cycle_backend,30982502,100.00,,
+== probe tag=c R=2 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,32347028,,cycles,20237791,100.00,,
+perf,19123234,,instructions,20237791,100.00,0.59,insn per cycle
+perf,58928,,l1d_prefetch_hit,20237791,100.00,,
+perf,4132,,l1d_prefetch_refill,20237791,100.00,,
+== probe tag=c R=2 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,31734,,l1d_load_miss,20670500,100.00,,
+perf,30073,,l2_miss,20670500,100.00,,
+perf,109203,,l2_load_access,20670500,100.00,,
+perf,14388626,,stalled_cycle_backend,20670500,100.00,,
+== probe tag=c R=4 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=0.0 GBps=3.248
+perf,79070801,,cycles,35017042,70.00,,
+perf,54840724,,instructions,38999542,78.00,0.69,insn per cycle
+perf,2484981,,l1d_prefetch_hit,42951292,86.00,,
+perf,779081,,l1d_prefetch_refill,46950417,94.00,,
+== probe tag=c R=4 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=30.5 GBps=3.305
+perf,38063,,l1d_load_miss,49399502,100.00,,
+perf,37523,,l2_miss,49399502,100.00,,
+perf,1702976,,l2_load_access,49399502,100.00,,
+perf,31770734,,stalled_cycle_backend,49399502,100.00,,
+== probe tag=c R=4 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,53906183,,cycles,33712292,100.00,,
+perf,34412240,,instructions,33712292,100.00,0.64,insn per cycle
+perf,66948,,l1d_prefetch_hit,33712292,100.00,,
+perf,4239,,l1d_prefetch_refill,33712292,100.00,,
+== probe tag=c R=4 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,33017,,l1d_load_miss,33958459,100.00,,
+perf,32567,,l2_miss,33958459,100.00,,
+perf,118203,,l2_load_access,33958459,100.00,,
+perf,22497878,,stalled_cycle_backend,33958459,100.00,,
+== probe tag=c R=6 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=15.8 GBps=3.598
+perf,110053592,,cycles,52931334,76.00,,
+perf,75855315,,instructions,56921917,82.00,0.69,insn per cycle
+perf,3398286,,l1d_prefetch_hit,60894126,88.00,,
+perf,1023051,,l1d_prefetch_refill,64895293,94.00,,
+== probe tag=c R=6 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=28.0 GBps=3.612
+perf,43223,,l1d_load_miss,68653624,100.00,,
+perf,42976,,l2_miss,68653624,100.00,,
+perf,2505584,,l2_load_access,68653624,100.00,,
+perf,45514008,,stalled_cycle_backend,68653624,100.00,,
+== probe tag=c R=6 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,75709752,,cycles,47349041,100.00,,
+perf,49735510,,instructions,47349041,100.00,0.66,insn per cycle
+perf,75027,,l1d_prefetch_hit,47349041,100.00,,
+perf,4360,,l1d_prefetch_refill,47349041,100.00,,
+== probe tag=c R=6 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,33996,,l1d_load_miss,47073999,100.00,,
+perf,34277,,l2_miss,47073999,100.00,,
+perf,129644,,l2_load_access,47073999,100.00,,
+perf,30540188,,stalled_cycle_backend,47073999,100.00,,
+== probe tag=c R=8 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=11.9 GBps=4.272
+perf,135303822,,cycles,68801374,81.00,,
+perf,94821257,,instructions,72797249,85.00,0.70,insn per cycle
+perf,4593950,,l1d_prefetch_hit,76696416,90.00,,
+perf,1354359,,l1d_prefetch_refill,80689708,95.00,,
+== probe tag=c R=8 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=23.9 GBps=4.248
+perf,91406,,l1d_load_miss,84838375,100.00,,
+perf,45402,,l2_miss,84838375,100.00,,
+perf,3359746,,l2_load_access,84838375,100.00,,
+perf,54452267,,stalled_cycle_backend,84838375,100.00,,
+== probe tag=c R=8 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,97624558,,cycles,61052249,100.00,,
+perf,65026100,,instructions,61052249,100.00,0.67,insn per cycle
+perf,81678,,l1d_prefetch_hit,61052249,100.00,,
+perf,4311,,l1d_prefetch_refill,61052249,100.00,,
+== probe tag=c R=8 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,36252,,l1d_load_miss,60599582,100.00,,
+perf,37679,,l2_miss,60599582,100.00,,
+perf,141422,,l2_load_access,60599582,100.00,,
+perf,38973736,,stalled_cycle_backend,60599582,100.00,,
+== probe tag=c R=10 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=29.1 GBps=2.186
+perf,211606085,,cycles,84431208,63.00,,
+perf,132637956,,instructions,96430207,72.00,0.63,insn per cycle
+perf,3295110,,l1d_prefetch_hit,108392706,81.00,,
+perf,1539774,,l1d_prefetch_refill,120393331,90.00,,
+== probe tag=c R=10 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=47.0 GBps=2.168
+perf,904022,,l1d_load_miss,136009661,100.00,,
+perf,167549,,l2_miss,136009661,100.00,,
+perf,5237723,,l2_load_access,136009661,100.00,,
+perf,111812706,,stalled_cycle_backend,136009661,100.00,,
+== probe tag=c R=10 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,121845544,,cycles,76176749,100.00,,
+perf,80244796,,instructions,76176749,100.00,0.66,insn per cycle
+perf,90153,,l1d_prefetch_hit,76176749,100.00,,
+perf,4447,,l1d_prefetch_refill,76176749,100.00,,
+== probe tag=c R=10 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,37048,,l1d_load_miss,76151958,100.00,,
+perf,48798,,l2_miss,76151958,100.00,,
+perf,152457,,l2_load_access,76151958,100.00,,
+perf,50286028,,stalled_cycle_backend,76151958,100.00,,
+== probe tag=c R=12 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=24.3 GBps=2.351
+perf,246203001,,cycles,103542915,67.00,,
+perf,152751887,,instructions,117997373,76.00,0.62,insn per cycle
+perf,4069386,,l1d_prefetch_hit,130012124,84.00,,
+perf,1718112,,l1d_prefetch_refill,141991374,92.00,,
+== probe tag=c R=12 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=42.9 GBps=2.377
+perf,1098109,,l1d_load_miss,153018708,100.00,,
+perf,142852,,l2_miss,153018708,100.00,,
+perf,6777882,,l2_load_access,153018708,100.00,,
+perf,122873843,,stalled_cycle_backend,153018708,100.00,,
+== probe tag=c R=12 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,139237167,,cycles,87045500,100.00,,
+perf,95413714,,instructions,87045500,100.00,0.69,insn per cycle
+perf,92854,,l1d_prefetch_hit,87045500,100.00,,
+perf,4579,,l1d_prefetch_refill,87045500,100.00,,
+== probe tag=c R=12 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,38205,,l1d_load_miss,87186208,100.00,,
+perf,44724,,l2_miss,87186208,100.00,,
+perf,158344,,l2_load_access,87186208,100.00,,
+perf,55492425,,stalled_cycle_backend,87186208,100.00,,
+== probe tag=c R=14 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=98.9 GBps=0.659
+perf,643180509,,cycles,162994792,40.00,,
+perf,240346002,,instructions,222909748,55.00,0.37,insn per cycle
+perf,4845040,,l1d_prefetch_hit,282925289,70.00,,
+perf,1172816,,l1d_prefetch_refill,342846080,85.00,,
+== probe tag=c R=14 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=168.0 GBps=0.608
+perf,1416297,,l1d_load_miss,403079162,100.00,,
+perf,2325733,,l2_miss,403079162,100.00,,
+perf,4843389,,l2_load_access,403079162,100.00,,
+perf,504252287,,stalled_cycle_backend,403079162,100.00,,
+== probe tag=c R=14 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,160841816,,cycles,100549082,100.00,,
+perf,110740911,,instructions,100549082,100.00,0.69,insn per cycle
+perf,101177,,l1d_prefetch_hit,100549082,100.00,,
+perf,4578,,l1d_prefetch_refill,100549082,100.00,,
+== probe tag=c R=14 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,40630,,l1d_load_miss,100522584,100.00,,
+perf,47041,,l2_miss,100522584,100.00,,
+perf,172854,,l2_load_access,100522584,100.00,,
+perf,63643950,,stalled_cycle_backend,100522584,100.00,,
+== probe tag=c R=16 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=47.9 GBps=1.307
+perf,429862167,,cycles,145048623,53.00,,
+perf,226623429,,instructions,177052081,65.00,0.53,insn per cycle
+perf,5171239,,l1d_prefetch_hit,208974123,77.00,,
+perf,2382970,,l1d_prefetch_refill,241090790,89.00,,
+== probe tag=c R=16 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=77.3 GBps=1.323
+perf,1657545,,l1d_load_miss,267469917,100.00,,
+perf,949881,,l2_miss,267469917,100.00,,
+perf,8586643,,l2_load_access,267469917,100.00,,
+perf,267489850,,stalled_cycle_backend,267469917,100.00,,
+== probe tag=c R=16 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,181939678,,cycles,113736457,100.00,,
+perf,125969748,,instructions,113736457,100.00,0.69,insn per cycle
+perf,109952,,l1d_prefetch_hit,113736457,100.00,,
+perf,4559,,l1d_prefetch_refill,113736457,100.00,,
+== probe tag=c R=16 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,41901,,l1d_load_miss,113788584,100.00,,
+perf,48970,,l2_miss,113788584,100.00,,
+perf,183296,,l2_load_access,113788584,100.00,,
+perf,71831267,,stalled_cycle_backend,113788584,100.00,,
+== probe tag=c R=17 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=65.1 GBps=0.956
+perf,552453367,,cycles,163094208,47.00,,
+perf,259704111,,instructions,211051999,61.00,0.47,insn per cycle
+perf,5104706,,l1d_prefetch_hit,257888790,74.00,,
+perf,2317982,,l1d_prefetch_refill,301928958,87.00,,
+== probe tag=c R=17 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=105.3 GBps=0.970
+perf,1921449,,l1d_load_miss,341944789,100.00,,
+perf,1522048,,l2_miss,341944789,100.00,,
+perf,8528263,,l2_load_access,341944789,100.00,,
+perf,381602495,,stalled_cycle_backend,341944789,100.00,,
+== probe tag=c R=17 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,192357394,,cycles,120249041,100.00,,
+perf,133609061,,instructions,120249041,100.00,0.69,insn per cycle
+perf,109482,,l1d_prefetch_hit,120249041,100.00,,
+perf,4642,,l1d_prefetch_refill,120249041,100.00,,
+== probe tag=c R=17 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,42207,,l1d_load_miss,120667458,100.00,,
+perf,51127,,l2_miss,120667458,100.00,,
+perf,186127,,l2_load_access,120667458,100.00,,
+perf,76356652,,stalled_cycle_backend,120667458,100.00,,
+== probe tag=c R=18 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=64.8 GBps=0.945
+perf,588383524,,cycles,176697538,47.00,,
+perf,275659150,,instructions,224687831,60.00,0.47,insn per cycle
+perf,5524742,,l1d_prefetch_hit,272677746,74.00,,
+perf,2061556,,l1d_prefetch_refill,320410289,86.00,,
+== probe tag=c R=18 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=106.6 GBps=0.957
+perf,1998224,,l1d_load_miss,365022495,100.00,,
+perf,1661788,,l2_miss,365022495,100.00,,
+perf,9460730,,l2_load_access,365022495,100.00,,
+perf,398287302,,stalled_cycle_backend,365022495,100.00,,
+== probe tag=c R=18 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,205908953,,cycles,128738916,100.00,,
+perf,141271740,,instructions,128738916,100.00,0.69,insn per cycle
+perf,113633,,l1d_prefetch_hit,128738916,100.00,,
+perf,4512,,l1d_prefetch_refill,128738916,100.00,,
+== probe tag=c R=18 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,42691,,l1d_load_miss,127265082,100.00,,
+perf,53541,,l2_miss,127265082,100.00,,
+perf,194923,,l2_load_access,127265082,100.00,,
+perf,80223900,,stalled_cycle_backend,127265082,100.00,,
+== probe tag=c R=19 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=61.2 GBps=0.976
+perf,611220172,,cycles,186973622,48.00,,
+perf,285194592,,instructions,238905290,62.00,0.47,insn per cycle
+perf,6058132,,l1d_prefetch_hit,286844624,74.00,,
+perf,1990396,,l1d_prefetch_refill,334806998,87.00,,
+== probe tag=c R=19 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=102.7 GBps=0.994
+perf,2042682,,l1d_load_miss,379299377,100.00,,
+perf,1796625,,l2_miss,379299377,100.00,,
+perf,9897136,,l2_load_access,379299377,100.00,,
+perf,419025536,,stalled_cycle_backend,379299377,100.00,,
+== probe tag=c R=19 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,214197472,,cycles,133925293,100.00,,
+perf,148977844,,instructions,133925293,100.00,0.70,insn per cycle
+perf,118281,,l1d_prefetch_hit,133925293,100.00,,
+perf,4678,,l1d_prefetch_refill,133925293,100.00,,
+== probe tag=c R=19 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,43577,,l1d_load_miss,133701457,100.00,,
+perf,53014,,l2_miss,133701457,100.00,,
+perf,198305,,l2_load_access,133701457,100.00,,
+perf,83999933,,stalled_cycle_backend,133701457,100.00,,
+== probe tag=c R=20 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=64.1 GBps=0.988
+perf,632630558,,cycles,188175293,47.00,,
+perf,304973397,,instructions,240209875,60.00,0.48,insn per cycle
+perf,6632385,,l1d_prefetch_hit,292066332,73.00,,
+perf,1843372,,l1d_prefetch_refill,343990500,86.00,,
+== probe tag=c R=20 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=102.2 GBps=1.001
+perf,2060831,,l1d_load_miss,393639500,100.00,,
+perf,2059875,,l2_miss,393639500,100.00,,
+perf,10066270,,l2_load_access,393639500,100.00,,
+perf,436730552,,stalled_cycle_backend,393639500,100.00,,
+== probe tag=c R=20 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,237190259,,cycles,148285625,100.00,,
+perf,156602736,,instructions,148285625,100.00,0.66,insn per cycle
+perf,120469,,l1d_prefetch_hit,148285625,100.00,,
+perf,4713,,l1d_prefetch_refill,148285625,100.00,,
+== probe tag=c R=20 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,45380,,l1d_load_miss,145314750,100.00,,
+perf,66867,,l2_miss,145314750,100.00,,
+perf,209504,,l2_load_access,145314750,100.00,,
+perf,94844273,,stalled_cycle_backend,145314750,100.00,,
+== probe tag=c R=21 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=63.3 GBps=1.015
+perf,665175514,,cycles,204570918,49.00,,
+perf,312324716,,instructions,260594083,62.00,0.47,insn per cycle
+perf,6765702,,l1d_prefetch_hit,312561291,75.00,,
+perf,1848264,,l1d_prefetch_refill,364433083,87.00,,
+== probe tag=c R=21 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=98.6 GBps=1.037
+perf,2224931,,l1d_load_miss,406174290,100.00,,
+perf,2171030,,l2_miss,406174290,100.00,,
+perf,10577932,,l2_load_access,406174290,100.00,,
+perf,446749314,,stalled_cycle_backend,406174290,100.00,,
+== probe tag=c R=21 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,242401811,,cycles,151526583,100.00,,
+perf,164083009,,instructions,151526583,100.00,0.68,insn per cycle
+perf,124901,,l1d_prefetch_hit,151526583,100.00,,
+perf,4695,,l1d_prefetch_refill,151526583,100.00,,
+== probe tag=c R=21 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,45539,,l1d_load_miss,147275915,100.00,,
+perf,56501,,l2_miss,147275915,100.00,,
+perf,208161,,l2_load_access,147275915,100.00,,
+perf,92567975,,stalled_cycle_backend,147275915,100.00,,
+== probe tag=c R=22 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=62.6 GBps=1.039
+perf,673209913,,cycles,205533207,48.00,,
+perf,327801980,,instructions,261552208,62.00,0.49,insn per cycle
+perf,7043859,,l1d_prefetch_hit,317396292,75.00,,
+perf,1914653,,l1d_prefetch_refill,369352166,87.00,,
+== probe tag=c R=22 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=96.1 GBps=1.064
+perf,2341273,,l1d_load_miss,416137832,100.00,,
+perf,2272793,,l2_miss,416137832,100.00,,
+perf,10635189,,l2_load_access,416137832,100.00,,
+perf,457052547,,stalled_cycle_backend,416137832,100.00,,
+== probe tag=c R=22 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,245607219,,cycles,153535208,100.00,,
+perf,171769543,,instructions,153535208,100.00,0.70,insn per cycle
+perf,124847,,l1d_prefetch_hit,153535208,100.00,,
+perf,4571,,l1d_prefetch_refill,153535208,100.00,,
+== probe tag=c R=22 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,45952,,l1d_load_miss,153563666,100.00,,
+perf,56305,,l2_miss,153563666,100.00,,
+perf,211287,,l2_load_access,153563666,100.00,,
+perf,96296057,,stalled_cycle_backend,153563666,100.00,,
+== probe tag=c R=23 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=60.2 GBps=1.045
+perf,703035179,,cycles,216136372,49.00,,
+perf,343422118,,instructions,272093288,61.00,0.49,insn per cycle
+perf,7188966,,l1d_prefetch_hit,328039330,74.00,,
+perf,1868096,,l1d_prefetch_refill,384078413,87.00,,
+== probe tag=c R=23 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=96.4 GBps=1.060
+perf,2468369,,l1d_load_miss,433504458,100.00,,
+perf,2421825,,l2_miss,433504458,100.00,,
+perf,10849630,,l2_load_access,433504458,100.00,,
+perf,471293349,,stalled_cycle_backend,433504458,100.00,,
+== probe tag=c R=23 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,256419286,,cycles,160285291,100.00,,
+perf,179392499,,instructions,160285291,100.00,0.70,insn per cycle
+perf,129982,,l1d_prefetch_hit,160285291,100.00,,
+perf,4719,,l1d_prefetch_refill,160285291,100.00,,
+== probe tag=c R=23 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,46198,,l1d_load_miss,160132166,100.00,,
+perf,57718,,l2_miss,160132166,100.00,,
+perf,213974,,l2_load_access,160132166,100.00,,
+perf,100375193,,stalled_cycle_backend,160132166,100.00,,
+== probe tag=c R=24 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=116.8 GBps=0.527
+perf,1181906713,,cycles,280708625,37.00,,
+perf,408959044,,instructions,396602914,53.00,0.35,insn per cycle
+perf,1499314,,l1d_prefetch_hit,512617998,69.00,,
+perf,8695,,l1d_prefetch_refill,628563329,84.00,,
+== probe tag=c R=24 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=190.7 GBps=0.536
+perf,4480396,,l1d_load_miss,730751456,100.00,,
+perf,4834605,,l2_miss,730751456,100.00,,
+perf,7959883,,l2_load_access,730751456,100.00,,
+perf,880629570,,stalled_cycle_backend,730751456,100.00,,
+== probe tag=c R=24 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,269759879,,cycles,168637458,100.00,,
+perf,187759262,,instructions,168637458,100.00,0.70,insn per cycle
+perf,135226,,l1d_prefetch_hit,168637458,100.00,,
+perf,4726,,l1d_prefetch_refill,168637458,100.00,,
+== probe tag=c R=24 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,47270,,l1d_load_miss,166816624,100.00,,
+perf,59303,,l2_miss,166816624,100.00,,
+perf,217893,,l2_load_access,166816624,100.00,,
+perf,104574176,,stalled_cycle_backend,166816624,100.00,,
+== probe tag=c R=28 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=114.3 GBps=0.534
+perf,1363899083,,cycles,326776288,38.00,,
+perf,478385173,,instructions,458696330,53.00,0.35,insn per cycle
+perf,2889977,,l1d_prefetch_hit,590610829,69.00,,
+perf,9299,,l1d_prefetch_refill,722549662,84.00,,
+== probe tag=c R=28 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=187.5 GBps=0.546
+perf,4910730,,l1d_load_miss,843643203,100.00,,
+perf,5633937,,l2_miss,843643203,100.00,,
+perf,8958663,,l2_load_access,843643203,100.00,,
+perf,1077736661,,stalled_cycle_backend,843643203,100.00,,
+== probe tag=c R=28 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,309682250,,cycles,193595293,100.00,,
+perf,217667260,,instructions,193595293,100.00,0.70,insn per cycle
+perf,150839,,l1d_prefetch_hit,193595293,100.00,,
+perf,4957,,l1d_prefetch_refill,193595293,100.00,,
+== probe tag=c R=28 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,49786,,l1d_load_miss,193271791,100.00,,
+perf,63866,,l2_miss,193271791,100.00,,
+perf,241242,,l2_load_access,193271791,100.00,,
+perf,120680394,,stalled_cycle_backend,193271791,100.00,,
+== probe tag=c R=32 stagger=4160 pfr=512 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=109.2 GBps=0.558
+perf,1512090562,,cycles,367431667,38.00,,
+perf,534189311,,instructions,515317585,54.00,0.35,insn per cycle
+perf,1592772,,l1d_prefetch_hit,659318252,69.00,,
+perf,9377,,l1d_prefetch_refill,803208754,84.00,,
+== probe tag=c R=32 stagger=4160 pfr=512 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=179.8 GBps=0.569
+perf,6098067,,l1d_load_miss,930261413,100.00,,
+perf,6429892,,l2_miss,930261413,100.00,,
+perf,10900175,,l2_load_access,930261413,100.00,,
+perf,1134252332,,stalled_cycle_backend,930261413,100.00,,
+== probe tag=c R=32 stagger=4160 pfr=512 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,351597457,,cycles,219777792,100.00,,
+perf,247949147,,instructions,219777792,100.00,0.71,insn per cycle
+perf,159069,,l1d_prefetch_hit,219777792,100.00,,
+perf,5007,,l1d_prefetch_refill,219777792,100.00,,
+== probe tag=c R=32 stagger=4160 pfr=512 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=512 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,52799,,l1d_load_miss,220090956,100.00,,
+perf,69669,,l2_miss,220090956,100.00,,
+perf,262897,,l2_load_access,220090956,100.00,,
+perf,137283106,,stalled_cycle_backend,220090956,100.00,,
+== probe tag=d R=1 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.9 GBps=2.093
+perf,31703543,,cycles,15907168,80.00,,
+perf,21749202,,instructions,19883376,100.00,0.69,insn per cycle
+perf,841033,,l1d_prefetch_hit,19883376,100.00,,
+perf,200834,,l1d_prefetch_refill,19883376,100.00,,
+== probe tag=d R=1 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.9 GBps=2.053
+perf,30943,,l1d_load_miss,19784375,100.00,,
+perf,30182,,l2_miss,19784375,100.00,,
+perf,496895,,l2_load_access,19784375,100.00,,
+perf,11673293,,stalled_cycle_backend,19784375,100.00,,
+== probe tag=d R=1 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,21031226,,cycles,13157584,100.00,,
+perf,11323862,,instructions,13157584,100.00,0.54,insn per cycle
+perf,54160,,l1d_prefetch_hit,13157584,100.00,,
+perf,4259,,l1d_prefetch_refill,13157584,100.00,,
+== probe tag=d R=1 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=1 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24414062499999999450393023304695808.0 GBps=0.000
+perf,30306,,l1d_load_miss,13430292,100.00,,
+perf,26090,,l2_miss,13430292,100.00,,
+perf,99387,,l2_load_access,13430292,100.00,,
+perf,9575762,,stalled_cycle_backend,13430292,100.00,,
+== probe tag=d R=2 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.7 GBps=3.232
+perf,46119537,,cycles,22432542,77.00,,
+perf,32298753,,instructions,26380625,91.00,0.70,insn per cycle
+perf,1633573,,l1d_prefetch_hit,28857209,100.00,,
+perf,397310,,l1d_prefetch_refill,28857209,100.00,,
+== probe tag=d R=2 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.1 GBps=3.176
+perf,32768,,l1d_load_miss,28592999,100.00,,
+perf,32613,,l2_miss,28592999,100.00,,
+perf,898662,,l2_load_access,28592999,100.00,,
+perf,17432452,,stalled_cycle_backend,28592999,100.00,,
+== probe tag=d R=2 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,32778643,,cycles,20511624,100.00,,
+perf,19188800,,instructions,20511624,100.00,0.59,insn per cycle
+perf,59784,,l1d_prefetch_hit,20511624,100.00,,
+perf,4290,,l1d_prefetch_refill,20511624,100.00,,
+== probe tag=d R=2 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=2 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=12207031249999999725196511652347904.0 GBps=0.000
+perf,30735,,l1d_load_miss,20204125,100.00,,
+perf,27102,,l2_miss,20204125,100.00,,
+perf,104924,,l2_load_access,20204125,100.00,,
+perf,13922085,,stalled_cycle_backend,20204125,100.00,,
+== probe tag=d R=4 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=25.5 GBps=3.930
+perf,74763766,,cycles,35430333,75.00,,
+perf,51225389,,instructions,39377501,84.00,0.69,insn per cycle
+perf,2933286,,l1d_prefetch_hit,43348666,92.00,,
+perf,790405,,l1d_prefetch_refill,46742458,100.00,,
+== probe tag=d R=4 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=25.4 GBps=3.958
+perf,36802,,l1d_load_miss,46702957,100.00,,
+perf,36260,,l2_miss,46702957,100.00,,
+perf,1699104,,l2_load_access,46702957,100.00,,
+perf,30862290,,stalled_cycle_backend,46702957,100.00,,
+== probe tag=d R=4 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,54294009,,cycles,33960833,100.00,,
+perf,34485079,,instructions,33960833,100.00,0.64,insn per cycle
+perf,66000,,l1d_prefetch_hit,33960833,100.00,,
+perf,4380,,l1d_prefetch_refill,33960833,100.00,,
+== probe tag=d R=4 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=4 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=6103515624999999862598255826173952.0 GBps=0.000
+perf,32932,,l1d_load_miss,33899333,100.00,,
+perf,31803,,l2_miss,33899333,100.00,,
+perf,118976,,l2_load_access,33899333,100.00,,
+perf,22421179,,stalled_cycle_backend,33899333,100.00,,
+== probe tag=d R=6 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=23.4 GBps=4.328
+perf,104082310,,cycles,49230915,75.00,,
+perf,70460997,,instructions,53181624,81.00,0.68,insn per cycle
+perf,3251814,,l1d_prefetch_hit,57141249,87.00,,
+perf,1027004,,l1d_prefetch_refill,61104040,93.00,,
+== probe tag=d R=6 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=22.5 GBps=4.486
+perf,42674,,l1d_load_miss,64635416,100.00,,
+perf,40233,,l2_miss,64635416,100.00,,
+perf,2502309,,l2_load_access,64635416,100.00,,
+perf,43660792,,stalled_cycle_backend,64635416,100.00,,
+== probe tag=d R=6 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,75453408,,cycles,47188209,100.00,,
+perf,49743229,,instructions,47188209,100.00,0.66,insn per cycle
+perf,76314,,l1d_prefetch_hit,47188209,100.00,,
+perf,4296,,l1d_prefetch_refill,47188209,100.00,,
+== probe tag=d R=6 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=6 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=4069010416666666575065503884115968.0 GBps=0.000
+perf,34676,,l1d_load_miss,47355124,100.00,,
+perf,35101,,l2_miss,47355124,100.00,,
+perf,130558,,l2_load_access,47355124,100.00,,
+perf,30824288,,stalled_cycle_backend,47355124,100.00,,
+== probe tag=d R=8 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=0.0 GBps=5.189
+perf,127935571,,cycles,64086417,80.00,,
+perf,87054449,,instructions,68053417,85.00,0.68,insn per cycle
+perf,4124956,,l1d_prefetch_hit,72045459,90.00,,
+perf,1284342,,l1d_prefetch_refill,76016667,95.00,,
+== probe tag=d R=8 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.2 GBps=5.261
+perf,89405,,l1d_load_miss,79933708,100.00,,
+perf,44202,,l2_miss,79933708,100.00,,
+perf,3354104,,l2_load_access,79933708,100.00,,
+perf,52701601,,stalled_cycle_backend,79933708,100.00,,
+== probe tag=d R=8 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,96981806,,cycles,60638583,100.00,,
+perf,64985627,,instructions,60638583,100.00,0.67,insn per cycle
+perf,79216,,l1d_prefetch_hit,60638583,100.00,,
+perf,4351,,l1d_prefetch_refill,60638583,100.00,,
+== probe tag=d R=8 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=3051757812499999931299127913086976.0 GBps=0.000
+perf,35712,,l1d_load_miss,60622333,100.00,,
+perf,37613,,l2_miss,60622333,100.00,,
+perf,139926,,l2_load_access,60622333,100.00,,
+perf,38990725,,stalled_cycle_backend,60622333,100.00,,
+== probe tag=d R=10 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=22.1 GBps=2.465
+perf,201197851,,cycles,81939041,65.00,,
+perf,124409341,,instructions,93892666,74.00,0.62,insn per cycle
+perf,3545856,,l1d_prefetch_hit,105916749,84.00,,
+perf,1592631,,l1d_prefetch_refill,117928207,93.00,,
+== probe tag=d R=10 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=41.3 GBps=2.469
+perf,898602,,l1d_load_miss,124853458,100.00,,
+perf,152065,,l2_miss,124853458,100.00,,
+perf,5184554,,l2_load_access,124853458,100.00,,
+perf,102189822,,stalled_cycle_backend,124853458,100.00,,
+== probe tag=d R=10 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,118364451,,cycles,74006207,100.00,,
+perf,80189207,,instructions,74006207,100.00,0.68,insn per cycle
+perf,85198,,l1d_prefetch_hit,74006207,100.00,,
+perf,4332,,l1d_prefetch_refill,74006207,100.00,,
+== probe tag=d R=10 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=10 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2441406249999999887393227100127232.0 GBps=0.000
+perf,36117,,l1d_load_miss,73545542,100.00,,
+perf,39733,,l2_miss,73545542,100.00,,
+perf,145518,,l2_load_access,73545542,100.00,,
+perf,46982953,,stalled_cycle_backend,73545542,100.00,,
+== probe tag=d R=12 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=24.2 GBps=2.621
+perf,231840008,,cycles,97034832,66.00,,
+perf,145143469,,instructions,109027165,75.00,0.63,insn per cycle
+perf,3828156,,l1d_prefetch_hit,121021124,83.00,,
+perf,1677490,,l1d_prefetch_refill,133017665,91.00,,
+== probe tag=d R=12 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=38.1 GBps=2.677
+perf,1089374,,l1d_load_miss,144003832,100.00,,
+perf,132861,,l2_miss,144003832,100.00,,
+perf,6748617,,l2_load_access,144003832,100.00,,
+perf,117263870,,stalled_cycle_backend,144003832,100.00,,
+== probe tag=d R=12 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,139256512,,cycles,87064374,100.00,,
+perf,95459181,,instructions,87064374,100.00,0.69,insn per cycle
+perf,90745,,l1d_prefetch_hit,87064374,100.00,,
+perf,4337,,l1d_prefetch_refill,87064374,100.00,,
+== probe tag=d R=12 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=12 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=2034505208333333287532751942057984.0 GBps=0.000
+perf,38883,,l1d_load_miss,87278584,100.00,,
+perf,42658,,l2_miss,87278584,100.00,,
+perf,162547,,l2_load_access,87278584,100.00,,
+perf,55524216,,stalled_cycle_backend,87278584,100.00,,
+== probe tag=d R=14 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=33.7 GBps=2.136
+perf,292990046,,cycles,116668873,63.00,,
+perf,173445819,,instructions,135340165,73.00,0.59,insn per cycle
+perf,4986017,,l1d_prefetch_hit,151325416,82.00,,
+perf,1857268,,l1d_prefetch_refill,167285290,91.00,,
+== probe tag=d R=14 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.2 GBps=2.163
+perf,1196179,,l1d_load_miss,182127541,100.00,,
+perf,100767,,l2_miss,182127541,100.00,,
+perf,8017751,,l2_load_access,182127541,100.00,,
+perf,160722998,,stalled_cycle_backend,182127541,100.00,,
+== probe tag=d R=14 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,160601178,,cycles,100401166,100.00,,
+perf,110715741,,instructions,100401166,100.00,0.69,insn per cycle
+perf,99105,,l1d_prefetch_hit,100401166,100.00,,
+perf,4466,,l1d_prefetch_refill,100401166,100.00,,
+== probe tag=d R=14 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=14 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1743861607142857227126805729640448.0 GBps=0.000
+perf,39267,,l1d_load_miss,100377833,100.00,,
+perf,45049,,l2_miss,100377833,100.00,,
+perf,169605,,l2_load_access,100377833,100.00,,
+perf,63526239,,stalled_cycle_backend,100377833,100.00,,
+== probe tag=d R=16 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=22.5 GBps=2.709
+perf,301839404,,cycles,126353416,66.00,,
+perf,186849958,,instructions,142336706,75.00,0.62,insn per cycle
+perf,5742287,,l1d_prefetch_hit,158297039,83.00,,
+perf,1941183,,l1d_prefetch_refill,174280788,92.00,,
+== probe tag=d R=16 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.1 GBps=2.748
+perf,1338626,,l1d_load_miss,187432332,100.00,,
+perf,107442,,l2_miss,187432332,100.00,,
+perf,9113277,,l2_load_access,187432332,100.00,,
+perf,155264675,,stalled_cycle_backend,187432332,100.00,,
+== probe tag=d R=16 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,181748026,,cycles,113620167,100.00,,
+perf,125969355,,instructions,113620167,100.00,0.69,insn per cycle
+perf,107281,,l1d_prefetch_hit,113620167,100.00,,
+perf,4598,,l1d_prefetch_refill,113620167,100.00,,
+== probe tag=d R=16 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1525878906249999965649563956543488.0 GBps=0.000
+perf,42506,,l1d_load_miss,113917499,100.00,,
+perf,49791,,l2_miss,113917499,100.00,,
+perf,183877,,l2_load_access,113917499,100.00,,
+perf,71851985,,stalled_cycle_backend,113917499,100.00,,
+== probe tag=d R=17 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=31.8 GBps=2.128
+perf,353179460,,cycles,141171001,63.00,,
+perf,207946668,,instructions,161138667,72.00,0.59,insn per cycle
+perf,6042041,,l1d_prefetch_hit,181151750,81.00,,
+perf,1981804,,l1d_prefetch_refill,201120085,90.00,,
+== probe tag=d R=17 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=47.4 GBps=2.153
+perf,1432921,,l1d_load_miss,222311583,100.00,,
+perf,124020,,l2_miss,222311583,100.00,,
+perf,9676476,,l2_load_access,222311583,100.00,,
+perf,201737202,,stalled_cycle_backend,222311583,100.00,,
+== probe tag=d R=17 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,192491298,,cycles,120325874,100.00,,
+perf,133625906,,instructions,120325874,100.00,0.69,insn per cycle
+perf,106768,,l1d_prefetch_hit,120325874,100.00,,
+perf,4422,,l1d_prefetch_refill,120325874,100.00,,
+== probe tag=d R=17 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=17 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1436121323529411800194972230090752.0 GBps=0.000
+perf,41052,,l1d_load_miss,120109874,100.00,,
+perf,49373,,l2_miss,120109874,100.00,,
+perf,181033,,l2_load_access,120109874,100.00,,
+perf,75736069,,stalled_cycle_backend,120109874,100.00,,
+== probe tag=d R=18 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=29.7 GBps=2.088
+perf,378232421,,cycles,148663458,62.00,,
+perf,220878220,,instructions,172645332,72.00,0.58,insn per cycle
+perf,6725677,,l1d_prefetch_hit,196682792,83.00,,
+perf,2093834,,l1d_prefetch_refill,216648124,91.00,,
+== probe tag=d R=18 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.3 GBps=2.115
+perf,1533859,,l1d_load_miss,235434833,100.00,,
+perf,119804,,l2_miss,235434833,100.00,,
+perf,10264262,,l2_load_access,235434833,100.00,,
+perf,212923624,,stalled_cycle_backend,235434833,100.00,,
+== probe tag=d R=18 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,203390295,,cycles,127147000,100.00,,
+perf,141280300,,instructions,127147000,100.00,0.69,insn per cycle
+perf,111803,,l1d_prefetch_hit,127147000,100.00,,
+perf,4711,,l1d_prefetch_refill,127147000,100.00,,
+== probe tag=d R=18 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=18 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1356336805555555525021834628038656.0 GBps=0.000
+perf,42214,,l1d_load_miss,126852875,100.00,,
+perf,49845,,l2_miss,126852875,100.00,,
+perf,189406,,l2_load_access,126852875,100.00,,
+perf,79856400,,stalled_cycle_backend,126852875,100.00,,
+== probe tag=d R=19 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=30.7 GBps=2.079
+perf,450839689,,cycles,162194246,57.00,,
+perf,243519538,,instructions,194162748,68.00,0.54,insn per cycle
+perf,6413366,,l1d_prefetch_hit,226161455,80.00,,
+perf,1987542,,l1d_prefetch_refill,254186747,90.00,,
+== probe tag=d R=19 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=61.0 GBps=1.676
+perf,1866693,,l1d_load_miss,317859080,100.00,,
+perf,474280,,l2_miss,317859080,100.00,,
+perf,10270370,,l2_load_access,317859080,100.00,,
+perf,330610262,,stalled_cycle_backend,317859080,100.00,,
+== probe tag=d R=19 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,213870136,,cycles,133690416,100.00,,
+perf,148857863,,instructions,133690416,100.00,0.70,insn per cycle
+perf,119408,,l1d_prefetch_hit,133690416,100.00,,
+perf,4665,,l1d_prefetch_refill,133690416,100.00,,
+== probe tag=d R=19 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1284950657894736843518619768848384.0 GBps=0.000
+perf,43079,,l1d_load_miss,133530791,100.00,,
+perf,51859,,l2_miss,133530791,100.00,,
+perf,193656,,l2_load_access,133530791,100.00,,
+perf,83997266,,stalled_cycle_backend,133530791,100.00,,
+== probe tag=d R=20 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=69.4 GBps=0.877
+perf,753090886,,cycles,204169081,43.00,,
+perf,302983867,,instructions,272166832,57.00,0.40,insn per cycle
+perf,5893957,,l1d_prefetch_hit,340168082,72.00,,
+perf,1826062,,l1d_prefetch_refill,407564913,86.00,,
+== probe tag=d R=20 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=120.0 GBps=0.850
+perf,3061486,,l1d_load_miss,702545746,100.00,,
+perf,2355011,,l2_miss,702545746,100.00,,
+perf,7430734,,l2_load_access,702545746,100.00,,
+perf,905112247,,stalled_cycle_backend,702545746,100.00,,
+== probe tag=d R=20 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,225102353,,cycles,140747998,100.00,,
+perf,156673973,,instructions,140747998,100.00,0.70,insn per cycle
+perf,119610,,l1d_prefetch_hit,140747998,100.00,,
+perf,4699,,l1d_prefetch_refill,140747998,100.00,,
+== probe tag=d R=20 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1220703124999999943696613550063616.0 GBps=0.000
+perf,43088,,l1d_load_miss,140202542,100.00,,
+perf,53283,,l2_miss,140202542,100.00,,
+perf,196693,,l2_load_access,140202542,100.00,,
+perf,88153363,,stalled_cycle_backend,140202542,100.00,,
+== probe tag=d R=21 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=168.5 GBps=0.363
+perf,1589103109,,cycles,316273873,31.00,,
+perf,378528502,,instructions,488222291,49.00,0.24,insn per cycle
+perf,1529320,,l1d_prefetch_hit,660290583,66.00,,
+perf,377159,,l1d_prefetch_refill,828103326,83.00,,
+== probe tag=d R=21 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=242.6 GBps=0.422
+perf,3955015,,l1d_load_miss,975773621,100.00,,
+perf,3723334,,l2_miss,975773621,100.00,,
+perf,5419432,,l2_load_access,975773621,100.00,,
+perf,1318257903,,stalled_cycle_backend,975773621,100.00,,
+== probe tag=d R=21 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,235322898,,cycles,147100125,100.00,,
+perf,164183274,,instructions,147100125,100.00,0.70,insn per cycle
+perf,124354,,l1d_prefetch_hit,147100125,100.00,,
+perf,4770,,l1d_prefetch_refill,147100125,100.00,,
+== probe tag=d R=21 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1162574404761904673969349077237760.0 GBps=0.000
+perf,45476,,l1d_load_miss,147823625,100.00,,
+perf,58937,,l2_miss,147823625,100.00,,
+perf,208109,,l2_load_access,147823625,100.00,,
+perf,93603233,,stalled_cycle_backend,147823625,100.00,,
+== probe tag=d R=22 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=216.6 GBps=0.278
+perf,1836141003,,cycles,352411498,30.00,,
+perf,408681376,,instructions,552172329,47.00,0.22,insn per cycle
+perf,231394,,l1d_prefetch_hit,752018126,65.00,,
+perf,10173,,l1d_prefetch_refill,951624501,82.00,,
+== probe tag=d R=22 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=346.3 GBps=0.295
+perf,4420559,,l1d_load_miss,1123642038,100.00,,
+perf,4403620,,l2_miss,1123642038,100.00,,
+perf,4820886,,l2_load_access,1123642038,100.00,,
+perf,1538725115,,stalled_cycle_backend,1123642038,100.00,,
+== probe tag=d R=22 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,245935672,,cycles,153734875,100.00,,
+perf,171771099,,instructions,153734875,100.00,0.70,insn per cycle
+perf,128357,,l1d_prefetch_hit,153734875,100.00,,
+perf,4704,,l1d_prefetch_refill,153734875,100.00,,
+== probe tag=d R=22 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1109730113636363572077358856798208.0 GBps=0.000
+perf,45433,,l1d_load_miss,153363958,100.00,,
+perf,56580,,l2_miss,153363958,100.00,,
+perf,209163,,l2_load_access,153363958,100.00,,
+perf,96209807,,stalled_cycle_backend,153363958,100.00,,
+== probe tag=d R=23 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=220.7 GBps=0.279
+perf,1910149801,,cycles,365782835,30.00,,
+perf,426434193,,instructions,573589291,47.00,0.22,insn per cycle
+perf,234261,,l1d_prefetch_hit,781560912,65.00,,
+perf,10241,,l1d_prefetch_refill,989309497,82.00,,
+== probe tag=d R=23 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.4 GBps=0.284
+perf,4663000,,l1d_load_miss,1180746704,100.00,,
+perf,4652580,,l2_miss,1180746704,100.00,,
+perf,4892583,,l2_load_access,1180746704,100.00,,
+perf,1622702730,,stalled_cycle_backend,1180746704,100.00,,
+== probe tag=d R=23 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,256451073,,cycles,160309499,100.00,,
+perf,179390587,,instructions,160309499,100.00,0.70,insn per cycle
+perf,130456,,l1d_prefetch_hit,160309499,100.00,,
+perf,4527,,l1d_prefetch_refill,160309499,100.00,,
+== probe tag=d R=23 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1061480978260869560119069023141888.0 GBps=0.000
+perf,46403,,l1d_load_miss,160279083,100.00,,
+perf,58063,,l2_miss,160279083,100.00,,
+perf,217375,,l2_load_access,160279083,100.00,,
+perf,100439510,,stalled_cycle_backend,160279083,100.00,,
+== probe tag=d R=24 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=222.7 GBps=0.276
+perf,2011953251,,cycles,385659035,30.00,,
+perf,437194217,,instructions,605583988,48.00,0.22,insn per cycle
+perf,238184,,l1d_prefetch_hit,825581576,65.00,,
+perf,10394,,l1d_prefetch_refill,1045502533,82.00,,
+== probe tag=d R=24 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.6 GBps=0.281
+perf,4864977,,l1d_load_miss,1244352663,100.00,,
+perf,4853144,,l2_miss,1244352663,100.00,,
+perf,5099193,,l2_load_access,1244352663,100.00,,
+perf,1716858980,,stalled_cycle_backend,1244352663,100.00,,
+== probe tag=d R=24 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,267188653,,cycles,167036334,100.00,,
+perf,187069778,,instructions,167036334,100.00,0.70,insn per cycle
+perf,132100,,l1d_prefetch_hit,167036334,100.00,,
+perf,4705,,l1d_prefetch_refill,167036334,100.00,,
+== probe tag=d R=24 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=1017252604166666643766375971028992.0 GBps=0.000
+perf,47879,,l1d_load_miss,167110124,100.00,,
+perf,60207,,l2_miss,167110124,100.00,,
+perf,224084,,l2_load_access,167110124,100.00,,
+perf,104797254,,stalled_cycle_backend,167110124,100.00,,
+== probe tag=d R=28 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=223.2 GBps=0.276
+perf,2346015691,,cycles,447331667,30.00,,
+perf,514423411,,instructions,702954375,47.00,0.22,insn per cycle
+perf,260979,,l1d_prefetch_hit,958799830,65.00,,
+perf,11110,,l1d_prefetch_refill,1214674455,82.00,,
+== probe tag=d R=28 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.6 GBps=0.281
+perf,5683644,,l1d_load_miss,1448655661,100.00,,
+perf,5654529,,l2_miss,1448655661,100.00,,
+perf,5937262,,l2_load_access,1448655661,100.00,,
+perf,2007584612,,stalled_cycle_backend,1448655661,100.00,,
+== probe tag=d R=28 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,309436452,,cycles,193432916,100.00,,
+perf,217486991,,instructions,193432916,100.00,0.70,insn per cycle
+perf,148167,,l1d_prefetch_hit,193432916,100.00,,
+perf,4820,,l1d_prefetch_refill,193432916,100.00,,
+== probe tag=d R=28 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=871930803571428613563402864820224.0 GBps=0.000
+perf,52081,,l1d_load_miss,193842293,100.00,,
+perf,65162,,l2_miss,193842293,100.00,,
+perf,253023,,l2_load_access,193842293,100.00,,
+perf,121107550,,stalled_cycle_backend,193842293,100.00,,
+== probe tag=d R=32 stagger=4160 pfr=0 reps=3 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=218.8 GBps=0.275
+perf,2689314476,,cycles,514311117,30.00,,
+perf,578939184,,instructions,810157075,48.00,0.22,insn per cycle
+perf,295951,,l1d_prefetch_hit,1102069822,65.00,,
+perf,12287,,l1d_prefetch_refill,1394001994,82.00,,
+== probe tag=d R=32 stagger=4160 pfr=0 reps=3 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=366.0 GBps=0.279
+perf,6490254,,l1d_load_miss,1660921662,100.00,,
+perf,6460151,,l2_miss,1660921662,100.00,,
+perf,6773838,,l2_load_access,1660921662,100.00,,
+perf,2319008434,,stalled_cycle_backend,1660921662,100.00,,
+== probe tag=d R=32 stagger=4160 pfr=0 reps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,352110221,,cycles,220115875,100.00,,
+perf,248090044,,instructions,220115875,100.00,0.70,insn per cycle
+perf,159625,,l1d_prefetch_hit,220115875,100.00,,
+perf,4939,,l1d_prefetch_refill,220115875,100.00,,
+== probe tag=d R=32 stagger=4160 pfr=0 reps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=762939453124999982824781978271744.0 GBps=0.000
+perf,53736,,l1d_load_miss,220070541,100.00,,
+perf,70087,,l2_miss,220070541,100.00,,
+perf,267594,,l2_load_access,220070541,100.00,,
+perf,137191733,,stalled_cycle_backend,220070541,100.00,,

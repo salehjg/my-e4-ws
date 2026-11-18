@@ -6,3 +6,7 @@
 
 # Archive left over from the old zip-based push.to.sh
 my-e4-ws.zip
+
+# Local builds (e.g. build/presentation4-x86/: waLBerla on x86 for the presentation4
+# correctness checks). push.to.sh excludes this folder too, so it never reaches the board.
+/build/

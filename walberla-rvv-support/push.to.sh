@@ -57,6 +57,7 @@ rsync -az --delete --delete-excluded \
     --exclude '.pytest_cache' \
     --exclude '.perfcache' \
     --exclude '*.zip' \
+    --exclude '/build/' \
     "${HERE}/" "${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR}/"
 
 echo "✓ ${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR} is up to date."

@@ -1,0 +1,40 @@
+== clang f32, 4 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar scalar_cse scalar_cse_aa
+== start Mon Nov 16 12:16:49 PM CST 2026, host k1, load: 3.03 3.44 5.68
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 12:16:50 PM CST 2026
+   sha256 5e424e3b1ce597f7 /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=40.592961549758911 mlups=5.1662946479756302 energy=24.240383829177464 mass=1048576.0000625253 fieldhash=0x05b73968f45b6ab9 links_noslip=285440 links_ubb=40960 t_bulk=37.729639291763306 t_comm=1.0852594375610352 t_bc=1.7731273174285889
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=40.391030311584473 mlups=5.1921230625268802 energy=24.240383829177464 mass=1048576.0000625253 fieldhash=0x05b73968f45b6ab9 links_noslip=285440 links_ubb=40960 t_bulk=37.000083923339844 t_comm=1.5702905654907227 t_bc=1.8158586025238037
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=40.136449337005615 mlups=5.2250561139359073 energy=24.240383829177464 mass=1048576.0000625253 fieldhash=0x05b73968f45b6ab9 links_noslip=285440 links_ubb=40960 t_bulk=37.192062616348267 t_comm=1.1488838195800781 t_bc=1.7907638549804688
+   sha256 d489a791f7cb4a05 /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.47037935256958 mlups=5.912403640103939 energy=24.24038169482823 mass=1048576.0007826686 fieldhash=0x77d7a080ef196bb4 links_noslip=285440 links_ubb=40960 t_bulk=32.667310237884521 t_comm=1.0886778831481934 t_bc=1.7097647190093994
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.104808330535889 mlups=5.9739736512841004 energy=24.24038169482823 mass=1048576.0007826686 fieldhash=0x77d7a080ef196bb4 links_noslip=285440 links_ubb=40960 t_bulk=32.681032657623291 t_comm=0.89914417266845703 t_bc=1.5223257541656494
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.361340045928955 mlups=5.9306349738899069 energy=24.24038169482823 mass=1048576.0007826686 fieldhash=0x77d7a080ef196bb4 links_noslip=285440 links_ubb=40960 t_bulk=31.914312124252319 t_comm=1.6459059715270996 t_bc=1.7963171005249023
+   sha256 370f888731ce992b /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.580151319503784 mlups=7.6038451555447502 energy=24.240381606381462 mass=1048576.0008262396 fieldhash=0xd6d7ff85aa70c80c links_noslip=285440 links_ubb=40960 t_bulk=24.527025461196899 t_comm=1.3592462539672852 t_bc=1.6881420612335205
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.386521339416504 mlups=7.6576063604749951 energy=24.240381606381462 mass=1048576.0008262396 fieldhash=0xd6d7ff85aa70c80c links_noslip=285440 links_ubb=40960 t_bulk=24.351849555969238 t_comm=1.3414371013641357 t_bc=1.6876883506774902
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=2x2x1 domain=128x128x64 cells=1048576 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.401356935501099 mlups=7.6534603922586673 energy=24.240381606381462 mass=1048576.0008262396 fieldhash=0xd6d7ff85aa70c80c links_noslip=285440 links_ubb=40960 t_bulk=24.30881667137146 t_comm=1.4113161563873291 t_bc=1.6753108501434326
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 4c |
+|---|---|
+| scalar | 5.23 (1.00x) |
+| scalar_cse | 5.97 (1.14x) |
+| scalar_cse_aa | 7.66 (1.47x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 4c | 2x2x1 blocks, 128x128x64, 200 steps | 24.240381606381462 | 24.240383829177464 | 9.2e-08 | 1048576.0000625253 | 1048576.0008262396 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 4c |
+|---|---|
+| scalar | 4.5% / 2.9% |
+| scalar_cse | 4.3% / 2.6% |
+| scalar_cse_aa | 6.2% / 4.9% |
+== done Mon Nov 16 12:22:25 PM CST 2026

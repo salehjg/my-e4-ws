@@ -1,6 +1,10 @@
 # =============================================================================
-#  docs/presentation3: only the sources are tracked (slides.tex, figures/*.tex,
-#  build.sh, this file). ./build.sh writes everything else into build/.
+#  docs/presentation4: tracked are the sources (slides.tex, figures/*.tex,
+#  build.sh, this file), the two films (figures/cavity-movie/: laptop, x86;
+#  figures/cavity-movie-board/: board, RVV): frame PNGs, cavity.avi (played in
+#  pdfpc) and cavity.gif (scripts/presentation4/cavity_movie.py), the plan and progress files
+#  (*.md) and the raw logs in board-logs/. ./build.sh writes everything else
+#  into build/.
 # =============================================================================
 
 # ---- Build output: PDF, logs, rendered PNGs, latexmk state --------------------
@@ -63,3 +67,8 @@ missfont.log
 Thumbs.db
 .vscode/
 .idea/
+
+# ---- Exception, kept last so no rule above overrides it -------------------------
+#   The raw board and x86 logs in board-logs/ are the evidence behind every number
+#   on the slides, whatever their extension (*.log, *.out, ...).
+!/board-logs/**

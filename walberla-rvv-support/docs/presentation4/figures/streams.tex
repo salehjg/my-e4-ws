@@ -1,29 +1,58 @@
-% Slide 9: cost of concurrent read streams on one X60 core (r03, from board-logs/p2-stream-sweep.txt
-% and p2-prefetch.txt): f32 vector loads, 4 MB per stream, huge pages.
+% Slide "The real limit: too many data streams": the stream test of report 3 (misc/x60-lab/probes/mem.cpp,
+% unchanged; code on the next slide) rerun for presentation4 with the X60's own counters:
+% scripts/presentation4/streams_check.sh, log docs/presentation4/board-logs/board/streams-probe.log,
+% coordinates printed by
+%   python3 scripts/presentation4/streams_table.py --tex docs/presentation4/board-logs/board
+% R read streams of 4 MB each (f32 vector loads, huge pages requested), one X60 core (core 2).
+% Top: cycles per 64-byte line (the probe's own cycle counter, runs without perf's cycles event).
+% Bottom ("late lines"): l2_miss per line = lines that missed L2 on access, i.e. were not prefetched in time (every
+% line comes from DRAM: 4 MB per array, L2 512 KB), (count(3 passes) - count(0 passes)) / lines.
+% Three array offsets (stagger 4160, 1600, 12352 bytes): the cliff stays at 20 to 22 streams, so it is
+% set by the number of streams, not by the addresses. Tag d (4160 again, at the end) repeats tag a:
+% e.g. R = 8: 19.2 / 19.2, R = 24: 364.7 / 364.6 cycles. With software prefetch (prefetch.r 512 B
+% ahead, tag c) R = 20 ... 23 cost 96 to 102 cycles instead of 110 to 361.
 \begin{tikzpicture}
-  \begin{semilogyaxis}[
-      width=7.6cm, height=5.4cm,
-      xlabel={read streams at the same time},
-      ylabel={cycles per 64-byte cache line},
-      xmin=0, xmax=34, ymin=10, ymax=600,
-      xtick={1,4,8,12,16,19,24,32},
-      ytick={10,20,50,100,200,500},
-      yticklabels={10,20,50,100,200,500},
-      grid=major, grid style={psgray!20},
+  \pgfplotsset{st/.style={width=7.6cm, ylabel style={at={(axis description cs:-0.1,0.5)}}, xmin=0, xmax=33, xtick={1,4,8,12,16,20,24,28,32},
       tick label style={font=\scriptsize}, label style={font=\scriptsize},
-      every axis plot/.append style={thick},
-    ]
-    \fill[psteal!10] (axis cs:0.5,10) rectangle (axis cs:8.5,600);
-    \node[lbl,anchor=north] at (axis cs:4.5,560) {prefetcher\\follows};
-    \fill[psred!7] (axis cs:19.5,10) rectangle (axis cs:34,600);
-    \node[lbl,anchor=south] at (axis cs:26.8,12) {prefetcher\\gives up};
-    \addplot[color=psblue,mark=*,mark size=1.5pt] coordinates {
-      (1,45.1) (4,25.0) (8,16.9) (12,36.7) (16,34.7) (19,75.3) (24,363.6) (32,363.7)};
-    \draw[psred,thick,dashed] (axis cs:0,184.3) -- (axis cs:34,184.3);
-    \node[font=\tiny,anchor=north west,text=psred!85!black,inner sep=1pt] at (axis cs:0.6,178)
-      {our loop, 42 streams: 184};
-    \draw[psteal,thick,dashed] (axis cs:0,90.4) -- (axis cs:34,90.4);
-    \node[font=\tiny,anchor=north west,text=psteal!80!black,inner sep=1pt] at (axis cs:0.6,87)
-      {same, with software prefetch: 90};
+      grid=major, grid style={psgray!20}},
+    sa/.style={color=psblue,mark=*,mark size=1.2pt,thick},
+    sb1/.style={color=psorange,mark=triangle*,mark size=1.4pt,densely dashed},
+    sb2/.style={color=psgray,mark=square*,mark size=1.0pt,densely dotted,thick},
+    sc/.style={color=psteal!85!black,mark=diamond*,mark size=1.5pt}}
+  \begin{semilogyaxis}[st, name=top, height=3.6cm, ymin=15, ymax=500,
+      ytick={20,50,100,200,400}, yticklabels={20,50,100,200,400}, xticklabels={},
+      ylabel={cycles per line},
+      legend to name=streamsleg, legend columns=2, legend cell align=left,
+      legend style={font=\tiny,draw=psgray!50,inner sep=1pt,/tikz/every even column/.append style={column sep=4pt}}]
+    \addplot[sa] coordinates {(1,47.8) (2,31.9) (4,25.5) (6,21.9) (8,19.2) (10,41.5) (12,37.9) (14,47.1)
+      (16,37.1) (17,47.3) (18,48.4) (19,51.4) (20,110.5) (21,158.8) (22,277.8) (23,360.6) (24,364.7)
+      (28,365.9) (32,366.1)};
+    \addplot[sb1] coordinates {(1,47.9) (2,53.5) (4,50.9) (6,43.3) (8,37.3) (10,75.3) (12,66.1) (14,68.2)
+      (16,57.6) (17,66.9) (18,67.7) (19,68.9) (20,72.9) (21,360.2) (22,358.5) (23,360.0) (24,361.9)
+      (28,364.5) (32,363.9)};
+    \addplot[sb2] coordinates {(1,47.8) (2,31.1) (4,25.5) (6,23.2) (8,19.7) (10,42.0) (12,38.3) (14,47.0)
+      (16,37.4) (17,47.4) (18,48.6) (19,52.8) (20,80.9) (21,362.0) (22,224.0) (23,356.7) (24,358.0)
+      (28,364.2) (32,366.1)};
+    \addplot[sc] coordinates {(1,57.9) (2,39.4) (4,30.5) (6,28.0) (8,23.9) (10,47.0) (12,42.9) (14,168.0)
+      (16,77.3) (17,105.3) (18,106.6) (19,102.7) (20,102.2) (21,98.6) (22,96.1) (23,96.4) (24,190.7)
+      (28,187.5) (32,179.8)};
+    \legend{arrays 4160 B apart, 1600 B apart, 12352 B apart, 4160 B + software prefetch}
   \end{semilogyaxis}
+  \begin{axis}[st, name=bottom, at={(top.south)}, anchor=north, yshift=-1.5mm, height=2.6cm, ymin=0, ymax=1.15,
+      ytick={0,0.5,1}, ylabel={late lines}, xlabel={read streams at the same time}]
+    \fill[psteal!10] (axis cs:0,0) rectangle (axis cs:19.5,1.15);
+    \fill[psred!8] (axis cs:20.5,0) rectangle (axis cs:33,1.15);
+    \node[lbl,anchor=north] at (axis cs:9.75,1.1) {prefetchers keep up};
+    \node[lbl,anchor=south] at (axis cs:27,0.1) {every line waits\\for memory};
+    \addplot[sa] coordinates {(1,0.023) (2,0.014) (4,0.007) (6,0.007) (8,0.004) (10,0.058) (12,0.038)
+      (14,0.022) (16,0.020) (17,0.022) (18,0.021) (19,0.031) (20,0.406) (21,0.798) (22,0.909) (23,1.016)
+      (24,1.016) (28,1.017) (32,1.015)};
+    \addplot[sb1] coordinates {(1,0.024) (2,0.090) (4,0.111) (6,0.123) (8,0.127) (10,0.206) (12,0.171)
+      (14,0.130) (16,0.122) (17,0.121) (18,0.121) (19,0.128) (20,0.376) (21,1.013) (22,1.013) (23,1.012)
+      (24,1.012) (28,1.012) (32,1.013)};
+    \addplot[sb2] coordinates {(1,0.023) (2,0.014) (4,0.005) (6,0.005) (8,0.003) (10,0.064) (12,0.037)
+      (14,0.021) (16,0.019) (17,0.018) (18,0.019) (19,0.061) (20,0.221) (21,1.017) (22,0.870) (23,1.017)
+      (24,1.020) (28,1.016) (32,1.016)};
+  \end{axis}
+  \node[anchor=north,inner sep=0pt] at ([yshift=-0.5mm]bottom.outer south) {\ref{streamsleg}};
 \end{tikzpicture}

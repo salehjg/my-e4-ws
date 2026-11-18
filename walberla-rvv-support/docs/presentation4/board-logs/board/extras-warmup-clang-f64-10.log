@@ -1,0 +1,34 @@
+== clang f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar_cse_aa explicit_cse_aa_pf
+== start Mon Nov 16 04:32:50 PM CST 2026, host k1, load: 3.00 3.08 3.08
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 04:32:50 PM CST 2026
+   sha256 24a422aeb70a107d /home/bananapi/saleh/presentation4/build-clang-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.269667387008667 mlups=1.4865124591254801 energy=11.366594364647623 mass=262143.99999999857 fieldhash=0x8ead726a2aed91f5 links_noslip=101632 links_ubb=20480 t_bulk=33.089219808578491 t_comm=0.0055496692657470703 t_bc=2.1742475032806396
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=36.08796501159668 mlups=1.4528056648013341 energy=11.366594364647623 mass=262143.99999999857 fieldhash=0x8ead726a2aed91f5 links_noslip=101632 links_ubb=20480 t_bulk=33.896745920181274 t_comm=0.0055675506591796875 t_bc=2.1850345134735107
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=34.934326648712158 mlups=1.5007817533512635 energy=11.366594364647623 mass=262143.99999999857 fieldhash=0x8ead726a2aed91f5 links_noslip=101632 links_ubb=20480 t_bulk=32.74735426902771 t_comm=0.0057117938995361328 t_bc=2.180579662322998
+   sha256 6badbaa73dfd19d8 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.386346817016602 mlups=3.6443442290704162 energy=11.366594364647622 mass=262143.99999999857 fieldhash=0xf2c7bddf8a3b3a76 links_noslip=101632 links_ubb=20480 t_bulk=12.178559541702271 t_comm=0.0052306652069091797 t_bc=2.201913595199585
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.36312198638916 mlups=3.6502370480235977 energy=11.366594364647622 mass=262143.99999999857 fieldhash=0xf2c7bddf8a3b3a76 links_noslip=101632 links_ubb=20480 t_bulk=12.164393663406372 t_comm=0.0052630901336669922 t_bc=2.1928071975708008
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.39278507232666 mlups=3.6427140220975067 energy=11.366594364647622 mass=262143.99999999857 fieldhash=0xf2c7bddf8a3b3a76 links_noslip=101632 links_ubb=20480 t_bulk=12.184059143066406 t_comm=0.0052590370178222656 t_bc=2.2028744220733643
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f64 1c |
+|---|---|
+| scalar_cse_aa | 1.50 |
+| explicit_cse_aa_pf | 3.65 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647622 | 11.366594364647623 | 1.6e-16 | 262143.99999999857 | 262143.99999999857 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f64 1c |
+|---|---|
+| scalar_cse_aa | 6.2% / 0.0% |
+| explicit_cse_aa_pf | 15.3% / 0.0% |
+== done Mon Nov 16 04:35:35 PM CST 2026

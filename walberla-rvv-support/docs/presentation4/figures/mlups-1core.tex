@@ -1,0 +1,33 @@
+% Slide "One core: MLUP/s": million cell updates per second of the whole program, lid-driven cavity
+% (SweepgenLdcCPU), 64^3 cells, one core, best of 3 runs of 200 steps. One session (board,
+% scripts/presentation4/all.sh, logs docs/presentation4/board-logs/board/
+% ldc-{gcc,clang}-{scalar,autovec,rvv}-{f32,f64}-1core.log), printed by
+%   python3 scripts/presentation4/slide_numbers.py --tex docs/presentation4/board-logs/board
+% Bars and numbers: GCC 14.2, f32 (blue) and f64 (teal). Diamonds: Clang 18.1, on the outer side of
+% the bar of the same precision (f32 left, f64 right).
+% Groups (style onecore, preamble of slides.tex): plain = scalar, plainav = autovec,
+% best = scalar_cse_aa, bestav = autovec_cse_aa (auto-vectorized: hatched), rvv = explicit_cse,
+% pf = explicit_cse_pf, aa = explicit_cse_aa_pf, split = explicit_cse_aa_split (no software prefetch: 0 hints).
+% The speedups of the same runs: figures/speedup-1core-{f32,f64}.tex.
+\begin{tikzpicture}
+  \begin{axis}[onecore, ybar, bar width=9pt, height=5.6cm, ymax=9,
+      ylabel={MLUP/s, one core},
+      nodes near coords style={font=\tiny,rotate=90,anchor=west},
+      legend style={at={(0.01,0.97)},anchor=north west}, legend columns=3]
+    \addplot[fill=psblue!60,draw=psblue!80!black,bar shift=-5.5pt] coordinates {
+      (plain,1.38)[1.38] (best,2.00)[2.00] (rvv,2.34)[2.34] (pf,4.58)[4.58] (aa,6.56)[6.56]
+      (split,7.68)[\textbf{7.68}]};
+    \addplot[fill=psteal!55,draw=psteal!80!black,bar shift=5.5pt] coordinates {
+      (plain,0.92)[0.92] (best,1.46)[1.46] (rvv,1.14)[1.14] (pf,2.42)[2.42] (aa,3.89)[3.89]
+      (split,4.71)[\textbf{4.71}]};
+    \addplot[clang1,clang1legend,xshift=-13.5pt] coordinates {
+      (plain,1.36) (plainav,1.36) (best,2.11) (bestav,2.10) (rvv,2.23) (pf,4.20) (aa,6.19) (split,7.54)};
+    \addplot[clang1,xshift=13.5pt,forget plot] coordinates {
+      (plain,0.89) (plainav,0.89) (best,1.58) (bestav,1.58) (rvv,1.10) (pf,2.16) (aa,3.63) (split,4.43)};
+    \addplot[pattern=north east lines,pattern color=psblue!80!black,draw=psblue!80!black,
+      bar shift=-5.5pt,forget plot] coordinates {(plainav,1.38)[1.38] (bestav,2.01)[2.01]};
+    \addplot[pattern=north east lines,pattern color=psteal!80!black,draw=psteal!80!black,
+      bar shift=5.5pt,forget plot] coordinates {(plainav,0.91)[0.91] (bestav,1.44)[1.44]};
+    \legend{GCC f32, GCC f64, Clang}
+  \end{axis}
+\end{tikzpicture}

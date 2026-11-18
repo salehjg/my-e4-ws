@@ -1,0 +1,12 @@
+== pattern R=19 W=23 stagger=4160 pfr=0 run=1
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=180.7 GBps=0.567
+== pattern R=19 W=23 stagger=4160 pfr=128 run=1
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=90.0 GBps=1.136
+== pattern R=19 W=23 stagger=4160 pfr=0 run=2
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=181.9 GBps=0.563
+== pattern R=19 W=23 stagger=4160 pfr=128 run=2
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=91.0 GBps=1.123
+== pattern R=19 W=23 stagger=4160 pfr=0 run=3
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=176.3 GBps=0.580
+== pattern R=19 W=23 stagger=4160 pfr=128 run=3
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=90.8 GBps=1.128

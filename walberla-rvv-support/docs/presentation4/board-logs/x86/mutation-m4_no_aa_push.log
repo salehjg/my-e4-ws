@@ -1,0 +1,73 @@
+== verify f64, Tue Nov 17 05:40:46 PM CET 2026, x86_64, 1 executable(s)
+   /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+
+== oracle: 1 process(es), 16^3 cells each, 100 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x47c8b0d9be86ea55 links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=100 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.37449845176755786 mass=4096.0
+input                                                           type       domain   mass_err    sym_err subnorm
+x86/mutation-m4_no_aa_push/oracle-np1-c16-s100/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+_no_aa_push/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa     f64     16x16x16   0.00e+00   2.22e-16       0
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/oracle-np1-c16-s100/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+_no_aa_push/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa   2.22e-16   4.86e-17         0/4096  
+
+RESULT PASS (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+PASS oracle np=1 cells=16 steps=100
+
+== oracle: 1 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x711248a10b7fe6de links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.3753928218591154 mass=4096.0
+input                                                           type       domain   mass_err    sym_err subnorm
+x86/mutation-m4_no_aa_push/oracle-np1-c16-s101/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+_no_aa_push/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f64     16x16x16   0.00e+00   2.22e-16       0
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/oracle-np1-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+_no_aa_push/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa   2.22e-16   4.86e-17         0/4096  
+
+RESULT PASS (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+PASS oracle np=1 cells=16 steps=101
+
+== oracle: 2 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x0663253d1e35835d links_noslip=9984 links_ubb=2560 
+ldc_reference domain=32x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=9984 links_ubb=2560 energy=0.8764116203957387 mass=8192.0
+input                                                           type       domain   mass_err    sym_err subnorm
+x86/mutation-m4_no_aa_push/oracle-np2-c16-s101/reference.npz ref-f64     32x16x16   0.00e+00   2.22e-16       0
+_no_aa_push/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f64     32x16x16   5.55e-05   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/oracle-np2-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+_no_aa_push/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa   1.23e-02   2.89e-02         0/8192    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=2 cells=16 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/verify.log)
+
+== oracle: 6 process(es), 8^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x3d3b6440cf0e8f87 links_noslip=6208 links_ubb=640 
+ldc_reference domain=16x24x8 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=640 energy=0.16526027832386786 mass=3072.0
+input                                                           type       domain   mass_err    sym_err subnorm
+-x86/mutation-m4_no_aa_push/oracle-np6-c8-s101/reference.npz ref-f64      16x24x8   0.00e+00   2.22e-16       0
+4_no_aa_push/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa     f64      16x24x8   6.63e-05   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/oracle-np6-c8-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+4_no_aa_push/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa   1.09e-02   2.54e-02         0/3072    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=6 cells=8 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/verify.log)
+
+== decomposition: 1 x 32^3 against 8 x 16^3, 61 steps, must be bit-identical
+input                                                           type       domain   mass_err    sym_err subnorm
+tation-m4_no_aa_push/decomp/SweepgenLdcCPU_scalar_cse_aa-np1     f64     32x32x32   0.00e+00   2.22e-16       0
+tation-m4_no_aa_push/decomp/SweepgenLdcCPU_scalar_cse_aa-np8     f64     32x32x32   1.89e-05   2.22e-16       0
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m4_no_aa_push/decomp/SweepgenLdcCPU_scalar_cse_aa-np1:
+input                                                         max|drho|    max|du|  identical cells
+tation-m4_no_aa_push/decomp/SweepgenLdcCPU_scalar_cse_aa-np8   1.29e-02   2.84e-02         0/32768   FAIL
+
+RESULT FAIL (thresholds: d rho 0, d u 0, mass inf, sym inf)
+FAIL decomp SweepgenLdcCPU_scalar_cse_aa (fieldhash=0x26d64794fea2010b vs fieldhash=0x2fdd5992934ee35e)
+
+== verify done Tue Nov 17 05:41:01 PM CET 2026: 3 failure(s)
+VERIFY FAIL

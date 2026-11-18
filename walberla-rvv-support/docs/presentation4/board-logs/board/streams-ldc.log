@@ -1,0 +1,250 @@
+   sha256 b9b593d0d47675ed /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+== ldc cc=gcc prec=f32 variant=explicit_cse cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.517561674118042 mlups=2.0825229641441445 energy=3.8031425391875424 mass=262143.99995964766 fieldhash=0xb59569eb0e02a0c7 links_noslip=101632 links_ubb=20480 t_bulk=2.3059840202331543 t_comm=0.00051045417785644531 t_bc=0.21101188659667969
+perf,5371011978,,cycles,3357221239,100.00,,
+perf,1339286803,,instructions,3357221239,100.00,0.25,insn per cycle
+perf,21653378,,l1d_prefetch_hit,3357221239,100.00,,
+perf,1923004,,l1d_prefetch_refill,3357221239,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.5422041416168213 mlups=2.0623363459181414 energy=3.8031425391875424 mass=262143.99995964766 fieldhash=0xb59569eb0e02a0c7 links_noslip=101632 links_ubb=20480 t_bulk=2.3303050994873047 t_comm=0.00052809715270996094 t_bc=0.21130895614624023
+perf,11207214,,l1d_load_miss,3386594069,100.00,,
+perf,17977034,,l2_miss,3386594069,100.00,,
+perf,34148339,,l2_load_access,3386594069,100.00,,
+perf,4191902444,,stalled_cycle_backend,3386594069,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1344159281,,cycles,840358039,100.00,,
+perf,939912464,,instructions,840358039,100.00,0.70,insn per cycle
+perf,13882150,,l1d_prefetch_hit,840358039,100.00,,
+perf,1007527,,l1d_prefetch_refill,840358039,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1989500,,l1d_load_miss,833217495,100.00,,
+perf,1844891,,l2_miss,833217495,100.00,,
+perf,10849938,,l2_load_access,833217495,100.00,,
+perf,451342439,,stalled_cycle_backend,833217495,100.00,,
+   sha256 ddd9e6e659320046 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+== ldc cc=gcc prec=f32 variant=explicit_cse_pf cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.22184157371521 mlups=4.2909654678537112 energy=3.8031425391875424 mass=262143.99995964766 fieldhash=0xb59569eb0e02a0c7 links_noslip=101632 links_ubb=20480 t_bulk=1.0103168487548828 t_comm=0.00049853324890136719 t_bc=0.21097302436828613
+perf,3292617895,,cycles,2058208452,100.00,,
+perf,1411242631,,instructions,2058208452,100.00,0.43,insn per cycle
+perf,79504842,,l1d_prefetch_hit,2058208452,100.00,,
+perf,2512444,,l1d_prefetch_refill,2058208452,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_pf cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.2001404762268066 mlups=4.3685552681994393 energy=3.8031425391875424 mass=262143.99995964766 fieldhash=0xb59569eb0e02a0c7 links_noslip=101632 links_ubb=20480 t_bulk=0.98976755142211914 t_comm=0.00050759315490722656 t_bc=0.20981025695800781
+perf,4160875,,l1d_load_miss,2032626245,100.00,,
+perf,15464267,,l2_miss,2032626245,100.00,,
+perf,38189700,,l2_load_access,2032626245,100.00,,
+perf,1957831332,,stalled_cycle_backend,2032626245,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_pf cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1310734045,,cycles,819468037,100.00,,
+perf,939383326,,instructions,819468037,100.00,0.72,insn per cycle
+perf,13974882,,l1d_prefetch_hit,819468037,100.00,,
+perf,987981,,l1d_prefetch_refill,819468037,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_pf cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.1457672119140625e-06 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1921619,,l1d_load_miss,823478993,100.00,,
+perf,1861872,,l2_miss,823478993,100.00,,
+perf,10844496,,l2_load_access,823478993,100.00,,
+perf,427494697,,stalled_cycle_backend,823478993,100.00,,
+   sha256 c89950706f0ffd9c /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.0455388602773836 mlups=2.5630801261282534 energy=3.8031423258840413 mass=262143.99996554852 fieldhash=0xfd1a3d0bdf9a61e5 links_noslip=101632 links_ubb=20480 t_bulk=1.8104739189147949 t_comm=0.00059413909912109375 t_bc=0.23441147804260254
+perf,4926829773,,cycles,3079560198,100.00,,
+perf,1726059365,,instructions,3079560198,100.00,0.35,insn per cycle
+perf,22377072,,l1d_prefetch_hit,3079560198,100.00,,
+perf,2073242,,l1d_prefetch_refill,3079560198,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.1017120994711096 mlups=2.4945757324798947 energy=3.8031423258840413 mass=262143.99996554852 fieldhash=0xfd1a3d0bdf9a61e5 links_noslip=101632 links_ubb=20480 t_bulk=1.8703997135162354 t_comm=0.00053930282592773438 t_bc=0.230712890625
+perf,9971640,,l1d_load_miss,3148411365,100.00,,
+perf,11173086,,l2_miss,3148411365,100.00,,
+perf,25858128,,l2_load_access,3148411365,100.00,,
+perf,3553941915,,stalled_cycle_backend,3148411365,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.0024164220757472e-06 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1661858209,,cycles,1038917664,100.00,,
+perf,1360413249,,instructions,1038917664,100.00,0.82,insn per cycle
+perf,14317216,,l1d_prefetch_hit,1038917664,100.00,,
+perf,1041349,,l1d_prefetch_refill,1038917664,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=7.461882727356737e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2049223,,l1d_load_miss,1042740035,100.00,,
+perf,1935460,,l2_miss,1042740035,100.00,,
+perf,11161502,,l2_load_access,1042740035,100.00,,
+perf,485023864,,stalled_cycle_backend,1042740035,100.00,,
+   sha256 d48953de35d72c41 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_pf cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=0.79541164541434706 mlups=6.5914046270580702 energy=3.8031423258840413 mass=262143.99996554852 fieldhash=0xfd1a3d0bdf9a61e5 links_noslip=101632 links_ubb=20480 t_bulk=0.56497335433959961 t_comm=0.00051164627075195312 t_bc=0.22986102104187012
+perf,2940222697,,cycles,1837961576,100.00,,
+perf,1766148662,,instructions,1837961576,100.00,0.60,insn per cycle
+perf,46498545,,l1d_prefetch_hit,1837961576,100.00,,
+perf,3788652,,l1d_prefetch_refill,1837961576,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_pf cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=0.79657628597635888 mlups=6.5817676125944837 energy=3.8031423258840413 mass=262143.99996554852 fieldhash=0xfd1a3d0bdf9a61e5 links_noslip=101632 links_ubb=20480 t_bulk=0.56488585472106934 t_comm=0.00053524971008300781 t_bc=0.23109126091003418
+perf,3741034,,l1d_load_miss,1838181871,100.00,,
+perf,7366769,,l2_miss,1838181871,100.00,,
+perf,29686885,,l2_load_access,1838181871,100.00,,
+perf,1431906352,,stalled_cycle_backend,1838181871,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_pf cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=7.354112955231109e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1662268540,,cycles,1039185413,100.00,,
+perf,1361751234,,instructions,1039185413,100.00,0.82,insn per cycle
+perf,14413373,,l1d_prefetch_hit,1039185413,100.00,,
+perf,1032469,,l1d_prefetch_refill,1039185413,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_pf cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=8.0979764813595186e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1993036,,l1d_load_miss,1035192992,100.00,,
+perf,1938264,,l2_miss,1035192992,100.00,,
+perf,11193339,,l2_load_access,1035192992,100.00,,
+perf,479170397,,stalled_cycle_backend,1035192992,100.00,,
+   sha256 864a7d8042e9a3f8 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_split cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=0.70111465454101562 mlups=7.4779210019968119 energy=3.8031413648639445 mass=262143.99996489286 fieldhash=0xf171367c7ed1ff7e links_noslip=101632 links_ubb=20480 t_bulk=0.47327113151550293 t_comm=0.00057220458984375 t_bc=0.22719836235046387
+perf,2795673052,,cycles,1747592659,100.00,,
+perf,1856332977,,instructions,1747592659,100.00,0.66,insn per cycle
+perf,62678180,,l1d_prefetch_hit,1747592659,100.00,,
+perf,7813465,,l1d_prefetch_refill,1747592659,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_split cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=0.68787670135498047 mlups=7.6218310486059018 energy=3.8031413648639445 mass=262143.99996489286 fieldhash=0xf171367c7ed1ff7e links_noslip=101632 links_ubb=20480 t_bulk=0.46542644500732422 t_comm=0.00063443183898925781 t_bc=0.22174358367919922
+perf,6105351,,l1d_load_miss,1746104241,100.00,,
+perf,3732431,,l2_miss,1746104241,100.00,,
+perf,44269997,,l2_load_access,1746104241,100.00,,
+perf,1192925182,,stalled_cycle_backend,1746104241,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_split cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1687503352,,cycles,1054922916,100.00,,
+perf,1363601531,,instructions,1054922916,100.00,0.81,insn per cycle
+perf,14319082,,l1d_prefetch_hit,1054922916,100.00,,
+perf,1036977,,l1d_prefetch_refill,1054922916,100.00,,
+== ldc cc=gcc prec=f32 variant=explicit_cse_aa_split cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=7.152557373046875e-07 mlups=0 energy=0 mass=262144 fieldhash=0x939d2d7d91c9f9c8 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2050896,,l1d_load_miss,1046827996,100.00,,
+perf,1944245,,l2_miss,1046827996,100.00,,
+perf,11249608,,l2_load_access,1046827996,100.00,,
+perf,482961494,,stalled_cycle_backend,1046827996,100.00,,
+   sha256 5c5a35fde48972ca /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+== ldc cc=gcc prec=f64 variant=explicit_cse cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=4.6429526805877686 mlups=1.1292124560994414 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0xbff4f1bd6ffd84cc links_noslip=101632 links_ubb=20480 t_bulk=4.4398055076599121 t_comm=0.00052618980407714844 t_bc=0.20255208015441895
+perf,8959354390,,cycles,5600103401,100.00,,
+perf,1643187007,,instructions,5600103401,100.00,0.18,insn per cycle
+perf,24511231,,l1d_prefetch_hit,5600103401,100.00,,
+perf,2063361,,l1d_prefetch_refill,5600103401,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=4.6296582221984863 mlups=1.1324550859631952 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0xbff4f1bd6ffd84cc links_noslip=101632 links_ubb=20480 t_bulk=4.4278793334960938 t_comm=0.00055241584777832031 t_bc=0.20115208625793457
+perf,18964641,,l1d_load_miss,5593223352,100.00,,
+perf,32353537,,l2_miss,5593223352,100.00,,
+perf,52191827,,l2_load_access,5593223352,100.00,,
+perf,7474742105,,stalled_cycle_backend,5593223352,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1520390771,,cycles,950503994,100.00,,
+perf,998232230,,instructions,950503994,100.00,0.66,insn per cycle
+perf,15047875,,l1d_prefetch_hit,950503994,100.00,,
+perf,1064510,,l1d_prefetch_refill,950503994,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.1920928955078125e-06 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2162985,,l1d_load_miss,949005163,100.00,,
+perf,2419001,,l2_miss,949005163,100.00,,
+perf,11962667,,l2_load_access,949005163,100.00,,
+perf,595394538,,stalled_cycle_backend,949005163,100.00,,
+   sha256 36a606cf5e9f0560 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+== ldc cc=gcc prec=f64 variant=explicit_cse_pf cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.2278707027435303 mlups=2.3533143074881369 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0xbff4f1bd6ffd84cc links_noslip=101632 links_ubb=20480 t_bulk=2.0266711711883545 t_comm=0.00051426887512207031 t_bc=0.20061469078063965
+perf,5042961189,,cycles,3152144946,100.00,,
+perf,1785730758,,instructions,3152144946,100.00,0.35,insn per cycle
+perf,134362676,,l1d_prefetch_hit,3152144946,100.00,,
+perf,4151913,,l1d_prefetch_refill,3152144946,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_pf cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=2.2275130748748779 mlups=2.3536921327810831 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0xbff4f1bd6ffd84cc links_noslip=101632 links_ubb=20480 t_bulk=2.0251133441925049 t_comm=0.00052213668823242188 t_bc=0.20180749893188477
+perf,6121152,,l1d_load_miss,3146305160,100.00,,
+perf,26667443,,l2_miss,3146305160,100.00,,
+perf,64253270,,l2_load_access,3146305160,100.00,,
+perf,3411598851,,stalled_cycle_backend,3146305160,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_pf cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1459300995,,cycles,912304166,100.00,,
+perf,1001569840,,instructions,912304166,100.00,0.69,insn per cycle
+perf,15535049,,l1d_prefetch_hit,912304166,100.00,,
+perf,1122549,,l1d_prefetch_refill,912304166,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_pf cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5367431640625e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2092859,,l1d_load_miss,908608289,100.00,,
+perf,2293454,,l2_miss,908608289,100.00,,
+perf,12201257,,l2_load_access,908608289,100.00,,
+perf,524810134,,stalled_cycle_backend,908608289,100.00,,
+   sha256 4cc7d6a9f3d1d81c /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=3.591316832995282 mlups=1.4598767649322819 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0x44520ad32fb9b5d9 links_noslip=101632 links_ubb=20480 t_bulk=3.3768594264984131 t_comm=0.00059723854064941406 t_bc=0.21379327774047852
+perf,7576171472,,cycles,4735577526,100.00,,
+perf,1999117506,,instructions,4735577526,100.00,0.26,insn per cycle
+perf,30933375,,l1d_prefetch_hit,4735577526,100.00,,
+perf,3339752,,l1d_prefetch_refill,4735577526,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=3.4452784545021182 mlups=1.5217579853810845 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0x44520ad32fb9b5d9 links_noslip=101632 links_ubb=20480 t_bulk=3.2315757274627686 t_comm=0.0005626678466796875 t_bc=0.21308016777038574
+perf,14317044,,l1d_load_miss,4589587776,100.00,,
+perf,16565115,,l2_miss,4589587776,100.00,,
+perf,38546914,,l2_load_access,4589587776,100.00,,
+perf,5642574301,,stalled_cycle_backend,4589587776,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=5.3726273850574375e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1837863436,,cycles,1148935334,100.00,,
+perf,1421037193,,instructions,1148935334,100.00,0.77,insn per cycle
+perf,16055797,,l1d_prefetch_hit,1148935334,100.00,,
+perf,1105465,,l1d_prefetch_refill,1148935334,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.2186903508911132e-06 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2205689,,l1d_load_miss,1151046662,100.00,,
+perf,2481682,,l2_miss,1151046662,100.00,,
+perf,12199599,,l2_load_access,1151046662,100.00,,
+perf,615154549,,stalled_cycle_backend,1151046662,100.00,,
+   sha256 790a01ce74bcda12 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_pf cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.3827105014658638 mlups=3.7917409280119188 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0x44520ad32fb9b5d9 links_noslip=101632 links_ubb=20480 t_bulk=1.1709954738616943 t_comm=0.00054049491882324219 t_bc=0.21110987663269043
+perf,4046594862,,cycles,2529430114,100.00,,
+perf,2069600878,,instructions,2529430114,100.00,0.51,insn per cycle
+perf,75626299,,l1d_prefetch_hit,2529430114,100.00,,
+perf,5210303,,l1d_prefetch_refill,2529430114,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_pf cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.386566221200483 mlups=3.7811969741053817 energy=3.8031395459348305 mass=262143.99999999278 fieldhash=0x44520ad32fb9b5d9 links_noslip=101632 links_ubb=20480 t_bulk=1.1747672557830811 t_comm=0.00052118301391601562 t_bc=0.2112126350402832
+perf,4501063,,l1d_load_miss,2532054406,100.00,,
+perf,12046337,,l2_miss,2532054406,100.00,,
+perf,42805285,,l2_load_access,2532054406,100.00,,
+perf,2281223879,,stalled_cycle_backend,2532054406,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_pf cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=7.9832441154900523e-08 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1832959020,,cycles,1145908664,100.00,,
+perf,1423639996,,instructions,1145908664,100.00,0.78,insn per cycle
+perf,16539946,,l1d_prefetch_hit,1145908664,100.00,,
+perf,1118873,,l1d_prefetch_refill,1145908664,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_pf cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=5.6997648420415429e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2079231,,l1d_load_miss,1145449247,100.00,,
+perf,2478429,,l2_miss,1145449247,100.00,,
+perf,12198019,,l2_load_access,1145449247,100.00,,
+perf,603281440,,stalled_cycle_backend,1145449247,100.00,,
+   sha256 2f2e70e6783c8d93 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_split cells=64 steps=20 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.1715512275695801 mlups=4.4751606900506777 energy=3.8031395459348309 mass=262143.99999999278 fieldhash=0x955fa545d8d66858 links_noslip=101632 links_ubb=20480 t_bulk=0.95978522300720215 t_comm=0.00061845779418945312 t_bc=0.21108245849609375
+perf,3718716702,,cycles,2324550617,100.00,,
+perf,2168604870,,instructions,2324550617,100.00,0.58,insn per cycle
+perf,101099180,,l1d_prefetch_hit,2324550617,100.00,,
+perf,14828062,,l1d_prefetch_refill,2324550617,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_split cells=64 steps=20 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=20 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.1606769561767578 mlups=4.5170880425419329 energy=3.8031395459348309 mass=262143.99999999278 fieldhash=0x955fa545d8d66858 links_noslip=101632 links_ubb=20480 t_bulk=0.94956278800964355 t_comm=0.00055551528930664062 t_bc=0.21048450469970703
+perf,10238089,,l1d_load_miss,2314165114,100.00,,
+perf,4084316,,l2_miss,2314165114,100.00,,
+perf,76624710,,l2_load_access,2314165114,100.00,,
+perf,1846539359,,stalled_cycle_backend,2314165114,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_split cells=64 steps=0 events=cycles,instructions,l1d_prefetch_hit,l1d_prefetch_refill
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=4.76837158203125e-07 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,1842148619,,cycles,1151600159,100.00,,
+perf,1420211099,,instructions,1151600159,100.00,0.77,insn per cycle
+perf,15961174,,l1d_prefetch_hit,1151600159,100.00,,
+perf,1100269,,l1d_prefetch_refill,1151600159,100.00,,
+== ldc cc=gcc prec=f64 variant=explicit_cse_aa_split cells=64 steps=0 events=l1d_load_miss,l2_miss,l2_load_access,stalled_cycle_backend
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_split compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=0 warmup=0 output=every omega=1.8 u_lid=0.050000000000000003 seconds=1.430511474609375e-06 mlups=0 energy=0 mass=262144 fieldhash=0xa3c687cb2367e644 links_noslip=101632 links_ubb=20480 t_bulk=0 t_comm=0 t_bc=0
+perf,2235780,,l1d_load_miss,1164086830,100.00,,
+perf,2486263,,l2_miss,1164086830,100.00,,
+perf,12211994,,l2_load_access,1164086830,100.00,,
+perf,617103489,,stalled_cycle_backend,1164086830,100.00,,

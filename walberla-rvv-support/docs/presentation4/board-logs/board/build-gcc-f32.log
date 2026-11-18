@@ -1,0 +1,39 @@
+== gcc f32, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar scalar_cse scalar_cse_aa autovec autovec_cse autovec_cse_aa explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split
+== start Mon Nov 16 06:05:54 AM CST 2026, host k1, load: 4.35 3.58 3.52
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== configure /home/bananapi/saleh/presentation4/build-gcc-f32-scalar (gcc, f32, scalar)
+== build SweepgenLdcCPU_scalar in build-gcc-f32-scalar 06:12:37
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== build SweepgenLdcCPU_scalar_cse in build-gcc-f32-scalar 06:48:44
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== build SweepgenLdcCPU_scalar_cse_aa in build-gcc-f32-scalar 06:51:07
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+== configure /home/bananapi/saleh/presentation4/build-gcc-f32 (gcc, f32, vector)
+== build SweepgenLdcCPU_autovec in build-gcc-f32 07:00:10
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 7929, generated sweeps 273
+== build SweepgenLdcCPU_autovec_cse in build-gcc-f32 07:38:49
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 7929, generated sweeps 273
+== build SweepgenLdcCPU_autovec_cse_aa in build-gcc-f32 07:41:16
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 8417, generated sweeps 281
+== build SweepgenLdcCPU_explicit_cse in build-gcc-f32 07:43:55
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 8555, generated sweeps 899
+== build SweepgenLdcCPU_explicit_cse_pf in build-gcc-f32 07:46:26
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 8555, generated sweeps 899
+== build SweepgenLdcCPU_explicit_cse_aa in build-gcc-f32 07:49:04
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 9511, generated sweeps 1375
+== build SweepgenLdcCPU_explicit_cse_aa_pf in build-gcc-f32 07:51:50
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 9511, generated sweeps 1375
+== build SweepgenLdcCPU_explicit_cse_aa_split in build-gcc-f32 07:54:35
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 10338, generated sweeps 2250
+== build only, done Mon Nov 16 07:57:46 AM CST 2026

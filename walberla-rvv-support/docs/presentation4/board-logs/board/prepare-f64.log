@@ -1,0 +1,152 @@
+== prepare f64: gcc clang, start Mon Nov 16 02:33:04 AM CST 2026
+== gcc f64: build 02:33:04
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 7471, generated sweeps 276
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 7471, generated sweeps 276
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 7966, generated sweeps 287
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 8097, generated sweeps 902
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 8097, generated sweeps 902
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 9060, generated sweeps 1381
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 9060, generated sweeps 1381
+   compile: -march=rv64gcv_zvl256b -O3 -std=c++20
+   RVV instructions: executable 9871, generated sweeps 2245
+== gcc f64: build audit 04:24:30
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gc': 242})
+PASS -mtune=spacemit-x60 present in all commands = False (waLBerla's configure check for gcc)
+PASS SweepgenLdcCPU_scalar: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse_aa: 0 RVV instructions in the whole executable (must be 0)
+CHECK_BUILD PASS
+PASS -O3 is the last -O option in all 242 compile commands
+FAIL -march as expected in all commands (last -march counts: {'-march=rv64gcv_zvl256b': 229, None: 1, '-march=rv64gc': 12})
+PASS -mtune=spacemit-x60 present in all commands = False (waLBerla's configure check for gcc)
+PASS SweepgenLdcCPU_autovec: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec: 7471 RVV instructions in total, 24 in the kernels
+PASS SweepgenLdcCPU_autovec_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse: 7471 RVV instructions in total, 24 in the kernels
+PASS SweepgenLdcCPU_autovec_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse_aa: 7966 RVV instructions in total, 48 in the kernels
+PASS SweepgenLdcCPU_explicit_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse: 8097 RVV instructions in total, 650 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_pf: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_pf: 8097 RVV instructions in total, 650 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa: 9060 RVV instructions in total, 1142 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 9060 RVV instructions in total, 1142 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 9871 RVV instructions in total, 2006 in the kernels
+CHECK_BUILD FAIL
+CHECK_WALLS PASS
+FAIL audit gcc f64
+== gcc f64: verify 04:25:47
+PASS oracle np=1 cells=16 steps=100
+PASS oracle np=1 cells=16 steps=101
+PASS oracle np=2 cells=16 steps=101
+PASS oracle np=6 cells=8 steps=101
+PASS decomp SweepgenLdcCPU_scalar (fieldhash=0xa445aa62b945bfd5)
+PASS decomp SweepgenLdcCPU_scalar_cse (fieldhash=0xd9e4729917bd0fe9)
+PASS decomp SweepgenLdcCPU_scalar_cse_aa (fieldhash=0x5c9a03c23e4c7538)
+PASS decomp SweepgenLdcCPU_autovec (fieldhash=0xa445aa62b945bfd5)
+PASS decomp SweepgenLdcCPU_autovec_cse (fieldhash=0xd9e4729917bd0fe9)
+PASS decomp SweepgenLdcCPU_autovec_cse_aa (fieldhash=0x5c9a03c23e4c7538)
+PASS decomp SweepgenLdcCPU_explicit_cse (fieldhash=0x5f574d949bd50411)
+PASS decomp SweepgenLdcCPU_explicit_cse_pf (fieldhash=0x5f574d949bd50411)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa (fieldhash=0x54feb859d01cc0df)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_pf (fieldhash=0x54feb859d01cc0df)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_split (fieldhash=0x0e4fe6367ef5ce4e)
+VERIFY PASS
+== clang f64: build 04:29:15
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -march=rv64gc -std=c++20 -march=rv64gc
+   RVV instructions: executable 0, generated sweeps 0
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 3832, generated sweeps 91
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 3832, generated sweeps 91
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4158, generated sweeps 54
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4481, generated sweeps 740
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 4476, generated sweeps 735
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 5267, generated sweeps 1163
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 5270, generated sweeps 1166
+   compile: -march=rv64gcv_zvl256b -mtune=spacemit-x60 -O3 -std=c++20
+   RVV instructions: executable 7732, generated sweeps 3665
+== clang f64: build audit 06:00:58
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gc': 242})
+PASS -mtune=spacemit-x60 present in all commands = True (waLBerla's configure check for clang)
+PASS SweepgenLdcCPU_scalar: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse_aa: 0 RVV instructions in the whole executable (must be 0)
+CHECK_BUILD PASS
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gcv_zvl256b': 230, '-march=rv64gc': 12})
+PASS -mtune=spacemit-x60 present in all commands = True (waLBerla's configure check for clang)
+PASS SweepgenLdcCPU_autovec: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec: 3832 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_autovec_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse: 3832 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_autovec_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse_aa: 4158 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_explicit_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse: 4481 RVV instructions in total, 651 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_pf: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_pf: 4476 RVV instructions in total, 646 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa: 5267 RVV instructions in total, 1124 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 5270 RVV instructions in total, 1127 in the kernels
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 7732 RVV instructions in total, 3626 in the kernels
+CHECK_BUILD PASS
+CHECK_WALLS PASS
+== clang f64: verify 06:02:18
+PASS oracle np=1 cells=16 steps=100
+PASS oracle np=1 cells=16 steps=101
+PASS oracle np=2 cells=16 steps=101
+PASS oracle np=6 cells=8 steps=101
+PASS decomp SweepgenLdcCPU_scalar (fieldhash=0xf020838ec51ab8e8)
+PASS decomp SweepgenLdcCPU_scalar_cse (fieldhash=0x35246511fc84081f)
+PASS decomp SweepgenLdcCPU_scalar_cse_aa (fieldhash=0x64dd7cd6e68f6645)
+PASS decomp SweepgenLdcCPU_autovec (fieldhash=0xf020838ec51ab8e8)
+PASS decomp SweepgenLdcCPU_autovec_cse (fieldhash=0x35246511fc84081f)
+PASS decomp SweepgenLdcCPU_autovec_cse_aa (fieldhash=0x64dd7cd6e68f6645)
+PASS decomp SweepgenLdcCPU_explicit_cse (fieldhash=0x5f574d949bd50411)
+PASS decomp SweepgenLdcCPU_explicit_cse_pf (fieldhash=0x5f574d949bd50411)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa (fieldhash=0x54feb859d01cc0df)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_pf (fieldhash=0x54feb859d01cc0df)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_split (fieldhash=0x0e4fe6367ef5ce4e)
+VERIFY PASS
+PASS compilers oracle-np1-c16-s100
+PASS compilers oracle-np1-c16-s101
+PASS compilers oracle-np2-c16-s101
+PASS compilers oracle-np6-c8-s101
+== prepare f64 done Mon Nov 16 06:05:54 AM CST 2026: 1 failure(s)
+PREPARE FAIL

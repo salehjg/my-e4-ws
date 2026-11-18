@@ -1,0 +1,20 @@
+== waiting for screen presentation4-recheck to end Mon Nov 16 06:47:48 PM CST 2026
+== start Mon Nov 16 07:07:19 PM CST 2026, host k1, load: 3.04 3.06 3.02
+== probe source ea67c3bd879c8ad7 /home/bananapi/saleh/my-e4-ws/misc/x60-lab/probes/mem.cpp
+== probe binary b6392ad226b24a09 (g++ -O2 -march=rv64gcv_zvl256b_zicboz)
+== probe a: stagger=4160 pfr=0 19:07:36
+== probe b1: stagger=1600 pfr=0 19:08:06
+== probe b2: stagger=12352 pfr=0 19:08:36
+== probe c: stagger=4160 pfr=512 19:09:05
+== probe d: stagger=4160 pfr=0 19:09:28
+== ldc gcc f32 explicit_cse: sha256 b9b593d0d47675ed 19:09:58
+== ldc gcc f32 explicit_cse_pf: sha256 ddd9e6e659320046 19:10:07
+== ldc gcc f32 explicit_cse_aa: sha256 c89950706f0ffd9c 19:10:13
+== ldc gcc f32 explicit_cse_aa_pf: sha256 d48953de35d72c41 19:10:22
+== ldc gcc f32 explicit_cse_aa_split: sha256 864a7d8042e9a3f8 19:10:29
+== ldc gcc f64 explicit_cse: sha256 5c5a35fde48972ca 19:10:35
+== ldc gcc f64 explicit_cse_pf: sha256 36a606cf5e9f0560 19:10:49
+== ldc gcc f64 explicit_cse_aa: sha256 4cc7d6a9f3d1d81c 19:10:58
+== ldc gcc f64 explicit_cse_aa_pf: sha256 790a01ce74bcda12 19:11:10
+== ldc gcc f64 explicit_cse_aa_split: sha256 2f2e70e6783c8d93 19:11:18
+== STREAMS DONE Mon Nov 16 07:11:26 PM CST 2026

@@ -1,0 +1,96 @@
+== /home/bananapi/saleh/presentation4/build-gcc-f64-scalar: scalar tree, gcc (/usr/bin/g++), riscv64=True, host tune flag accepted=False
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gc': 242})
+PASS -mtune=spacemit-x60 present in all commands = False (waLBerla's configure check for gcc)
+PASS SweepgenLdcCPU_scalar: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse_aa: 0 RVV instructions in the whole executable (must be 0)
+CHECK_BUILD PASS
+== /home/bananapi/saleh/presentation4/build-gcc-f64: vector tree, gcc (/usr/bin/g++), riscv64=True, host tune flag accepted=False
+PASS -O3 is the last -O option in all 242 compile commands
+FAIL -march as expected in all commands (last -march counts: {'-march=rv64gcv_zvl256b': 229, None: 1, '-march=rv64gc': 12})
+     None (expected -march=rv64gcv_zvl256b) extern/sqlite3/CMakeFiles/sqlite3.dir/sqlite3.c.o
+PASS -mtune=spacemit-x60 present in all commands = False (waLBerla's configure check for gcc)
+PASS SweepgenLdcCPU_autovec: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec: 7471 RVV instructions in total, 24 in the kernels
+         15 SweepgenLdcCPU::gen::UBB_kernels::UBB(double*, SweepgenLdcCPU::gen::UBBLink*, int, int, int, int, int, double)
+          9 SweepgenLdcCPU::gen::NoSlip_kernels::NoSlip(double*, SweepgenLdcCPU::gen::NoSlipLink*, int, int, int, int, int
+PASS SweepgenLdcCPU_autovec_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse: 7471 RVV instructions in total, 24 in the kernels
+         15 SweepgenLdcCPU::gen::UBB_kernels::UBB(double*, SweepgenLdcCPU::gen::UBBLink*, int, int, int, int, int, double)
+          9 SweepgenLdcCPU::gen::NoSlip_kernels::NoSlip(double*, SweepgenLdcCPU::gen::NoSlipLink*, int, int, int, int, int
+PASS SweepgenLdcCPU_autovec_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse_aa: 7966 RVV instructions in total, 48 in the kernels
+         15 SweepgenLdcCPU::gen::UBBEven_kernels::UBBEven(double*, SweepgenLdcCPU::gen::UBBEvenLink*, int, int, int, int, 
+         15 SweepgenLdcCPU::gen::UBBOdd_kernels::UBBOdd(double*, SweepgenLdcCPU::gen::UBBOddLink*, int, int, int, int, int
+          9 SweepgenLdcCPU::gen::NoSlipEven_kernels::NoSlipEven(double*, SweepgenLdcCPU::gen::NoSlipEvenLink*, int, int, i
+          9 SweepgenLdcCPU::gen::NoSlipOdd_kernels::NoSlipOdd(double*, SweepgenLdcCPU::gen::NoSlipOddLink*, int, int, int,
+PASS SweepgenLdcCPU_explicit_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse: 8097 RVV instructions in total, 650 in the kernels
+        240 SweepgenLdcCPU::gen::LBM::StreamCollide_kernels::StreamCollide(double const*, double*, double*, double*, long,
+        236 SweepgenLdcCPU::gen::LBM::StreamCollideNoOutput_kernels::StreamCollideNoOutput(double const*, double*, long, l
+        150 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+         15 SweepgenLdcCPU::gen::UBB_kernels::UBB(double*, SweepgenLdcCPU::gen::UBBLink*, int, int, int, int, int, double)
+          9 SweepgenLdcCPU::gen::NoSlip_kernels::NoSlip(double*, SweepgenLdcCPU::gen::NoSlipLink*, int, int, int, int, int
+PASS SweepgenLdcCPU_explicit_cse_pf: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_pf: 8097 RVV instructions in total, 650 in the kernels
+        240 SweepgenLdcCPU::gen::LBM::StreamCollide_kernels::StreamCollide(double const*, double*, double*, double*, long,
+        236 SweepgenLdcCPU::gen::LBM::StreamCollideNoOutput_kernels::StreamCollideNoOutput(double const*, double*, long, l
+        150 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+         15 SweepgenLdcCPU::gen::UBB_kernels::UBB(double*, SweepgenLdcCPU::gen::UBBLink*, int, int, int, int, int, double)
+          9 SweepgenLdcCPU::gen::NoSlip_kernels::NoSlip(double*, SweepgenLdcCPU::gen::NoSlipLink*, int, int, int, int, int
+PASS SweepgenLdcCPU_explicit_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa: 9060 RVV instructions in total, 1142 in the kernels
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        150 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+         15 SweepgenLdcCPU::gen::UBBEven_kernels::UBBEven(double*, SweepgenLdcCPU::gen::UBBEvenLink*, int, int, int, int, 
+         15 SweepgenLdcCPU::gen::UBBOdd_kernels::UBBOdd(double*, SweepgenLdcCPU::gen::UBBOddLink*, int, int, int, int, int
+          9 SweepgenLdcCPU::gen::NoSlipEven_kernels::NoSlipEven(double*, SweepgenLdcCPU::gen::NoSlipEvenLink*, int, int, i
+          9 SweepgenLdcCPU::gen::NoSlipOdd_kernels::NoSlipOdd(double*, SweepgenLdcCPU::gen::NoSlipOddLink*, int, int, int,
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 9060 RVV instructions in total, 1142 in the kernels
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        150 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+         15 SweepgenLdcCPU::gen::UBBEven_kernels::UBBEven(double*, SweepgenLdcCPU::gen::UBBEvenLink*, int, int, int, int, 
+         15 SweepgenLdcCPU::gen::UBBOdd_kernels::UBBOdd(double*, SweepgenLdcCPU::gen::UBBOddLink*, int, int, int, int, int
+          9 SweepgenLdcCPU::gen::NoSlipEven_kernels::NoSlipEven(double*, SweepgenLdcCPU::gen::NoSlipEvenLink*, int, int, i
+          9 SweepgenLdcCPU::gen::NoSlipOdd_kernels::NoSlipOdd(double*, SweepgenLdcCPU::gen::NoSlipOddLink*, int, int, int,
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 9871 RVV instructions in total, 2006 in the kernels
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        237 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        150 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+         76 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c0_0(double*, double const*, long, long, long, long, lo
+         72 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c0_1(double*, double const*, long, long, long, long, lo
+         67 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c1_1(double*, double const*, long, long, long, long, lo
+         67 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c1_0(double*, double const*, long, long, long, long, lo
+         66 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c2_1(double*, double const*, long, long, long, long, lo
+         66 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c2_0(double*, double const*, long, long, long, long, lo
+         58 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m2_1(double*, double const*, long, long, long, long, lo
+         58 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m2_0(double*, double const*, long, long, long, long, lo
+         54 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m1_1(double*, double const*, long, long, long, long, lo
+         54 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m1_0(double*, double const*, long, long, long, long, lo
+         51 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m3_1(double*, double const*, long, long, long, long, lo
+         51 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m3_0(double*, double const*, long, long, long, long, lo
+         35 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m0_1(double*, double const*, long, long, long, long, lo
+         35 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::m0_0(double*, double const*, long, long, long, long, lo
+         32 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::macro_noout_0(double const*, double*, long, long, long,
+         19 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::macro_0(double const*, double*, double*, double*, long,
+         15 SweepgenLdcCPU::gen::UBBEven_kernels::UBBEven(double*, SweepgenLdcCPU::gen::UBBEvenLink*, int, int, int, int, 
+         15 SweepgenLdcCPU::gen::UBBOdd_kernels::UBBOdd(double*, SweepgenLdcCPU::gen::UBBOddLink*, int, int, int, int, int
+          9 SweepgenLdcCPU::gen::NoSlipEven_kernels::NoSlipEven(double*, SweepgenLdcCPU::gen::NoSlipEvenLink*, int, int, i
+          9 SweepgenLdcCPU::gen::NoSlipOdd_kernels::NoSlipOdd(double*, SweepgenLdcCPU::gen::NoSlipOddLink*, int, int, int,
+          3 SweepgenLdcCPU::gen::LBM_SPLIT::streamCollide(double*, double*, double*, long, long, long, long, long, long, l
+CHECK_BUILD FAIL
+CHECK_WALLS PASS
