@@ -888,3 +888,45 @@ both compilers and precisions; every run's sha256 is the one in `all.sh`'s log, 
   (now 62 items + 22 table rows, PASS; mutation: 184 put back -> FAIL (1), file restored, sha256 identical).
 - Slide: the 19 + 23 line shows 176 (was report 3's 184), the takeaway "176 ... 90"; caption names only
   presentation4 logs. Every number on the two stream slides now comes from `scripts/presentation4/`.
+
+## 2026-11-19: new slide "Software prefetch: the RISC-V instruction behind it"
+
+- Asked by the user: explain how RISC-V prefetches and with which instructions. New slide 11, after "Software prefetch:
+  where the code generator puts it"; figure `figures/zicbop.tex` (the 32-bit word of `prefetch.r 0(a0)` =
+  `ori x0, a0, 1` = `0x00156013`, field by field; the two readings: cores without Zicbop vs the X60; the runtime
+  function `prefetch_read` from `include/pystencils_runtime/rvv.hpp:144-151`, shortened). 3 bullets: RVV has no
+  prefetch instruction or intrinsic, Zicbop does; the encoding is a hint; the X60 does not list Zicbop, so GCC drops
+  `__builtin_prefetch` and the runtime writes the bits by inline assembly. Takeaway uses 176 -> 90 cycles per line
+  (`board-logs/board/streams-pattern.log`, as on the stream-test slide).
+- Checked on the laptop (board unreachable at the time, VPN): `riscv64-linux-gnu-g++` 16.2.1 `-O3 -march=rv64gcv`
+  compiles `__builtin_prefetch` to nothing and `-march=rv64gcv_zicbop` to `prefetch.r`/`prefetch.w`; `llvm-objdump`
+  decodes the inline asm as `00156013 prefetch.r 0x0(a0)`. Clang 23.1.5 emits `prefetch.r` even without `_zicbop`,
+  so the slide states the GCC behaviour only (board Clang 18.1 not checked). X60 ISA string without `zicbop`: notes3
+  progress log, board facts.
+- Glossary (1/2): new entries Hint and Inline assembly; "f32, f64" moved to the left column, item spacing 0.8 pt (as
+  in 2/2) so both columns fit. Deck: 26 pages; only warning the inherited `Overfull \hbox` (lines 93-259), also in
+  the committed deck. `CHECK_FIGURES PASS`.
+
+## 2026-11-19: split-loop slides; "All the optimizations we tried" removed
+
+- User: "what is split loop? add a slide or two ... why prefetch is not considered for this. get rid of slide 12."
+  Slide 12 was "All the optimizations we tried" (footer number = PDF page 12); removed with its comment block (the
+  removed source is not kept in the repo). Its per-optimization gains are still in `slide_numbers.py` ("Gain of
+  each optimization"); the in-place gain stays in the AA slide's takeaway, the split gain moved to the new slide
+  14's takeaway. The prefetch gain (1.96 / 2.12 / 1.88 / 1.97) is no longer on any slide.
+- New slide 13 "The split loop: the same update in eight short passes" (`figures/split-loop.tex`): one loop (in
+  place, 23 arrays) against the 8 passes per block (4 sums of 5/5/5/4 values, rho and u, 3 collide passes of
+  7/6/6 values), the block as 2 rows of a 64 x 64 plane, its size (19 x 128 x 4 B = 9.7 KB + 4.6 KB scratch, L1 32
+  KB; f64 1-row blocks, same size). Sources: `SweepgenLbmCPU/lbm_split.py`, `SweepgenLdcCPU/CMakeLists.txt:63-70`,
+  the generated `LBM_SPLIT::streamCollide` (x86 build tree, gcc-f32, `SweepgenLdcCPU.cpp:6933-6997`).
+- New slide 14 "The split loop in code, and why it needs no prefetch" (`figures/split-code.tex`: the driver and
+  pass `m1`, shortened from the same generated file). Why no prefetch: at most 7 arrays per pass; late lines per
+  cell 1.762 (explicit_cse_aa) vs 0.341 (split), GCC f32, `streams_table.py` (neither has prefetch); the collide
+  passes reload lines still in L1; measured with prefetch (notes3 `board-logs/lab7.log`, kernel lab, periodic box,
+  GCC, generated split passes + `prefetch_distance=128`, best of 3): f32 9.967 -> 9.255 MLUP/s (-7 %), 66.4 -> 88.0
+  instructions per cell (+33 %); f64 5.528 -> 4.802 (-13 %), 114.5 -> 159.8 (+40 %). Takeaway: split against in
+  place + prefetch, `slide_numbers.py`: 1.171 / 1.211 (GCC), 1.219 / 1.221 (Clang).
+- Wording: "collide" (as on the benchmark slide), not "relax". Glossary 2/2: new entry "Split loop"; "QEMU" removed
+  (used nowhere in the deck, also not in the committed version) so the column fits.
+- Deck: 27 pages (22 main + 5 backup); only warning the inherited `Overfull \hbox` (lines 93-259);
+  `CHECK_FIGURES PASS`. Every new page looked at in `./build.sh png`.
