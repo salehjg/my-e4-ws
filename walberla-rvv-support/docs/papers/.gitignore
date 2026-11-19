@@ -1,0 +1,7 @@
+# ---- Downloaded papers (re-fetch with ./download.sh) ----
+# A pattern without a slash matches at every depth below this folder,
+# so this covers pystencils/, lbmpy/, walberla/, kerncraft/, exastencils/ and any new subfolder.
+*.pdf
+
+# ---- Unfinished downloads left by an interrupted ./download.sh ----
+*.part
