@@ -1,0 +1,36 @@
+== start Wed Nov 18 08:50:02 AM CST 2026
+== gcc gcc (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0 -O3 -march=rv64gcv_zvl256b
+   	ret
+== gcc gcc (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0 -O3 -march=rv64gcv_zvl256b_zicbop
+   	addi	a5,a0,256
+   	prefetch.r	0(a0)
+   	prefetch.w	0(a5)
+   	ret
+== clang Bianbu clang version 18.1.8 (11bb4) -O3 -march=rv64gcv_zvl256b
+   # %bb.0:
+   	ret
+                                           # -- End function
+== clang Bianbu clang version 18.1.8 (11bb4) -O3 -march=rv64gcv_zvl256b_zicbop
+   # %bb.0:
+   	prefetch.r	0(a0)
+   	prefetch.w	256(a0)
+   	ret
+                                           # -- End function
+elf /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl256b1p0_zvl32b1p0_zvl64b1p0 rvv_plain=9511 unknown_plain=0 rvv_mattr_v=9511
+elf /usr/lib/riscv64-linux-gnu/libmpi.so.40.30.6 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libmpi_cxx.so.40.30.1 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libstdc++.so.6.0.33 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libm.so.6 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libgcc_s.so.1 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libc.so.6 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libopen-rte.so.40.30.3 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libopen-pal.so.40.30.3 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libhwloc.so.15.7.0 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libz.so.1.3.1.zlib-ng arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_v1p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0_zve32f1p0_zve32x1p0_zve64d1p0_zve64f1p0_zve64x1p0_zvl128b1p0_zvl32b1p0_zvl64b1p0 rvv_plain=132 unknown_plain=0 rvv_mattr_v=132
+elf /usr/lib/riscv64-linux-gnu/libevent_core-2.1.so.7.0.1 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libevent_pthreads-2.1.so.7.0.1 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libudev.so.1.7.8 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+elf /usr/lib/riscv64-linux-gnu/libcap.so.2.66 arch=rv64i2p1_m2p0_a2p1_f2p2_d2p2_c2p0_zicsr2p0_zifencei2p0_zmmul1p0_zba1p0_zbb1p0_zbc1p0_zbs1p0 rvv_plain=0 unknown_plain=0 rvv_mattr_v=0
+== E5 DONE Wed Nov 18 08:51:17 AM CST 2026
