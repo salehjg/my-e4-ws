@@ -1,0 +1,73 @@
+== verify f64, Tue Nov 17 05:40:04 PM CET 2026, x86_64, 1 executable(s)
+   /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+
+== oracle: 1 process(es), 16^3 cells each, 100 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x77a7887589fb6f9a links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=100 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.37449845176755786 mass=4096.0
+input                                                           type       domain   mass_err    sym_err subnorm
+6/mutation-m3_no_odd_walls/oracle-np1-c16-s100/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+o_odd_walls/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa     f64     16x16x16   3.74e-05   2.78e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/oracle-np1-c16-s100/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+o_odd_walls/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa   7.49e-02   2.60e-01         0/4096    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=1 cells=16 steps=100 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/verify.log)
+
+== oracle: 1 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x422dd2b80620df96 links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.3753928218591154 mass=4096.0
+input                                                           type       domain   mass_err    sym_err subnorm
+6/mutation-m3_no_odd_walls/oracle-np1-c16-s101/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+o_odd_walls/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f64     16x16x16   5.40e-05   5.00e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/oracle-np1-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+o_odd_walls/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa   2.78e-02   4.92e-01         0/4096    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=1 cells=16 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/verify.log)
+
+== oracle: 2 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x16376df713e4962e links_noslip=9984 links_ubb=2560 
+ldc_reference domain=32x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=9984 links_ubb=2560 energy=0.8764116203957387 mass=8192.0
+input                                                           type       domain   mass_err    sym_err subnorm
+6/mutation-m3_no_odd_walls/oracle-np2-c16-s101/reference.npz ref-f64     32x16x16   0.00e+00   2.22e-16       0
+o_odd_walls/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f64     32x16x16   2.67e-05   4.44e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/oracle-np2-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+o_odd_walls/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa   2.66e-02   5.17e-01         0/8192    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=2 cells=16 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/verify.log)
+
+== oracle: 6 process(es), 8^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0xef7e9fc455186be4 links_noslip=6208 links_ubb=640 
+ldc_reference domain=16x24x8 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=640 energy=0.16526027832386786 mass=3072.0
+input                                                           type       domain   mass_err    sym_err subnorm
+86/mutation-m3_no_odd_walls/oracle-np6-c8-s101/reference.npz ref-f64      16x24x8   0.00e+00   2.22e-16       0
+no_odd_walls/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa     f64      16x24x8   8.36e-05   6.66e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/oracle-np6-c8-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+no_odd_walls/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa   2.60e-02   4.95e-01         0/3072    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=6 cells=8 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/verify.log)
+
+== decomposition: 1 x 32^3 against 8 x 16^3, 61 steps, must be bit-identical
+input                                                           type       domain   mass_err    sym_err subnorm
+tion-m3_no_odd_walls/decomp/SweepgenLdcCPU_scalar_cse_aa-np1     f64     32x32x32   6.79e-06   2.22e-16       0
+tion-m3_no_odd_walls/decomp/SweepgenLdcCPU_scalar_cse_aa-np8     f64     32x32x32   6.79e-06   2.22e-16       0
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m3_no_odd_walls/decomp/SweepgenLdcCPU_scalar_cse_aa-np1:
+input                                                         max|drho|    max|du|  identical cells
+tion-m3_no_odd_walls/decomp/SweepgenLdcCPU_scalar_cse_aa-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_scalar_cse_aa (fieldhash=0x00eda17b0489cdbb)
+
+== verify done Tue Nov 17 05:40:19 PM CET 2026: 4 failure(s)
+VERIFY FAIL

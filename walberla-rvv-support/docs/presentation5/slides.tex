@@ -1,0 +1,1061 @@
+% =============================================================================
+%  slides.tex (docs/presentation5): 15 minute overview of the RISC-V vector (RVV)
+%  work in pystencils and waLBerla, for listeners who know software but not this
+%  project. A copy of docs/presentation4 (lid-driven cavity, app SweepgenLdcCPU,
+%  GCC and Clang) with the corrections of the audit in docs/notes5
+%  (audit-findings-opus5.5.md, findings F1-F21; proposed-slide-changes-opus5.5.md).
+%  What changed, slide by slide: docs/presentation5/presentation5-progress-opus5.5.md.
+%  Build with ./build.sh (output: build/slides.pdf).
+%
+%  Sources of every number: the presentation4 board session (scripts/presentation4/
+%  all.sh), raw logs copied to board-logs/board/ and board-logs/x86/ (identical to
+%  docs/presentation4/board-logs/); the notes5 audit runs (docs/notes5/board/audit_e*.sh),
+%  raw logs copied to board-logs/notes5/ (identical to docs/notes5/board-logs/); the
+%  verification results in docs/presentation4/presentation4-progress-opus5.5.md.
+%  Numbers that come from the periodic box of presentation3 (docs/manual/reports/r02,
+%  r03) are labelled as such on the slide.
+%
+%  Writing rules: plain English, short sentences, no em/en dashes as
+%  punctuation, every name explained where it first appears and again in the
+%  glossary at the end.
+% =============================================================================
+\documentclass[aspectratio=169,10pt,t]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[sfdefault,lining]{FiraSans}
+\usepackage[varqu]{inconsolata}
+\usefonttheme{professionalfonts}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,array,tabularx}
+\usepackage{pifont}
+\usepackage{appendixnumberbeamer}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds,decorations.pathreplacing,patterns}
+\usepackage{pgfplots}
+\usepackage{multimedia}   % the flow film: \movie links figures/cavity-movie/cavity.avi (played by pdfpc)
+\pgfplotsset{compat=1.18}
+
+% ---- Colours (the same as in docs/manual, so slides and reports match) --------
+\definecolor{psblue}{HTML}{1F5FA8}
+\definecolor{psteal}{HTML}{127A72}
+\definecolor{psorange}{HTML}{C8641A}
+\definecolor{psred}{HTML}{B3261E}
+\definecolor{psgray}{HTML}{5F6368}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{psviolet}{HTML}{7A3E9D}   % generated code (build-run figure)
+\newif\ifbrmarkers                       % markers in figures/build-run.tex
+%   Meaning of the colours in every figure:
+%   teal = added and measured, orange = in the code but not measured yet,
+%   red = tried and dropped (or: what was wrong before), blue = facts about the hardware.
+
+% ---- Beamer look ------------------------------------------------------------------
+\setbeamersize{text margin left=8mm,text margin right=8mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{normal text}{fg=black!88}
+\setbeamercolor{structure}{fg=psblue}
+\setbeamercolor{frametitle}{fg=psblue!80!black}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamercolor{itemize item}{fg=psblue}
+\setbeamercolor{itemize subitem}{fg=psgray}
+\setbeamertemplate{itemize item}{\raisebox{0.15ex}{\small$\bullet$}}
+\setbeamertemplate{itemize subitem}{\raisebox{0.1ex}{\scriptsize$\circ$}}
+\setlength{\leftmargini}{1.1em}
+\setlength{\leftmarginii}{1.1em}
+\setbeamercolor{takeaway}{bg=psblue!8,fg=black!88}
+
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip\vskip3mm
+  \hbox to \textwidth{%
+    \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}\insertframetitle\hfil
+    {\usebeamerfont{footline}\scriptsize\color{psgray}\insertsectionhead}}%
+  \vskip1.5mm
+  {\color{psblue!40}\hrule height 0.5pt}%
+  \vskip1mm}
+
+\setbeamertemplate{footline}{%
+  \hbox to \paperwidth{\hspace*{8mm}{\color{psgray}\tiny RISC-V vectors in pystencils and waLBerla}%
+    \hfil{\color{psgray}\tiny\insertframenumber\,/\,\inserttotalframenumber}\hspace*{8mm}}%
+  \vskip2.5mm}
+
+% ---- Macros -------------------------------------------------------------------------
+\newcommand{\presenter}{Saleh}            % edit: name on the title slide
+\newcommand{\sx}[1]{#1\ensuremath{\times}} % a speedup factor, e.g. \sx{5.24}
+\newcommand{\term}[1]{\textcolor{psblue!85!black}{\textbf{#1}}} % a name, defined right here
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\yes}{\textcolor{psteal}{\ding{51}}}
+\newcommand{\no}{\textcolor{psgray!70}{$\cdot$}}
+\newcommand{\tagdot}[1]{\tikz[baseline=-0.6ex]\fill[#1] (0,0) circle (0.9mm);} % colour dot
+%   \todo{text}: a measurement or fact that is still missing. Shown in red; build with
+%   ./build.sh final to hide all of them (it defines \hidetodos). ./build.sh lists them.
+\newif\ifshowtodos \showtodostrue
+\ifdefined\hidetodos \showtodosfalse \fi
+\newcommand{\todo}[1]{\ifshowtodos{\scriptsize\textcolor{psred}{\textbf{[TODO: #1]}}}\fi}
+%   \takeaway{text}: the one sentence to remember, at the bottom of a slide
+\newcommand{\takeaway}[1]{\par\vfill
+  \begin{beamercolorbox}[wd=\textwidth,sep=4pt,rounded=true]{takeaway}
+    \small #1
+  \end{beamercolorbox}}
+
+% ---- TikZ styles shared by the figures ------------------------------------------------
+\tikzset{
+  box/.style={draw=psgray!80,fill=white,rounded corners=2pt,align=center,
+    font=\footnotesize,inner sep=3pt,minimum height=7mm},
+  added/.style={box,fill=psteal!12,draw=psteal!90!black,line width=0.6pt},
+  pending/.style={box,fill=psorange!12,draw=psorange!90!black,line width=0.6pt},
+  wrong/.style={box,fill=psred!7,draw=psred!80!black,line width=0.6pt},
+  info/.style={box,fill=psblue!7,draw=psblue!70!black},
+  quiet/.style={box,fill=psgray!8,draw=psgray!60,text=psgray!90!black},
+  arr/.style={-{Stealth[length=2mm]},semithick,draw=psgray!90!black},
+  lbl/.style={font=\scriptsize,text=psgray!90!black,align=center},
+  codebox/.style={box,fill=codebg,font=\ttfamily\scriptsize,align=left,inner sep=4pt},
+}
+% ---- Overlays inside TikZ (the animated kernel slides) ----------------------------------
+%   visible on=<2->        drawn on those overlays only; invisible but still taking its place on the others,
+%                          so nothing moves from one overlay to the next
+%   alt=<2>{style}{style}  one style on those overlays, the other one elsewhere
+\tikzset{
+  invisible/.style={opacity=0,text opacity=0},
+  alt/.code args={<#1>#2#3}{\alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}},
+  visible on/.style={alt={#1{}{invisible}}},
+}
+
+% ---- pgfplots styles shared by the result figures ---------------------------------------
+%   onecore: one core, x = 8 builds (figures/speedup-1core-<prec>.tex, figures/mlups-1core.tex)
+%   clang1/clang1legend: Clang as a white diamond next to its bar, no number
+%   mc + pl/bs/av/rv/sp/cl/cllegend: several cores, x = 1, 4, 8 cores
+%     (figures/mlups-multicore.tex, figures/speedup-multicore-<prec>.tex); each figure sets ymax
+\pgfplotsset{
+  onecore/.style={
+    width=\textwidth, ymin=0,
+    symbolic x coords={plain,plainav,best,bestav,rvv,pf,aa,split},
+    xtick={plain,plainav,best,bestav,rvv,pf,aa,split},
+    xticklabels={{plain scalar},{plain scalar,\\auto-vectorized},{best scalar},
+      {best scalar,\\auto-vectorized},{RVV,\\AB pattern},{RVV,\\+ prefetch},
+      {RVV, + in place\\(AA pattern)},{\textbf{RVV, AA,}\\\textbf{split loop,}\\\textbf{no prefetch}}},
+    xticklabel style={align=center,font=\scriptsize,anchor=north},
+    tick label style={font=\scriptsize}, label style={font=\scriptsize},
+    enlarge x limits=0.065,
+    legend style={font=\scriptsize,draw=psgray!50},
+    nodes near coords, point meta=explicit symbolic,
+    ymajorgrids, grid style={psgray!20}},
+  clang1/.style={sharp plot,only marks,mark=diamond*,mark size=2.4pt,
+    mark options={fill=white,draw=black!85},nodes near coords={}},
+  clang1legend/.style={legend image code/.code={\draw[mark=diamond*,mark size=2.4pt,
+    mark options={fill=white,draw=black!85}] plot coordinates {(0.15cm,0cm)};}},
+  mc/.style={
+    ybar=1pt, bar width=5pt, width=6.9cm, height=4.7cm, ymin=0,
+    symbolic x coords={1,4,8}, xtick=data,
+    xticklabels={1 core,4 cores,8 cores},
+    enlarge x limits=0.22,
+    tick label style={font=\scriptsize}, label style={font=\scriptsize},
+    title style={font=\small\bfseries,yshift=-1.5ex},
+    ymajorgrids, grid style={psgray!20},
+    nodes near coords, point meta=explicit symbolic,
+    nodes near coords style={font=\tiny,rotate=90,anchor=west,inner xsep=4pt}},
+  pl/.style={fill=psgray!30,draw=psgray,bar shift=-12pt},
+  bs/.style={fill=psgray!75,draw=psgray!90!black,bar shift=-6pt},
+  av/.style={pattern=north east lines,pattern color=psgray!90!black,draw=psgray!90!black,bar shift=0pt},
+  rv/.style={fill=psteal!55,draw=psteal!80!black,bar shift=6pt},
+  sp/.style={fill=psteal!90!black,draw=psteal!60!black,bar shift=12pt},
+  cl/.style={sharp plot,only marks,mark=diamond*,mark size=1.8pt,
+    mark options={fill=white,draw=black!85},nodes near coords={},forget plot},
+  cllegend/.style={legend image code/.code={\draw[mark=diamond*,mark size=1.8pt,
+    mark options={fill=white,draw=black!85}] plot coordinates {(0.12cm,0cm)};}},
+}
+
+\title{Vector instructions for a generated fluid simulation on RISC-V}
+\subtitle{What we added to pystencils and waLBerla, how it works, and what it gives in a lid-driven cavity on the SpacemiT X60, with GCC and Clang}
+\author{\presenter}
+\date{November 2026}
+
+\begin{document}
+
+% =============================================================================
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture,overlay]
+    % a strip of 8 "vector lanes" along the top edge
+    \foreach \k in {0,...,7}
+      \fill[psblue!\the\numexpr 25+8*\k\relax] ([xshift=\k*20mm]current page.north west) rectangle ++(19.6mm,-3mm);
+    \node[anchor=north west,text width=136mm,align=left,inner sep=0pt,
+          execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}]
+      at ([xshift=12mm,yshift=-22mm]current page.north west) {%
+      {\LARGE\bfseries\color{psblue!80!black}\inserttitle\par}
+      \vspace{5mm}
+      {\large\color{black!75}\insertsubtitle\par}
+      \vspace{14mm}
+      {\normalsize\insertauthor\par}
+      \vspace{1mm}
+      {\normalsize\color{psgray}\insertdate\par}};
+  \end{tikzpicture}
+\end{frame}
+
+% =============================================================================
+% =============================================================================
+\section{Background}
+
+\begin{frame}{The benchmark: a lid-driven cavity}
+  \vspace{1mm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.40\textwidth}
+    \centering\input{figures/cavity}
+    \column{0.57\textwidth}
+    \centering\resizebox{!}{4.1cm}{\input{figures/lbm}}
+  \end{columns}
+
+  \vspace{1mm}
+  {\small \term{waLBerla}: C++ fluid simulation framework. \term{Lattice Boltzmann method}, 19
+  numbers per cell (\term{D3Q19}). Walls send back what flows into them (\term{bounce-back}).
+  200 time steps; speed in \term{MLUP/s}, million cell updates per second.\par}
+  \takeaway{Per cell and time step: 19 loads, about 200 operations, 23 stores (19 values, density, velocity).}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  The two films (scripts/presentation4/laptop.sh part x86film, all.sh part movie + fetch_movie_board.sh):
+%  the same program, SweepgenLdcCPU_explicit_cse_aa, f64, 64^3, warm-up 0, frame steps 16000 (k/40)^2, k = 0..40,
+%  plus 210; each run from rest; middle plane drawn by scripts/presentation4/cavity_movie.py.
+%  Laptop: generated with upstream pystencils 20d7dcf0 (build_x86.sh PYSTENCILS=upstream), x86 AVX intrinsics
+%  (_mm256_*_pd), GCC 16.2.1 -O3 -march=native; the same kernel lines as with our fork, bit-identical fields
+%  (field hash at 210, 1000, 4000 steps). Log board-logs/x86/cavity-movie.log.
+%  Board: the verified all.sh executable (sha256 4cc7d6a9f3d1d81c), GCC 14.2.0, RVV; step 210 bit-identical to
+%  all.sh (cavity_movie_board.sh check 2). Log board-logs/board/cavity-movie-board.log.
+%  \movie only links the videos: build.sh copies them next to the PDF. Until the board film is fetched, its
+%  slot shows a note (\IfFileExists), so the deck builds without it.
+%  Agreement: scripts/presentation4/compare_movies.py (x86 log + slices against board log + slices), 42 frames:
+%  worst relative energy difference 1.20e-14 (frame 41), worst middle-plane |du| / u_lid 5.07e-15; field hashes
+%  equal only at step 0 (different instruction sets round differently). Board film: MOVIE PASS (step 210
+%  bit-identical to all.sh), 47 copied files sha256-equal (fetch_movie_board.sh).
+\begin{frame}{The flow we compute, on both machines}
+  \vspace{1mm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \centering
+    \movie[loop]{\includegraphics[height=4.3cm]{figures/cavity-movie/frame-41.png}}{figures/cavity-movie/cavity.avi}\par
+    \vspace{1mm}
+    {\scriptsize\textbf{Laptop}: Intel Core i9-13950HX, x86-64, AVX vectors (256 bits).\\
+    pystencils' x86 code, not changed by us. GCC 16.2.\par}
+    \column{0.49\textwidth}
+    \centering
+    \IfFileExists{figures/cavity-movie-board/frame-41.png}{%
+      \movie[loop]{\includegraphics[height=4.3cm]{figures/cavity-movie-board/frame-41.png}}{figures/cavity-movie-board/cavity.avi}}{%
+      {\setlength{\fboxsep}{0pt}\fbox{\parbox[c][4.3cm][c]{4.57cm}{\centering\scriptsize board film not fetched yet\\(\code{fetch\_movie\_board.sh})}}}}\par
+    \vspace{1mm}
+    {\scriptsize\textbf{Board}: SpacemiT X60, RISC-V, RVV 1.0 vectors (256 bits).\\
+    Our pystencils RVV code. GCC 14.2.\par}
+  \end{columns}
+  \vspace{1.5mm}
+  {\scriptsize\color{psgray}Same program: middle plane, colour = speed relative to the lid, lines = where the
+  fluid goes; from rest to 16\,000 steps (a timed run: 210); f64, $64^3$ cells. In every frame the two agree to
+  $1.2\cdot10^{-14}$ (energy) and $5\cdot10^{-15}$ of the lid speed. Click to play (\code{pdfpc}).\par}
+  \takeaway{A real flow, and both machines compute the same one: they agree to 14 digits.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{The hardware, and how the work is split}
+  \vspace{3mm}
+  \centering\input{figures/k1}
+
+  \vspace{4mm}
+  \raggedright
+  {\small One \term{MPI} process and one block per core. After every step, neighbouring blocks swap
+  their border cells (\term{halo exchange}), and the wall pass updates the cells next to a wall.\par}
+  \takeaway{One 256-bit operation per cycle works on 8 numbers in f32, 4 in f64: vectors alone can make
+    the arithmetic at most \sx{8} and \sx{4} faster.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{From source code to a running simulation}
+  \vspace{1mm}
+  \centering\input{figures/build-run}
+  \takeaway{Python only runs while the program is built. The program that runs is plain C++.}
+\end{frame}
+
+% =============================================================================
+\section{Part 1: make it work}
+
+\begin{frame}{What we added, and the builds we compare}
+  \vspace{2mm}
+  \centering\input{figures/chain}
+
+  \vspace{5mm}
+  {\footnotesize\renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{build} & \textbf{kernel} & \textbf{compiler flags}\\
+    \midrule
+    plain scalar & plain C++ & \code{-march=rv64gc} for every file: no vector instruction\\
+    auto-vectorized & plain C++ & \code{-march=rv64gcv\_zvl256b}: compiler may vectorize\\
+    best scalar & plain C++ with \term{CSE} and in-place update & \code{-march=rv64gc} for every file\\
+    \textbf{RVV} & \textbf{RVV intrinsics from pystencils} & \code{-march=rv64gcv\_zvl256b}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{2mm}
+  {\scriptsize\color{psgray}Every build twice: \term{GCC}~14.2 and \term{Clang}~18.1, \code{-O3}; Clang also
+  gets \code{-mtune=spacemit-x60} (GCC does not accept it). Speedup: MLUP/s divided by that of the
+  plain scalar build of the same compiler, same session. CSE: each repeated part of the formulas is
+  computed once.\par}
+  \takeaway{The generator script asks for vector code once; on RISC-V that now gives RVV code, as it
+    gives AVX code on x86.}
+\end{frame}
+
+% =============================================================================
+%  How the kernel works (new in presentation5, at the user's request): the D3Q19 stencil, the memory
+%  layout of the 19 arrays, and the generated kernel line by line, animated with overlays. They lead into
+%  the first slide of part 2 (what a data stream is), which is animated too.
+\section{How the kernel works}
+
+%  The D3Q19 stencil and the pull access of the generated kernel. Directions and offsets checked against
+%  the generated StreamCollide (sources in figures/stencil-d3q19.tex).
+\begin{frame}{The stencil: the cells needed to update one cell}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.53\textwidth}
+    \vspace{4mm}
+    \centering\input{figures/stencil-d3q19}
+    \column{0.45\textwidth}
+    \vspace{1mm}
+    \begin{itemize}\small
+      \item Each cell stores 19 values, $f_0$ to $f_{18}$. Each value is the fluid moving in one of
+            19 directions (\term{D3Q19}).
+      \item<2-> In every time step, each value moves one cell along its direction. The kernel
+            \term{pulls}: each cell fetches $f_i$ from the neighbour it comes from. $f_4$ moves east, so
+            it comes from the west neighbour.
+      \item<4-> The \term{stencil} is the set of cells needed to update one cell: the cell itself, 6 face
+            neighbours and 12 edge neighbours. The 8 corners are not used.
+    \end{itemize}
+  \end{columns}
+  \vfill
+  {\scriptsize\color{psgray}The numbering follows lbmpy. LBM papers call this move ``streaming''; it is unrelated
+  to the data streams later in the talk.\par}
+  \takeaway{To update one cell, the kernel reads 19 values: from the cell itself and from 18 neighbours.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Memory layout of the 19 arrays (waLBerla v8 fields, fzyx, f32 strides of the board build; sources in
+%  figures/field-layout.tex).
+\begin{frame}{How the 19 values are stored in memory}
+  \centering\input{figures/field-layout}
+
+  \raggedright
+  \uncover<6->{\footnotesize Each of the 19 values ($f_0$ to $f_{18}$) has its own 3D array like this, and the 19
+  arrays follow each other (\term{layout fzyx}).\par
+  {\scriptsize\color{psgray}Our blocks have $64^3$ cells. The \term{ghost layer} wraps the whole block (66 cells in
+  $x$, $y$ and $z$) and holds the values of the neighbouring block or of the wall, so the stencil of a cell at the
+  edge can read them. The \term{padding} makes every row start at a multiple of 16 bytes.\par}}
+  \takeaway{Neighbours in $x$ are next to each other; the 19 values of one cell are 1.2\,MB apart (f32).}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  The generated kernel, shortened to its shape, load by load (sources in figures/kernel-code.tex).
+\begin{frame}{The kernel code: updating one cell, step by step}
+  \vspace{1mm}
+  \centering\input{figures/kernel-code}
+
+  \raggedright
+  {\scriptsize\color{psgray}Simplified: the real loop is about 300 lines long. The last step shows the RVV
+  version, which updates 8 cells per iteration (f32).\par}
+  \takeaway{Each cell update loads from 19 arrays, does about 200 operations, and stores into 23 arrays.}
+\end{frame}
+
+% =============================================================================
+\section{Part 2: make it fast}
+
+%  What a stream is. Sources: the generated StreamCollide (19 prefetch_read + 23 prefetch_write, one
+%  per array; see figures/stream-def.tex); the quote: M. Wittmann, T. Zeiser, G. Hager, G. Wellein,
+%  "Modeling and analyzing performance for highly optimized propagation steps of the lattice Boltzmann
+%  method on sparse lattices", arXiv:1410.0412 (2014/2015), section 4.3.
+\begin{frame}{What a data stream is, and why our loop has 42}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.55\textwidth}
+    \vspace{1mm}
+    \centering\input{figures/stream-def}
+    \column{0.43\textwidth}
+    \vspace{1mm}
+    \begin{itemize}\small
+      \item \term{Stream}: the loop reads or writes one array at consecutive addresses, cache line
+            after cache line. The \term{hardware prefetcher} spots this and loads the next lines early.
+      \item<4-> Each of the 19 values of a cell has its own array. One step of the loop reads 19 arrays,
+            writes 19 others and 4 outputs ($\rho$, $u$): 42 streams.
+    \end{itemize}
+  \end{columns}
+  \vfill
+  {\scriptsize\color{psgray}The term in lattice Boltzmann performance papers: ``concurrent memory streams
+  (38 with OS-NT and 19 with AA)'' for D3Q19 (Wittmann et al., arXiv:1410.0412).\par}
+  \takeaway{A stream is one sequence of addresses the loop walks through. Our loop walks through 42 at once.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Why there is one stream per array: the strip and numbers of the layout slide (sources in
+%  figures/stream-count.tex). Added after the user asked how many streams the flat arrays stand for.
+\begin{frame}{How many streams the stencil needs}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.6\textwidth}
+    \vspace{1mm}
+    \input{figures/stream-count}
+    \column{0.38\textwidth}
+    \vspace{1mm}
+    \begin{itemize}\footnotesize
+      \item On slide 8 we drew all 7 values in one array. Read like that, 12, 13 and 14 share a row and a cache
+            line, so the loop reads them in one stream. 10 and 16 lie in other rows, 4 and 22 in other
+            planes: 5 streams.
+      \item<2-> In our kernel each value has its own array: $f_4$ comes from cell 12 of array $f_4$, $f_1$ from
+            cell 10 of array $f_1$, and so on. Each array is read at one place only, so every read is a stream
+            of its own.
+      \item<3-> The loop also writes the 19 new values and 4 outputs ($\rho$, $u$) into arrays of their own:
+            $19 + 19 + 4 = 42$ streams. In place (AA), the reads and writes use the same 19 arrays: 23.
+    \end{itemize}
+  \end{columns}
+  \vfill
+  \takeaway{Each array the loop reads or writes is one stream: $19 + 19 + 4 = 42$.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Plot: figures/streams.tex (scripts/presentation4/streams_check.sh, streams-probe.log). Program numbers:
+%  streams-ldc.log, python3 scripts/presentation4/streams_table.py docs/presentation4/board-logs/board:
+%  GCC f32, 64^3, l2_miss per cell update (20 steps minus 0): explicit_cse 3.077, explicit_cse_aa 1.762,
+%  explicit_cse_aa_split 0.341 (none of the three has software prefetch: 0 hint instructions);
+%  stalled_cycle_backend 713.5 of 776 cycles per cell (1.6 GHz / 2.06 MLUP/s) for explicit_cse = 92 %;
+%  the split build still 64 % (f32; 66 % f64), explicit_cse_aa_pf 75 % (notes5 F3, recomputed from streams-ldc.log).
+%  "4 of 5 lines in time" holds for the 4160 B series (<= 0.031 late per line up to R = 19); the 1600 B series
+%  reaches 0.206 at R = 10 (notes5 F20). Vector misses do not overlap, scalar misses do (notes5 F19, E4 + E7:
+%  board-logs/notes5/e4-stream-order.log, e7-scalar-vs-vector.log; probes built with -fno-tree-vectorize):
+%  8 arrays in random line order, vle32 357-358 cycles per line, true scalar flw 105; pointer chase 356 cycles
+%  for 1 chain, 72 per miss with 6 chains. The cliff is the same with 4 KB pages (notes5 E1-B, e1-B-probe-thp.log).
+%  Repeats: the 4160 B series ran twice (tags a, d; up to 19 % apart near the cliff, R = 19: 51.4 / 61.0),
+%  the others once (notes5 F7, F20).
+\begin{frame}{The real limit: too many data streams}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    \centering\input{figures/streams}
+    \column{0.46\textwidth}
+    \vspace{1mm}
+    \begin{itemize}\small
+      \item Up to 19 streams the \term{hardware prefetchers} bring 4 of 5 lines in time. From 21 to 23 on,
+            every vector load waits the full memory latency: about 360 cycles.
+      \item On the X60, \term{cache misses} of vector loads never overlap; scalar misses overlap, 3 to 5 at
+            once. For vector code, prefetching is the only way to wait for several lines at once.
+      \item Our program, same counter: 3.1 late lines per cell with 42 streams, 1.8 with 23 (in place),
+            0.34 with the split loop.
+    \end{itemize}
+  \end{columns}
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}Plot: a test loop reading $R$ arrays (next slide), the core's own counters; one
+  run per point (4160 bytes: two, up to 19\,\% apart near the cliff). The split loop still stalls in 64\,\%
+  of its cycles.\par}
+  \takeaway{The X60 prefetchers follow about 20 streams, our loop has 42: the core \term{stalls} in 92\,\% of its cycles.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{The stream test: the code behind the plot}
+  \vspace{2mm}
+  \centering\input{figures/stream-test}
+
+  \vspace{2mm}
+  {\scriptsize\color{psgray}From \code{misc/x60-lab/probes/mem.cpp}. Arrays of 4\,MB, \term{huge pages}
+  (4\,KB pages: same cliff), 4160 bytes apart; best of 3 passes (last two lines: of 3 runs). Logs:
+  \code{board-logs/board/streams-*.log}, \code{board-logs/notes5/e1-B-probe-thp.log}.\par}
+  \takeaway{Our loop's 42 streams: 176 cycles per cache line. Prefetching 128 bytes ahead: 90.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Software prefetch: where the code generator puts it}
+  \vspace{0.5mm}
+  \centering\input{figures/prefetch-insert}
+
+  \vspace{2mm}
+  {\scriptsize\color{psgray}Per build: \code{-{}-prefetch-distance=128} sets pystencils' option
+  \code{cpu.vectorize.prefetch\_distance}. Main loop: 42 prefetches, one per stream; whole program: 103.
+  Cores without the prefetch extension skip the instruction.\par}
+  \takeaway{One new pass in pystencils: every vectorized loop prefetches all its streams.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  The instruction behind prefetch_read / prefetch_write. Sources: figures/zicbop.tex (encoding checked
+%  with GCC 16.2.1 + llvm-objdump on the laptop; runtime code from include/pystencils_runtime/rvv.hpp:
+%  144-160); X60 ISA string without zicbop: docs/notes3/rvv-8x-speedup-progress-fable5.2.md (board facts);
+%  176 -> 90 cycles per line: board-logs/board/streams-pattern.log (stream-test slide).
+\begin{frame}{Software prefetch: the RISC-V instruction behind it}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.56\textwidth}
+    \input{figures/zicbop}
+    \column{0.41\textwidth}
+    \vspace{1mm}
+    \begin{itemize}\small
+      \item RVV has no prefetch instruction and no prefetch intrinsic. Prefetch comes from a small
+            scalar extension, \term{Zicbop}: \code{prefetch.r} (will read), \code{prefetch.w} (will write).
+      \item Its bits are a \term{hint}: they also spell an instruction without effect, so cores
+            without Zicbop just skip it.
+      \item The X60 runs Zicbop but does not list it, so our \code{-march} lacks it and GCC drops
+            \code{\_\_builtin\_prefetch}. We write the bits by hand (\term{inline assembly}).
+    \end{itemize}
+  \end{columns}
+  \takeaway{Prefetch is a scalar Zicbop hint, not RVV: safe on any core; on the X60, 176 to 90 cycles per line.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Update in place: the AA pattern}
+  \vspace{1mm}
+  {\small The name: the usual way reads array A and writes array B (AB). This way only uses A (AA).\par}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.4\textwidth}
+    {\small\bfseries AB pattern (before)\par}
+    \vspace{3mm}
+    \centering\input{figures/ab}
+
+    \vspace{1mm}
+    {\small\textbf{42 streams}, 260 bytes per cell\par}
+
+    \vspace{3mm}
+    {\scriptsize\color{psgray}New for AA: sweepgen kernels, their halo exchange, and wall passes for
+    even and odd steps. Bytes: f32, with \term{write-allocate}.\par}
+    \column{0.56\textwidth}
+    {\small\bfseries AA pattern: one array, two kinds of step\par}
+    \vspace{1mm}
+    \centering\input{figures/aa-pattern}
+
+    \vspace{1mm}
+    {\small\textbf{23 streams}, 184 bytes per cell\par}
+  \end{columns}
+  \takeaway{Whole program, with prefetch, f32 / f64: GCC \sx{1.4} / \sx{1.6}, Clang \sx{1.5} / \sx{1.7}.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  The split loop (build explicit_cse_aa_split). Sources: figures/split-loop.tex (lbm_split.py, the
+%  generated driver, block and scratch sizes). The split loop is always in place (AA): --split needs
+%  --streaming-pattern=aa (SweepgenLdcCPU.py:100-102).
+\begin{frame}{The split loop: the same update in eight short passes}
+  \vspace{5mm}
+  \centering\input{figures/split-loop}
+  \takeaway{Each pass walks through at most 7 arrays, and the collide passes find their values in the L1
+    cache.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Why the split build has no software prefetch. Late lines (l2_miss per cell update, GCC f32, 64^3,
+%  streams-ldc.log via scripts/presentation4/streams_table.py): explicit_cse_aa 1.762, explicit_cse_aa_split
+%  0.341, neither with software prefetch (0 hint instructions). Prefetch added to the split loop: kernel
+%  lab, periodic box 64^3, GCC, the generated split passes with cpu.vectorize.prefetch_distance=128
+%  (docs/notes3/board-logs/lab7.log, best of 3 rounds): f32 BY=2 GM=5 GP=3 9.967 -> 9.255 MLUP/s (-7.1 %),
+%  instructions per cell 66.4 -> 88.0 (+33 %); f64 BY=1 5.528 -> 4.802 (-13.1 %), 114.5 -> 159.8 (+40 %).
+%  Report 3 (r03, section "Fewer streams") says the same of the hand-written split kernel. Gains in the
+%  takeaway: slide_numbers.py, "split loop (instead of prefetch)": 1.171 / 1.211 / 1.219 / 1.221.
+%  presentation5 (notes5 F7): round by round the f32 loss is 7.3 / 3.0 / 1.9 % (lab7.log:22,58,94 against
+%  :28,64,100), f64 12 to 13 % in every round; "from more instructions" was not shown and is dropped: the stream
+%  test shows prefetch costing 2 to 3.6x below 20 streams (streams-probe.log, tag c against a, R = 14-19).
+%  The ranking split / in place + prefetch flips with the memory layout (notes5 F18, E6: 0.74 to 1.96).
+\begin{frame}{The split loop in code, and why it needs no prefetch}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.57\textwidth}
+    \vspace{0.5mm}
+    \input{figures/split-code}
+    \column{0.41\textwidth}
+    \vspace{1mm}
+    {\small\bfseries Why no software prefetch\par}
+    \vspace{1mm}
+    \begin{itemize}\small
+      \item At most 7 arrays per pass: the \term{hardware prefetcher} keeps up. Late lines per cell:
+            1.8 in place, 0.34 split (no prefetch in either).
+      \item The collide passes reload lines that are still in L1.
+      \item Tried: with prefetch it is 2 to 7\,\% (f32) and 12 to 13\,\% (f64) slower: below 20
+            streams, prefetch costs more than it saves.
+    \end{itemize}
+    \vspace{1mm}
+    {\scriptsize\color{psgray}Last point: kernel lab, periodic box, GCC. The \sx{1.2} below holds in this
+    memory layout, not in every one (results part).\par}
+  \end{columns}
+  \takeaway{Split loop against in place + prefetch, one core: about \sx{1.2} with both compilers, f32 and f64.}
+\end{frame}
+
+% =============================================================================
+\section{Results and limits}
+
+%  The result figures: speedup (one plot per precision) and MLUP/s are separate figures, one core
+%  first, then several cores. All numbers: scripts/presentation4/slide_numbers.py --tex (see the figures).
+%  Second session: scripts/presentation4/speedup_check.sh (board 19:11-19:28, 3 interleaved rounds; logs
+%  board-logs/board/speedup-*.log). Today / all.sh, best of 3: scalar GCC f32 0.901, Clang f32 0.919, GCC f64
+%  0.989, Clang f64 1.042; aa_pf 0.999 to 1.013; split 0.965 to 1.001. Speedups today (all.sh): GCC f32 aa_pf
+%  5.274 (4.738), split 6.119 (5.548); Clang f32 4.947 (4.551), 6.045 (5.550); GCC f64 4.315 (4.230), 5.000
+%  (5.123); Clang f64 3.944 (4.061), 4.698 (4.959).
+%  presentation5 (notes5 F1, F8, F15): the plotted ratio is everything together (CSE, in place, prefetch or
+%  split loop, RVV) over the plain scalar build, not a vector speedup, so the 8x / 4x lines are gone from these
+%  plots (they are on the next slide, against the vectors' own share); speedups with two digits; the second
+%  session gives the range (GCC f32 split 5.548 -> 6.119, Clang 5.550 -> 6.045; f64 GCC 5.123 -> 5.000, Clang
+%  4.959 -> 4.698). Autovec: the plain kernels pass the x stride at run time (generated StreamCollideEven:
+%  ctr_0 * _stride_f_0), the RVV kernels are generated with assume_inner_stride_one.
+\begin{frame}{Results: everything together, one core, f32}
+  \vspace{1mm}
+  \centering\input{figures/speedup-1core-f32}
+
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}Bars and numbers: GCC; diamonds: Clang. Each compiler against its own plain
+  scalar build. Hatched: auto-vectorized. $64^3$ cells, best of 3 runs of 200 steps. Second session,
+  interleaved: split loop \sx{6.1} (GCC), \sx{6.0} (Clang); plain scalar 8 to 10\,\% slower there.\par}
+  \takeaway{Everything together, f32: \sx{5.5} to \sx{6.1} the plain scalar build, both compilers. The
+    compilers alone do not vectorize these loops: the \term{stride} is only known at run time.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Results: everything together, one core, f64}
+  \vspace{1mm}
+  \centering\input{figures/speedup-1core-f64}
+
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}Bars and numbers: GCC; diamonds: Clang. Each compiler against its own plain
+  scalar build. Hatched: auto-vectorized. $64^3$ cells, best of 3 runs of 200 steps. Second session,
+  interleaved: split loop \sx{5.0} (GCC), \sx{4.7} (Clang).\par}
+  \takeaway{Everything together, f64: \sx{5.1} (GCC), \sx{5.0} (Clang). That is more than 4 lanes can
+    give: most of it does not come from the vectors (next slide).}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  New in presentation5 (notes5 F1): why the "everything together" ratio is not a vector speedup.
+%  Table rows: ldc-gcc-*-f32-1core.log (all.sh), builds scalar, scalar_cse_aa, explicit_cse_aa_pf,
+%  explicit_cse_aa_split. Streams per step: AB 19 read + 19 write + 4 outputs = 42; AA 19 in place + 4 outputs
+%  = 23; split loop: at most 7 arrays per pass (figures/split-loop.tex). Prefetch (cpu.vectorize.prefetch_distance)
+%  and the split (--split) exist only for the explicit (vectorized) variant: SweepgenLdcCPU.py:78-79, 101-102.
+\begin{frame}{Why \sx{5.5} is not what the vectors alone give}
+  \vspace{1mm}
+  {\small The speedups so far add up several changes. Only one of them is the vectors.\par}
+  \vspace{2mm}
+  \centering
+  {\footnotesize\renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}lccccrr@{}}
+    \toprule
+    \textbf{build} & \textbf{CSE} & \textbf{in place} & \textbf{prefetch or split loop} & \textbf{vectors}
+      & \textbf{streams per step} & \textbf{MLUP/s, f32}\\
+    \midrule
+    plain scalar & \no & \no & \no & \no & 42 & 1.38\\
+    best scalar & \yes & \yes & \no & \no & 23 & 2.00\\
+    RVV, in place + prefetch & \yes & \yes & \yes\ prefetch & \yes & 23, prefetched & 6.56\\
+    RVV, split loop & \yes & \yes & \yes\ split loop & \yes & at most 7 per pass & 7.68\\
+    \bottomrule
+  \end{tabular}\par}
+  \vspace{3mm}
+  \raggedright
+  \begin{itemize}\small
+    \item Prefetch and the split loop both get around the limit of slide 12: the X60's prefetchers follow
+          only about 20 streams.
+    \item Our code generator makes both only for vector code. So the best scalar build still walks
+          through 23 streams and waits for memory.
+  \end{itemize}
+  {\scriptsize\color{psgray}GCC, one core, the session of the results slides.\par}
+  \takeaway{A fair test of the vectors alone needs a scalar build that also stays under 20 streams
+    (next slide).}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  New in presentation5 (notes5 F1, E2, E10). Numbers and logs: figures/vector-share.tex.
+%  SWEEPGEN_LDC_OUTPUT=last (SweepgenLdcCPU.cpp:131-132) writes rho and u only in the last step; energies every vs
+%  last agree to 2e-8 (f32) / 5e-16 (f64); one field hash per build and mode. Late lines per cell with output last
+%  (e2-B-output-last-perf.log): scalar_cse_aa 0.359 / 0.486, RVV explicit_cse_aa 0.956 / 1.592 (f32 / f64): at 19
+%  streams the scalar loop copes, the RVV loop without prefetch or split does not (notes5 F17).
+\begin{frame}{The fair test: what the vectors alone give}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.5\textwidth}
+    \vspace{1mm}
+    \centering\input{figures/vector-share}
+    \column{0.48\textwidth}
+    \vspace{2mm}
+    \begin{itemize}\small
+      \item Density and velocity are 4 of the 23 streams, and only needed to look at the result. In this
+            test both builds write them only in the last step: 19 streams, same final result.
+      \item That alone makes the best scalar build twice as fast: 3.98 instead of 2.00\,MLUP/s (f32).
+      \item With the same change, the fastest RVV build is \sx{2.1} faster than that in f32, and \sx{1.4}
+            in f64 (teal bar against dark grey bar).
+    \end{itemize}
+  \end{columns}
+  \vfill
+  {\scriptsize\color{psgray}GCC, one core, $64^3$ cells, best of 3 interleaved rounds of 200 steps, a later
+  session. Fastest RVV build: split loop (f32), in place + prefetch (f64). Clang: \sx{2.4} and \sx{1.45}.
+  Logs: \code{board-logs/notes5/e2-A-*}, \code{e10-A-*}.\par}
+  \takeaway{Vectors alone: about \sx{2} in f32 and \sx{1.4} in f64, far below the \sx{8} and \sx{4} of
+    slide 4. Waiting for memory, not arithmetic, sets the speed.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Wall pass (notes5 F2): t_bc of the best runs in ldc-gcc-rvv-f32-1core.log, 2.0 to 2.2 s per 200 steps in
+%  every build; share of the timed loop: explicit_cse_aa_pf 27.2 %, explicit_cse_aa_split 31.9 % (f64 15.3 /
+%  18.6 %; Clang f32 25.7 / 31.2 %). Split build, stream/collide alone: 11.28 MLUP/s against 7.68 whole program.
+\begin{frame}{One core: the measured speed}
+  \vspace{1mm}
+  \centering\input{figures/mlups-1core}
+
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}MLUP/s: million cell updates per second. Bars and numbers: GCC; diamonds:
+  Clang, next to the bar of the same precision. Hatched: auto-vectorized. $64^3$ cells, best of 3 runs
+  of 200 steps. The wall pass, plain C++ in every build, takes 2.0 to 2.2\,s of each run: 27\,\% and
+  32\,\% of the time of the two fastest f32 builds.\par}
+  \takeaway{Fastest build in this run (split loop), f32 / f64: GCC 7.68 / 4.71, Clang 7.54 / 4.43 MLUP/s.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  New in presentation5 (notes5 F6, F18; E1-C, E6). Same verified executables, same results (one energy per
+%  build and layout); only the placement of the allocations changed through glibc tunables:
+%  default (separate anonymous mmaps, 4 KB pages), huge pages (GLIBC_TUNABLES=glibc.malloc.hugetlb=1,
+%  AnonHugePages 24576 kB), heap (glibc.malloc.mmap_threshold=33554432: the f32 fields in one 36 MB [heap]).
+%  Table: board-logs/notes5/e6-layout.log, GCC f32, 1 core, 2 interleaved rounds, both runs shown as a range.
+%  Box = presentation3's periodic-box executables (SweepgenLbmCPU), cavity = presentation4's (SweepgenLdcCPU).
+%  Last bullet: board-logs/notes5/e1-C-program-thp.log (3 interleaved rounds, medians): default plain scalar
+%  1.368, aa_pf 6.517 (4.76x), split 7.665 (5.60x); huge pages 1.519, 3.999 (2.63x), 8.143 (5.36x).
+%  notes3 lab5 had found the same kind of effect with row alignment (f64 scalar pull +34 % with 64-byte rows).
+\begin{frame}{Speed depends on where the arrays sit in memory}
+  \vspace{1mm}
+  \centering
+  {\footnotesize\renewcommand{\arraystretch}{1.1}
+  \begin{tabular}{@{}llrrr@{}}
+    \toprule
+    \multicolumn{2}{@{}l}{MLUP/s, f32, GCC, one core, two runs}
+      & \textbf{default} & \textbf{huge pages} & \textbf{one heap}\\
+    \midrule
+    periodic box & RVV, in place + prefetch & 7.3 to 7.8 & \textcolor{psred}{3.5 to 3.7} & 7.8 to 7.9\\
+                 & RVV, split loop          & 6.3 to 6.4 & 6.2 to 7.3 & 5.6 to 5.9\\
+    lid-driven cavity & RVV, in place + prefetch & 6.5 & \textcolor{psred}{4.3 to 7.1} & 6.9\\
+                 & RVV, split loop          & 7.6 to 7.7 & 8.0 & 7.6 to 7.7\\
+    \midrule
+    \multicolumn{2}{@{}l}{split loop / in place + prefetch: periodic box} & 0.8 & 1.7 to 2.1 & 0.7\\
+    \multicolumn{2}{@{}r}{lid-driven cavity} & 1.2 & 1.1 to 1.9 & 1.1\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{2mm}
+  \raggedright
+  \begin{itemize}\small
+    \item Same executables, same results bit for bit. Only the place of the arrays changed: \term{huge pages}
+          (2\,MB instead of 4\,KB), or all arrays in one \term{heap} region.
+    \item Which RVV build is faster flips: that is why the periodic box found the split loop slower.
+    \item With huge pages, everything together in f32 reads \sx{2.6} instead of \sx{4.8} (in place +
+          prefetch) and \sx{5.4} instead of \sx{5.6} (split loop).
+  \end{itemize}
+  \takeaway{Read our speedups as ranges, and compare builds only within one memory layout.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Several cores: speedup over plain scalar}
+  \vspace{1mm}
+  \centering\input{figures/speedup-multicore-f32}\hspace{0.6cm}\input{figures/speedup-multicore-f64}
+
+  \vspace{0.5mm}
+  \ref{mcspeeduplegend}
+
+  \vspace{1mm}
+  {\scriptsize\color{psgray}Each build against the plain scalar build of the same compiler and core
+  count. Bars and numbers: GCC; diamonds: Clang. Each core runs one process with its own $64^3$ block.
+  One session, best of 3 runs of 200 steps.\par}
+  \takeaway{The gain shrinks with more cores. 8 cores, GCC: RVV is \sx{2.2} (f32) and \sx{2.0}
+    (f64) the plain scalar build, \sx{1.6} and \sx{1.4} the best scalar build.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  presentation5 (notes5 F4, F5, E9): the traffic is an estimate, not a measurement: bytes per cell (f32 AA
+%  184 B with write-allocate) x the rate of the stream/collide phase alone (explicit_cse_aa_pf, 8 cores, best run
+%  of ldc-gcc-rvv-f32-8core.log: 25.07 MLUP/s without walls and halo exchange) = 4.6 GB/s; the whole-run average
+%  is 3.6 GB/s (walls 12.6 %, halo exchange 10.0 % of the 8-core time). Ceiling: N copies of the stream probe,
+%  one per core (board-logs/notes5/e9-bandwidth.log, unsynchronized, median per process x N): the LBM pattern
+%  (19 read + 23 write streams, prefetch 128 B) moves about 5.8 to 6.9 GB/s with write-allocate on 8 cores.
+%  4 -> 8 cores, the two fastest RVV builds: GCC f32 +8.3 / +6.5 %, Clang +9.3 / +7.3 %; f64 GCC +4.0 / +2.9 %,
+%  Clang +5.5 / +4.0 %. The slower RVV builds gain more (explicit_cse_aa +48 %). Clang against GCC on 8 cores
+%  (0.965 to 0.986) is within the 8-core run-to-run spread (1.3 to 2.2 %), so that line is gone.
+\begin{frame}{Several cores: close to the memory's limit}
+  \vspace{1mm}
+  \centering\input{figures/mlups-multicore}
+
+  \vspace{1mm}
+  \raggedright
+  \begin{itemize}\small
+    \item Each core runs one process with its own $64^3$ block.
+    \item RVV on 8 cores moves about 4.6\,GB/s while it streams and collides (estimated: bytes per cell
+          times cells per second). A test loop with the same access pattern moves about 6\,GB/s.
+  \end{itemize}
+  {\scriptsize\color{psgray}Bars and numbers: GCC; diamonds: Clang. One session, best of 3 runs of
+  200 steps. Hatched: the best scalar build, auto-vectorized.\par}
+  \takeaway{4 to 8 cores: the two fastest RVV builds gain only 6 to 9\,\% (f32) and 3 to 6\,\% (f64).}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  All builds, both compilers, one session (board, scripts/presentation4/all.sh): logs
+%  docs/presentation4/board-logs/board/ldc-*.log; rows printed by
+%  python3 scripts/presentation4/slide_numbers.py --tex docs/presentation4/board-logs/board
+%  Energy spread over the 11 builds per column: f64 <= 1.1e-15, f32 <= 3.9e-6 (relative); the 3 runs
+%  of each build give the same field hash. all.sh: 09:42-14:22 board time; prepare.sh f64 + f32: 7 h.
+%  f32 (notes5 F14, rechecked for presentation5 over all 36 logs): the 10 single-loop builds agree to
+%  0.9e-7 ... 2.7e-7 relative (max - min over mean; GCC 1 core 11.3666528 ... 11.3666559), the split build is
+%  3.4e-6 ... 3.8e-6 away from their mean and closer to the f64 result 11.3665944 (rounding order, not a bug).
+\begin{frame}{Numbers: every build in one session, GCC}
+  \vspace{1mm}
+  \centering
+  {\footnotesize\renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{1 core}} & \multicolumn{2}{c}{\textbf{4 cores}}
+      & \multicolumn{2}{c}{\textbf{8 cores}}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+    MLUP/s, all cores together & f32 & f64 & f32 & f64 & f32 & f64\\
+    \midrule
+    plain scalar & 1.38 & 0.92 & 5.27 & 3.39 & 8.77 & 5.17\\
+    scalar, CSE & 1.57 & 0.97 & 5.62 & 3.56 & 9.12 & 5.33\\
+    scalar, CSE, in place (best scalar) & 2.00 & 1.46 & 7.30 & 5.16 & 12.50 & 7.59\\
+    \midrule
+    auto-vectorized & 1.38 & 0.91 & 5.31 & 3.42 & 8.79 & 5.21\\
+    auto-vectorized, CSE & 1.57 & 0.96 & 5.57 & 3.56 & 9.17 & 5.32\\
+    auto-vectorized, CSE, in place & 2.01 & 1.44 & 7.27 & 5.16 & 12.52 & 7.63\\
+    \midrule
+    RVV, CSE & 2.34 & 1.14 & 7.69 & 4.00 & 10.82 & 5.61\\
+    RVV, CSE, prefetch & 4.58 & 2.42 & 12.35 & 6.59 & 13.89 & 7.09\\
+    RVV, CSE, in place & 2.91 & 1.47 & 9.28 & 5.00 & 13.72 & 7.29\\
+    RVV, CSE, in place, prefetch & 6.56 & 3.89 & 17.91 & 9.89 & 19.40 & 10.29\\
+    \textbf{RVV, CSE, in place, split loop, no prefetch} & \textbf{7.68} & \textbf{4.71} & \textbf{18.31}
+      & \textbf{10.06} & \textbf{19.49} & \textbf{10.35}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{3mm}
+  \raggedright
+  {\scriptsize\color{psgray}
+  Whole program, lid-driven cavity, one process per core with its own $64^3$ block, GCC~14.2,
+  best of 3 runs of 200 steps, default memory layout. Bold: fastest in every column, in this run. All builds
+  agree: energy to $10^{-15}$ in f64; in f32 to $3\cdot 10^{-7}$, except the split loop, which rounds
+  differently ($4\cdot 10^{-6}$ away, closer to f64). Every run repeats bit for bit.
+  \code{scripts/presentation4/all.sh} times both compilers in about 5 hours, after \code{prepare.sh}
+  (7 hours) built and checked them.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Numbers: every build in one session, Clang}
+  \vspace{1mm}
+  \centering
+  {\footnotesize\renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{@{}lrrrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{1 core}} & \multicolumn{2}{c}{\textbf{4 cores}}
+      & \multicolumn{2}{c}{\textbf{8 cores}}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+    MLUP/s, all cores together & f32 & f64 & f32 & f64 & f32 & f64\\
+    \midrule
+    plain scalar & 1.36 & 0.89 & 5.23 & 3.39 & 8.54 & 5.15\\
+    scalar, CSE & 1.68 & 1.00 & 5.97 & 3.68 & 9.38 & 5.29\\
+    scalar, CSE, in place (best scalar) & 2.11 & 1.58 & 7.66 & 5.49 & 12.91 & 7.79\\
+    \midrule
+    auto-vectorized & 1.36 & 0.89 & 5.23 & 3.41 & 8.66 & 5.15\\
+    auto-vectorized, CSE & 1.68 & 0.99 & 5.91 & 3.69 & 9.47 & 5.31\\
+    auto-vectorized, CSE, in place & 2.10 & 1.58 & 7.66 & 5.59 & 12.90 & 7.86\\
+    \midrule
+    RVV, CSE & 2.23 & 1.10 & 7.52 & 3.87 & 10.64 & 5.49\\
+    RVV, CSE, prefetch & 4.20 & 2.16 & 11.88 & 6.35 & 13.40 & 6.95\\
+    RVV, CSE, in place & 2.90 & 1.62 & 9.12 & 4.86 & 13.47 & 7.09\\
+    RVV, CSE, in place, prefetch & 6.19 & 3.63 & 17.19 & 9.43 & 18.79 & 9.95\\
+    \textbf{RVV, CSE, in place, split loop, no prefetch} & \textbf{7.54} & \textbf{4.43} & \textbf{17.90}
+      & \textbf{9.79} & \textbf{19.21} & \textbf{10.18}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{3mm}
+  \raggedright
+  {\scriptsize\color{psgray}
+  The same session and protocol as the GCC table, Clang~18.1 with \code{-mtune=spacemit-x60}.
+  Clang against GCC, same build and core count: 0.89 to 1.10. The RVV builds give bit for bit the
+  same result with both compilers.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Where the code and the details are}
+  \vspace{1mm}
+  \small
+  \begin{tabularx}{\textwidth}{@{}l l X@{}}
+    \toprule
+    Repository & Branch, commit & Contents\\
+    \midrule
+    \href{https://github.com/salehjg/mirrored-pystencil2/tree/rvv-support}{\code{mirrored-pystencil2}}
+      & \code{rvv-support}, \code{a81dc547} & pystencils: RVV target, prefetch, instruction choice\\
+    \href{https://github.com/salehjg/mirrored-walberla/tree/rvv-support}{\code{mirrored-walberla}}
+      & \code{rvv-support}, \code{8c19407a} & waLBerla: flags, in-place update, both benchmarks\\
+    \href{https://github.com/salehjg/my-e4-ws}{\code{my-e4-ws}} & \code{main}, \todo{commit}
+      & workspace: both forks, scripts, raw logs\\
+    \bottomrule
+  \end{tabularx}
+
+  \vspace{4mm}
+  Written reports in the workspace, \code{docs/manual/} (\code{./build.sh}):
+  \begin{itemize}\small
+    \item Report 2: RISC-V vector support in waLBerla (part 1 of this talk, about 60 pages).
+    \item Report 3: toward \sx{8} with RVV on the SpacemiT K1 (part 2, about 45 pages), with
+          the log file behind every number.
+    \item \code{docs/notes5/}: an audit of these numbers; the corrections are in this talk.
+  \end{itemize}
+  \vfill
+  \centering{\Huge\bfseries\color{psred}Thank you\par}
+  \vspace{2mm}
+\end{frame}
+
+% =============================================================================
+\appendix
+\section{Backup}
+
+\begin{frame}{Glossary (1/3)}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[AA pattern] in-place update: one array (A) is read and written; even and odd steps alternate.
+      \item[AB pattern] the usual update: read array A, write array B, then swap.
+      \item[Auto-vectorization] the compiler turns a plain loop into vector code by itself.
+      \item[Best scalar build] no vector instructions, but with the other improvements (CSE, AA pattern).
+      \item[Block] a box of cells; waLBerla cuts the domain into blocks, here one per process.
+      \item[Bounce-back] wall rule: a value that would flow into the wall comes back in the opposite direction.
+      \item[Build time] when the program is compiled; here code generation happens too.
+      \item[Cache line] the unit the memory system moves: 64 bytes on the X60.
+      \item[Cache miss] the data is not in the cache and must come from main memory.
+    \end{description}
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[CSE] common sub-expression elimination: compute each repeated part of a formula once.
+      \item[D3Q19] the LBM model used: 3 dimensions, 19 directions per cell.
+      \item[f32, f64] single (32-bit) and double (64-bit) precision floating point.
+      \item[GCC, Clang] the two C++ compilers we compare (GCC 14.2, Clang 18.1).
+      \item[Generator script] a Python file per program that says which kernels to generate.
+      \item[Ghost layer] a one-cell copy of the neighbour block's border around each block.
+      \item[Halo exchange] refreshing the ghost layers after each time step.
+      \item[Hardware prefetcher] part of the cache that spots regular access patterns and loads data early.
+    \end{description}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Glossary (2/3)}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[Heap] one growing memory region from which the C library hands out memory.
+      \item[Hint] an instruction that older cores run as a no-op.
+      \item[Huge page] a 2\,MB page of memory instead of 4\,KB: fewer address translations.
+      \item[Inline assembly] instructions written by hand in C++ code.
+      \item[Intrinsic] a C/C++ function that the compiler turns into one machine instruction.
+      \item[K1, X60] the SpacemiT chip on the board, and its core type.
+      \item[Kernel] the generated loop that updates all cells once.
+      \item[Kernel lab] a small program that times one kernel alone, without waLBerla.
+      \item[L1, L2] the core's own cache (32\,KB), the cache of 4 cores (512\,KB).
+    \end{description}
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[Lane] one number's slot in a vector register: 8 for f32, 4 for f64.
+      \item[Late line] a cache line that is not in the cache when the loop needs it: the core waits.
+      \item[Layout fzyx] waLBerla's memory order: $x$ changes fastest, then $y$, then $z$; each value $f_i$ has its own array.
+      \item[LBM] lattice Boltzmann method: fluid simulation on a grid of cells.
+      \item[lbmpy] Python package that derives the LBM formulas for one cell.
+      \item[Lid-driven cavity] a closed box whose top wall moves: a standard flow test case.
+      \item[MLUP/s] million cell updates per second.
+      \item[MPI] the standard library for messages between processes, also between computers.
+      \item[Periodic box] the test case of our earlier work: no walls, what leaves one side comes back on the other.
+    \end{description}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Glossary (3/3)}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[Padding] unused values at the end of each row, so that every row starts at a multiple of 16 bytes.
+      \item[Plain scalar build] the same program compiled without any vector instructions.
+      \item[Pull] how the kernel moves the values: each cell fetches every value from the neighbour it comes from.
+      \item[pystencils] Python package that turns formulas into a C++ loop over all cells.
+      \item[RISC-V] an open instruction set architecture.
+      \item[Run time] when the compiled program runs.
+      \item[RVV] the RISC-V vector extension.
+      \item[Software prefetch] an instruction that asks the cache to load data that will be needed soon.
+      \item[Spill] saving a register to memory and loading it back, for lack of registers.
+      \item[Split loop] the cell update in 8 short passes over a block of 1 or 2 rows, few arrays per pass.
+      \item[Stall] a cycle in which the core cannot go on: it waits for data or for a result.
+    \end{description}
+    \column{0.49\textwidth}
+    \scriptsize
+    \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[Stencil] the set of cells needed to update one cell; here 19 (D3Q19).
+      \item[Stream] one run of consecutive addresses that a loop walks through, e.g.\ one array.
+      \item[Stride] the address distance between two neighbouring cells of a loop.
+      \item[sweepgen] part of waLBerla: wraps generated kernels into C++ classes.
+      \item[.vf form] an RVV instruction form with one vector and one scalar operand.
+      \item[waLBerla] open-source C++ framework for fluid simulations.
+      \item[Wall pass] the sweep that applies bounce-back to the cells next to a wall.
+      \item[Write-allocate] before a store, the cache first loads the line from memory.
+      \item[Zicbop] the RISC-V extension with prefetch instructions.
+    \end{description}
+  \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Numbers: one step at a time (periodic box, report 3)}
+  \vspace{1mm}
+  \centering
+  {\small
+  \begin{tabular}{@{}lrrrr@{}}
+    \toprule
+    & \multicolumn{2}{c}{\textbf{f32}} & \multicolumn{2}{c}{\textbf{f64}}\\
+    \cmidrule(lr){2-3}\cmidrule(l){4-5}
+    Step & MLUP/s & vs plain & MLUP/s & vs plain\\
+    \midrule
+    plain scalar build & 1.40 & \sx{1.00} & 0.95 & \sx{1.00}\\
+    best scalar build (CSE, in-place update) & 2.05 & \sx{1.46} & 1.44 & \sx{1.51}\\
+    RVV code at the start of part 2 & 2.40 & \sx{1.72} & 1.21 & \sx{1.26}\\
+    + software prefetch & 4.70 & \sx{3.36} & 2.37 & \sx{2.48}\\
+    + in-place update and new instruction choice & 7.08 & \sx{5.06} & 3.95 & \sx{4.14}\\
+    + row addresses once per row (second session) & 7.25 & \sx{5.24} & 4.04 & \sx{4.23}\\
+    \bottomrule
+  \end{tabular}\par}
+
+  \vspace{3mm}
+  \raggedright
+  {\scriptsize\color{psgray}
+  Whole program (kernel, halo exchange, time loop), $64^3$ cells, one core, GCC~14, best of 3
+  runs of 200 time steps. Rows 1 to 5 are from one session; the last row is from a second
+  session and is compared with that session's own scalar build (1.38 and 0.95\,MLUP/s). The
+  part 1 measurement (\sx{1.73}, \sx{1.31}) is an earlier session. The results slides measure the
+  lid-driven cavity instead (every build, GCC and Clang). Like the results slides, every ratio here is
+  everything together, not the vectors alone.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  presentation5 (notes5 F12): oracle domains from board-logs/board/verify-*.log (16^3, 32x16x16 on 2
+%  processes, 16x24x8 on 6 processes, 100/101 steps); mutations M1-M6 on x86, GCC f64, builds scalar and
+%  scalar_cse_aa (board-logs/x86/mutation-*.log), each caught by at least one check (M4, M5 pass at np = 1 by
+%  design); ctest board-logs/x86/ctest-gcc-f64.log (its generator never enables vectorization); 0 RVV
+%  instructions: notes5 E5 (the process also loads zlib-ng, which has 132, not used in the timed loop);
+%  every domain has x a multiple of the vector length and y a multiple of the split's 2 rows.
+\begin{frame}{How we know the results are still correct}
+  \vspace{1mm}
+  \begin{itemize}\small
+    \item \term{Reference}: a separate NumPy program computes the same cavity on small boxes ($16^3$ to
+          $32\times16\times16$, 1 to 6 processes, 100 steps). Every build matches it cell by cell:
+          differences at most $2\cdot 10^{-16}$ in f64, at the level of rounding.
+    \item One block or 8 blocks: bit-for-bit the same result, for every build.
+    \item Broken on purpose (wrong wall rule, missing wall pass, missing exchange): each broken version
+          fails at least one check.
+    \item Scalar builds: 0 vector instructions in the executable. Every file: \code{-O3}.
+  \end{itemize}
+  \vspace{1mm}
+  {\scriptsize\color{psgray}Checked on x86 and on the board: GCC and Clang, f32 and f64, all 11 builds
+  (broken versions: x86, GCC, f64). In f32 every build differs from the reference by less than $10^{-7}$,
+  within 3\,\% of the scalar build's difference. The timed programs are exactly the checked files (same
+  checksum); at $64^3$ the builds are checked against each other. Mass is conserved and the flow is
+  mirror-symmetric to rounding. 24 of 24 waLBerla tests pass (x86, plain C++ kernels). Not yet checked:
+  box sizes that are not a multiple of the vector length.\par}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Where each change lives}
+  \centering{\brmarkerstrue\resizebox{0.88\textwidth}{!}{\input{figures/build-run}}}
+
+  \vspace{1.5mm}
+  {\scriptsize\renewcommand{\arraystretch}{0.95}
+  \begin{tabular}{@{}lll@{}}
+    \tagdot{psblue}\ \textbf{part 1: make it work} & \tagdot{psteal}\ \textbf{part 2: make it fast}
+      & \tagdot{psteal}\ \textbf{part 2: the last three changes}\\
+    1 RISC-V compiler flags & 5 prefetch, instruction choice, row addresses & 10 no density and velocity output\\
+    2 RVV target in pystencils & 6 in-place kernels \quad 7 their halo exchange & 11 halo copy per direction\\
+    3 benchmark program \quad 4 Clang fix & 8 X60 flag for Clang \quad 9 in-place time loop & 12 split kernel\\
+  \end{tabular}\par}
+\end{frame}
+
+\end{document}

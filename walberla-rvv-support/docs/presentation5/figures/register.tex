@@ -1,0 +1,19 @@
+% Slide 5: one 256-bit RVV register as 8 f32 lanes or 4 f64 lanes, and one vector addition.
+\begin{tikzpicture}[
+    ln/.style={draw=white,line width=0.6pt,minimum height=5.5mm,inner sep=0pt,font=\scriptsize}]
+  \def\w{0.68}
+  \node[lbl,anchor=west] at (0,0.6) {one vector register: 256 bits};
+  % a + b = c with 8 f32 lanes
+  \foreach \y/\col/\v in {0/psblue!30/a, -0.62/psblue!30/b, -1.48/psteal!40/c}
+    \foreach \k in {0,...,7}
+      \node[ln,fill=\col,minimum width=\w cm] at (\k*\w+\w/2,\y) {$\v_{\k}$};
+  \node[font=\small] at (-0.3,-0.62) {$+$};
+  \node[font=\small] at (-0.3,-1.48) {$=$};
+  \draw[psgray,thick] (0,-1.0) -- (8*\w,-1.0);
+  \node[lbl,anchor=north west,text width=55mm,align=left] at (0,-1.85)
+    {f32 (single precision): 8 lanes of 32 bits, so one \code{vfadd} does 8 additions};
+  % f64
+  \foreach \k in {0,...,3}
+    \node[ln,fill=psorange!30,minimum width=2*\w cm] at (\k*2*\w+\w,-3.05) {$d_{\k}$};
+  \node[lbl,anchor=north west] at (0,-3.4) {f64 (double precision): 4 lanes of 64 bits};
+\end{tikzpicture}

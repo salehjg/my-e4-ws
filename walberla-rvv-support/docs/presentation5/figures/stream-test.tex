@@ -1,0 +1,28 @@
+% Slide "The stream test: the code behind the plot".
+% Top: the timed loop of misc/x60-lab/probes/mem.cpp, function stream() (lines 124-158), simplified:
+% the real code adds the 8 loads with a sum tree (a0+a1, a2+a3, ...) so they do not wait for each
+% other, and has further options (touch-ahead loads, prefetch.w, cbo.zero, scalar loads) not used here.
+% Each array is 4 MB (f32); the time is the best of 3 passes, read with the cycle counter
+% (perf_event_open, probes/pmu.hpp). Built with g++ -O2 -march=rv64gcv_zvl256b_zicboz.
+% Bottom: the commands and their results, all from presentation4's runs (scripts/presentation4/streams_check.sh):
+% first three docs/presentation4/board-logs/board/streams-probe.log (tags a and c, reps=3), last two
+% streams-pattern.log (best of 3 runs: 180.7 / 181.9 / 176.3 and 90.0 / 91.0 / 90.8; report 3 had 184.3 and 90.4).
+% Printed by streams_table.py --tex; checked by check_figures.py.
+\begin{tikzpicture}
+  \node[codebox,anchor=north west] (loop) at (0,0) {%
+for\ (i\ =\ 0;\ i\ <\ n;\ i\ +=\ 8)\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ 8\ floats\ =\ one\ vector;\ all\ arrays\ advance}\\
+\ \ if\ (pfr\ \&\&\ i\ \%\ 16\ ==\ 0)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ optional,\ once\ per\ 64-byte\ line:}\\
+\ \ \ \ for\ (r\ =\ 0;\ r\ <\ R;\ r++)\ prefetch\_r(\&a[r][i]\ +\ pfr/4);\ \textcolor{psgray}{//\ prefetch.r}\\
+\ \ for\ (r\ =\ 0;\ r\ <\ R;\ r\ +=\ 8)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ R\ read\ streams:\ 8\ loads,\ then\ their\ sum}\\
+\ \ \ \ acc\ +=\ vle32(\&a[r][i])\ +\ ...\ +\ vle32(\&a[r+7][i]);\\
+\ \ for\ (w\ =\ 0;\ w\ <\ W;\ w++)\ vse32(\&b[w][i],\ acc);\ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ W\ write\ streams}\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (loop.north west) {the timed loop};
+  \node[codebox,anchor=north west] (cmd) at ([yshift=-7mm]loop.south west) {%
+./mem\ stream\ \ 8\ \ 0\ thp=1\ stagger=4160\ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ \ 19\ cycles\ per\ line\ (8\ read\ streams)}\\
+./mem\ stream\ 24\ \ 0\ thp=1\ stagger=4160\ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ 365\ (24\ read\ streams)}\\
+./mem\ stream\ 24\ \ 0\ thp=1\ stagger=4160\ pfr=512\ \ \textcolor{psgray}{//\ 191\ (the\ same,\ with\ software\ prefetch)}\\
+./mem\ stream\ 19\ 23\ thp=1\ stagger=4160\ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ 176\ (our\ loop's\ 42\ streams)}\\
+./mem\ stream\ 19\ 23\ thp=1\ stagger=4160\ pfr=128\ \ \textcolor{psgray}{//\ \ 90\ (the\ same,\ with\ software\ prefetch)}};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (cmd.north west) {runs on one X60 core: \code{taskset -c 2 ./mem stream R W ...}};
+\end{tikzpicture}

@@ -1,0 +1,22 @@
+% Slide 11: software prefetch along one row (f32). One block = one loop iteration = 8 floats =
+% 32 bytes; 128 bytes ahead = 4 iterations ahead. Two blocks = one 64-byte cache line.
+\begin{tikzpicture}
+  \def\w{1.08}
+  \foreach \k in {0,...,11} {
+    \ifnum\k<1 \def\col{psgray!25}\else\def\col{white}\fi
+    \ifnum\k=1 \def\col{psblue!45}\fi
+    \ifnum\k=5 \def\col{psteal!45}\fi
+    \draw[psgray!70,fill=\col] (\k*\w,0) rectangle ++(\w,0.6);
+  }
+  \node[font=\scriptsize] at (1.5*\w,0.3) {now};
+  \node[font=\scriptsize] at (5.5*\w,0.3) {asked for};
+  \draw[-{Stealth[length=2mm]},thick,psteal!85!black] (1.5*\w,0.65) to[bend left=35]
+    node[above,font=\scriptsize,text=black] {prefetch: ``I will need this soon'', 128 bytes ahead} (5.5*\w,0.65);
+  \foreach \k in {0,2,...,10}
+    \draw[decorate,decoration={brace,amplitude=2.5pt,mirror},psgray!80] (\k*\w+0.04,-0.08) -- (\k*\w+2*\w-0.04,-0.08);
+  \node[lbl,anchor=north] at (6*\w,-0.25) {each block: 8 floats handled by one loop iteration; each pair of blocks: one 64-byte cache line};
+  \draw[arr] (-0.1,-0.95) -- node[lbl,below] {loop runs this way} (3*\w,-0.95);
+  \node[lbl,anchor=west,align=left] at (4.4*\w,-1.05)
+    {without it: the core waits hundreds of cycles at many new lines\\
+     with it: the line is already on its way when the loop gets there};
+\end{tikzpicture}

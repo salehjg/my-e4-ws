@@ -1,0 +1,23 @@
+% Slide "The benchmark": the flow of waLBerla's DoubleShearLayer example, as the benchmark
+% SweepgenLbmCPU sets it up (report r03, "The benchmark application"): a fully periodic box;
+% u_x = u0 tanh(kappa (y - 1/4)) for y <= 1/2 and u0 tanh(kappa (3/4 - y)) above, so the middle
+% band moves right, the outer bands left, with two shear layers at y = 1/4 and 3/4; a small
+% sine perturbation u_y = delta u0 sin(2 pi (x + 1/4)) makes them roll up. Cross-section, 2D.
+\begin{tikzpicture}
+  \def\L{3.3}
+  \fill[psblue!9]  (0,0) rectangle (\L,\L/4);
+  \fill[psteal!13] (0,\L/4) rectangle (\L,3*\L/4);
+  \fill[psblue!9]  (0,3*\L/4) rectangle (\L,\L);
+  \foreach \yy in {0.25,0.75}
+    \draw[psred!75!black,thick,smooth,samples=40,domain=0:\L]
+      plot (\x,{\yy*\L+0.09*sin(360*(\x/\L+0.25))});
+  \draw[psgray!80] (0,0) rectangle (\L,\L);
+  \foreach \x in {0.35,1.3,2.25} {
+    \draw[arr,psteal!80!black,thick] (\x,\L/2) -- ++(0.75,0);
+    \draw[arr,psblue!80!black] (\x+0.75,\L/8) -- ++(-0.75,0);
+    \draw[arr,psblue!80!black] (\x+0.75,7*\L/8) -- ++(-0.75,0);
+  }
+  \node[font=\tiny,text=psred!80!black,anchor=west] at (\L+0.05,3*\L/4) {shear layer};
+  \node[font=\tiny,text=psred!80!black,anchor=west] at (\L+0.05,\L/4) {shear layer};
+  \node[lbl,anchor=north] at (\L/2,-0.08) {waLBerla's \code{DoubleShearLayer}: a periodic\\box, $64^3$ cells per core};
+\end{tikzpicture}

@@ -1,0 +1,235 @@
+== start Mon Nov 16 06:20:12 PM CST 2026, 3 rounds
+== 18:20:12 ref-start: busy cores 0.58 of 8; top:  3.5 sshd, 1.3 disp_eng_share_thread, 1.2 rsyslogd
+   mlups=1.3566429871694732 fieldhash=0x4e89844392b3dbdf t_bc=2.229933500289917
+   mlups=1.3425888496569132 fieldhash=0x4e89844392b3dbdf t_bc=2.2616357803344727
+   mlups=1.3620258714036917 fieldhash=0x4e89844392b3dbdf t_bc=2.249138355255127
+== 18:22:20 warmup-clang-f32-10: busy cores 0.98 of 8; top: 92.1 check-new-relea, 1.3 disp_eng_share_thread, 1.2 rsyslogd
+   mlups=6.1805659976904774 fieldhash=0xd6f00f6bcd25138e t_bc=2.2846550941467285
+== 18:22:31 warmup-clang-f32-2000: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=6.1784609932567545 fieldhash=0xccd80841af4e6f2c t_bc=2.2521665096282959
+== 18:24:07 warmup-clang-f32-2000: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=6.1681058823753814 fieldhash=0xccd80841af4e6f2c t_bc=2.3189013004302979
+== 18:25:44 warmup-clang-f32-10: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=6.1984614041111401 fieldhash=0xd6f00f6bcd25138e t_bc=2.2468910217285156
+== 18:25:55 warmup-clang-f32-10: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=6.1736154916749859 fieldhash=0xd6f00f6bcd25138e t_bc=2.2463579177856445
+== 18:26:07 warmup-clang-f32-2000: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=6.0875681340245205 fieldhash=0xccd80841af4e6f2c t_bc=2.2411293983459473
+== 18:27:45 scalartree-gcc-f32-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2437546209687129 fieldhash=0xce523d69f3292fb1 t_bc=2.0469534397125244
+== 18:28:31 vectortree-gcc-f32-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2064943932795891 fieldhash=0xce523d69f3292fb1 t_bc=2.0450069904327393
+== 18:29:20 scalartree-gcc-f32-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8073592008905519 fieldhash=0x1871071d87f11a9a t_bc=2.2413859367370605
+== 18:29:53 vectortree-gcc-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8227320982809403 fieldhash=0x1871071d87f11a9a t_bc=2.2480728626251221
+== 18:30:26 scalartree-gcc-f64-scalar: busy cores 0.03 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.88600539287205127 fieldhash=0x10656311b8feb388 t_bc=2.0222587585449219
+== 18:31:31 vectortree-gcc-f64-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.9081943450553468 fieldhash=0x10656311b8feb388 t_bc=2.0192611217498779
+== 18:32:34 scalartree-gcc-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3554314225604718 fieldhash=0x4e89844392b3dbdf t_bc=2.2142465114593506
+== 18:33:17 vectortree-gcc-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3458522505963864 fieldhash=0x4e89844392b3dbdf t_bc=2.1832690238952637
+== 18:34:01 scalartree-clang-f32-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.1938031552616601 fieldhash=0x3633c760e5e09380 t_bc=2.1920661926269531
+== 18:34:50 vectortree-clang-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2293584736133545 fieldhash=0x3633c760e5e09380 t_bc=2.2367415428161621
+== 18:35:38 scalartree-clang-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.9939123620968939 fieldhash=0xd61bf4babf97708f t_bc=2.2651917934417725
+== 18:36:08 vectortree-clang-f32-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.9243876410394296 fieldhash=0xd61bf4babf97708f t_bc=2.2370846271514893
+== 18:36:39 scalartree-clang-f64-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.89232429161065341 fieldhash=0x4601ba1f548b0608 t_bc=2.144092321395874
+== 18:37:44 vectortree-clang-f64-scalar: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.88718579080189852 fieldhash=0x4601ba1f548b0608 t_bc=2.1541919708251953
+== 18:38:49 scalartree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.4855258455606108 fieldhash=0x8ead726a2aed91f5 t_bc=2.2270200252532959
+== 18:39:29 vectortree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.4177011556456685 fieldhash=0x8ead726a2aed91f5 t_bc=2.1871621608734131
+== 18:40:11 vectortree-gcc-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2276576242973729 fieldhash=0xce523d69f3292fb1 t_bc=2.0880913734436035
+== 18:40:58 scalartree-gcc-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2259387359634915 fieldhash=0xce523d69f3292fb1 t_bc=2.0514571666717529
+== 18:41:46 vectortree-gcc-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8423058752187322 fieldhash=0x1871071d87f11a9a t_bc=2.242218017578125
+== 18:42:18 scalartree-gcc-f32-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8800245097260808 fieldhash=0x1871071d87f11a9a t_bc=2.2680072784423828
+== 18:42:50 vectortree-gcc-f64-scalar: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.8806240453082087 fieldhash=0x10656311b8feb388 t_bc=2.023123025894165
+== 18:43:55 scalartree-gcc-f64-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.87870488642939371 fieldhash=0x10656311b8feb388 t_bc=2.0318629741668701
+== 18:45:01 vectortree-gcc-f64-scalar_cse_aa: busy cores 0.04 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3527938376803195 fieldhash=0x4e89844392b3dbdf t_bc=2.2542216777801514
+== 18:45:44 scalartree-gcc-f64-scalar_cse_aa: busy cores 0.02 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3704173815060126 fieldhash=0x4e89844392b3dbdf t_bc=2.2220454216003418
+== 18:46:27 vectortree-clang-f32-scalar: busy cores 0.08 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.204905131464636 fieldhash=0x3633c760e5e09380 t_bc=2.1781678199768066
+== 18:47:16 scalartree-clang-f32-scalar: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2333385827078314 fieldhash=0x3633c760e5e09380 t_bc=2.1740882396697998
+== 18:48:03 vectortree-clang-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8988193471256332 fieldhash=0xd61bf4babf97708f t_bc=2.2403275966644287
+== 18:48:35 scalartree-clang-f32-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.9275969591414512 fieldhash=0xd61bf4babf97708f t_bc=2.240588903427124
+== 18:49:06 vectortree-clang-f64-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.88820243697148504 fieldhash=0x4601ba1f548b0608 t_bc=2.1405544281005859
+== 18:50:11 scalartree-clang-f64-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.87183399372850734 fieldhash=0x4601ba1f548b0608 t_bc=2.1213908195495605
+== 18:51:17 vectortree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.5028475519993081 fieldhash=0x8ead726a2aed91f5 t_bc=2.1809039115905762
+== 18:51:57 scalartree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.4437239629710452 fieldhash=0x8ead726a2aed91f5 t_bc=2.2059364318847656
+== 18:52:38 scalartree-gcc-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2146937007407625 fieldhash=0xce523d69f3292fb1 t_bc=2.0403859615325928
+== 18:53:26 vectortree-gcc-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2021244542798093 fieldhash=0xce523d69f3292fb1 t_bc=2.0445711612701416
+== 18:54:14 scalartree-gcc-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8169531839636672 fieldhash=0x1871071d87f11a9a t_bc=2.2523593902587891
+== 18:54:47 vectortree-gcc-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.8090105263923355 fieldhash=0x1871071d87f11a9a t_bc=2.247189998626709
+== 18:55:20 scalartree-gcc-f64-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.87745618969305683 fieldhash=0x10656311b8feb388 t_bc=2.0329749584197998
+== 18:56:26 vectortree-gcc-f64-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.87628771610714162 fieldhash=0x10656311b8feb388 t_bc=2.0338301658630371
+== 18:57:31 scalartree-gcc-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3636111342692459 fieldhash=0x4e89844392b3dbdf t_bc=2.2578232288360596
+== 18:58:15 vectortree-gcc-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.359923581651959 fieldhash=0x4e89844392b3dbdf t_bc=2.2721672058105469
+== 18:58:58 scalartree-clang-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.1875540080522979 fieldhash=0x3633c760e5e09380 t_bc=2.1883809566497803
+== 18:59:47 vectortree-clang-f32-scalar: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.2073314780331106 fieldhash=0x3633c760e5e09380 t_bc=2.1824026107788086
+== 19:00:35 scalartree-clang-f32-scalar_cse_aa: busy cores 0.04 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.9795310155805808 fieldhash=0xd61bf4babf97708f t_bc=2.281336784362793
+== 19:01:06 vectortree-clang-f32-scalar_cse_aa: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.9414652352030239 fieldhash=0xd61bf4babf97708f t_bc=2.2267634868621826
+== 19:01:37 scalartree-clang-f64-scalar: busy cores 1.03 of 8; top:  6.4 sshd, 4.3 sftp-server, 2.7 sshd
+   mlups=0.88797347961468254 fieldhash=0x4601ba1f548b0608 t_bc=2.1492269039154053
+== 19:02:42 vectortree-clang-f64-scalar: busy cores 0.00 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=0.88090468665700405 fieldhash=0x4601ba1f548b0608 t_bc=2.1462914943695068
+== 19:03:47 scalartree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.483113908682641 fieldhash=0x8ead726a2aed91f5 t_bc=2.2068686485290527
+== 19:04:28 vectortree-clang-f64-scalar_cse_aa: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.485620364082179 fieldhash=0x8ead726a2aed91f5 t_bc=2.15181565284729
+== 19:05:08 ref-end: busy cores 0.01 of 8; top:  1.3 disp_eng_share_thread, 1.2 rsyslogd, 0.5 systemd-journal
+   mlups=1.3424351189827617 fieldhash=0x4e89844392b3dbdf t_bc=2.2591269016265869
+   mlups=1.3420536883334904 fieldhash=0x4e89844392b3dbdf t_bc=2.2540884017944336
+   mlups=1.341059773885606 fieldhash=0x4e89844392b3dbdf t_bc=2.2566325664520264
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | reference start | reference end |
+|---|---|---|
+| scalar_cse_aa | 1.36 | 1.34 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| reference start | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647609 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+| reference end | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647609 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | reference start | reference end |
+|---|---|---|
+| scalar_cse_aa | 5.8% / 0.0% | 5.8% / 0.0% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 warm-up 10 | clang f32 warm-up 2000 |
+|---|---|---|
+| explicit_cse_aa_pf | 6.20 | 6.18 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 warm-up 10 | 1x1x1 blocks, 64x64x64, 200 steps | 11.366652814113262 | 11.366652814113262 | 0.0e+00 | 262144.00016909838 | 262144.00016909838 | 1 of 1 variants |
+| clang f32 warm-up 2000 | 1x1x1 blocks, 64x64x64, 200 steps | 26.321984745790221 | 26.321984745790221 | 0.0e+00 | 262143.99804645777 | 262143.99804645777 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 warm-up 10 | clang f32 warm-up 2000 |
+|---|---|---|
+| explicit_cse_aa_pf | 26.6% / 0.1% | 26.5% / 0.1% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f32 scalar tree | gcc f32 vector tree |
+|---|---|---|
+| scalar | 1.24 (1.00x) | 1.23 (1.00x) |
+| scalar_cse_aa | 1.88 (1.51x) | 1.84 (1.50x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f32 scalar tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366654542853633 | 11.366655838162176 | 1.1e-07 | 262143.99988484383 | 262144.00018298626 | 2 of 2 variants |
+| gcc f32 vector tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366654542853633 | 11.366655838162176 | 1.1e-07 | 262143.99988484383 | 262144.00018298626 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f32 scalar tree | gcc f32 vector tree |
+|---|---|---|
+| scalar | 4.9% / 0.0% | 4.9% / 0.0% |
+| scalar_cse_aa | 8.1% / 0.0% | 7.9% / 0.0% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 scalar tree | gcc f64 vector tree |
+|---|---|---|
+| scalar | 0.89 (1.00x) | 0.91 (1.00x) |
+| scalar_cse_aa | 1.37 (1.55x) | 1.36 (1.50x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 scalar tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647613 | 3.1e-16 | 262143.99999999857 | 262143.99999999857 | 2 of 2 variants |
+| gcc f64 vector tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647613 | 3.1e-16 | 262143.99999999857 | 262143.99999999857 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 scalar tree | gcc f64 vector tree |
+|---|---|---|
+| scalar | 3.4% / 0.0% | 3.5% / 0.0% |
+| scalar_cse_aa | 5.8% / 0.0% | 5.9% / 0.0% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 scalar tree | clang f32 vector tree |
+|---|---|---|
+| scalar | 1.23 (1.00x) | 1.23 (1.00x) |
+| scalar_cse_aa | 1.99 (1.62x) | 1.94 (1.58x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 scalar tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366652830002709 | 11.366654124957959 | 1.1e-07 | 262143.99982398748 | 262144.00016671419 | 2 of 2 variants |
+| clang f32 vector tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366652830002709 | 11.366654124957959 | 1.1e-07 | 262143.99982398748 | 262144.00016671419 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 scalar tree | clang f32 vector tree |
+|---|---|---|
+| scalar | 5.1% / 0.0% | 5.2% / 0.0% |
+| scalar_cse_aa | 8.6% / 0.0% | 8.2% / 0.0% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f64 scalar tree | clang f64 vector tree |
+|---|---|---|
+| scalar | 0.89 (1.00x) | 0.89 (1.00x) |
+| scalar_cse_aa | 1.49 (1.66x) | 1.50 (1.69x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f64 scalar tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647618 | 11.366594364647623 | 4.7e-16 | 262143.99999999857 | 262143.99999999857 | 2 of 2 variants |
+| clang f64 vector tree | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647618 | 11.366594364647623 | 4.7e-16 | 262143.99999999857 | 262143.99999999857 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f64 scalar tree | clang f64 vector tree |
+|---|---|---|
+| scalar | 3.6% / 0.0% | 3.6% / 0.0% |
+| scalar_cse_aa | 6.3% / 0.0% | 6.3% / 0.0% |
+== RECHECK DONE Mon Nov 16 07:07:18 PM CST 2026

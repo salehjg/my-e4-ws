@@ -1,0 +1,78 @@
+% Slide "How many streams the stencil needs" (new in presentation5, after the user asked how many streams the
+% flat arrays of the layout slide stand for). Same strip, numbers and colours as figures/field-layout.tex: the
+% 3 x 3 x 3 cube stored x fastest, then y, then z; cell 13 in the middle (blue), its 6 face neighbours (teal).
+% Top: if ONE array held all 7 values, the reads at 12, 13, 14 (same row, same cache line) form one stream,
+% and 10 (row y-1), 16 (row y+1), 4 (plane z-1), 22 (plane z+1) one each: 5 streams (the classic 7-point
+% stencil: 5 read streams + 1 written = 6, the old bullet of the stream slide).
+% Bottom: our kernel (waLBerla fzyx, pull, lbmpy order): every value has its own array and is read at one place
+% only, x - c_i: f_0 at 13, f_1 (N, c = (0,1,0)) at 13 - 3 = 10, f_2 (S) at 16, f_3 (W, c = (-1,0,0)) at 14,
+% f_4 (E) at 12, f_5 (T, c = (0,0,1)) at 13 - 9 = 4, f_6 (B) at 22 (checked against the generated StreamCollide,
+% see figures/stencil-d3q19.tex). So one stream per array: 19 read, plus 19 written (AB pattern) and 4 outputs
+% (rho, u_x, u_y, u_z) = 42 (the generated loop has 19 prefetch_read + 23 prefetch_write, one per array).
+% In place (AA): reads and writes use the same 19 arrays at the same addresses: 19 + 4 = 23.
+% Overlays: 1 one array, 5 streams; 2 our kernel, 7 arrays, 7 streams; 3 all 19 arrays and the total.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{
+    cb/.style={draw=psgray!60,line width=0.3pt},
+    num/.style={font=\tiny,inner sep=0pt},
+    me/.style={draw=psblue!80!black,fill=psblue!50,line width=0.9pt},
+    nb/.style={draw=psteal!70!black,fill=psteal!40,line width=0.9pt},
+    hd/.style={font=\scriptsize,anchor=south west,inner sep=0pt},
+    tl/.style={font=\tiny,text=psgray!90!black,inner sep=1pt},
+    sn/.style={circle,draw=psteal!70!black,fill=white,font=\tiny\bfseries,text=psteal!50!black,
+               inner sep=0.4pt,minimum size=3.3mm},
+    arrlbl/.style={font=\scriptsize,anchor=east,inner sep=1pt},
+  }
+  \path (0,-0.55) rectangle (8.1,4.55);   % the same size on every overlay
+  \def\sw{0.26}\def\xo{1.0}
+  %   the x position of slot k, and of its centre
+  \def\slx#1{{\xo+(#1)*\sw}}
+  \def\scx#1{{\xo+(#1+0.5)*\sw}}
+
+  % ================= 1: one array holding all 7 values ===============================================
+  \node[hd] at (0,4.32) {If \textbf{one array} held all 7 values: \textbf{5 streams}};
+  \node[arrlbl] at (\xo-0.05,3.5) {one array};
+  \foreach \k in {0,...,26} {
+    \pgfmathtruncatemacro\y{mod(int(\k/3),3)}
+    \pgfmathtruncatemacro\z{\k/9}
+    \pgfmathtruncatemacro\sh{12+13*\y}
+    \ifcase\z \def\hue{psorange}\or\def\hue{psviolet}\or\def\hue{psgray}\fi
+    \draw[cb,fill=\hue!\sh] (\slx{\k},3.35) rectangle ++(\sw,0.3);
+    \node[num] at (\scx{\k},3.5) {\k};
+  }
+  \foreach \k in {4,10,12,14,16,22} {
+    \draw[nb] (\slx{\k},3.35) rectangle ++(\sw,0.3);
+    \node[num] at (\scx{\k},3.5) {\k};
+  }
+  \draw[me] (\slx{13},3.35) rectangle ++(\sw,0.3);
+  \node[num,font=\tiny\bfseries] at (\scx{13},3.5) {13};
+  %   the streams: 12-14 share a row (and a cache line), the others lie in other rows and planes
+  \draw[decorate,decoration={brace,amplitude=2.5pt},psteal!70!black] (\slx{12},3.7) -- (\slx{15},3.7);
+  \node[sn] at (\scx{13},4.0) {1};
+  \foreach \k/\n in {10/2, 16/3, 4/4, 22/5} {
+    \draw[psteal!70!black,line width=0.4pt] (\scx{\k},3.68) -- (\scx{\k},3.84);
+    \node[sn] at (\scx{\k},4.0) {\n};
+  }
+  \foreach \k/\t in {13/{row $y$}, 10/{row $y{-}1$}, 16/{row $y{+}1$}, 4/{plane $z{-}1$}, 22/{plane $z{+}1$}}
+    \node[tl,anchor=north] at (\scx{\k},3.33) {\t};
+
+  % ================= 2: our kernel, every value in its own array =====================================
+  \begin{scope}[visible on=<2->]
+    \node[hd] at (0,2.62) {In our kernel, \textbf{each value has its own array}: \textbf{7 streams}};
+    \foreach \a/\k/\st/\yy in {0/13/me/2.2, 1/10/nb/1.9, 2/16/nb/1.6, 3/14/nb/1.3, 4/12/nb/1.0, 5/4/nb/0.7, 6/22/nb/0.4} {
+      \node[arrlbl] at (\xo-0.05,\yy+0.12) {array $f_{\a}$};
+      \foreach \j in {0,...,26} {
+        \pgfmathtruncatemacro\z{\j/9}
+        \ifcase\z \def\hue{psorange}\or\def\hue{psviolet}\or\def\hue{psgray}\fi
+        \draw[cb,fill=\hue!10] (\slx{\j},\yy) rectangle ++(\sw,0.24);
+      }
+      \draw[\st] (\slx{\k},\yy) rectangle ++(\sw,0.24);
+      \node[num] at (\scx{\k},\yy+0.12) {\k};
+    }
+  \end{scope}
+  \node[font=\scriptsize,anchor=west,inner sep=0pt,visible on=<3->] at (0,0.12)
+    {+ 12 more arrays ($f_7$ to $f_{18}$), one stream each: \textbf{19 streams read}};
+  %   the loop moves on: every read moves one position to the right
+  \draw[arr,visible on=<2->] (\xo,-0.18) -- (\slx{27},-0.18)
+    node[midway,below,lbl] {next cell: every read moves one position to the right};
+\end{tikzpicture}%

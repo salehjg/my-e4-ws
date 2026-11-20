@@ -1,0 +1,29 @@
+% Slide 12: the AA pattern for one pair of directions, east (E) and west (W), seen from cell x
+% (as in lbmpy's AA accessors). Even step: read both slots of x, write each value into the
+% other's slot of x. Odd step: read from the neighbours' slots, write to the neighbours' slots.
+\begin{tikzpicture}[
+    slot/.style={draw=psgray!80,fill=codebg,minimum width=5.6mm,minimum height=4.2mm,inner sep=0pt,font=\tiny},
+    coll/.style={circle,draw=psgray!90,fill=white,inner sep=1pt,font=\tiny},
+    rd/.style={-{Stealth[length=1.4mm]},semithick,draw=psblue!85!black,dashed},
+    wr/.style={-{Stealth[length=1.4mm]},semithick,draw=psorange!90!black}]
+  \foreach \p/\py/\ttl in {e/0/{even step: in place}, o/-1.95/{odd step: from and to the neighbours}} {
+    \foreach \c/\lab in {0/$x{-}1$, 1/$x$, 2/$x{+}1$} {
+      \node[slot] (\p W\c) at (\c*1.62+0.3,\py) {W};
+      \node[slot] (\p E\c) at (\c*1.62+0.88,\py) {E};
+      \node[font=\tiny,text=psgray] at (\c*1.62+0.59,\py-0.36) {cell \lab};
+    }
+    \node[coll] (\p col) at (2.21,\py+0.85) {collide};
+    \node[font=\scriptsize\bfseries,anchor=west] at (-0.05,\py+1.3) {\ttl};
+  }
+  \draw[rd] (eE1.north) to[bend right=10] (ecol);
+  \draw[rd] (eW1.north) to[bend left=10] (ecol);
+  \draw[wr] (ecol.west) to[bend right=45] (eW1.north west);
+  \draw[wr] (ecol.east) to[bend left=45] (eE1.north east);
+  \draw[rd] (oW0.north) to[bend left=10] (ocol);
+  \draw[rd] (oE2.north) to[bend right=10] (ocol);
+  \draw[wr] (ocol.east) to[bend left=20] (oE2.north west);
+  \draw[wr] (ocol.west) to[bend right=20] (oW0.north east);
+  \draw[rd] (0,-2.62) -- ++(0.45,0) node[right,font=\tiny,text=black] {read};
+  \draw[wr] (1.3,-2.62) -- ++(0.45,0) node[right,font=\tiny,text=black] {write};
+  \node[font=\tiny,text=psgray,anchor=west] at (2.5,-2.62) {E, W: values moving east, west};
+\end{tikzpicture}

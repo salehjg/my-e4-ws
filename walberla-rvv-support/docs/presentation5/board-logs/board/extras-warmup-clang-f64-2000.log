@@ -1,0 +1,34 @@
+== clang f64, 1 core(s), 64^3 cells per core, 200 steps (+2000 warm-up), 3 runs: scalar_cse_aa explicit_cse_aa_pf
+== start Mon Nov 16 04:35:35 PM CST 2026, host k1, load: 3.02 3.05 3.07
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 04:35:35 PM CST 2026
+   sha256 24a422aeb70a107d /home/bananapi/saleh/presentation4/build-clang-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.805437564849854 mlups=1.4642692162340525 energy=26.320914303394776 mass=262143.9999999982 fieldhash=0x799a2cf3049690f7 links_noslip=101632 links_ubb=20480 t_bulk=33.610113382339478 t_comm=0.0054330825805664062 t_bc=2.189293384552002
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.884655475616455 mlups=1.4610367385476295 energy=26.320914303394776 mass=262143.9999999982 fieldhash=0x799a2cf3049690f7 links_noslip=101632 links_ubb=20480 t_bulk=33.684407949447632 t_comm=0.0053434371948242188 t_bc=2.1942481994628906
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=34.648991107940674 mlups=1.5131407386919453 energy=26.320914303394776 mass=262143.9999999982 fieldhash=0x799a2cf3049690f7 links_noslip=101632 links_ubb=20480 t_bulk=32.45237398147583 t_comm=0.0054433345794677734 t_bc=2.1905062198638916
+   sha256 6badbaa73dfd19d8 /home/bananapi/saleh/presentation4/build-clang-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.336132287979126 mlups=3.6571091105208096 energy=26.320914303394773 mass=262143.9999999982 fieldhash=0xbc332402b73771fa links_noslip=101632 links_ubb=20480 t_bulk=12.134201288223267 t_comm=0.0051560401916503906 t_bc=2.1961183547973633
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.408062219619751 mlups=3.6388515819015992 energy=26.320914303394773 mass=262143.9999999982 fieldhash=0xbc332402b73771fa links_noslip=101632 links_ubb=20480 t_bulk=12.213430881500244 t_comm=0.0052170753479003906 t_bc=2.1888186931610107
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=14.327991247177124 mlups=3.6591870483121234 energy=26.320914303394773 mass=262143.9999999982 fieldhash=0xbc332402b73771fa links_noslip=101632 links_ubb=20480 t_bulk=12.137953281402588 t_comm=0.0051019191741943359 t_bc=2.1843447685241699
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f64 1c |
+|---|---|
+| scalar_cse_aa | 1.51 |
+| explicit_cse_aa_pf | 3.66 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 26.320914303394773 | 26.320914303394776 | 1.3e-16 | 262143.9999999982 | 262143.9999999982 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f64 1c |
+|---|---|
+| scalar_cse_aa | 6.3% / 0.0% |
+| explicit_cse_aa_pf | 15.2% / 0.0% |
+== done Mon Nov 16 05:03:07 PM CST 2026

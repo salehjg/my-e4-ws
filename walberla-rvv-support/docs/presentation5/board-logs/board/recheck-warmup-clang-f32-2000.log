@@ -1,0 +1,78 @@
+== clang f32, 1 core(s), 64^3 cells per core, 200 steps (+2000 warm-up), 1 runs: explicit_cse_aa_pf
+== start Mon Nov 16 06:22:32 PM CST 2026, host k1, load: 3.17 2.49 2.18
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 06:22:33 PM CST 2026
+   sha256 6ca2150a6fe9a1a9 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=8.4857378005981445 mlups=6.1784609932567545 energy=26.321984745790221 mass=262143.99804645777 fieldhash=0xccd80841af4e6f2c links_noslip=101632 links_ubb=20480 t_bulk=6.2273502349853516 t_comm=0.0056936740875244141 t_bc=2.2521665096282959
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 6.18 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 26.321984745790221 | 26.321984745790221 | 0.0e+00 | 262143.99804645777 | 262143.99804645777 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 26.5% / 0.1% |
+== done Mon Nov 16 06:24:07 PM CST 2026
+== clang f32, 1 core(s), 64^3 cells per core, 200 steps (+2000 warm-up), 1 runs: explicit_cse_aa_pf
+== start Mon Nov 16 06:24:09 PM CST 2026, host k1, load: 3.02 2.66 2.28
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 06:24:09 PM CST 2026
+   sha256 6ca2150a6fe9a1a9 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=8.4999837875366211 mlups=6.1681058823753814 energy=26.321984745790221 mass=262143.99804645777 fieldhash=0xccd80841af4e6f2c links_noslip=101632 links_ubb=20480 t_bulk=6.175175666809082 t_comm=0.0054249763488769531 t_bc=2.3189013004302979
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 6.17 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 26.321984745790221 | 26.321984745790221 | 0.0e+00 | 262143.99804645777 | 262143.99804645777 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 27.3% / 0.1% |
+== done Mon Nov 16 06:25:44 PM CST 2026
+== clang f32, 1 core(s), 64^3 cells per core, 200 steps (+2000 warm-up), 1 runs: explicit_cse_aa_pf
+== start Mon Nov 16 06:26:08 PM CST 2026, host k1, load: 2.92 2.76 2.37
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 06:26:08 PM CST 2026
+   sha256 6ca2150a6fe9a1a9 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=2000 output=every omega=1.8 u_lid=0.050000000000000003 seconds=8.6124374866485596 mlups=6.0875681340245205 energy=26.321984745790221 mass=262143.99804645777 fieldhash=0xccd80841af4e6f2c links_noslip=101632 links_ubb=20480 t_bulk=6.3652758598327637 t_comm=0.0055477619171142578 t_bc=2.2411293983459473
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 6.09 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 26.321984745790221 | 26.321984745790221 | 0.0e+00 | 262143.99804645777 | 262143.99804645777 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 1c |
+|---|---|
+| explicit_cse_aa_pf | 26.0% / 0.1% |
+== done Mon Nov 16 06:27:45 PM CST 2026
