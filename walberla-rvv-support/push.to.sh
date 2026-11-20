@@ -12,13 +12,14 @@
 #     leaves the directory itself in place, so anything
 #     pointing into it (e.g. a walberla build dir) survives a push.
 #
-# The board is a SHARED machine: everything stays under REMOTE_PATHS[<machine>].
+# The boards are SHARED machines: everything stays under REMOTE_PATHS[<machine>].
 set -euo pipefail
 
-VALID_MACHINES=( bananapi )
+VALID_MACHINES=( bananapi monte3 )
 
 declare -A REMOTE_PATHS=(
     [bananapi]="/home/bananapi/saleh"
+    [monte3]="/home/sjamaligolzar/02_ws"     # UNIBO RVV 1.0 board (ssh alias in ~/.ssh/config)
 )
 
 SOURCE_DIR="my-e4-ws"
