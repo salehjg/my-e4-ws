@@ -1,6 +1,6 @@
 # Plan (Opus 5.5): one RVV backend for VLEN 128 and 256, with tuning knobs, and one script for monte3
 
-Written 2026-11-21. Predecessors: [`../notes2/rvv-vls256-only-plan-opus5.5.md`](../notes2/rvv-vls256-only-plan-opus5.5.md)
+Written 2026-11-21. Implemented the same day; deviations and results in [`rvv-vlen128-progress-opus5.5.md`](rvv-vlen128-progress-opus5.5.md). Predecessors: [`../notes2/rvv-vls256-only-plan-opus5.5.md`](../notes2/rvv-vls256-only-plan-opus5.5.md)
 (why the backend is VLS and AVX-like), [`../presentation6/presentation6-progress-opus5.5.md`](../presentation6/presentation6-progress-opus5.5.md)
 (monte3 facts: VLEN 128, toolchain, slurm, what already works there).
 
@@ -68,8 +68,9 @@ also runs correctly (at half width) on VLEN 256 hardware; the reverse is refused
 
 Future knobs, listed here, not built now: loop unrolling (several vectors per iteration: may help the in-order X60
 more than the out-of-order C920v2), non-temporal store hints (the SG2044 has Zihintntl), `cpu.loop_blocking`,
-compiler and `-mtune`. Note for the prefetch knob: the SG2044 does not report Zicbop, so its prefetch instructions run
-as no-ops there (they are encoded as hints); the sweep will show whether `_pf` variants help at all on monte3.
+compiler and `-mtune`. Note for the prefetch knob: the SG2044's ISA string does not list Zicbop, but neither does the
+K1's, and the X60 executes the prefetch hints anyway (`rvv.hpp`); whether the C920v2 does is open, so the
+measurements will show whether the `_pf` variants help on monte3.
 
 ## 4. Implementation steps
 

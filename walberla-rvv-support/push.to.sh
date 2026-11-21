@@ -5,7 +5,8 @@
 #
 # Why rsync (and not the former zip + rm -rf + unzip):
 #   * incremental -- only changed files travel, so a push takes seconds;
-#   * the heavy local-only directories (.git, .venv-rvv, caches) are excluded,
+#   * the heavy local-only directories (.git, .venv-rvv, caches) and the copied results
+#     (00_private_data/: never pushed back to a shared machine) are excluded,
 #     the old archive carried ~330 MB of them on every push;
 #   * `--delete` keeps the remote copy an exact mirror (same effect as the old
 #     wipe-and-unzip; `--delete-excluded` also drops excluded leftovers), but
@@ -59,6 +60,7 @@ rsync -az --delete --delete-excluded \
     --exclude '.perfcache' \
     --exclude '*.zip' \
     --exclude '/build/' \
+    --exclude '/00_private_data/' \
     "${HERE}/" "${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR}/"
 
 echo "✓ ${MACHINE}:${REMOTE_PATH}/${SOURCE_DIR} is up to date."

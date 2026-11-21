@@ -10,3 +10,7 @@ my-e4-ws.zip
 # Local builds (e.g. build/presentation4-x86/: waLBerla on x86 for the presentation4
 # correctness checks). push.to.sh excludes this folder too, so it never reaches the board.
 /build/
+
+# Results copied back from the boards (scripts/notes7/monte3.sh fetch): private, not committed.
+# push.to.sh excludes this folder too, so it never goes back to a shared machine.
+/00_private_data/
