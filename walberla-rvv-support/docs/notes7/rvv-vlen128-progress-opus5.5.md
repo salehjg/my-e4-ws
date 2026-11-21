@@ -6,12 +6,40 @@ Plan: [`rvv-vlen128-plan-opus5.5.md`](rvv-vlen128-plan-opus5.5.md). Nothing is c
 
 - 2026-11-21: steps 1-3 of the plan are implemented and tested on the laptop (pystencils tests, QEMU at VLEN 128 and
   256, the CMake VLEN probe through QEMU, the LDC generator outside CMake, dry runs of the script with stubbed
-  `ssh`/`rsync` and of the timing logic with fake executables). **Nothing has run on monte3 yet.**
+  `ssh`/`rsync` and of the timing logic with fake executables). First monte3 run failed at its first write (see "monte3 runs"); fixed.
 - Next: the user runs `bash scripts/notes7/monte3.sh start` on the laptop (it pushes, then submits the build job and
   the timing job), follows it with `status`, and copies the results with `fetch` (to `00_private_data/monte3/`).
   The first build job shows the real build time (the 6 h limits are generous guesses; `TIME_BUILD`, `TIME_RUN`).
 - Open: K1 rebuild with the new code (optional: the kernels are byte-identical, see step 2); LMUL/prefetch sweeps
   (future work, plan §3).
+
+## monte3 runs
+
+- Run 20261121-142100 (build job 8547, timing job 8548): the build job failed at once. sbatch runs a copy of the
+  script from slurm's spool folder (`/var/lib/slurm/slurmd/job08547/slurm_script`), and `monte3.sh` derived its paths
+  from `$0`, so they pointed to `/var/lib/...`; the first `mkdir` there failed (no permission, nothing written). The
+  timing job stayed pending with `DependencyNeverSatisfied`. Fix: in the job modes the repo is `SLURM_SUBMIT_DIR`
+  (`submit()` starts sbatch from the repo root), and `node_env` refuses to run unless every path is under `$HOME` and
+  `REPO` is the repo copy. Tested on the laptop with a spool-style copy (paths resolve to the home's `02_ws`; a wrong or
+  missing submit directory is refused before any write). presentation6's `peak.sbatch` already did this; the laptop
+  dry run had started the script from its real location, so it could not catch it.
+
+- Run 20261121-142513 (build job 8549, 14:25-17:03; timing job 8550 cancelled by slurm through
+  `--kill-on-invalid-dep`): `BUILD FAIL`, 18 failures, logs in `00_private_data/monte3/20261121-142513/`.
+  - **GCC 14.2: all 11 variants pass, f64 and f32** (`verify-gcc-*.log`: VERIFY PASS, 11 executables, the four
+    reference-solution cases and the decomposition check each), including the five explicit RVV variants built for
+    VLEN 128: compile lines end in `-march=rv64gcv_zvl128b`, CMake measured VLEN 128, 900-2240 vector instructions in
+    the generated sweeps. First evidence that the VLEN-128 code is correct on the SG2044.
+  - Clang 17: scalar and autovec pass (VERIFY PASS, 6 executables each); the five explicit variants do not build, in
+    f64 and f32 (10 failures). The error lines were not in the job output (fixed: the first 10 now are); to find out.
+  - The 8 GCC-vs-Clang comparisons failed because the comparison asked for the missing Clang explicit dumps (my port
+    listed every variant; presentation6 compared only existing dumps). Fixed: only existing Clang dumps.
+  - Clang 17's error (user, from the build log): `__riscv_vcreate_v_f32m1x4` / `__riscv_vcreate_v_f64m1x2` undeclared
+    in `rvv.hpp` (the Philox random-number functions; `vcreate` exists from Clang 18, the K1 had 18). The LBM kernels
+    do not use random numbers, but every kernel includes the header. Fix: the `random` namespace of `rvv.hpp` is left
+    out for Clang < 18 (kernels with random numbers do not compile there, all others do; GCC and Clang >= 18 see the
+    same code as before). Checked with the laptop's Clang posing as 17 (`-D__clang_major__=17`): a kernel without random
+    numbers compiles, one with them fails at `random::`; as a newer Clang both compile. RVV tests: 154 passed.
 
 ## Step 1: pystencils (fork `submodules/pystencils`)
 

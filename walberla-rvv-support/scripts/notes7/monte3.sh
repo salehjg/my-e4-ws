@@ -17,6 +17,12 @@ set -u
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "${HERE}/../.." && pwd)"
+#   Inside a slurm job, sbatch runs a copy of this file from slurm's spool folder, so $0 does not point into the
+#   repo there. submit() starts sbatch from the repo root, which slurm passes on as SLURM_SUBMIT_DIR.
+if [[ "${1:-}" == job-* && -n "${SLURM_SUBMIT_DIR:-}" ]]; then
+    REPO="${SLURM_SUBMIT_DIR}"
+    HERE="${REPO}/scripts/notes7"
+fi
 MACHINE=monte3
 REMOTE_REPO=02_ws/my-e4-ws    # push.to.sh's REMOTE_PATHS[monte3] (~/02_ws) + my-e4-ws, relative to the remote home
 REMOTE_OUT=02_ws/notes7       # on monte3: build trees, verify dumps, logs/<run>/
@@ -95,7 +101,8 @@ cmd_start() {
         echo "   build job ${build_job} (limit ${TIME_BUILD})"
     fi
     if [[ "${what}" != build ]]; then
-        time_job="$(submit n7-time "${TIME_RUN}" "${run}" job-time ${build_job:+--dependency=afterok:${build_job}})"
+        #   --kill-on-invalid-dep: if the build job fails, slurm cancels the timing job instead of keeping it queued
+        time_job="$(submit n7-time "${TIME_RUN}" "${run}" job-time ${build_job:+--dependency=afterok:${build_job} --kill-on-invalid-dep=yes})"
         [[ "${time_job}" =~ ^[0-9]+$ ]] || { echo "sbatch of the timing job failed: ${time_job}"; exit 1; }
         echo "   timing job ${time_job} (limit ${TIME_RUN}${build_job:+, starts after the build job succeeds})"
     fi
@@ -145,6 +152,10 @@ EOF
 node_env() {   # paths, modules, Python environment of the jobs
     RUN="$1"
     BASE="$(dirname "${REPO}")"            # ~/02_ws
+    #   Never write anywhere but under the home folder, and only from the real repo copy
+    case "${BASE}/" in "${HOME}"/*) ;; *) echo "REFUSED: ${BASE} is not under ${HOME}"; exit 1 ;; esac
+    [[ -f "${HERE}/ldc_reference.py" && -d "${REPO}/submodules/walberla" ]] \
+        || { echo "REFUSED: ${REPO} is not the repo copy (no scripts/notes7, no submodules/walberla)"; exit 1; }
     OUT="${BASE}/notes7"
     LOGS="${OUT}/logs/${RUN}"
     VERIFIED="${OUT}/verified"             # the verify logs of the last build job: what the timing job may time
@@ -257,6 +268,7 @@ build_tree() {   # build_tree <cc> <prec> <scalar|vector>: configure (once), the
             audit "${tree}" "${kind}" "${t}"
         else
             echo "FAIL build ${t} (log ${tree}/build-${t}.log)"; fails=$((fails + 1))
+            grep -m 10 -E "error|Error" "${tree}/build-${t}.log" | sed "s/^/   /"
         fi
     done
 }
@@ -327,8 +339,11 @@ compare_compilers() {   # compare_compilers <prec>: Clang's fields against the G
     [[ "${prec}" == f64 ]] && cmp=(--tol 2e-12 --inv-tol 1e-12) || cmp=(--calibrate 2)
     for d in "${OUT}/verify/gcc-${prec}"/oracle-*; do
         c="${OUT}/verify/clang-${prec}/$(basename "${d}")"
+        #   the Clang builds that exist (a failed build is already counted), its scalar build first
         others=("${c}/SweepgenLdcCPU_scalar")
-        for v in ${SCALAR_VARIANTS} ${VECTOR_VARIANTS}; do [[ "${v}" == scalar ]] || others+=("${c}/SweepgenLdcCPU_${v}"); done
+        for v in ${SCALAR_VARIANTS} ${VECTOR_VARIANTS}; do
+            [[ "${v}" != scalar && -f "${c}/SweepgenLdcCPU_${v}.rank0.bin" ]] && others+=("${c}/SweepgenLdcCPU_${v}")
+        done
         if "${PY}" -I "${HERE}/compare_fields.py" "${cmp[@]}" --label-width 60 "${d}/SweepgenLdcCPU_scalar" "${others[@]}" \
             >> "${LOGS}/compilers-${prec}.log" 2>&1; then
             echo "PASS compilers ${prec} $(basename "${d}")"
