@@ -1,0 +1,23 @@
+% Slide 2: the talk in three boxes. Numbers: the one-session run (docs/notes3/board-logs/
+% presentation3/, 1 core: 5.13x f32, 4.22x f64) and the part 1 starting point from r02 (1.73x f32).
+\begin{tikzpicture}[
+    head/.style={font=\small\bfseries,text=white,inner sep=3pt,minimum height=6.5mm,
+      text width=43mm,align=left},
+    body/.style={font=\footnotesize,text width=43mm,align=left,inner sep=3pt,anchor=north}]
+  \foreach \i/\col/\title in {0/psblue/What we did, 1/psteal/What came out, 2/psorange/What we learned} {
+    \node[head,fill=\col!85!black,anchor=north west] (h\i) at (\i*4.85,0) {\title};
+    \draw[\col!70!black,line width=0.6pt,fill=\col!5]
+      (h\i.south west) rectangle ([yshift=-33mm]h\i.south east);
+  }
+  \node[body] at ([yshift=-1mm]h0.south) {%
+    Taught waLBerla's code generators to write RISC-V vector code (RVV).\\[4pt]
+    Then made that code fast on a real RISC-V chip.};
+  \node[body] at ([yshift=-1mm]h1.south) {%
+    One core, whole program, against no vector instructions:\\[4pt]
+    \textbf{single precision: \sx{5.13}}\\ goal \sx{8}, not reached yet\\[4pt]
+    \textbf{double precision: \sx{4.22}}\\ goal \sx{4}, reached};
+  \node[body] at ([yshift=-1mm]h2.south) {%
+    First result: only \sx{1.7}.\\[4pt]
+    Cause: the core cannot load 42 data streams ahead of time.\\[4pt]
+    Fix: ask for data early, and use fewer streams.};
+\end{tikzpicture}

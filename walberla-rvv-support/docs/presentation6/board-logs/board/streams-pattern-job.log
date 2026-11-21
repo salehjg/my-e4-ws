@@ -1,0 +1,11 @@
+== waiting for screen presentation4-recheck to end Mon Nov 16 10:48:18 PM CST 2026
+== start Mon Nov 16 10:48:18 PM CST 2026, host k1, load: 2.00 2.04 3.45, sections: pattern
+== probe source ea67c3bd879c8ad7 /home/bananapi/saleh/my-e4-ws/misc/x60-lab/probes/mem.cpp
+== probe binary b6392ad226b24a09 (g++ -O2 -march=rv64gcv_zvl256b_zicboz)
+== pattern R=19 W=23 stagger=4160 pfr=0 run 1 22:48:35
+== pattern R=19 W=23 stagger=4160 pfr=128 run 1 22:48:36
+== pattern R=19 W=23 stagger=4160 pfr=0 run 2 22:48:37
+== pattern R=19 W=23 stagger=4160 pfr=128 run 2 22:48:38
+== pattern R=19 W=23 stagger=4160 pfr=0 run 3 22:48:39
+== pattern R=19 W=23 stagger=4160 pfr=128 run 3 22:48:40
+== STREAMS DONE Mon Nov 16 10:48:40 PM CST 2026

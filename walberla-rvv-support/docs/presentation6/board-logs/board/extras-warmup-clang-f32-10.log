@@ -1,0 +1,34 @@
+== clang f32, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: scalar_cse_aa explicit_cse_aa_pf
+== start Mon Nov 16 03:54:42 PM CST 2026, host k1, load: 3.00 3.07 3.12
+== Bianbu clang version 18.1.8 (11bb4)
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 03:54:42 PM CST 2026
+   sha256 370f888731ce992b /home/bananapi/saleh/presentation4/build-clang-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.549841165542603 mlups=1.9030527139871225 energy=11.366652830002709 mass=262144.00016671419 fieldhash=0xd61bf4babf97708f links_noslip=101632 links_ubb=20480 t_bulk=25.268508911132812 t_comm=0.0065131187438964844 t_bc=2.2742118835449219
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.430551290512085 mlups=1.9113287022464811 energy=11.366652830002709 mass=262144.00016671419 fieldhash=0xd61bf4babf97708f links_noslip=101632 links_ubb=20480 t_bulk=25.140565633773804 t_comm=0.0066254138946533203 t_bc=2.2827281951904297
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar_cse_aa compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=27.484195470809937 mlups=1.907598134196175 energy=11.366652830002709 mass=262144.00016671419 fieldhash=0xd61bf4babf97708f links_noslip=101632 links_ubb=20480 t_bulk=25.195627927780151 t_comm=0.0064170360565185547 t_bc=2.2814571857452393
+   sha256 6ca2150a6fe9a1a9 /home/bananapi/saleh/presentation4/build-clang-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.5951774120330811 mlups=5.4640782289497123 energy=11.366652814113262 mass=262144.00016909838 fieldhash=0xd6f00f6bcd25138e links_noslip=101632 links_ubb=20480 t_bulk=7.3126263618469238 t_comm=0.0063321590423583984 t_bc=2.2756171226501465
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.506669282913208 mlups=5.5149493939199923 energy=11.366652814113262 mass=262144.00016909838 fieldhash=0xd6f00f6bcd25138e links_noslip=101632 links_ubb=20480 t_bulk=7.2243921756744385 t_comm=0.0064551830291748047 t_bc=2.2751095294952393
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=Clang-18.1.8 real_t=32 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=9.393742561340332 mlups=5.5812472672786635 energy=11.366652814113262 mass=262144.00016909838 fieldhash=0xd6f00f6bcd25138e links_noslip=101632 links_ubb=20480 t_bulk=7.108107328414917 t_comm=0.0065760612487792969 t_bc=2.278348445892334
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 1c |
+|---|---|
+| scalar_cse_aa | 1.91 |
+| explicit_cse_aa_pf | 5.58 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366652814113262 | 11.366652830002709 | 1.4e-09 | 262144.00016671419 | 262144.00016909838 | 2 of 2 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 1c |
+|---|---|
+| scalar_cse_aa | 8.3% / 0.0% |
+| explicit_cse_aa_pf | 24.3% / 0.1% |
+== done Mon Nov 16 03:56:46 PM CST 2026

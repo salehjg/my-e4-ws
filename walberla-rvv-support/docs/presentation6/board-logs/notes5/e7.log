@@ -1,0 +1,37 @@
+== start Wed Nov 18 08:56:16 AM CST 2026, load 2.95 3.12 3.13, freq 1600000 
+== stream_order_nv 78f1f8e31c176c1d: gathers 0, flw 13
+== mem_nv 296a73b0455c0519: gathers 0, flw 14
+== board mem (streams_check.sh build): gathers 10
+stream_order R=8 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=19.2 GBps=5.329 sink=0
+stream_order R=8 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=16.1 GBps=6.362 sink=0
+stream_order R=8 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=357.8 GBps=0.286 sink=0
+stream_order R=8 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=105.1 GBps=0.974 sink=0
+stream_order R=16 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=38.6 GBps=2.650 sink=0
+stream_order R=16 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=24.9 GBps=4.117 sink=0
+stream_order R=16 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=365.3 GBps=0.280 sink=0
+stream_order R=16 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=103.9 GBps=0.986 sink=0
+stream_order R=24 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=367.2 GBps=0.279 sink=0
+stream_order R=24 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=103.3 GBps=0.991 sink=0
+stream_order R=24 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=366.0 GBps=0.280 sink=0
+stream_order R=24 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=103.5 GBps=0.990 sink=0
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=16.9 GBps=6.008
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=35.0 GBps=2.921
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=115.5 GBps=0.886
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=113.5 GBps=0.902
+stream_order R=8 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=18.9 GBps=5.432 sink=0
+stream_order R=8 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=16.0 GBps=6.405 sink=0
+stream_order R=8 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=357.4 GBps=0.287 sink=0
+stream_order R=8 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=105.1 GBps=0.975 sink=0
+stream_order R=16 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=38.6 GBps=2.654 sink=0
+stream_order R=16 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=24.9 GBps=4.117 sink=0
+stream_order R=16 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=364.9 GBps=0.281 sink=0
+stream_order R=16 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=104.3 GBps=0.982 sink=0
+stream_order R=24 order=seq scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=367.2 GBps=0.279 sink=0
+stream_order R=24 order=seq scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=103.6 GBps=0.988 sink=0
+stream_order R=24 order=rand scalar=0 thp=1 mb=4 stagger=4160 cyc_per_line=365.1 GBps=0.280 sink=0
+stream_order R=24 order=rand scalar=1 thp=1 mb=4 stagger=4160 cyc_per_line=104.1 GBps=0.984 sink=0
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=17.0 GBps=5.993
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=35.3 GBps=2.894
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=115.2 GBps=0.888
+stream R=32 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=1 cyc_per_line=113.9 GBps=0.898
+== E7 DONE Wed Nov 18 08:57:03 AM CST 2026

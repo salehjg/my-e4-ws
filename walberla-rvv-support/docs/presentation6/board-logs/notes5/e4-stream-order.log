@@ -1,0 +1,30 @@
+lat K=1 thp=1 mb=128 cyc_per_step=356.4 cyc_per_miss=356.4 ns_per_step=222.9 sink=0
+lat K=6 thp=1 mb=128 cyc_per_step=432.7 cyc_per_miss=72.1 ns_per_step=270.7 sink=0
+stream_order R=8 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=17.8 GBps=5.743 sink=0
+stream_order R=8 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=354.7 GBps=0.289 sink=0
+stream_order R=16 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=37.2 GBps=2.752 sink=0
+stream_order R=16 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=362.7 GBps=0.282 sink=0
+stream_order R=19 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=365.4 GBps=0.280 sink=0
+stream_order R=19 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=365.3 GBps=0.280 sink=0
+stream_order R=24 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=358.5 GBps=0.286 sink=0
+stream_order R=24 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=362.6 GBps=0.282 sink=0
+stream_order R=32 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=358.3 GBps=0.286 sink=0
+stream_order R=32 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=361.9 GBps=0.283 sink=0
+stream_order R=24 order=seq thp=0 mb=4 stagger=4160 cyc_per_line=357.8 GBps=0.286 sink=0
+stream_order R=24 order=rand thp=0 mb=4 stagger=4160 cyc_per_line=438.2 GBps=0.234 sink=0
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.3 GBps=0.281
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.3 GBps=5.278
+stream_order R=8 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=347.9 GBps=0.294 sink=0
+stream_order R=8 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=17.7 GBps=5.772 sink=0
+stream_order R=16 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=352.9 GBps=0.290 sink=0
+stream_order R=16 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=37.0 GBps=2.768 sink=0
+stream_order R=19 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=365.7 GBps=0.280 sink=0
+stream_order R=19 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=365.8 GBps=0.280 sink=0
+stream_order R=24 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=363.0 GBps=0.282 sink=0
+stream_order R=24 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=358.9 GBps=0.285 sink=0
+stream_order R=32 order=rand thp=1 mb=4 stagger=4160 cyc_per_line=362.3 GBps=0.283 sink=0
+stream_order R=32 order=seq thp=1 mb=4 stagger=4160 cyc_per_line=358.1 GBps=0.286 sink=0
+stream_order R=24 order=rand thp=0 mb=4 stagger=4160 cyc_per_line=437.3 GBps=0.234 sink=0
+stream_order R=24 order=seq thp=0 mb=4 stagger=4160 cyc_per_line=358.9 GBps=0.285 sink=0
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=363.7 GBps=0.282
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.2 GBps=5.295

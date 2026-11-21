@@ -1,0 +1,25 @@
+% Slide "First result": part 1 (report r02, table "Single-core throughput", GCC, whole program,
+% one core, 64^3 cells), as speedup over the plain scalar build. "auto-vectorized" is the same
+% plain C++ kernel compiled so that GCC may vectorize it (variant autovec): 1.39 against
+% 1.39 MLUP/s in f32, 0.91 against 0.90 in f64. "our RVV code" is explicit_cse.
+\begin{tikzpicture}
+  \def\u{0.53}  % cm per 1x
+  \def\h{0.36}  % bar height
+  \foreach \y/\grp/\lim/\col/\rvv in {0/f32/8/psblue/1.73, -2.1/f64/4/psteal/1.31} {
+    \node[font=\small\bfseries,anchor=south west] at (-2.45,\y+0.05) {\grp};
+    \foreach \dy/\v/\name/\fc in {0/1.00/plain scalar/psgray!40, -0.5/1.00/auto-vectorized/psgray!70,
+                                  -1.0/\rvv/our RVV code/\col!75!black} {
+      \node[font=\scriptsize,anchor=east] at (-0.1,\y+\dy-\h/2) {\name};
+      \fill[\fc] (0,\y+\dy) rectangle (\v*\u,\y+\dy-\h);
+      \node[font=\scriptsize,anchor=west] at (\v*\u+0.05,\y+\dy-\h/2) {\sx{\v}};
+    }
+    \draw[\col!60,dashed] (\lim*\u,\y+0.2) -- (\lim*\u,\y-1.45);
+    \node[lbl,anchor=south east] at (\lim*\u,\y+0.2) {possible: \sx{\lim}};
+  }
+  \draw[psgray!60] (0,-3.6) -- (8*\u,-3.6);
+  \foreach \t in {0,2,4,6,8} {
+    \draw[psgray!60] (\t*\u,-3.6) -- (\t*\u,-3.68);
+    \node[lbl,anchor=north] at (\t*\u,-3.7) {\t};
+  }
+  \node[lbl,anchor=north] at (4*\u,-4.0) {speedup over the plain scalar build};
+\end{tikzpicture}

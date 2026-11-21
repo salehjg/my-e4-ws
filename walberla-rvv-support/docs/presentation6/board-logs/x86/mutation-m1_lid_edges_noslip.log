@@ -1,0 +1,77 @@
+== verify f64, Tue Nov 17 05:37:06 PM CET 2026, x86_64, 1 executable(s)
+   /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+
+== oracle: 1 process(es), 16^3 cells each, 100 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xa5f0ba243bfe54b0 links_noslip=6272 links_ubb=1216 
+ldc_reference domain=16x16x16 steps=100 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.37449845176755786 mass=4096.0
+FAIL links SweepgenLdcCPU_scalar links_noslip=6272 links_ubb=1216 != oracle links_noslip=6208 links_ubb=1280
+input                                                           type       domain   mass_err    sym_err subnorm
+tation-m1_lid_edges_noslip/oracle-np1-c16-s100/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+1_lid_edges_noslip/oracle-np1-c16-s100/SweepgenLdcCPU_scalar     f64     16x16x16   1.38e-04   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/oracle-np1-c16-s100/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+1_lid_edges_noslip/oracle-np1-c16-s100/SweepgenLdcCPU_scalar   1.01e-02   8.82e-03         0/4096    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=1 cells=16 steps=100 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/verify.log)
+
+== oracle: 1 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xc384564ff209ff38 links_noslip=6272 links_ubb=1216 
+ldc_reference domain=16x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.3753928218591154 mass=4096.0
+FAIL links SweepgenLdcCPU_scalar links_noslip=6272 links_ubb=1216 != oracle links_noslip=6208 links_ubb=1280
+input                                                           type       domain   mass_err    sym_err subnorm
+tation-m1_lid_edges_noslip/oracle-np1-c16-s101/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+1_lid_edges_noslip/oracle-np1-c16-s101/SweepgenLdcCPU_scalar     f64     16x16x16   1.39e-04   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/oracle-np1-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+1_lid_edges_noslip/oracle-np1-c16-s101/SweepgenLdcCPU_scalar   9.99e-03   8.49e-03         0/4096    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=1 cells=16 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/verify.log)
+
+== oracle: 2 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xa4f7dc03366214ba links_noslip=10080 links_ubb=2464 
+ldc_reference domain=32x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=9984 links_ubb=2560 energy=0.8764116203957387 mass=8192.0
+FAIL links SweepgenLdcCPU_scalar links_noslip=10080 links_ubb=2464 != oracle links_noslip=9984 links_ubb=2560
+input                                                           type       domain   mass_err    sym_err subnorm
+tation-m1_lid_edges_noslip/oracle-np2-c16-s101/reference.npz ref-f64     32x16x16   0.00e+00   2.22e-16       0
+1_lid_edges_noslip/oracle-np2-c16-s101/SweepgenLdcCPU_scalar     f64     32x16x16   7.47e-05   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/oracle-np2-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+1_lid_edges_noslip/oracle-np2-c16-s101/SweepgenLdcCPU_scalar   8.78e-03   8.10e-03         0/8192    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=2 cells=16 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/verify.log)
+
+== oracle: 6 process(es), 8^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xb8e932973a9b3fe1 links_noslip=6256 links_ubb=592 
+ldc_reference domain=16x24x8 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=640 energy=0.16526027832386786 mass=3072.0
+FAIL links SweepgenLdcCPU_scalar links_noslip=6256 links_ubb=592 != oracle links_noslip=6208 links_ubb=640
+input                                                           type       domain   mass_err    sym_err subnorm
+utation-m1_lid_edges_noslip/oracle-np6-c8-s101/reference.npz ref-f64      16x24x8   0.00e+00   2.22e-16       0
+m1_lid_edges_noslip/oracle-np6-c8-s101/SweepgenLdcCPU_scalar     f64      16x24x8   1.01e-04   2.22e-16       0  FAIL
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/oracle-np6-c8-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+m1_lid_edges_noslip/oracle-np6-c8-s101/SweepgenLdcCPU_scalar   9.07e-03   8.70e-03         0/3072    FAIL
+
+RESULT FAIL (thresholds: d rho 1e-12, d u 1e-12, mass 1e-12, sym 1e-12)
+FAIL oracle np=6 cells=8 steps=101 (details above in /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/verify.log)
+
+== decomposition: 1 x 32^3 against 8 x 16^3, 61 steps, must be bit-identical
+input                                                           type       domain   mass_err    sym_err subnorm
+utation-m1_lid_edges_noslip/decomp/SweepgenLdcCPU_scalar-np1     f64     32x32x32   2.31e-05   2.22e-16       0
+utation-m1_lid_edges_noslip/decomp/SweepgenLdcCPU_scalar-np8     f64     32x32x32   2.31e-05   2.22e-16       0
+
+against /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/mutation-m1_lid_edges_noslip/decomp/SweepgenLdcCPU_scalar-np1:
+input                                                         max|drho|    max|du|  identical cells
+utation-m1_lid_edges_noslip/decomp/SweepgenLdcCPU_scalar-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_scalar (fieldhash=0x7fbb5268d3d43c5f)
+
+== verify done Tue Nov 17 05:37:21 PM CET 2026: 8 failure(s)
+VERIFY FAIL

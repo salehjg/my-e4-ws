@@ -1,0 +1,55 @@
+== start Mon Nov 16 08:10:01 PM CST 2026, host k1, load: 2.14 2.04 2.06, 8 jobs
+PASS 1 executable 4cc7d6a9f3d1d81c /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa is verified (/home/bananapi/saleh/presentation4/logs/verify-gcc-f64.log)
+== reference (all.sh, 10 warm-up + 200 steps): energy=11.366594364647622 fieldhash=0xf2c7bddf8a3b3a76
+== runs and drawing 20:10:01
+done step 10890
+done step 11560
+done step 12250
+done step 12960
+done step 13690
+done step 14440
+done step 15210
+done step 16000
+done step 9000
+done step 7840
+done step 10240
+done step 9610
+done step 8410
+done step 7290
+done step 6250
+done step 6760
+done step 3240
+done step 2890
+done step 3610
+done step 4000
+done step 4410
+done step 4840
+done step 5760
+done step 5290
+done step 1440
+done step 810
+done step 1210
+done step 1690
+done step 2250
+done step 1000
+done step 1960
+done step 2560
+done step 90
+done step 160
+done step 10
+done step 250
+done step 40
+done step 0
+done step 210
+done step 360
+done step 490
+done step 640
+42 frames in /home/bananapi/saleh/presentation4/movie, video /home/bananapi/saleh/presentation4/movie/cavity.avi, GIF /home/bananapi/saleh/presentation4/movie/cavity.gif, log /home/bananapi/saleh/presentation4/logs/cavity-movie-board.log
+== runs and drawing done 22:25:09
+PASS 2 step 210: energy=11.366594364647622 fieldhash=0xf2c7bddf8a3b3a76 = all.sh
+PASS 3 42 frames, one variant (variant=SweepgenLdcCPU_explicit_cse_aa), program /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+-rw-rw-r-- 1 bananapi bananapi 3793420 Nov 16 22:24 /home/bananapi/saleh/presentation4/movie/cavity.avi
+-rw-rw-r-- 1 bananapi bananapi 2449821 Nov 16 22:25 /home/bananapi/saleh/presentation4/movie/cavity.gif
+-rw-rw-r-- 1 bananapi bananapi 2828592 Nov 16 22:22 /home/bananapi/saleh/presentation4/movie-work/slices.npz
+== 42 frames, 7.8M in /home/bananapi/saleh/presentation4/movie
+MOVIE PASS Mon Nov 16 10:25:09 PM CST 2026

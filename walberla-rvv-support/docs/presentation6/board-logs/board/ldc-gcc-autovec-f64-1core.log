@@ -1,0 +1,40 @@
+== gcc f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 3 runs: autovec autovec_cse autovec_cse_aa
+== start Mon Nov 16 10:42:54 AM CST 2026, host k1, load: 3.00 4.41 6.44
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 10:42:54 AM CST 2026
+   sha256 edd2e7db214eca55 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=57.792813777923584 mlups=0.9071854539123928 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=55.833099603652954 t_comm=0.0054490566253662109 t_bc=1.953585147857666
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=57.966954231262207 mlups=0.90446014794623419 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=56.009378910064697 t_comm=0.0054452419281005859 t_bc=1.9514508247375488
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=57.920350551605225 mlups=0.90518789165972979 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=55.963492393493652 t_comm=0.0053856372833251953 t_bc=1.950817346572876
+   sha256 f7162b2fe19da341 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=54.942045211791992 mlups=0.95425643144328043 energy=11.366594364647611 mass=262143.99999999857 fieldhash=0x80b75735c68a7aa0 links_noslip=101632 links_ubb=20480 t_bulk=52.99128794670105 t_comm=0.0052323341369628906 t_bc=1.9447786808013916
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=54.790588140487671 mlups=0.95689427289168993 energy=11.366594364647611 mass=262143.99999999857 fieldhash=0x80b75735c68a7aa0 links_noslip=101632 links_ubb=20480 t_bulk=52.837118148803711 t_comm=0.0054087638854980469 t_bc=1.9473106861114502
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=54.863736629486084 mlups=0.95561846897286529 energy=11.366594364647611 mass=262143.99999999857 fieldhash=0x80b75735c68a7aa0 links_noslip=101632 links_ubb=20480 t_bulk=52.904072046279907 t_comm=0.0053415298461914062 t_bc=1.9536125659942627
+   sha256 fada853000048960 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=36.464051472016237 mlups=1.4378215772384937 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=34.387475490570068 t_comm=0.0057070255279541016 t_bc=2.0701351165771484
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=36.431912479432377 mlups=1.4390899744722065 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=34.358719348907471 t_comm=0.0056200027465820312 t_bc=2.0668709278106689
+SweepgenLdcCPU variant=SweepgenLdcCPU_autovec_cse_aa compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=36.450651790517583 mlups=1.4383501370924467 energy=11.366594364647609 mass=262143.99999999857 fieldhash=0x4e89844392b3dbdf links_noslip=101632 links_ubb=20480 t_bulk=34.370699405670166 t_comm=0.0056595802307128906 t_bc=2.0735957622528076
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| autovec | 0.91 |
+| autovec_cse | 0.96 |
+| autovec_cse_aa | 1.44 |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647609 | 11.366594364647613 | 3.1e-16 | 262143.99999999857 | 262143.99999999857 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| autovec | 3.4% / 0.0% |
+| autovec_cse | 3.6% / 0.0% |
+| autovec_cse_aa | 5.7% / 0.0% |
+== done Mon Nov 16 10:50:55 AM CST 2026

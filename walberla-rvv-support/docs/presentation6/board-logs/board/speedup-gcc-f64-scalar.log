@@ -1,0 +1,78 @@
+== gcc f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 1 runs: scalar
+== start Mon Nov 16 07:12:42 PM CST 2026, host k1, load: 3.20 3.11 3.04
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 07:12:42 PM CST 2026
+   sha256 7a3605edac99ce64 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=57.685605525970459 mlups=0.90887145106583289 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=55.675020694732666 t_comm=0.0050482749938964844 t_bc=2.0048661231994629
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 0.91 (1.00x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647613 | 11.366594364647613 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 3.5% / 0.0% |
+== done Mon Nov 16 07:13:44 PM CST 2026
+== gcc f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 1 runs: scalar
+== start Mon Nov 16 07:18:41 PM CST 2026, host k1, load: 2.89 3.04 3.04
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 07:18:41 PM CST 2026
+   sha256 7a3605edac99ce64 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=58.04160213470459 mlups=0.90329691241674825 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=56.037896871566772 t_comm=0.0051999092102050781 t_bc=1.9978427886962891
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 0.90 (1.00x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647613 | 11.366594364647613 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 3.4% / 0.0% |
+== done Mon Nov 16 07:19:44 PM CST 2026
+== gcc f64, 1 core(s), 64^3 cells per core, 200 steps (+10 warm-up), 1 runs: scalar
+== start Mon Nov 16 07:23:42 PM CST 2026, host k1, load: 2.94 2.99 3.00
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== SKIP_BUILD=1: no configure, no build
+== run Mon Nov 16 07:23:42 PM CST 2026
+   sha256 7a3605edac99ce64 /home/bananapi/saleh/presentation4/build-gcc-f64-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+SweepgenLdcCPU variant=SweepgenLdcCPU_scalar compiler=GNU-14.2.0 real_t=64 blocks=1x1x1 domain=64x64x64 cells=262144 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=58.317495822906494 mlups=0.89902351361607202 energy=11.366594364647613 mass=262143.99999999857 fieldhash=0x10656311b8feb388 links_noslip=101632 links_ubb=20480 t_bulk=56.286843538284302 t_comm=0.0050766468048095703 t_bc=2.0248732566833496
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 0.90 (1.00x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647613 | 11.366594364647613 | 0.0e+00 | 262143.99999999857 | 262143.99999999857 | 1 of 1 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 3.5% / 0.0% |
+== done Mon Nov 16 07:24:45 PM CST 2026

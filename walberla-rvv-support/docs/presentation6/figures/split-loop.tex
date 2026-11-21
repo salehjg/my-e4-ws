@@ -1,0 +1,50 @@
+% Slide "The split loop: the same update in eight short passes".
+% Source: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py (class SplitAA), used by
+% SweepgenLdcCPU (--split=BY,GM,GP; CMakeLists.txt:63-70: f32 2,5,3, f64 1,5,3). For each block of BY
+% rows of one z-plane the generated driver LBM_SPLIT::streamCollide calls 8 passes (generated
+% SweepgenLdcCPU.cpp of explicit_cse_aa_split, e.g. build/presentation4-x86/gcc-f32/.../gen/
+% SweepgenLdcCPU.cpp:6933-6997): m0..m3 add up mass and momentum of 5, 5, 5, 4 values into the scratch
+% acc; macro computes rho, u (into the scratch scr, and into the outputs); c0..c2 reload 7, 6, 6
+% values (the rest value and 3 opposite pairs, then 3 pairs, 3 pairs), collide (relax) them and store them in
+% place. Arrays per pass: 5 / 4 outputs / 7 or 6 (plus the scratch, which stays in L1).
+% Block size, 64^3 block: f32 19 x 2 rows x 64 cells x 4 B = 9728 B; f64 19 x 1 x 64 x 8 B = 9728 B.
+% Scratch (driver): 9 x sc values, sc = 128 (f32) / 64 (f64): 4608 B. L1 data cache 32 KB.
+% The one-loop row: the in-place (AA) StreamCollide kernel: 19 + 4 = 23 arrays (see stream-def).
+\begin{tikzpicture}[x=1mm,y=1mm]
+  \tikzset{pass/.style={added,minimum height=8mm,text width=12mm,inner sep=1pt,font=\scriptsize},
+           rowlbl/.style={font=\scriptsize,align=left,anchor=west,inner sep=0pt},
+           tag/.style={font=\scriptsize,align=center,anchor=west,inner sep=1pt}}
+  % ---- before: one loop over all cells, all 19 values at once
+  %   row labels: what, and how many arrays it walks through at once
+  \node[rowlbl] at (0,0) {\textbf{one loop}\\(in place)\\\textcolor{psred!85!black}{\textbf{23 arrays}}};
+  \node[wrong,anchor=west,minimum height=8mm,text width=105mm,font=\scriptsize] (one) at (25,0)
+    {for each cell: load 19 values, compute $\rho$, $u$, collide, store 19 values, write $\rho$, $u$};
+  % ---- split loop: 8 passes over one block
+  \node[rowlbl] at (0,-18.5) {\textbf{split loop}\\(per block)\\\textcolor{psteal!85!black}{\textbf{at most 7}}};
+  \foreach \k/\t in {0/{sum\\$f_{0\ldots4}$},1/{sum\\$f_{5\ldots9}$},2/{sum\\$f_{10\ldots14}$},
+                     3/{sum\\$f_{15\ldots18}$},4/{$\rho$, $u$},5/{collide\\7 values},
+                     6/{collide\\6 values},7/{collide\\6 values}}
+    \node[pass,anchor=west] (p\k) at (25+\k*13.9,-18.5) {\t};
+  \draw[arr] (25,-24.5) -- (135,-24.5) node[pos=0.5,below=-0.5mm,lbl] {one pass after the other, then the next block};
+  % ---- what the groups of passes do
+  \foreach \a/\b/\t in {p0/p3/{add up mass and momentum\\into a small scratch array},
+                        p4/p4/{density,\\velocity},
+                        p5/p7/{reload from L1, collide,\\store in place}}
+    \draw[decorate,decoration={brace,amplitude=2.5pt},psgray!90!black]
+      ([xshift=0.3mm,yshift=1mm]\a.north west) -- ([xshift=-0.3mm,yshift=1mm]\b.north east)
+      node[midway,above=2pt,lbl] {\t};
+  % ---- the block: 2 rows of one plane
+  \begin{scope}[shift={(25,-44)}]
+    \draw[psgray!70,fill=psgray!6] (0,0) rectangle (30,12);
+    \foreach \r in {1,...,11} \draw[psgray!25] (0,\r) -- (30,\r);
+    \draw[psteal!85!black,fill=psteal!45] (0,6) rectangle (30,7);
+    \draw[-{Stealth[length=1.5mm]},psteal!85!black] (31,6.5) -- (31,9.5);
+    \node[lbl,anchor=west,align=left] at (32,8) {next block};
+    \node[lbl,anchor=north] at (15,-0.5) {one plane of the block: 64 $\times$ 64 cells};
+    \node[lbl,anchor=east,align=right] at (-1,6.5) {2 rows\\= 128 cells};
+  \end{scope}
+  \node[info,anchor=west,text width=58mm,font=\scriptsize,align=left] at (78,-38)
+    {19 values $\times$ 128 cells $\times$ 4 bytes = 9.7\,KB, plus 4.6\,KB of scratch: fits the
+     32\,KB L1 cache, so the collide passes find their values there.\\[1pt]
+     {\color{psgray}f64: blocks of 1 row, the same size.}};
+\end{tikzpicture}

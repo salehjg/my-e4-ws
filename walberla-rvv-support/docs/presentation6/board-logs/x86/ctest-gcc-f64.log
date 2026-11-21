@@ -1,0 +1,57 @@
+Test project /workspace/02_ws/my-e4-ws/walberla-rvv-support/build/presentation4-x86/gcc-f64
+      Start 298: TestHaloExchange - testHaloExchangeInterfacesHost (np=1)
+ 1/24 Test #298: TestHaloExchange - testHaloExchangeInterfacesHost (np=1) ...   Passed    1.50 sec
+      Start 299: TestHaloExchange - testHaloExchangeInterfacesHost (np=2)
+ 2/24 Test #299: TestHaloExchange - testHaloExchangeInterfacesHost (np=2) ...   Passed    1.48 sec
+      Start 300: TestHaloExchange - testHaloExchangeInterfacesHost (np=4)
+ 3/24 Test #300: TestHaloExchange - testHaloExchangeInterfacesHost (np=4) ...   Passed    1.50 sec
+      Start 301: TestHaloExchange - testHostFieldPackInfo (np=1)
+ 4/24 Test #301: TestHaloExchange - testHostFieldPackInfo (np=1) ............   Passed    1.48 sec
+      Start 302: TestHaloExchange - testHostFieldPackInfo (np=2)
+ 5/24 Test #302: TestHaloExchange - testHostFieldPackInfo (np=2) ............   Passed    1.45 sec
+      Start 303: TestHaloExchange - testHostFieldPackInfo (np=4)
+ 6/24 Test #303: TestHaloExchange - testHostFieldPackInfo (np=4) ............   Passed    1.55 sec
+      Start 304: TestHaloExchange - testStreamPullPackInfo (np=1)
+ 7/24 Test #304: TestHaloExchange - testStreamPullPackInfo (np=1) ...........   Passed    1.42 sec
+      Start 305: TestHaloExchange - testStreamPullPackInfo (np=2)
+ 8/24 Test #305: TestHaloExchange - testStreamPullPackInfo (np=2) ...........   Passed    1.50 sec
+      Start 306: TestHaloExchange - testStreamPullPackInfo (np=4)
+ 9/24 Test #306: TestHaloExchange - testStreamPullPackInfo (np=4) ...........   Passed    1.50 sec
+      Start 307: TestCommunicationHiding - testCommunicationHiding (np=1)
+10/24 Test #307: TestCommunicationHiding - testCommunicationHiding (np=1) ...   Passed    1.44 sec
+      Start 308: TestCommunicationHiding - testCommunicationHiding (np=2)
+11/24 Test #308: TestCommunicationHiding - testCommunicationHiding (np=2) ...   Passed    1.50 sec
+      Start 309: TestCommunicationHiding - testCommunicationHiding (np=4)
+12/24 Test #309: TestCommunicationHiding - testCommunicationHiding (np=4) ...   Passed    1.49 sec
+      Start 317: TestLbmScenarios_CXX - FullyPeriodic (np=1)
+13/24 Test #317: TestLbmScenarios_CXX - FullyPeriodic (np=1) ................   Passed    1.48 sec
+      Start 318: TestLbmScenarios_CXX - FullyPeriodic (np=2)
+14/24 Test #318: TestLbmScenarios_CXX - FullyPeriodic (np=2) ................   Passed    1.47 sec
+      Start 319: TestLbmScenarios_CXX - FullyPeriodic (np=4)
+15/24 Test #319: TestLbmScenarios_CXX - FullyPeriodic (np=4) ................   Passed    1.56 sec
+      Start 320: TestLbmScenarios_CXX - AAMatchesPull (np=1)
+16/24 Test #320: TestLbmScenarios_CXX - AAMatchesPull (np=1) ................   Passed    1.42 sec
+      Start 321: TestLbmScenarios_CXX - AAMatchesPull (np=2)
+17/24 Test #321: TestLbmScenarios_CXX - AAMatchesPull (np=2) ................   Passed    1.52 sec
+      Start 322: TestLbmScenarios_CXX - AAMatchesPull (np=4)
+18/24 Test #322: TestLbmScenarios_CXX - AAMatchesPull (np=4) ................   Passed    1.54 sec
+      Start 323: TestLbmScenarios_CXX - MirroredHalfChannel (np=1)
+19/24 Test #323: TestLbmScenarios_CXX - MirroredHalfChannel (np=1) ..........   Passed    1.43 sec
+      Start 324: TestLbmScenarios_CXX - MirroredHalfChannel (np=2)
+20/24 Test #324: TestLbmScenarios_CXX - MirroredHalfChannel (np=2) ..........   Passed    1.52 sec
+      Start 325: TestLbmScenarios_CXX - MirroredHalfChannel (np=4)
+21/24 Test #325: TestLbmScenarios_CXX - MirroredHalfChannel (np=4) ..........   Passed    1.49 sec
+      Start 326: TestLbmScenarios_CXX - FreeSlipPipe (np=1)
+22/24 Test #326: TestLbmScenarios_CXX - FreeSlipPipe (np=1) .................   Passed    1.51 sec
+      Start 327: TestLbmScenarios_CXX - FreeSlipPipe (np=2)
+23/24 Test #327: TestLbmScenarios_CXX - FreeSlipPipe (np=2) .................   Passed    1.46 sec
+      Start 328: TestLbmScenarios_CXX - FreeSlipPipe (np=4)
+24/24 Test #328: TestLbmScenarios_CXX - FreeSlipPipe (np=4) .................   Passed    1.55 sec
+
+100% tests passed out of 24
+
+Label Time Summary:
+walberla::sweepgen     =  42.35 sec*proc (12 tests)
+walberla::v8           =  41.88 sec*proc (12 tests)
+
+Total Test time (real) =  35.80 sec

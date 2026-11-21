@@ -1,0 +1,159 @@
+   verified 790a01ce74bcda12 /home/bananapi/saleh/presentation4/build-gcc-f64/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+== start Wed Nov 18 06:59:44 PM CST 2026
+   governor: performance 
+   frequency (kHz): 1600000 1600000 1600000 1600000 1600000 1600000 1600000 1600000 
+   temperatures: top_thermal=59C gpu_thermal=60C cluster0_thermal=62C cluster1_thermal=61C
+   load: 7.77 7.73 6.52 (2.00 when idle)
+   busy cores (>3 % over 1 s): cpu3=21%
+== run 200 steps 19:00:46, before: 52000 52000
+sample t=0.0 freq_min_max_khz=1600000 1600000 cluster0=52C cluster1=52C cpufreq_cooling=0
+sample t=0.6 freq_min_max_khz=1600000 1600000 cluster0=57C cluster1=58C cpufreq_cooling=0
+sample t=1.2 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=62C cpufreq_cooling=0
+sample t=1.9 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=68C cpufreq_cooling=0
+sample t=2.7 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=61C cpufreq_cooling=0
+sample t=3.4 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=64C cpufreq_cooling=0
+sample t=4.2 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=5.0 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=5.8 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=64C cpufreq_cooling=0
+sample t=6.6 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=7.3 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=8.1 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=64C cpufreq_cooling=0
+sample t=8.9 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=66C cpufreq_cooling=0
+sample t=9.7 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=65C cpufreq_cooling=0
+sample t=10.5 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=11.2 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=11.9 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=66C cpufreq_cooling=0
+sample t=12.8 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=66C cpufreq_cooling=0
+sample t=13.5 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=67C cpufreq_cooling=0
+sample t=14.3 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=66C cpufreq_cooling=0
+sample t=15.1 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=65C cpufreq_cooling=0
+sample t=15.9 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=66C cpufreq_cooling=0
+sample t=16.7 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=67C cpufreq_cooling=0
+sample t=17.5 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=67C cpufreq_cooling=0
+sample t=18.2 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=18.9 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=19.6 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=68C cpufreq_cooling=0
+sample t=20.3 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=70C cpufreq_cooling=0
+sample t=21.0 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=70C cpufreq_cooling=0
+sample t=21.7 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=69C cpufreq_cooling=0
+sample t=22.5 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=70C cpufreq_cooling=0
+sample t=23.3 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=69C cpufreq_cooling=0
+sample t=24.1 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=24.9 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=69C cpufreq_cooling=0
+sample t=25.6 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=69C cpufreq_cooling=0
+sample t=26.4 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=70C cpufreq_cooling=0
+sample t=27.2 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=68C cpufreq_cooling=0
+sample t=28.0 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=70C cpufreq_cooling=0
+sample t=28.8 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=70C cpufreq_cooling=0
+sample t=29.6 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=71C cpufreq_cooling=0
+sample t=30.4 freq_min_max_khz=1600000 1600000 cluster0=70C cluster1=70C cpufreq_cooling=0
+sample t=31.1 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=70C cpufreq_cooling=0
+sample t=31.9 freq_min_max_khz=1600000 1600000 cluster0=68C cluster1=71C cpufreq_cooling=0
+sample t=32.7 freq_min_max_khz=1600000 1600000 cluster0=70C cluster1=71C cpufreq_cooling=0
+sample t=33.5 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=72C cpufreq_cooling=0
+sample t=34.3 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=71C cpufreq_cooling=0
+sample t=35.0 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=70C cpufreq_cooling=0
+sample t=35.9 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=70C cpufreq_cooling=0
+sample t=36.6 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=72C cpufreq_cooling=0
+sample t=37.4 freq_min_max_khz=1600000 1600000 cluster0=70C cluster1=73C cpufreq_cooling=0
+sample t=38.2 freq_min_max_khz=1600000 1600000 cluster0=70C cluster1=71C cpufreq_cooling=0
+sample t=38.9 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=71C cpufreq_cooling=0
+sample t=39.7 freq_min_max_khz=1600000 1600000 cluster0=70C cluster1=72C cpufreq_cooling=0
+sample t=40.5 freq_min_max_khz=1600000 1600000 cluster0=69C cluster1=72C cpufreq_cooling=0
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=2x2x2 domain=128x128x128 cells=2097152 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=36.931024323369535 mlups=11.357128801179478 energy=49.525378876420845 mass=2097152.0000000056 fieldhash=0xeb1786c54c1e7e5e links_noslip=408064 links_ubb=81920 t_bulk=28.9130699634552 t_comm=6.025986909866333 t_bc=1.985339879989624
+== run 60 steps 19:02:26, before: 48000 50000
+sample t=0.0 freq_min_max_khz=1600000 1600000 cluster0=51C cluster1=51C cpufreq_cooling=0
+sample t=0.6 freq_min_max_khz=1600000 1600000 cluster0=55C cluster1=57C cpufreq_cooling=0
+sample t=1.2 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=2.0 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=61C cpufreq_cooling=0
+sample t=2.8 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=62C cpufreq_cooling=0
+sample t=3.5 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=61C cpufreq_cooling=0
+sample t=4.4 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=61C cpufreq_cooling=0
+sample t=5.1 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=61C cpufreq_cooling=0
+sample t=5.9 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=64C cpufreq_cooling=0
+sample t=6.7 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=7.5 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=8.3 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=9.0 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=9.8 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=10.6 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=11.4 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=64C cpufreq_cooling=0
+sample t=12.2 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=13.0 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=13.7 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=66C cpufreq_cooling=0
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=2x2x2 domain=128x128x128 cells=2097152 steps=60 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=10.601201326126862 mlups=11.869326515844175 energy=28.972808217454407 mass=2097152.0000000298 fieldhash=0x946ca8c37558f691 links_noslip=408064 links_ubb=81920 t_bulk=8.8094284534454346 t_comm=1.1682929992675781 t_bc=0.61514735221862793
+== run 200 steps 19:03:40, before: 47000 47000
+sample t=0.0 freq_min_max_khz=1600000 1600000 cluster0=47C cluster1=47C cpufreq_cooling=0
+sample t=0.6 freq_min_max_khz=1600000 1600000 cluster0=53C cluster1=54C cpufreq_cooling=0
+sample t=1.2 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=60C cpufreq_cooling=0
+sample t=1.9 freq_min_max_khz=1600000 1600000 cluster0=57C cluster1=58C cpufreq_cooling=0
+sample t=2.7 freq_min_max_khz=1600000 1600000 cluster0=57C cluster1=58C cpufreq_cooling=0
+sample t=3.5 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=60C cpufreq_cooling=0
+sample t=4.2 freq_min_max_khz=1600000 1600000 cluster0=58C cluster1=61C cpufreq_cooling=0
+sample t=5.0 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=61C cpufreq_cooling=0
+sample t=5.8 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=60C cpufreq_cooling=0
+sample t=6.6 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=60C cpufreq_cooling=0
+sample t=7.4 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=62C cpufreq_cooling=0
+sample t=8.2 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=61C cpufreq_cooling=0
+sample t=9.0 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=61C cpufreq_cooling=0
+sample t=9.7 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=61C cpufreq_cooling=0
+sample t=10.5 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=62C cpufreq_cooling=0
+sample t=11.3 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=12.0 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=63C cpufreq_cooling=0
+sample t=12.8 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=13.6 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=14.4 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=15.2 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=16.0 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=66C cpufreq_cooling=0
+sample t=16.8 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+sample t=17.5 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=18.4 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=19.1 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=65C cpufreq_cooling=0
+sample t=19.9 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=20.7 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=65C cpufreq_cooling=0
+sample t=21.5 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=66C cpufreq_cooling=0
+sample t=22.3 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=66C cpufreq_cooling=0
+sample t=23.1 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=65C cpufreq_cooling=0
+sample t=23.8 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=66C cpufreq_cooling=0
+sample t=24.6 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=64C cpufreq_cooling=0
+sample t=25.4 freq_min_max_khz=1600000 1600000 cluster0=64C cluster1=67C cpufreq_cooling=0
+sample t=26.2 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=68C cpufreq_cooling=0
+sample t=27.0 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=66C cpufreq_cooling=0
+sample t=27.8 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=67C cpufreq_cooling=0
+sample t=28.6 freq_min_max_khz=1600000 1600000 cluster0=66C cluster1=67C cpufreq_cooling=0
+sample t=29.3 freq_min_max_khz=1600000 1600000 cluster0=65C cluster1=68C cpufreq_cooling=0
+sample t=30.1 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=30.9 freq_min_max_khz=1600000 1600000 cluster0=66C cluster1=66C cpufreq_cooling=0
+sample t=31.7 freq_min_max_khz=1600000 1600000 cluster0=66C cluster1=69C cpufreq_cooling=0
+sample t=32.5 freq_min_max_khz=1600000 1600000 cluster0=66C cluster1=68C cpufreq_cooling=0
+sample t=33.2 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=34.1 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=34.8 freq_min_max_khz=1600000 1600000 cluster0=66C cluster1=68C cpufreq_cooling=0
+sample t=35.6 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=69C cpufreq_cooling=0
+sample t=36.4 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=69C cpufreq_cooling=0
+sample t=37.2 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=69C cpufreq_cooling=0
+sample t=37.9 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=68C cpufreq_cooling=0
+sample t=38.6 freq_min_max_khz=1600000 1600000 cluster0=67C cluster1=69C cpufreq_cooling=0
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=2x2x2 domain=128x128x128 cells=2097152 steps=200 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=35.290512363905918 mlups=11.885075390092121 energy=49.525378876420845 mass=2097152.0000000056 fieldhash=0xeb1786c54c1e7e5e links_noslip=408064 links_ubb=81920 t_bulk=28.817590951919556 t_comm=4.3503921031951904 t_bc=2.1146190166473389
+== run 60 steps 19:05:19, before: 48000 47000
+sample t=0.0 freq_min_max_khz=1600000 1600000 cluster0=50C cluster1=49C cpufreq_cooling=0
+sample t=0.6 freq_min_max_khz=1600000 1600000 cluster0=54C cluster1=55C cpufreq_cooling=0
+sample t=1.2 freq_min_max_khz=1600000 1600000 cluster0=58C cluster1=60C cpufreq_cooling=0
+sample t=1.9 freq_min_max_khz=1600000 1600000 cluster0=58C cluster1=58C cpufreq_cooling=0
+sample t=2.7 freq_min_max_khz=1600000 1600000 cluster0=58C cluster1=59C cpufreq_cooling=0
+sample t=3.5 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=61C cpufreq_cooling=0
+sample t=4.3 freq_min_max_khz=1600000 1600000 cluster0=58C cluster1=60C cpufreq_cooling=0
+sample t=5.1 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=62C cpufreq_cooling=0
+sample t=5.8 freq_min_max_khz=1600000 1600000 cluster0=59C cluster1=61C cpufreq_cooling=0
+sample t=6.6 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=62C cpufreq_cooling=0
+sample t=7.4 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=61C cpufreq_cooling=0
+sample t=8.2 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=62C cpufreq_cooling=0
+sample t=9.0 freq_min_max_khz=1600000 1600000 cluster0=60C cluster1=62C cpufreq_cooling=0
+sample t=9.8 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=10.6 freq_min_max_khz=1600000 1600000 cluster0=61C cluster1=62C cpufreq_cooling=0
+sample t=11.4 freq_min_max_khz=1600000 1600000 cluster0=63C cluster1=63C cpufreq_cooling=0
+sample t=12.1 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=12.9 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=63C cpufreq_cooling=0
+sample t=13.7 freq_min_max_khz=1600000 1600000 cluster0=62C cluster1=64C cpufreq_cooling=0
+SweepgenLdcCPU variant=SweepgenLdcCPU_explicit_cse_aa_pf compiler=GNU-14.2.0 real_t=64 blocks=2x2x2 domain=128x128x128 cells=2097152 steps=60 warmup=10 output=every omega=1.8 u_lid=0.050000000000000003 seconds=10.567606960046307 mlups=11.907059041439654 energy=28.972808217454407 mass=2097152.0000000298 fieldhash=0x946ca8c37558f691 links_noslip=408064 links_ubb=81920 t_bulk=8.7799899578094482 t_comm=1.1974160671234131 t_bc=0.58563923835754395
+== THERMAL DONE Wed Nov 18 07:05:33 PM CST 2026

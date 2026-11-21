@@ -1,0 +1,77 @@
+# =============================================================================
+#  docs/presentation6: tracked are the sources (slides.tex, figures/*.tex,
+#  build.sh, this file), the two films (figures/cavity-movie/: laptop, x86;
+#  figures/cavity-movie-board/: board, RVV): frame PNGs, cavity.avi (played in
+#  pdfpc) and cavity.gif (scripts/presentation4/cavity_movie.py), the progress file
+#  (*.md) and the raw logs in board-logs/. ./build.sh writes everything else
+#  into build/.
+# =============================================================================
+
+# ---- Build output: PDF, logs, rendered PNGs, latexmk state --------------------
+build/
+
+# ---- Output of running pdflatex/latexmk by hand in this folder ----------------
+#   Only the root: a PDF or PNG placed in figures/ on purpose stays visible.
+/slides.pdf
+/*.pdf
+/*.png
+/*.dvi
+/*.ps
+/*.xdv
+
+# ---- LaTeX auxiliary files (anywhere below this folder) -----------------------
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.lol
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.synctex
+missfont.log
+
+# ---- beamer -----------------------------------------------------------------
+*.nav
+*.snm
+*.vrb
+
+# ---- Bibliography and index (not used now; harmless if added later) ----------
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*.idx
+*.ilg
+*.ind
+
+# ---- TikZ/pgfplots externalisation (if it is ever switched on) ---------------
+*.auxlock
+*.figlist
+*.makefile
+*.dpth
+*.md5
+*-figure[0-9]*.pdf
+
+# ---- Editors and operating systems --------------------------------------------
+*~
+*.bak
+*.swp
+.*.swp
+\#*\#
+.#*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- Exception, kept last so no rule above overrides it -------------------------
+#   The raw board and x86 logs in board-logs/ are the evidence behind every number
+#   on the slides, whatever their extension (*.log, *.out, ...).
+!/board-logs/**
+
+
+data/

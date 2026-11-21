@@ -1,0 +1,14 @@
+% Slide 7: one row of 64 cells of one of the 19 arrays, handled 8 cells (one 256-bit register)
+% per loop iteration. The row is contiguous in memory (waLBerla's fzyx layout).
+\begin{tikzpicture}
+  \def\w{0.2}
+  \foreach \k in {0,...,63} {
+    \pgfmathtruncatemacro{\g}{mod(int(\k/8),2)}
+    \ifnum\g=0 \def\col{psblue!45}\else\def\col{psblue!20}\fi
+    \fill[\col] (\k*\w,0) rectangle ++(\w*0.92,0.42);
+  }
+  \draw[decorate,decoration={brace,amplitude=3pt},psgray] (0,0.5) -- node[lbl,above=3pt] {iteration 1} (8*\w-0.02,0.5);
+  \draw[decorate,decoration={brace,amplitude=3pt},psgray] (8*\w,0.5) -- node[lbl,above=3pt] {iteration 2} (16*\w-0.02,0.5);
+  \node[lbl,anchor=south] at (40*\w,0.55) {\dots\ 8 iterations of 8 cells for one row of 64 cells};
+  \node[lbl,anchor=north] at (32*\w,-0.05) {neighbouring cells are neighbours in memory, so each iteration does one plain 256-bit load per array};
+\end{tikzpicture}

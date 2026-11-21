@@ -1,0 +1,65 @@
+== g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0
+== flags: -march=rv64gcv_zvl256b -O3 
+rc=0
+== ctr_0 loops at lines: 
+30:40: missed: couldn't vectorize loop
+32:42: missed: couldn't vectorize loop
+34:44: missed: couldn't vectorize loop
+36:27: missed: not vectorized: not suitable for strided load xi_37_299 = *_10;
+148:10: missed: statement clobbers memory: __builtin_trap ();
+150:84: missed: not vectorized: more than one data ref in stmt: f = this_19(D)->properties_.f_;
+151:83: missed: not vectorized: more than one data ref in stmt: rho = this_19(D)->properties_.rho_;
+152:83: missed: not vectorized: more than one data ref in stmt: u = this_19(D)->properties_.u_;
+182:77: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven (_67, _60, _54, _size_f_0_25, _size_f_1_26, _size_f_2_27, _stride_f_0_28, _stride_f_1_29, _stride_f_2_30, _stride_f_3_31, _stride_rho_0_38, _stride_rho_1_39, _stride_rho_2_40, _stride_u_0_32, _stride_u_1_34, _stride_u_2_35, _stride_u_3_36, omega_41);
+185:10: missed: statement clobbers memory: __builtin_trap ();
+187:84: missed: not vectorized: more than one data ref in stmt: f = this_5(D)->properties_.f_;
+188:83: missed: not vectorized: more than one data ref in stmt: rho = this_5(D)->properties_.rho_;
+189:83: missed: not vectorized: more than one data ref in stmt: u = this_5(D)->properties_.u_;
+219:77: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven (_83, _38, _53, _size_f_0_137, _size_f_1_141, prephitmp_108, _69, _73, _78, _stride_f_3_25, _24, _20, _13, _40, _43, _47, _stride_u_3_27, omega_28);
+242:40: missed: couldn't vectorize loop
+244:42: missed: couldn't vectorize loop
+246:44: missed: couldn't vectorize loop
+248:27: missed: not vectorized: not suitable for strided load xi_37_337 = *_11;
+260:116: missed: not vectorized: vectorization is not profitable.
+266:123: missed: not vectorized: vectorization is not profitable.
+360:10: missed: statement clobbers memory: __builtin_trap ();
+362:84: missed: not vectorized: more than one data ref in stmt: f = this_19(D)->properties_.f_;
+363:83: missed: not vectorized: more than one data ref in stmt: rho = this_19(D)->properties_.rho_;
+364:83: missed: not vectorized: more than one data ref in stmt: u = this_19(D)->properties_.u_;
+394:75: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd (_67, _60, _54, _size_f_0_25, _size_f_1_26, _size_f_2_27, _stride_f_0_28, _stride_f_1_29, _stride_f_2_30, _stride_f_3_31, _stride_rho_0_38, _stride_rho_1_39, _stride_rho_2_40, _stride_u_0_32, _stride_u_1_34, _stride_u_2_35, _stride_u_3_36, omega_41);
+397:10: missed: statement clobbers memory: __builtin_trap ();
+399:84: missed: not vectorized: more than one data ref in stmt: f = this_5(D)->properties_.f_;
+400:83: missed: not vectorized: more than one data ref in stmt: rho = this_5(D)->properties_.rho_;
+401:83: missed: not vectorized: more than one data ref in stmt: u = this_5(D)->properties_.u_;
+431:75: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd (_83, _38, _53, _size_f_0_137, _size_f_1_141, prephitmp_108, _69, _73, _78, _stride_f_3_25, _24, _20, _13, _40, _43, _47, _stride_u_3_27, omega_28);
+454:40: missed: couldn't vectorize loop
+456:42: missed: couldn't vectorize loop
+458:44: missed: couldn't vectorize loop
+460:27: missed: not vectorized: not suitable for strided load xi_31_279 = *_10;
+559:10: missed: statement clobbers memory: __builtin_trap ();
+561:84: missed: not vectorized: more than one data ref in stmt: f = this_10(D)->properties_.f_;
+573:93: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput (_31, _size_f_0_13, _size_f_1_14, _size_f_2_15, _stride_f_0_16, _stride_f_1_18, _stride_f_2_19, _stride_f_3_20, omega_21);
+576:10: missed: statement clobbers memory: __builtin_trap ();
+578:84: missed: not vectorized: more than one data ref in stmt: f = this_3(D)->properties_.f_;
+590:93: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput (_43, _size_f_0_83, _size_f_1_87, prephitmp_82, _28, _32, _37, _stride_f_3_10, omega_11);
+613:40: missed: couldn't vectorize loop
+615:42: missed: couldn't vectorize loop
+617:44: missed: couldn't vectorize loop
+619:27: missed: not vectorized: not suitable for strided load xi_31_317 = *_11;
+628:125: missed: not vectorized: vectorization is not profitable.
+637:124: missed: not vectorized: vectorization is not profitable.
+718:10: missed: statement clobbers memory: __builtin_trap ();
+720:84: missed: not vectorized: more than one data ref in stmt: f = this_10(D)->properties_.f_;
+732:91: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput (_31, _size_f_0_13, _size_f_1_14, _size_f_2_15, _stride_f_0_16, _stride_f_1_18, _stride_f_2_19, _stride_f_3_20, omega_21);
+735:10: missed: statement clobbers memory: __builtin_trap ();
+737:84: missed: not vectorized: more than one data ref in stmt: f = this_3(D)->properties_.f_;
+749:91: missed: statement clobbers memory: SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput (_43, _size_f_0_83, _size_f_1_87, prephitmp_82, _28, _32, _37, _stride_f_3_10, omega_11);
+773:40: missed: couldn't vectorize loop
+775:42: missed: couldn't vectorize loop
+777:44: missed: couldn't vectorize loop
+779:27: missed: not vectorized: not suitable for strided load rho_247 = *_8;
+819:10: missed: statement clobbers memory: __builtin_trap ();
+821:84: missed: not vectorized: more than one data ref in stmt: f = this_19(D)->properties_.f_;
+822:83: missed: not vectorized: more than one data ref in stmt: rho = this_19(D)->properties_.rho_;
+823:83: missed: not vectorized: more than one data ref in stmt: u = this_19(D)->properties_.u_;
+== AUTOVEC WHY DONE

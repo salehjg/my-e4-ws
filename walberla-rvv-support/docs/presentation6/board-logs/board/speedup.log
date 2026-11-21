@@ -1,0 +1,160 @@
+== waiting for screen presentation4-streams to end Mon Nov 16 07:10:33 PM CST 2026
+== start Mon Nov 16 07:11:33 PM CST 2026, 3 rounds
+== 19:11:33 gcc f32 scalar: busy cores 0.00 of 8
+   mlups=1.2359998115679478 fieldhash=0xce523d69f3292fb1 t_bc=2.0896444320678711
+== 19:12:20 gcc f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.5744575931462244 fieldhash=0xd6f00f6bcd25138e t_bc=2.3020479679107666
+== 19:12:31 gcc f32 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=7.5687658665830337 fieldhash=0x625a08023588934c t_bc=2.3141176700592041
+== 19:12:41 gcc f64 scalar: busy cores 0.06 of 8
+   mlups=0.90887145106583289 fieldhash=0x10656311b8feb388 t_bc=2.0048661231994629
+== 19:13:44 gcc f64 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=3.9132636810938126 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.188931941986084
+== 19:14:01 gcc f64 explicit_cse_aa_split: busy cores 1.45 of 8
+   mlups=4.5445815439489357 fieldhash=0x28c335880bd8f1e5 t_bc=2.2201027870178223
+== 19:14:16 clang f32 scalar: busy cores 1.48 of 8
+   mlups=1.2491208421214406 fieldhash=0x3633c760e5e09380 t_bc=2.2221314907073975
+== 19:15:02 clang f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.1789569866587923 fieldhash=0xd6f00f6bcd25138e t_bc=2.2579998970031738
+== 19:15:14 clang f32 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=7.4946390570310104 fieldhash=0x625a08023588934c t_bc=2.3089380264282227
+== 19:15:24 clang f64 scalar: busy cores 0.00 of 8
+   mlups=0.93148533379229081 fieldhash=0x4601ba1f548b0608 t_bc=2.0771539211273193
+== 19:16:26 clang f64 explicit_cse_aa_pf: busy cores 0.00 of 8
+   mlups=3.6223607687750996 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.1301319599151611
+== 19:16:44 clang f64 explicit_cse_aa_split: busy cores 0.05 of 8
+   mlups=4.3691710094363154 fieldhash=0x28c335880bd8f1e5 t_bc=2.2032933235168457
+== 19:16:59 gcc f32 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=7.6277420143588737 fieldhash=0x625a08023588934c t_bc=2.2630050182342529
+== 19:17:09 gcc f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.567321461641769 fieldhash=0xd6f00f6bcd25138e t_bc=2.3057446479797363
+== 19:17:20 gcc f32 scalar: busy cores 0.02 of 8
+   mlups=1.205193054294321 fieldhash=0xce523d69f3292fb1 t_bc=2.0935459136962891
+== 19:18:08 gcc f64 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=4.5424567530817059 fieldhash=0x28c335880bd8f1e5 t_bc=2.157543420791626
+== 19:18:23 gcc f64 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=3.9134982327293182 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.1878507137298584
+== 19:18:40 gcc f64 scalar: busy cores 0.01 of 8
+   mlups=0.90329691241674825 fieldhash=0x10656311b8feb388 t_bc=1.9978427886962891
+== 19:19:44 clang f32 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=7.4839069813359327 fieldhash=0x625a08023588934c t_bc=2.3094773292541504
+== 19:19:54 clang f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.1705497661838145 fieldhash=0xd6f00f6bcd25138e t_bc=2.2544596195220947
+== 19:20:05 clang f32 scalar: busy cores 0.02 of 8
+   mlups=1.2008222577865959 fieldhash=0x3633c760e5e09380 t_bc=2.2428162097930908
+== 19:20:54 clang f64 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=4.311321519493613 fieldhash=0x28c335880bd8f1e5 t_bc=2.1878194808959961
+== 19:21:09 clang f64 explicit_cse_aa_pf: busy cores 0.00 of 8
+   mlups=3.6739211985350315 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.2091541290283203
+== 19:21:27 clang f64 scalar: busy cores 0.01 of 8
+   mlups=0.86795254333238825 fieldhash=0x4601ba1f548b0608 t_bc=2.15232253074646
+== 19:22:33 gcc f32 scalar: busy cores 0.01 of 8
+   mlups=1.2465611336291864 fieldhash=0xce523d69f3292fb1 t_bc=2.0624263286590576
+== 19:23:20 gcc f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.5636497969647003 fieldhash=0xd6f00f6bcd25138e t_bc=2.3043761253356934
+== 19:23:31 gcc f32 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=7.6223250845743316 fieldhash=0x625a08023588934c t_bc=2.31069016456604
+== 19:23:41 gcc f64 scalar: busy cores 0.01 of 8
+   mlups=0.89902351361607202 fieldhash=0x10656311b8feb388 t_bc=2.0248732566833496
+== 19:24:45 gcc f64 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=3.9221222809778777 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.2047600746154785
+== 19:25:01 gcc f64 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=4.5375004153698262 fieldhash=0x28c335880bd8f1e5 t_bc=2.2120420932769775
+== 19:25:16 clang f32 scalar: busy cores 1.19 of 8
+   mlups=1.2098071107308674 fieldhash=0x3633c760e5e09380 t_bc=2.1829483509063721
+== 19:26:04 clang f32 explicit_cse_aa_pf: busy cores 0.01 of 8
+   mlups=6.1664855407173871 fieldhash=0xd6f00f6bcd25138e t_bc=2.2426645755767822
+== 19:26:16 clang f32 explicit_cse_aa_split: busy cores 0.00 of 8
+   mlups=7.5503703970378142 fieldhash=0x625a08023588934c t_bc=2.2418701648712158
+== 19:26:26 clang f64 scalar: busy cores 0.01 of 8
+   mlups=0.89031519284176985 fieldhash=0x4601ba1f548b0608 t_bc=2.153820276260376
+== 19:27:31 clang f64 explicit_cse_aa_pf: busy cores 0.02 of 8
+   mlups=3.661899656804199 fieldhash=0xf2c7bddf8a3b3a76 t_bc=2.2100613117218018
+== 19:27:49 clang f64 explicit_cse_aa_split: busy cores 0.01 of 8
+   mlups=4.375819187475682 fieldhash=0x28c335880bd8f1e5 t_bc=2.1760146617889404
+
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f32 1c |
+|---|---|
+| scalar | 1.25 (1.00x) |
+| explicit_cse_aa_pf | 6.57 (5.27x) |
+| explicit_cse_aa_split | 7.63 (6.12x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366614821193197 | 11.366654542853633 | 3.5e-06 | 262143.99988484383 | 262144.00016909838 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f32 1c |
+|---|---|
+| scalar | 4.9% / 0.0% |
+| explicit_cse_aa_pf | 28.9% / 0.1% |
+| explicit_cse_aa_split | 32.9% / 0.1% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 0.91 (1.00x) |
+| explicit_cse_aa_pf | 3.92 (4.32x) |
+| explicit_cse_aa_split | 4.54 (5.00x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| gcc f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647613 | 11.366594364647622 | 7.8e-16 | 262143.99999999857 | 262143.99999999857 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | gcc f64 1c |
+|---|---|
+| scalar | 3.5% / 0.0% |
+| explicit_cse_aa_pf | 16.5% / 0.0% |
+| explicit_cse_aa_split | 19.2% / 0.0% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f32 1c |
+|---|---|
+| scalar | 1.25 (1.00x) |
+| explicit_cse_aa_pf | 6.18 (4.95x) |
+| explicit_cse_aa_split | 7.55 (6.04x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f32 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366614821193197 | 11.366654124957959 | 3.5e-06 | 262143.99982398748 | 262144.00016909838 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f32 1c |
+|---|---|
+| scalar | 5.3% / 0.0% |
+| explicit_cse_aa_pf | 26.6% / 0.1% |
+| explicit_cse_aa_split | 32.3% / 0.1% |
+## SweepgenLdcCPU (lid-driven cavity): best MLUP/s, speedup over the same column's plain scalar
+
+| variant | clang f64 1c |
+|---|---|
+| scalar | 0.93 (1.00x) |
+| explicit_cse_aa_pf | 3.67 (3.94x) |
+| explicit_cse_aa_split | 4.38 (4.70x) |
+
+### Checksums across variants (all runs, per configuration)
+
+| column | configuration | energy min | energy max | rel. spread | mass min | mass max | distinct field hashes |
+|---|---|---|---|---|---|---|---|
+| clang f64 1c | 1x1x1 blocks, 64x64x64, 200 steps | 11.366594364647614 | 11.366594364647622 | 6.3e-16 | 262143.99999999857 | 262143.99999999857 | 3 of 3 variants |
+
+### Share of the timed loop in the wall sweeps / halo exchange (best run, rank 0)
+
+| variant | clang f64 1c |
+|---|---|
+| scalar | 3.7% / 0.0% |
+| explicit_cse_aa_pf | 15.5% / 0.0% |
+| explicit_cse_aa_split | 18.2% / 0.0% |
+== SPEEDUP DONE Mon Nov 16 07:28:05 PM CST 2026

@@ -1,0 +1,135 @@
+% Slide "The kernel in code: one cell update, load by load" (new in presentation5).
+% Left: the generated StreamCollide, shortened to its shape (SweepgenLdcCPU_scalar_cse and _explicit_cse,
+% build/presentation4-x86/gcc-f32/apps/benchmarks/SweepgenLdcCPU/_gen/*/gen/SweepgenLdcCPU.cpp:41-345):
+%   src[i][z][y][x] = _data_f[x + y * _stride_f_1 + z * _stride_f_2 + i * _stride_f_3]  (previous slide),
+%   dst = _data_f_tmp (AB pattern: a second set of 19 arrays), rho_out = _data_rho, u_out = _data_u (3 arrays).
+% In the real code the 19 loads are spread over the formulas (e.g. xi_5 = f3(x+1) + f9(x+1,y+1) + f17(x+1,z+1)),
+% the collide part is about 200 operations, and the stores are 19 + 4 lines; the offsets shown are the real
+% ones (f_4 at ctr_0 - 1, f_1 at ctr_1 - 1, f_5 at ctr_2 - 1; see stencil-d3q19.tex). The last overlay
+% shows the RVV build (explicit_*): ctr_0 += 8 in f32 and every load/store a vector of 8 consecutive values
+% (vle32 / vse32 stand for __riscv_vle32_v_f32m1 / __riscv_vse32_v_f32m1; f64: 4 values, vle64).
+% Overlays: 1 the loops, 2-5 one load each (code line, stencil cell, array slot), 6 all 19 loads,
+% 7 collide (no memory access), 8 the 23 stores, 9 the same with vectors.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{
+    kl/.style={font=\ttfamily\scriptsize,inner sep=0pt,anchor=base west},
+    kc/.style={kl,text=psgray},
+    hl/.style={fill=psorange!22,rounded corners=1pt},
+    hlb/.style={fill=psblue!12,rounded corners=1pt},
+    sl/.style={draw=psgray!55,fill=white,line width=0.3pt},
+    cur/.style={draw=psorange!90!black,fill=psorange!60,line width=0.4pt},
+    done/.style={draw=psteal!70!black,fill=psteal!35,line width=0.4pt},
+    vec/.style={draw=psteal!60!black,fill=psteal!55,line width=0.4pt},
+    meb/.style={draw=psblue!80!black,fill=psblue!35,line width=0.4pt},
+    ln/.style={-{Stealth[length=1.5mm]},semithick,draw=psorange!90!black},
+    lb/.style={font=\tiny,text=psgray!90!black,inner sep=1pt},
+    off/.style={text=psorange!85!black},
+  }
+  \path (-0.2,-5.0) rectangle (14.2,0.12);      % the same size on every overlay
+  \def\ly{0.34}                                 % line pitch
+  \def\ke#1{\textcolor{psorange!85!black}{#1}}  % a neighbour offset in the code
+
+  % ================= the code ==================================================================
+  \fill[codebg] (-0.15,0.0) rectangle (8.8,-4.95);
+  \draw[psgray!80,rounded corners=2pt] (-0.15,0.0) rectangle (8.8,-4.95);
+  %   line highlights (behind the text)
+  \def\hlr#1#2#3{\fill[#3,visible on=<#2>] (-0.08,-#1*\ly-0.11) rectangle (8.73,-#1*\ly+0.24);}
+  \fill[hlb,visible on=<1>] (-0.08,-3*\ly-0.11) rectangle (8.73,-1*\ly+0.24);
+  \hlr{4}{2}{hl} \hlr{5}{3}{hl} \hlr{6}{4}{hl} \hlr{7}{5}{hl} \hlr{8}{6}{hl}
+  \fill[hl,visible on=<7>] (-0.08,-11*\ly-0.11) rectangle (8.73,-9*\ly+0.24);
+  \fill[hl,visible on=<8>] (-0.08,-13*\ly-0.11) rectangle (8.73,-12*\ly+0.24);
+  \fill[hl,visible on=<9>] (-0.08,-7*\ly-0.11) rectangle (8.73,-3*\ly+0.24);
+  \fill[hl,visible on=<9>] (-0.08,-13*\ly-0.11) rectangle (8.73,-12*\ly+0.24);
+  %   \kline{line}{indent}{code}{comment}
+  \def\kline#1#2#3#4{\node[kl] (L#1) at (#2*0.3,-#1*\ly) {#3}; \node[kc] at (5.45,-#1*\ly) {#4};}
+  \kline{1}{0}{for (z = 0; z < 64; z++)}{// plane by plane}
+  \kline{2}{1}{for (y = 0; y < 64; y++)}{// row by row}
+  \kline{3}{2}{\alt<9>{for (x = 0; x < 64; x += 8) \{}{for (x = 0; x < 64; x++) \{}}%
+              {\alt<9>{// 8 cells at once}{// cell by cell}}
+  \kline{4}{3}{\alt<9>{f0 = vle32(\&src[0][z][y][x]);}{f0 = src[0][z][y][x];}}{// the cell itself}
+  \kline{5}{3}{\alt<9>{f4 = vle32(\&src[4][z][y][x\ke{-1}]);}{f4 = src[4][z][y][x\ke{-1}];}}{// from the west}
+  \kline{6}{3}{\alt<9>{f1 = vle32(\&src[1][z][y\ke{-1}][x]);}{f1 = src[1][z][y\ke{-1}][x];}}{// from the south}
+  \kline{7}{3}{\alt<9>{f5 = vle32(\&src[5][z\ke{-1}][y][x]);}{f5 = src[5][z\ke{-1}][y][x];}}{// from below}
+  \kline{8}{3}{...}{// 15 more loads}
+  \kline{9}{3}{rho = f0 + f1 + ... + f18;}{// collide: about 200}
+  \kline{10}{3}{u = (f4 - f3 + ...) / rho;}{// arithmetic operations,}
+  \kline{11}{3}{g0 = ...;\ \ ...\ \ g18 = ...;}{// all in registers}
+  \kline{12}{3}{\alt<9>{vse32(\&dst[0][z][y][x], g0);}{dst[0][z][y][x] = g0;\ \ ...}}{// 19 stores}
+  \kline{13}{3}{\alt<9>{vse32(\&rho\_out[z][y][x], rho);}{rho\_out[z][y][x] = rho;\ \ ...}}{// + density, velocity}
+  \kline{14}{2}{\}}{}
+
+  % ================= right: the stencil in 3D (as on the stencil slide) ==========================
+  \begin{scope}[shift={(11.35cm,-0.98cm)},x={(0.46cm,0cm)},y={(0.27cm,0.18cm)},z={(0cm,0.46cm)}]
+    \tikzset{
+      mpt/.style={circle,draw=psgray!55,fill=white,inner sep=0pt,minimum size=1.1mm},
+      mdot/.style={circle,inner sep=0pt,minimum size=2.1mm,line width=0.4pt},
+      mcur/.style={mdot,draw=psorange!90!black,fill=psorange!75},
+      mdone/.style={mdot,draw=psteal!70!black,fill=psteal!45},
+      mme/.style={mdot,draw=psblue!80!black,fill=psblue!55},
+    }
+    \foreach \a in {-1,0,1} \foreach \b in {-1,0,1} {
+      \draw[draw=psgray!28,line width=0.3pt] (-1,\a,\b) -- (1,\a,\b);
+      \draw[draw=psgray!28,line width=0.3pt] (\a,-1,\b) -- (\a,1,\b);
+      \draw[draw=psgray!28,line width=0.3pt] (\a,\b,-1) -- (\a,\b,1);
+    }
+    \foreach \b in {1,0,-1} \foreach \a in {-1,0,1} \foreach \c in {-1,0,1}
+      \node[mpt] at (\a,\b,\c) {};
+    %   the 19 cells D3Q19 reads, back to front
+    \foreach \a/\b/\c in {0/1/0, 1/1/0, -1/1/0, 0/1/-1, 0/1/1, 1/0/0, -1/0/0, 0/0/-1, 0/0/1, 1/0/-1, -1/0/-1,
+                          1/0/1, -1/0/1, 0/0/0, 0/-1/0, 1/-1/0, -1/-1/0, 0/-1/-1, 0/-1/1}
+      \node[mdone,visible on=<6->] at (\a,\b,\c) {};
+    \node[mme,visible on=<1>] at (0,0,0) {};
+    \node[visible on=<2->,alt=<2>{mcur}{mdone}] at (0,0,0) {};       % f0: the cell itself
+    \node[visible on=<3->,alt=<3>{mcur}{mdone}] at (-1,0,0) {};      % f4: from the west (x - 1)
+    \node[visible on=<4->,alt=<4>{mcur}{mdone}] at (0,-1,0) {};      % f1: from the south (y - 1)
+    \node[visible on=<5->,alt=<5>{mcur}{mdone}] at (0,0,-1) {};      % f5: from below (z - 1)
+    %   axes
+    \begin{scope}[shift={(-2.0cm,-0.45cm)}]
+      \draw[-{Stealth[length=1.2mm]},semithick] (0,0,0) -- (0.9,0,0) node[lb,anchor=west] {$\mathbf{i}$};
+      \draw[-{Stealth[length=1.2mm]},semithick] (0,0,0) -- (0,1.3,0) node[lb,anchor=south west] {$\mathbf{j}$};
+      \draw[-{Stealth[length=1.2mm]},semithick] (0,0,0) -- (0,0,0.9) node[lb,anchor=south] {$\mathbf{k}$};
+    \end{scope}
+  \end{scope}
+  \node[lb,anchor=west,align=left,visible on=<1>] at (12.35,-0.98) {the cell\\to update};
+  \node[lb,anchor=west,align=left,visible on=<2>] at (12.35,-0.98) {the cell\\itself};
+  \node[lb,anchor=west,align=left,visible on=<3>] at (12.35,-0.98) {from the west\\($x-1$)};
+  \node[lb,anchor=west,align=left,visible on=<4>] at (12.35,-0.98) {from the south\\($y-1$)};
+  \node[lb,anchor=west,align=left,visible on=<5>] at (12.35,-0.98) {from below\\($z-1$)};
+  \node[lb,anchor=west,align=left,visible on=<6->] at (12.35,-0.98) {all 19\\cells};
+
+  % ================= right: one slot window per array ==========================================
+  %   12 slots per strip: x-3 ... x+8; slot 3 is x
+  \def\sw{0.255}
+  \def\sxx{11.0}
+  \begin{scope}[alt=<7>{opacity=0.3}{}]
+  \foreach \y/\n/\c in {-2.0/src[0]/row $y$, -2.42/src[4]/row $y$, -2.84/src[1]/row $y{-}1$,
+                        -3.26/src[5]/plane $z{-}1$, -4.02/dst[i]/19 arrays, -4.44/{rho, u}/4 arrays} {
+    \foreach \k in {0,...,11} \draw[sl] (\sxx+\k*\sw,\y) rectangle ++(\sw,0.26);
+    \node[font=\ttfamily\tiny,anchor=base west,inner sep=0pt] at (9.2,\y+0.1) {\n};
+    \node[lb,anchor=base east] at (\sxx-0.05,\y+0.02) {\c};
+  }
+  \node[lb,anchor=west,fill=white,visible on=<6->] at (9.2,-3.62)
+    {\alt<9>{each load and store now covers 8 neighbouring cells}{+ 15 more arrays, one value from each}};
+  \draw[densely dotted,psgray!70] (\sxx+3.5*\sw,-1.82) -- (\sxx+3.5*\sw,-4.5);
+  \node[lb,anchor=north] at (\sxx+3.5*\sw,-4.55) {$x$};
+  %   \slot{strip y}{slot}{style}
+  \def\slot#1#2#3{\draw[#3] ({\sxx+(#2)*\sw},#1) rectangle ++(\sw,0.26);}
+  \slot{-2.0}{3}{visible on=<2->,alt=<2>{cur}{done}}
+  \slot{-2.42}{2}{visible on=<3->,alt=<3>{cur}{done}}
+  \slot{-2.84}{3}{visible on=<4->,alt=<4>{cur}{done}}
+  \slot{-3.26}{3}{visible on=<5->,alt=<5>{cur}{done}}
+  \slot{-4.02}{3}{visible on=<8->,alt=<8>{cur}{done}}
+  \slot{-4.44}{3}{visible on=<8->,alt=<8>{cur}{done}}
+  %   9: vectors, 8 consecutive slots per load and store
+  \foreach \y/\a in {-2.0/3, -2.84/3, -3.26/3, -4.02/3, -4.44/3}
+    \foreach \k in {0,...,7} \slot{\y}{\a+\k}{vec,visible on=<9>};
+  \foreach \k in {0,...,7} \slot{-2.42}{2+\k}{cur,visible on=<9>};
+  \end{scope}
+  \node[font=\scriptsize,text=psteal!50!black,fill=white,draw=psteal!70!black,rounded corners=2pt,
+    align=center,visible on=<7>] at (12.0,-3.05) {collide: no memory access};
+
+  % ================= annotations: code line -> array ===========================================
+  \foreach \l/\y/\o in {4/-1.87/2, 5/-2.29/3, 6/-2.71/4, 7/-3.13/5, 8/-3.55/6}
+    \draw[ln,visible on=<\o>] (8.8,-\l*\ly+0.06) to[out=0,in=180] (9.15,\y);
+  \draw[ln,visible on=<8>] (8.8,-12.5*\ly+0.06) to[out=0,in=180] (9.15,-3.89);
+\end{tikzpicture}

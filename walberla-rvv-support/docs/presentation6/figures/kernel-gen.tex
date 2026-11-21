@@ -1,0 +1,68 @@
+% How one kernel is made (top) and when each step happens (bottom).
+% Top: lbmpy writes the formulas of one cell, pystencils turns them into a C++ loop over all
+% cells with RVV intrinsics (8 f32 cells per instruction; samples simplified, intrinsic names
+% shortened), and GCC or Clang compiles that to machine code.
+% Bottom: waLBerla generates and compiles at build time (make, on the board) and calls the
+% kernel once per time step. Colours as in figures/build-run.tex: blue = build time,
+% teal = run time.
+\begin{tikzpicture}[
+    card/.style={box,anchor=north west,minimum height=24mm,inner sep=0pt},
+    ttl/.style={anchor=north west,font=\scriptsize\bfseries,inner sep=0pt},
+    who/.style={anchor=north west,font=\tiny,text=psgray,inner sep=0pt},
+    smp/.style={anchor=north west,font=\ttfamily\scriptsize,align=left,inner sep=0pt},
+    chip/.style={box,font=\scriptsize,minimum height=5.5mm,inner sep=2pt},
+    brc/.style={decorate,decoration={brace,amplitude=4pt,mirror},semithick,draw=psgray!80}]
+  % ---- top: from formulas to machine code ------------------------------------------
+  \node[card,minimum width=3.3cm] (k1) at (0,0) {};
+  \node[card,minimum width=5.75cm] (k2) at (4.15,0) {};
+  \node[card,minimum width=3.65cm] (k3) at (10.75,0) {};
+  \draw[arr] (k1) -- (k2);
+  \draw[arr] (k2) -- (k3);
+
+  \node[ttl] at ([shift={(3pt,-4pt)}]k1.north west) {1\enspace formulas for one cell};
+  \node[who] at ([shift={(3pt,-13pt)}]k1.north west) {lbmpy (Python)};
+  \node[anchor=north west,font=\scriptsize,align=left,inner sep=0pt] at ([shift={(3pt,-22pt)}]k1.north west)
+    {$f_i \leftarrow f_i + \omega\,(f^{\mathrm{eq}}_i - f_i)$\\[3pt]
+     19 such equations,\\about 200 operations};
+
+  \node[ttl] at ([shift={(3pt,-4pt)}]k2.north west) {2\enspace C++ loop over all cells};
+  \node[who] at ([shift={(3pt,-13pt)}]k2.north west) {pystencils (Python), RVV target};
+  \node[smp] at ([shift={(3pt,-22pt)}]k2.north west)
+    {for (z ...) for (y ...)\\
+     \ \ for (x = 0; x < n; x += 8) \{\\
+     \ \ \ \ v = vle32(\&f[x]);\ \ \ \ {\color{psgray}// load 8 cells}\\
+     \ \ \ \ r = vfmacc(r, c, v);\ \ {\color{psgray}// 8 multiply-adds}\\
+     \ \ \ \ vse32(\&g[x], r); \}\ \ \ {\color{psgray}// store 8 cells}};
+
+  \node[ttl] at ([shift={(3pt,-4pt)}]k3.north west) {3\enspace machine code};
+  \node[who] at ([shift={(3pt,-13pt)}]k3.north west) {GCC or Clang};
+  \node[smp] at ([shift={(3pt,-22pt)}]k3.north west)
+    {vle32.v\ \ \ \ v1,(a5)\\vfmacc.vf\ \ v2,fa4,v1\\vse32.v\ \ \ \ v2,(a6)};
+
+  \draw[brc] ([yshift=-2mm]k1.south west) -- ([yshift=-2mm]k2.south east)
+    node[midway,below=4pt,font=\scriptsize\bfseries] {generate};
+  \draw[brc] ([yshift=-2mm]k3.south west) -- ([yshift=-2mm]k3.south east)
+    node[midway,below=4pt,font=\scriptsize\bfseries] {compile};
+
+  % ---- bottom: when, along the time axis --------------------------------------------
+  \def\xs{2.4}    % start of the time axis
+  \def\xb{6.3}    % the program starts here
+  \fill[psblue!7] (\xs,-3.20) rectangle (\xb,-4.35);
+  \fill[psteal!9] (\xb,-3.20) rectangle (14.4,-4.35);
+  \draw[psgray!80,dashed] (\xb,-3.20) -- (\xb,-4.35);
+  \node[font=\tiny,text=psblue!75!black,anchor=north west] at (\xs,-3.20)
+    {\textbf{build time}: before the program runs};
+  \node[font=\tiny,text=psteal!75!black,anchor=north east] at (14.4,-3.20)
+    {\textbf{run time}: while the program runs};
+  \draw[arr] (\xs,-4.35) -- (14.4,-4.35);
+  \node[lbl,anchor=south east] at (14.35,-4.35) {time};
+
+  %   waLBerla: generate and compile once when it is built, then call the kernel every step
+  \node[anchor=west,font=\scriptsize\bfseries] at (0,-3.85) {waLBerla};
+  \node[chip,minimum width=1.6cm] at (3.4,-3.85) {generate};
+  \node[chip,minimum width=1.5cm] at (5.3,-3.85) {compile};
+  \foreach \x in {6.95,7.85,8.75} \node[chip,minimum width=0.8cm,fill=white] at (\x,-3.85) {run};
+  \node[font=\scriptsize] at (9.45,-3.85) {\dots};
+  \node[lbl,anchor=west] at (9.8,-3.85) {one call per time step};
+
+\end{tikzpicture}

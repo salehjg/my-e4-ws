@@ -1,0 +1,57 @@
+== /home/bananapi/saleh/presentation4/build-clang-f64-scalar: scalar tree, clang (/usr/bin/clang++), riscv64=True, host tune flag accepted=True
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gc': 242})
+PASS -mtune=spacemit-x60 present in all commands = True (waLBerla's configure check for clang)
+PASS SweepgenLdcCPU_scalar: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse: 0 RVV instructions in the whole executable (must be 0)
+PASS SweepgenLdcCPU_scalar_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_scalar_cse_aa: 0 RVV instructions in the whole executable (must be 0)
+CHECK_BUILD PASS
+== /home/bananapi/saleh/presentation4/build-clang-f64: vector tree, clang (/usr/bin/clang++), riscv64=True, host tune flag accepted=True
+PASS -O3 is the last -O option in all 242 compile commands
+PASS -march as expected in all commands (last -march counts: {'-march=rv64gcv_zvl256b': 230, '-march=rv64gc': 12})
+PASS -mtune=spacemit-x60 present in all commands = True (waLBerla's configure check for clang)
+PASS SweepgenLdcCPU_autovec: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec: 3832 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_autovec_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse: 3832 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_autovec_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+INFO SweepgenLdcCPU_autovec_cse_aa: 4158 RVV instructions in total, 0 in the kernels
+PASS SweepgenLdcCPU_explicit_cse: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse: 4481 RVV instructions in total, 651 in the kernels
+        258 SweepgenLdcCPU::gen::LBM::StreamCollide_kernels::StreamCollide(double const*, double*, double*, double*, long,
+        257 SweepgenLdcCPU::gen::LBM::StreamCollideNoOutput_kernels::StreamCollideNoOutput(double const*, double*, long, l
+        136 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+PASS SweepgenLdcCPU_explicit_cse_pf: 2 generated files, no code-changing #pragma (15 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_pf: 4476 RVV instructions in total, 646 in the kernels
+        256 SweepgenLdcCPU::gen::LBM::StreamCollideNoOutput_kernels::StreamCollideNoOutput(double const*, double*, long, l
+        254 SweepgenLdcCPU::gen::LBM::StreamCollide_kernels::StreamCollide(double const*, double*, double*, double*, long,
+        136 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+PASS SweepgenLdcCPU_explicit_cse_aa: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa: 5267 RVV instructions in total, 1124 in the kernels
+        260 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        257 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        236 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        136 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_pf: 5270 RVV instructions in total, 1127 in the kernels
+        262 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        259 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        136 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 2 generated files, no code-changing #pragma (27 warning-control pragmas)
+PASS SweepgenLdcCPU_explicit_cse_aa_split: 7732 RVV instructions in total, 3626 in the kernels
+       2200 SweepgenLdcCPU::gen::LBM_SPLIT::streamCollide(double*, double*, double*, long, long, long, long, long, long, l
+        260 SweepgenLdcCPU::gen::LBM::StreamCollideOddNoOutput_kernels::StreamCollideOddNoOutput(double*, long, long, long
+        257 SweepgenLdcCPU::gen::LBM::StreamCollideEvenNoOutput_kernels::StreamCollideEvenNoOutput(double*, long, long, lo
+        236 SweepgenLdcCPU::gen::LBM::StreamCollideEven_kernels::StreamCollideEven(double*, double*, double*, long, long, 
+        235 SweepgenLdcCPU::gen::LBM::StreamCollideOdd_kernels::StreamCollideOdd(double*, double*, double*, long, long, lo
+        163 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c0_1(double*, double const*, long, long, long, long, lo
+        139 SweepgenLdcCPU::gen::LBM_SPLIT::(anonymous namespace)::c2_1(double*, double const*, long, long, long, long, lo
+        136 SweepgenLdcCPU::gen::LBM::InitPdfs_kernels::InitPdfs(double*, double const*, double const*, long, long, long, 
+CHECK_BUILD PASS
+CHECK_WALLS PASS

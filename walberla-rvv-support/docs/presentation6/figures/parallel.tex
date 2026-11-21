@@ -1,0 +1,61 @@
+% Slide "How waLBerla splits the work" (report r02, section "The block-structured domain" and its
+% figure blockforest.tex). The benchmark uses a uniform block grid with one 64^3 block per MPI
+% process and one process per core; no threads (WALBERLA_BUILD_WITH_OPENMP is OFF). The halo
+% exchange copies locally between blocks of the same process and sends MPI messages otherwise;
+% with one process the periodic domain makes the block its own neighbour (a local copy).
+% Inside a block, x is the fastest index (fzyx layout), so one RVV instruction covers 8 (f32)
+% or 4 (f64) neighbouring cells of a row.
+\begin{tikzpicture}[
+    cell/.style={draw=psgray!70,line width=0.3pt},
+    ttl/.style={font=\scriptsize\bfseries,anchor=south west,text=black!80,inner sep=0pt}]
+  % ---- 1: the domain, one block per core ------------------------------------------
+  \def\bs{0.82}
+  \node[ttl] at (0,2.75) {1\enspace domain: one block per core};
+  \foreach \i in {0,...,3} \foreach \j in {0,1} {
+    \pgfmathtruncatemacro{\c}{\i+4*\j}
+    \fill[psblue!12] (\i*\bs,0.6+\j*\bs) rectangle ++(\bs,\bs);
+    \draw[psgray!80] (\i*\bs,0.6+\j*\bs) rectangle ++(\bs,\bs);
+    \node[font=\tiny,text=psblue!80!black,align=center] at (\i*\bs+0.5*\bs,0.6+\j*\bs+0.5*\bs) {core\\[-2pt]\c};
+  }
+  \draw[black!80,line width=1pt] (3*\bs,0.6) rectangle ++(\bs,\bs);
+  \node[lbl,anchor=north] at (2*\bs,0.5) {8 cores: 8 blocks\\of $64^3$ cells each};
+  %   zoom onto the block of panel 2
+  \draw[psgray!60,dashed] (4*\bs,0.6+\bs) -- (4.3,2.52);
+  \draw[psgray!60,dashed] (4*\bs,0.6) -- (4.3,0);
+
+  % ---- 2: one block, its ghost layer and the halo exchange -------------------------
+  \begin{scope}[shift={(4.3,0)}]
+    \def\s{0.36}
+    \node[ttl] at (0,2.75) {2\enspace one block and its ghost layer};
+    \fill[psgray!30] (0,0) rectangle (7*\s,7*\s);
+    \fill[white] (\s,\s) rectangle (6*\s,6*\s);
+    \fill[psteal!30] (\s,2*\s) rectangle (6*\s,3*\s);            % one row (panel 3)
+    \draw[cell,step=\s] (0,0) grid (7*\s,7*\s);
+    \draw[black!80,line width=1pt] (0,0) rectangle (7*\s,7*\s);
+    \node[lbl,anchor=north] at (3.5*\s,-0.08) {white: its cells\\grey: ghost layer};
+    %   the east neighbour, another process: its first interior column is the border slice
+    \begin{scope}[shift={(7*\s+0.75,0)}]
+      \fill[psgray!30] (0,0) rectangle (2*\s,7*\s);
+      \fill[psblue!35] (\s,\s) rectangle (2*\s,6*\s);
+      \draw[cell,step=\s] (0,0) grid (2*\s,7*\s);
+      \node[lbl,anchor=north] at (\s,-0.08) {neighbour\\block};
+    \end{scope}
+    \draw[arr,psblue!80!black,thick] (7*\s+0.75+1.5*\s,4.5*\s) -- (6.5*\s,4.5*\s);
+    \node[font=\tiny,text=psblue!80!black,align=center,anchor=south] at (7*\s+0.45,4.75*\s)
+      {halo\\[-2pt]exchange};
+  \end{scope}
+
+  % ---- 3: one row of cells inside one core ----------------------------------------
+  \begin{scope}[shift={(9.35,0)}]
+    \def\w{0.38}
+    \node[ttl] at (0,2.75) {3\enspace one row, inside one core};
+    \foreach \k in {0,...,11} {
+      \fill[psteal!30] (\k*\w,1.0) rectangle ++(\w,0.4);
+      \draw[cell] (\k*\w,1.0) rectangle ++(\w,0.4);
+    }
+    \draw[psteal!80!black,line width=1.2pt,rounded corners=1pt] (0,0.94) rectangle (8*\w,1.46);
+    \node[lbl,anchor=south] at (4*\w,1.55) {one RVV instruction:\\8 cells (f32) or 4 (f64)};
+    \draw[arr] (0,0.72) -- (12*\w,0.72);
+    \node[lbl,anchor=north] at (6*\w,0.62) {x: cell after cell in memory};
+  \end{scope}
+\end{tikzpicture}

@@ -1,0 +1,88 @@
+== probe run=1 R=8 thp=0
+stream R=8 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=21.1 GBps=4.819
+== probe run=1 R=8 thp=1
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.2 GBps=5.303
+== probe run=1 R=16 thp=0
+stream R=16 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.9 GBps=2.697
+== probe run=1 R=16 thp=1
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.3 GBps=2.741
+== probe run=1 R=19 thp=0
+stream R=19 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=49.2 GBps=2.080
+== probe run=1 R=19 thp=1
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=56.5 GBps=1.812
+== probe run=1 R=20 thp=0
+stream R=20 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=130.5 GBps=0.783
+== probe run=1 R=20 thp=1
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=214.2 GBps=0.477
+== probe run=1 R=21 thp=0
+stream R=21 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=265.6 GBps=0.385
+== probe run=1 R=21 thp=1
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=242.7 GBps=0.422
+== probe run=1 R=22 thp=0
+stream R=22 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=357.0 GBps=0.287
+== probe run=1 R=22 thp=1
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.1 GBps=0.284
+== probe run=1 R=23 thp=0
+stream R=23 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=355.5 GBps=0.288
+== probe run=1 R=23 thp=1
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.1 GBps=0.284
+== probe run=1 R=24 thp=0
+stream R=24 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=357.7 GBps=0.286
+== probe run=1 R=24 thp=1
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.9 GBps=0.281
+== probe run=1 R=28 thp=0
+stream R=28 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=357.1 GBps=0.287
+== probe run=1 R=28 thp=1
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=363.6 GBps=0.281
+== pattern run=1 R=19 W=23 thp=0 pfr=0
+stream R=19 W=23 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=182.3 GBps=0.561
+== pattern run=1 R=19 W=23 thp=1 pfr=0
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=182.2 GBps=0.561
+== pattern run=1 R=19 W=23 thp=0 pfr=128
+stream R=19 W=23 mb=4 thp=0 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=93.3 GBps=1.096
+== pattern run=1 R=19 W=23 thp=1 pfr=128
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=91.3 GBps=1.120
+== probe run=2 R=8 thp=0
+stream R=8 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=21.2 GBps=4.796
+== probe run=2 R=8 thp=1
+stream R=8 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=19.0 GBps=5.350
+== probe run=2 R=16 thp=0
+stream R=16 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=38.3 GBps=2.669
+== probe run=2 R=16 thp=1
+stream R=16 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=37.2 GBps=2.750
+== probe run=2 R=19 thp=0
+stream R=19 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=48.3 GBps=2.118
+== probe run=2 R=19 thp=1
+stream R=19 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=53.8 GBps=1.899
+== probe run=2 R=20 thp=0
+stream R=20 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=130.5 GBps=0.784
+== probe run=2 R=20 thp=1
+stream R=20 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=62.9 GBps=1.625
+== probe run=2 R=21 thp=0
+stream R=21 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=271.1 GBps=0.378
+== probe run=2 R=21 thp=1
+stream R=21 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=358.7 GBps=0.285
+== probe run=2 R=22 thp=0
+stream R=22 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=357.2 GBps=0.286
+== probe run=2 R=22 thp=1
+stream R=22 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=360.7 GBps=0.284
+== probe run=2 R=23 thp=0
+stream R=23 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=355.5 GBps=0.288
+== probe run=2 R=23 thp=1
+stream R=23 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=312.0 GBps=0.328
+== probe run=2 R=24 thp=0
+stream R=24 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=358.6 GBps=0.285
+== probe run=2 R=24 thp=1
+stream R=24 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.0 GBps=0.281
+== probe run=2 R=28 thp=0
+stream R=28 W=0 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=356.5 GBps=0.287
+== probe run=2 R=28 thp=1
+stream R=28 W=0 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=364.1 GBps=0.281
+== pattern run=2 R=19 W=23 thp=0 pfr=0
+stream R=19 W=23 mb=4 thp=0 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=185.6 GBps=0.551
+== pattern run=2 R=19 W=23 thp=1 pfr=0
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=0 pfw=0 zero=0 scalar=0 cyc_per_line=176.8 GBps=0.579
+== pattern run=2 R=19 W=23 thp=0 pfr=128
+stream R=19 W=23 mb=4 thp=0 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=91.7 GBps=1.116
+== pattern run=2 R=19 W=23 thp=1 pfr=128
+stream R=19 W=23 mb=4 thp=1 stagger=4160 pf=0 pfr=128 pfw=0 zero=0 scalar=0 cyc_per_line=90.2 GBps=1.135

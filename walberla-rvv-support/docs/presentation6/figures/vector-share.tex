@@ -1,0 +1,32 @@
+% Slide "The fair test: what the vectors alone give" (new in presentation5; notes5 F1, E2).
+% MLUP/s of the whole program, GCC 14.2, one core (core 2), 64^3, 200 steps + 10 warm-up, best of 3
+% interleaved rounds, the verified presentation4 executables; log board-logs/notes5/e2-A-output-last.log:
+%   best scalar (scalar_cse_aa), density and velocity written every step:   f32 1.996, f64 1.417
+%   the same build, density and velocity only in the last step               f32 3.975, f64 3.442
+%     (SWEEPGEN_LDC_OUTPUT=last: 19 streams instead of 23; same final fields: energy to 2e-8 / 5e-16)
+%   fastest RVV build, density and velocity only in the last step:
+%     f32 explicit_cse_aa_split 8.266, f64 explicit_cse_aa_pf 4.803
+% Ratios: 8.266 / 3.975 = 2.08, 4.803 / 3.442 = 1.40.
+% Clang (e10-A-clang-output-last.log, 2 rounds): 3.396 -> split 8.023 = 2.36; 3.296 -> split 4.776 = 1.45.
+\begin{tikzpicture}
+  \begin{axis}[ybar=1.5pt, bar width=15pt, width=7.6cm, height=4.4cm, ymin=0, ymax=12, clip=false,
+      symbolic x coords={f32,f64}, xtick=data,
+      enlarge x limits=0.38,
+      ylabel={MLUP/s, one core},
+      tick label style={font=\scriptsize}, label style={font=\scriptsize},
+      ymajorgrids, grid style={psgray!20},
+      nodes near coords, point meta=explicit symbolic,
+      nodes near coords style={font=\scriptsize,anchor=south},
+      legend style={font=\tiny,draw=psgray!50,at={(0.5,-0.17)},anchor=north,inner sep=1.5pt},
+      legend cell align=left, legend columns=1]
+    \addplot[fill=psgray!25,draw=psgray] coordinates {(f32,1.996)[2.00] (f64,1.417)[1.42]};
+    \addplot[fill=psgray!70,draw=psgray!90!black] coordinates {(f32,3.975)[3.98] (f64,3.442)[3.44]};
+    \addplot[fill=psteal!75,draw=psteal!70!black] coordinates {(f32,8.266)[8.27] (f64,4.803)[4.80]};
+    \legend{best scalar (as on the previous slide),
+      best scalar{,} density and velocity at the end,
+      fastest RVV{,} density and velocity at the end}
+    %   above the teal bar (bar shifts -16.5, 0, +16.5 pt): teal over dark grey
+    \node[font=\small\bfseries,text=psteal!70!black] at ([xshift=16.5pt,yshift=5mm]axis cs:f32,8.266) {\sx{2.1}};
+    \node[font=\small\bfseries,text=psteal!70!black] at ([xshift=16.5pt,yshift=5mm]axis cs:f64,4.803) {\sx{1.4}};
+  \end{axis}
+\end{tikzpicture}

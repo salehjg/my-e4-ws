@@ -1,0 +1,14 @@
+% How the work was done in part 2 (report r03, "How the work was done"), reduced to three steps.
+\begin{tikzpicture}[st/.style={box,text width=38mm,minimum height=15mm,font=\scriptsize,
+    execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}}]
+  \node[st,fill=psblue!7,draw=psblue!70!black] (p) at (0,0)
+    {{\small\bfseries 1 Measure the chip}\\[2pt] small test programs for memory and instruction costs};
+  \node[st] (l) at (4.85,0)
+    {{\small\bfseries 2 Try one idea}\\[2pt] in the \term{kernel lab}: the generated loop alone, minutes instead of hours};
+  \node[st,fill=psteal!12,draw=psteal!90!black] (m) at (9.7,0)
+    {{\small\bfseries 3 Keep what pays off}\\[2pt] put it into the generator, check the results, measure the whole program};
+  \draw[arr] (p) -- (l);
+  \draw[arr] (l) -- node[lbl,above] {gain} (m);
+  \draw[arr,dashed] (l.south) -- ++(0,-0.5) node[lbl,below] {no gain: dropped};
+  \draw[arr,dashed] (m.north) -- ++(0,0.4) -| node[lbl,pos=0.25,above] {next idea} (l.north);
+\end{tikzpicture}
