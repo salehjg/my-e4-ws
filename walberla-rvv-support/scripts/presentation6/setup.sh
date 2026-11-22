@@ -9,7 +9,9 @@
 # bananapi: bash scripts/presentation6/setup.sh   (the venv of presentation4 is only checked, not changed)
 #
 # Steps, each printed as PASS / FAIL / INFO; the last line says SETUP PASS or SETUP FAIL:
-#   1. modules    load MODULES (monte3 default: gcc-14.2.0; elsewhere none)
+#   1. modules    load MODULES (monte3 default: gcc-14.2.0 openmpi-5.0.6, in this order; elsewhere none). The
+#                 milkv Open MPI 5.0.6, not the system Open MPI 4.1.5: its helper thread spins and halves every
+#                 core, and some runs hang (docs/notes7)
 #   2. compilers  GCC >= 14 and, if present, Clang >= 17: each compiles and runs a test program with RVV intrinsics
 #                 that reads VLEN from the vlenb register (all must agree), and accepts -march=rv64gc and the
 #                 vector trees' -march=rv64gcv_zvl<VLEN>b
@@ -68,7 +70,7 @@ fi
 grep -m1 '^isa' /proc/cpuinfo
 
 # ---- 1. modules ---------------------------------------------------------------------------------------------
-case "${MACHINE}" in monte3) MODULES="${MODULES-gcc-14.2.0}" ;; *) MODULES="${MODULES-}" ;; esac
+case "${MACHINE}" in monte3) MODULES="${MODULES-gcc-14.2.0 openmpi-5.0.6}" ;; *) MODULES="${MODULES-}" ;; esac
 MODULE_INIT=""
 if [[ -n "${MODULES}" ]]; then
     for f in /usr/share/Modules/init/bash /etc/profile.d/modules.sh /usr/share/lmod/lmod/init/bash; do

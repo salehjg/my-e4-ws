@@ -120,12 +120,14 @@ Files (folder and names per `scripts/README.md`: kebab-case folder, snake_case f
 | `monte3.sh` | the single entry point (laptop commands and the slurm job bodies) |
 | `ldc_reference.py` | NumPy reference solution of the lid-driven cavity (copied from `scripts/presentation6`) |
 | `compare_fields.py` | cell-by-cell field comparison (copied from `scripts/presentation6`) |
+| `mpi_bench.cpp` | small MPI test (added 2026-11-22): ring, waLBerla-like halo, alltoall, allreduce, barrier; checked data; per-rank trace; helper-thread CPU |
 
 It uses nothing else in `scripts/` except `push.to.sh`. Commands, run on the laptop from the repo root:
 
 | command | does | prints next |
 |---|---|---|
 | `bash scripts/notes7/monte3.sh start [all\|build\|time]` | `push.to.sh monte3`, then over `ssh monte3`: `sbatch` the build job, and the timing job with `--dependency=afterok:<build job>` | job ids, `status` and `fetch` commands |
+| `bash scripts/notes7/monte3.sh start mpitest [--np LIST] [--limit S] [mpi_bench options]` | push, then one short job: `mpi_bench` at each process count; the job's limit follows from the options | job id |
 | `bash scripts/notes7/monte3.sh status` | `squeue -u $USER`, last lines of this run's job logs | whether to wait or fetch |
 | `bash scripts/notes7/monte3.sh fetch` | `rsync -a` of `monte3:02_ws/notes7/logs/` to `00_private_data/monte3/` (logs only, never build trees) | where the files are; the Monte Cimone acknowledgement and citation reminder |
 | `bash scripts/notes7/monte3.sh help` | usage, what each step does, the rules it follows | |
@@ -134,25 +136,34 @@ The two job bodies are modes of the same file, started by `sbatch` with all opti
 `#SBATCH` lines): `--partition=peak --nodes=1 --exclusive --ntasks-per-node=64 --time=<limit>
 --output=<base>/notes7/logs/<run>/<job>-%j.out`. The script creates the log folder before submitting.
 
-- **Build job** (`job-build`, limit 4 h; presentation6 measured 62 min per precision for 6 variants, now 11):
-  1. Environment: `module load gcc-14.2.0`; Python 3.12.11 built from python.org source into `<base>/python` if
+- **MPI (decided 2026-11-22, see "MPI on monte3" below):** every job loads `gcc-14.2.0`, then `openmpi-5.0.6`
+  (milkv, `/opt/share/milkv/openmpi-5.0.6`), and refuses to run unless `mpirun` and the compiler wrappers are the
+  module's. Build trees, verify dumps and the list of verified executables live in `<base>/notes7/openmpi-5.0.6/`.
+- **Build job** (`job-build`, limit 6 h; job 8551 took 2 h 22 min for all 44 executables):
+  1. Environment: modules as above; Python 3.12.11 built from python.org source into `<base>/python` if
      missing; `<base>/venv` with numpy, sympy 1.14.0, appdirs, joblib, packaging, pyyaml, fasteners, py-cpuinfo, and
      lbmpy 2.1.1 + pystencilssfg 0.1.1 without dependencies (so PyPI's pystencils never shadows the repo's). Both
      are reused when present (the presentation6 ones are).
   2. Build, per compiler (GCC 14.2, Clang 17) and precision (f64, f32): a scalar tree (`-march=rv64gc` everywhere)
-     and a vector tree (waLBerla's own flags, now `zvl128b` from the measured VLEN); all 11 variants. Link flags
-     `-Wl,-rpath-link,/usr/lib64/openmpi/lib:/usr/lib64` (the module's linker does not find libmpi's own
-     dependencies; link-time search only).
+     and a vector tree (waLBerla's own flags, now `zvl128b` from the measured VLEN); all 11 variants. CMake gets the
+     module's `mpicc`/`mpic++`; link flags `-Wl,-rpath-link,<MPI>/lib:/usr/lib64 -Wl,-rpath,<MPI>/lib` (the GCC
+     module's linker does not find libmpi's own dependencies; the programs find the module's libmpi).
   3. Audit (short): the generated sweeps' last `-march` (scalar `rv64gc`, vector `rv64gcv_zvl<VLEN>b`), 0 vector
-     instructions in scalar executables, more than 0 in the explicit kernels, `WALBERLA_RISCV_VLEN` from the cache.
+     instructions in scalar executables, more than 0 in the explicit kernels, `WALBERLA_RISCV_VLEN` from the cache,
+     and `libmpi` from the module's folder (`ldd`).
   4. Verify (presentation6's checks): every executable against `ldc_reference.py` (1 process 16³ at 100 and 101
      steps, 2 × 16³, 6 × 8³), and 1 × 32³ against 8 × 16³ bit-identical; GCC against Clang. The sha256 of every
      verified executable goes into the verify log.
-- **Timing job** (`job-time`, limit set from the first run; starts only if the build job succeeded): presentation6's
-  protocol: 60 timed steps after 10 warm-up, 3 interleaved rounds, groups scalar / autovec / rvv, GCC and Clang,
+- **Timing job** (`job-time`, limit 8 h; starts only if the build job succeeded): first `mpi_bench` (halo and
+  allreduce, 64 KiB) at 4-64 processes; where it fails, the log says why in words and every experiment at that count
+  is FAILED (not run). Then presentation6's protocol: 60 timed steps after 10 warm-up, 3 interleaved rounds, groups scalar / autovec / rvv, GCC and Clang,
   f32 and f64, 1, 4, 8, 16, 32, 64 MPI processes (one 64³ block each), plus the fair pair (output only at the end).
   Refuses any executable whose sha256 is not in the verify log. Records the load and the busy cores before each
-  round. A small best-of table at the end.
+  round. Every run is stopped after 300 s (FAILED (hung), with its processes' state); after a hang, the larger counts
+  of that compiler and precision are FAILED (not run). A small best-of table, the list of failures, and TIME DONE
+  or TIME FAIL at the end.
+- **MPI test job** (`job-mpitest`): `mpi_bench` at each process count, PASS per run with one line per step, or FAIL
+  in words; for a hang, which ranks were stuck in which step. For checking MPI before long jobs.
 - **Rules it follows** (monte3 is a public cluster supervised by professors): only `sbatch` jobs that request what
   they use, on the one peak node, with realistic time limits; `mpirun` inside the allocation; writes only under
   `~/02_ws` (repo copy, `venv`, `python`, `notes7`); never reads or sets anything related to power, frequency or
@@ -161,6 +172,15 @@ The two job bodies are modes of the same file, started by `sbatch` with all opti
 - Left out on purpose (keep it simple): the 30/60/200-steps check (the timing logs show each run's wall time, so
   too-short runs are visible), the thermal check (forbidden), the full compile-command audit of all library files
   (unchanged since presentation6), any knob sweep (future work, §3).
+
+**MPI on monte3.** The node has the system Open MPI 4.1.5 (openEuler package `openmpi-4.1.5-5.oe2403`,
+`/usr/bin/mpirun`), the milkv module `openmpi-5.0.6`, and an older spack `openmpi/4.1.1` (Fedora 38 tree). The jobs
+first used the system one (as presentation6). With it, every MPI process had a helper thread spinning at 100 % CPU;
+with one core per process (`--bind-to core`) it took half of the core, every message waited for the 10 ms scheduler
+turn (1 KiB exchange 10 ms instead of ~10 us), and some runs hung (the 16-process timing run of job 8552 for 5.6 h).
+With `openmpi-5.0.6` the same tests run at laptop speed with the helper thread at 0 %, and pass at 2-64 processes
+(jobs 8559, 8560, 8562, 8563 in the progress log). So every job uses the module; earlier monte3 timings (system MPI)
+are not used.
 
 Repo hygiene: `00_private_data/` is added to `.gitignore` and to `push.to.sh`'s excludes, so the copied results
 are neither committed nor pushed back to the cluster. A row for `scripts/notes7/` in `scripts/README.md`.
@@ -178,7 +198,8 @@ are neither committed nor pushed back to the cluster. A row for `scripts/notes7/
    without presentation6's override; the generated explicit sources include `rvv_vlen128.hpp` and step by 2 (f64)
    / 4 (f32); all 11 variants pass the reference-solution and decomposition checks for both compilers; GCC and
    Clang agree.
-4. **monte3, timing job, `fetch`:** logs arrive in `00_private_data/monte3/<run>/`.
+4. **monte3, timing job, `fetch`:** logs arrive in `00_private_data/monte3/<run>/`; the MPI check passes at 4-64
+   processes and the experiments at 16-64 processes produce results.
 5. **K1 (optional, later):** a rebuild with presentation6's scripts measures 256 and generates the same sources as
    presentation4 (step 1 already shows the code is identical).
 

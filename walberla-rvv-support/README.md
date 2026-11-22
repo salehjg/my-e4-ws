@@ -10,7 +10,10 @@ Machines:
 - **bananapi**: Banana Pi BPI-F3, SpacemiT K1 (8 X60 cores, VLEN 256). `ssh bananapi`; everything under
   `/home/bananapi/saleh`; long jobs run detached in `screen`.
 - **monte3**: Monte Cimone (University of Bologna), slurm partition `peak`: one Sophgo SG2044 node (64 C920v2 cores,
-  VLEN 128). `ssh monte3` (x86-64 login node); compute only through slurm. Reports using its data must acknowledge the
+  VLEN 128). `ssh monte3` (x86-64 login node); compute only through slurm. Modules: `gcc-14.2.0` (GCC 14.2), then
+  `openmpi-5.0.6` (milkv Open MPI 5.0.6). Not the system Open MPI 4.1.5 (`/usr/bin/mpirun`): its helper thread spins
+  at 100 % CPU, takes half of each core and makes every message wait ~10 ms; some runs hang (`docs/notes7`). Never
+  read or set anything about frequency, power or temperature there. Reports using its data must acknowledge the
   Monte Cimone project and cite DOI 10.1007/978-3-032-07612-0_44.
 
 Helpers in this folder: `push.to.sh <machine>` (rsync of the repo), `test.on.bananapi.sh <pytest args>` (pystencils
@@ -106,7 +109,9 @@ cd docs/presentation5 && ./build.sh && pdfpc build/slides.pdf    # the slides, o
 
 `docs/presentation6/`: presentation5's protocol as one self-contained script set (`scripts/presentation6/`, guide in
 its README) for both machines; `machine.sh` holds what differs. On monte3 (VLEN 128) the explicit RVV variants are
-skipped: the backend of this version supports VLEN 256 only (notes7 adds 128).
+skipped: the backend of this version supports VLEN 256 only (notes7 adds 128). Its monte3 data (presentation6
+archive) was made with the system Open MPI 4.1.5; `setup.sh` now loads `openmpi-5.0.6` (remove old build trees first,
+see its README).
 
 ```bash
 bash push.to.sh monte3
@@ -123,11 +128,15 @@ mkdir -p ../presentation6/logs && screen -dmS presentation6-all bash -c "bash sc
 
 `docs/notes7/rvv-vlen128-{plan,progress}-opus5.5.md`: targets `RISCV_RVV256` (K1) and `RISCV_RVV128` (SG2044) on one
 backend, the VLEN measured by CMake, tuning knobs (LMUL, prefetch, split sizes), and `scripts/notes7/monte3.sh`, which
-pushes, runs the build/verify and timing jobs on monte3, and fetches the logs to `00_private_data/monte3/` (not in git).
+pushes, runs the build/verify and timing jobs on monte3 (with the milkv Open MPI 5.0.6), and fetches the logs to
+`00_private_data/monte3/` (not in git). It also found why multi-process runs on monte3 were slow or hung: the system
+Open MPI 4.1.5 (MPI test job `mpitest`, `mpi_bench.cpp`).
 
 ```bash
 cd submodules/pystencils && PYTHONPATH=src python -m pytest -q -o addopts="" tests/nbackend/test_rvv_codegen.py tests/nbackend/test_rvv_target.py tests/nbackend/test_rvv_qemu.py && cd ../..   # RVV tests, QEMU at VLEN 128 and 256 (qemu-riscv64, riscv64-linux-gnu-g++)
 bash scripts/notes7/monte3.sh start     # push, then the build/verify job and the timing job on monte3
 bash scripts/notes7/monte3.sh status    # the jobs and the last lines of their logs
 bash scripts/notes7/monte3.sh fetch     # the logs, to 00_private_data/monte3/<run>/
+bash scripts/notes7/monte3.sh start mpitest   # optional, minutes: MPI health check (mpi_bench) at 2-64 processes
+bash scripts/notes7/monte3.sh help      # what each job does, options, the rules for monte3
 ```

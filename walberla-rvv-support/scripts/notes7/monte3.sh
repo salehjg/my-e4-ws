@@ -3,16 +3,22 @@
 #
 # monte3 = Monte Cimone (University of Bologna), slurm partition "peak": one Sophgo SG2044 node (64 cores,
 # RVV 1.0, VLEN 128), reached with `ssh monte3` (x86-64 login node). Plan: docs/notes7/rvv-vlen128-plan-opus5.5.md.
-# Self-contained: besides this file it uses only push.to.sh (repo root) and the two helpers next to it,
-# ldc_reference.py (NumPy reference solution) and compare_fields.py (field comparison).
+# Self-contained: besides this file it uses only push.to.sh (repo root) and the helpers next to it:
+# ldc_reference.py (NumPy reference solution), compare_fields.py (field comparison), mpi_bench.cpp (MPI test).
+#
+# MPI: every job uses the milkv module openmpi-5.0.6 (/opt/share/milkv/openmpi-5.0.6), loaded after gcc-14.2.0.
+# Not the system Open MPI 4.1.5 (openEuler package, /usr/bin/mpirun): every process of it has a helper thread
+# that spins at 100 % CPU; with one core per process it takes half of the core, each message waits ~10 ms, and
+# some runs hang (docs/notes7, jobs 8552-8563).
 #
 # On the laptop, from the repo root (walberla-rvv-support):
 #   bash scripts/notes7/monte3.sh start [all|build|time]   push the repo, submit the slurm jobs
-#   bash scripts/notes7/monte3.sh status                    the jobs and the last lines of their logs
-#   bash scripts/notes7/monte3.sh fetch                     copy the logs to 00_private_data/monte3/
-#   bash scripts/notes7/monte3.sh help                      what each step does, the rules it follows
-# The slurm jobs run this same file on the peak node (modes job-build and job-time).
-# Environment (laptop): TIME_BUILD and TIME_RUN, the jobs' time limits (default 06:00:00 each).
+#   bash scripts/notes7/monte3.sh start mpitest [options]  push, submit one job running mpi_bench (see help)
+#   bash scripts/notes7/monte3.sh status                   the jobs and the last lines of their logs
+#   bash scripts/notes7/monte3.sh fetch                    copy the logs to 00_private_data/monte3/
+#   bash scripts/notes7/monte3.sh help                     what each step does, the rules it follows
+# The slurm jobs run this same file on the peak node (modes job-build, job-time, job-mpitest).
+# Environment (laptop): TIME_BUILD and TIME_RUN, the jobs' time limits (default 06:00:00 and 08:00:00).
 set -u
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -25,11 +31,17 @@ if [[ "${1:-}" == job-* && -n "${SLURM_SUBMIT_DIR:-}" ]]; then
 fi
 MACHINE=monte3
 REMOTE_REPO=02_ws/my-e4-ws    # push.to.sh's REMOTE_PATHS[monte3] (~/02_ws) + my-e4-ws, relative to the remote home
-REMOTE_OUT=02_ws/notes7       # on monte3: build trees, verify dumps, logs/<run>/
+REMOTE_OUT=02_ws/notes7       # on monte3: logs/<run>/, and openmpi-5.0.6/ (build trees, verify dumps)
 LOCAL_OUT="${REPO}/00_private_data/monte3"
 STATE="${LOCAL_OUT}/last-run.txt"
 TIME_BUILD="${TIME_BUILD:-06:00:00}"
-TIME_RUN="${TIME_RUN:-06:00:00}"
+TIME_RUN="${TIME_RUN:-08:00:00}"
+MPI_MODULE=openmpi-5.0.6
+MPI_ARGS="--bind-to core --map-by core"
+#   Each single run is stopped after RUN_LIMIT seconds (the longest normal timing run takes well under a minute):
+#   job 8552 lost 5.6 of its 6 hours in one mpirun at 16 processes that never returned.
+RUN_LIMIT=300
+MPI_LIMIT=60    # the same for the timing job's MPI check (mpi_bench, about a second)
 
 SCALAR_VARIANTS="scalar scalar_cse scalar_cse_aa"
 VECTOR_VARIANTS="autovec autovec_cse autovec_cse_aa explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split"
@@ -46,6 +58,9 @@ Usage (on the laptop, from the repo root):
              which starts only if the build job succeeds
       build  only the build job
       time   only the timing job (times the executables of the last successful build job)
+  bash scripts/notes7/monte3.sh start mpitest [--np LIST] [--limit S] [mpi_bench options]
+      only the MPI test job: mpi_bench (scripts/notes7/mpi_bench.cpp) at each process count; the job's time
+      limit follows from the options. Details and examples: help
   bash scripts/notes7/monte3.sh status   the jobs (squeue) and the last lines of this run's job logs
   bash scripts/notes7/monte3.sh fetch    copy monte3:${REMOTE_OUT}/logs/ to 00_private_data/monte3/
   bash scripts/notes7/monte3.sh help
@@ -57,15 +72,36 @@ cmd_help() {
     cat <<EOF
 
 What the jobs do (each on the one peak node: sbatch --partition=peak --nodes=1 --exclusive --ntasks-per-node=64):
-  build job  load the gcc-14.2.0 module; build Python 3.12.11 from python.org source and the venv in ~/02_ws if
-             they are missing; build the 11 SweepgenLdcCPU variants with GCC 14.2 and Clang 17, in f64 and f32
-             (scalar variants with -march=rv64gc everywhere; vector variants with waLBerla's flags, whose
-             VLEN CMake measures on the node: 128); audit each (last -march, vector instruction counts); verify
-             each against the NumPy reference solution and the 1-block/8-block decomposition check; compare
-             GCC with Clang. Log: build-<job>.out, details in verify-<cc>-<prec>.log.
-  time job   time every verified executable: 60 steps after 10 warm-up steps, 3 interleaved rounds, at 1, 4, 8,
-             16, 32 and 64 MPI processes (one 64^3 block each), plus the fair pair (output only in the last
-             step); refuses executables that the build job did not verify. Log: time-<job>.out, ldc-*.log.
+  every job  load the modules gcc-14.2.0, then ${MPI_MODULE} (the milkv Open MPI; checks that mpirun and the
+             MPI compiler wrappers are the module's), and log which mpirun and compiler it uses
+  build job  build Python 3.12.11 from python.org source and the venv in ~/02_ws if they are missing; build the
+             11 SweepgenLdcCPU variants with GCC 14.2 and Clang 17, in f64 and f32 (scalar variants with
+             -march=rv64gc everywhere; vector variants with waLBerla's flags, whose VLEN CMake measures on the
+             node: 128), against ${MPI_MODULE}; audit each (last -march, vector instruction counts, libmpi from
+             the module); verify each against the NumPy reference solution and the 1-block/8-block decomposition
+             check; compare GCC with Clang. Log: build-<job>.out, details in verify-<cc>-<prec>.log.
+  time job   first mpi_bench (halo and allreduce, 64 KiB) at 4, 8, 16, 32 and 64 processes: where it fails, the log
+             says in words what went wrong (ERROR) and every experiment at that count is marked FAILED (not run).
+             Then time every verified executable: 60 steps after 10 warm-up steps, 3 interleaved rounds, at 1, 4,
+             8, 16, 32 and 64 MPI processes (one 64^3 block each), plus the fair pair (output only in the last
+             step); refuses executables that the build job did not verify (SKIPPED). Every run is stopped after
+             ${RUN_LIMIT} s (FAILED (hung), with its processes at that moment); after a hang, the larger process
+             counts of that compiler and precision are marked FAILED (not run). Ends with TIME DONE, or TIME FAIL
+             and the list of failures. Log: time-<job>.out, ldc-*.log, share-*.log, mpi-*.log.
+  mpitest    mpi_bench, a small C++ MPI program, at each process count (--np, default 2,4,8,16,32,64) with the
+             timing runs' binding (${MPI_ARGS}). Each run is stopped after --limit seconds (default 120,
+             plus twice the expected time with --seconds). mpi_bench options (passed on; defaults: all patterns,
+             1K,16K,64K,256K,1M, 20 repeats):
+               --pattern ring,halo,alltoall,allreduce,barrier   which communication patterns (halo = the 3D block
+                                grid with face and edge neighbours, like waLBerla's halo exchange)
+               --bytes 1K,64K,1M   message sizes;  --repeats N   repetitions per step;  --seconds S   instead,
+               about S seconds per step;  --warmup N;  --no-check   do not check the received bytes
+             Per run: PASS with one line per step (time per repetition, peers) and the busiest helper thread
+             (a spinning one would show ~100 %), or FAIL in words (hung, wrong data, exit code) with, for a hang,
+             which ranks were stuck in which step. Log: mpitest-<job>.out, each run's output in mpitest-np<N>.log.
+             Examples:
+               bash scripts/notes7/monte3.sh start mpitest
+               bash scripts/notes7/monte3.sh start mpitest --np 4,16 --pattern halo --bytes 1K,8K,64K,512K --repeats 200
 
 Rules it follows (monte3 is a public cluster supervised by professors): only sbatch jobs that request what they
 use, with time limits; mpirun only inside the job's allocation; writes only under ~/02_ws on monte3; never reads
@@ -85,29 +121,86 @@ submit() {   # submit <job name> <time limit> <run> <mode> [sbatch options...]: 
     # shellcheck disable=SC2029
     ssh "${MACHINE}" "cd ${REMOTE_REPO} && mkdir -p ../notes7/logs/${run} && sbatch --parsable --job-name=${name} \
         --partition=peak --nodes=1 --exclusive --ntasks-per-node=64 --mem=0 --time=${limit} $* \
-        --output=../notes7/logs/${run}/${name#n7-}-%j.out scripts/notes7/monte3.sh ${mode} ${run}" | cut -d';' -f1
+        --output=../notes7/logs/${run}/${name#n7-}-%j.out scripts/notes7/monte3.sh ${mode} ${run} ${JOB_ARGS:-}" | cut -d';' -f1
+}
+
+mpitest_plan() {   # mpitest_plan [options]: check the mpitest options on the laptop; sets JOB_ARGS and TEST_TIME
+    local nps="2,4,8,16,32,64" limit="" seconds=0 patterns="ring,halo,alltoall,allreduce,barrier" bytes="1K,16K,64K,256K,1M"
+    local a v x args=() steps runs total
+    bad() { echo "start mpitest: $*"; echo "(bash scripts/notes7/monte3.sh help lists the options)"; exit 1; }
+    while (($# > 0)); do
+        a=$1
+        case "${a}" in
+            --no-check) args+=("${a}"); shift; continue ;;
+            --np|--limit|--pattern|--bytes|--repeats|--seconds|--warmup)
+                (($# >= 2)) || bad "${a} needs a value"; v=$2; shift 2 ;;
+            *) bad "unknown option ${a}" ;;
+        esac
+        #   the values travel through ssh and sbatch: only letters, digits, dots and commas
+        [[ "${v}" =~ ^[A-Za-z0-9.,]+$ ]] || bad "${a}: '${v}' may only contain letters, digits, dots and commas"
+        case "${a}" in
+            --np) for x in ${v//,/ }; do
+                      [[ "${x}" =~ ^[0-9]+$ ]] && ((x >= 1 && x <= 64)) || bad "--np: ${x} is not a process count from 1 to 64"
+                  done; nps=${v} ;;
+            --limit) [[ "${v}" =~ ^[0-9]+$ ]] && ((v >= 10 && v <= 3600)) || bad "--limit: seconds from 10 to 3600"
+                     limit=${v} ;;
+            --pattern) for x in ${v//,/ }; do
+                           [[ " ring halo alltoall allreduce barrier " == *" ${x} "* ]] || bad "--pattern: unknown pattern ${x}"
+                       done; patterns=${v}; args+=("${a}" "${v}") ;;
+            --bytes) for x in ${v//,/ }; do
+                         [[ "${x}" =~ ^[0-9]+(\.[0-9]+)?[KkMm]?$ ]] || bad "--bytes: ${x} is not a size like 512, 64K or 1M"
+                     done; bytes=${v}; args+=("${a}" "${v}") ;;
+            --seconds) [[ "${v}" =~ ^[0-9]+(\.[0-9]+)?$ ]] && awk -v s="${v}" 'BEGIN {exit !(s > 0 && s <= 600)}' \
+                           || bad "--seconds: a number of seconds above 0 and up to 600"
+                       seconds=${v}; args+=("${a}" "${v}") ;;
+            --repeats|--warmup) [[ "${v}" =~ ^[0-9]+$ ]] || bad "${a}: a whole number"; args+=("${a}" "${v}") ;;
+        esac
+    done
+    #   steps per run: each pattern at each size, the barrier once
+    steps="$(awk -v p="${patterns}" -v b="${bytes}" 'BEGIN {np = split(p, P, ","); nb = split(b, B, ","); s = 0
+             for (i = 1; i <= np; i++) s += (P[i] == "barrier") ? 1 : nb; print s}')"
+    [[ -n "${limit}" ]] || limit="$(awk -v n="${steps}" -v s="${seconds}" 'BEGIN {printf "%d", 120 + 2 * n * s + 0.999}')"
+    runs="$(tr ',' '\n' <<< "${nps}" | wc -l)"
+    #   the job's time limit: every run at its limit (+25 s to stop it), +5 min to build and start
+    total=$(( runs * (limit + 25) + 300 ))
+    ((total <= 4 * 3600)) || bad "${runs} run(s) of up to ${limit} s would need up to $((total / 60)) min: fewer --np or a smaller --limit"
+    TEST_TIME="$(printf '%02d:%02d:%02d' $((total / 3600)) $((total % 3600 / 60)) $((total % 60)))"
+    JOB_ARGS="--np ${nps} --limit ${limit}${args[*]:+ ${args[*]}}"
+    echo "== mpitest: ${runs} run(s) (process counts ${nps//,/ }), ${steps} step(s) each, at most ${limit} s per run," \
+        "job limit ${TEST_TIME}"
 }
 
 cmd_start() {
-    local what="${1:-all}" run build_job="" time_job=""
-    case "${what}" in all|build|time) ;; *) usage; exit 1 ;; esac
+    local what="${1:-all}" run build_job="" time_job="" test_job=""
+    case "${what}" in all|build|time|mpitest) ;; *) usage; exit 1 ;; esac
+    if [[ "${what}" == mpitest ]]; then
+        shift
+        mpitest_plan "$@"    # checks the options before anything is pushed; sets JOB_ARGS and TEST_TIME
+    elif (($# > 1)); then
+        usage; exit 1
+    fi
     run="$(date +%Y%m%d-%H%M%S)"
     echo "== push the repo to ${MACHINE} (push.to.sh)"
     bash "${REPO}/push.to.sh" "${MACHINE}" || { echo "push failed: nothing submitted"; exit 1; }
     echo "== submit run ${run}"
-    if [[ "${what}" != time ]]; then
+    if [[ "${what}" == mpitest ]]; then
+        test_job="$(submit n7-mpitest "${TEST_TIME}" "${run}" job-mpitest)"
+        [[ "${test_job}" =~ ^[0-9]+$ ]] || { echo "sbatch of the MPI test job failed: ${test_job}"; exit 1; }
+        echo "   MPI test job ${test_job} (limit ${TEST_TIME}), options: ${JOB_ARGS}"
+    fi
+    if [[ "${what}" == all || "${what}" == build ]]; then
         build_job="$(submit n7-build "${TIME_BUILD}" "${run}" job-build)"
         [[ "${build_job}" =~ ^[0-9]+$ ]] || { echo "sbatch of the build job failed: ${build_job}"; exit 1; }
         echo "   build job ${build_job} (limit ${TIME_BUILD})"
     fi
-    if [[ "${what}" != build ]]; then
+    if [[ "${what}" == all || "${what}" == time ]]; then
         #   --kill-on-invalid-dep: if the build job fails, slurm cancels the timing job instead of keeping it queued
         time_job="$(submit n7-time "${TIME_RUN}" "${run}" job-time ${build_job:+--dependency=afterok:${build_job} --kill-on-invalid-dep=yes})"
         [[ "${time_job}" =~ ^[0-9]+$ ]] || { echo "sbatch of the timing job failed: ${time_job}"; exit 1; }
         echo "   timing job ${time_job} (limit ${TIME_RUN}${build_job:+, starts after the build job succeeds})"
     fi
     mkdir -p "${LOCAL_OUT}"
-    printf 'run=%s\nbuild_job=%s\ntime_job=%s\n' "${run}" "${build_job}" "${time_job}" > "${STATE}"
+    printf 'run=%s\nbuild_job=%s\ntime_job=%s\ntest_job=%s\n' "${run}" "${build_job}" "${time_job}" "${test_job}" > "${STATE}"
     cat <<EOF
 
 Next:
@@ -119,16 +212,17 @@ EOF
 
 cmd_status() {
     [[ -f "${STATE}" ]] || { echo "No run started from this laptop yet: bash scripts/notes7/monte3.sh start"; exit 1; }
-    local run build_job time_job
+    local run build_job="" time_job="" test_job=""
     # shellcheck disable=SC1090
     source "${STATE}"
-    echo "== run ${run}: build job ${build_job:-none}, timing job ${time_job:-none}"
+    echo "== run ${run}: build job ${build_job:-none}, timing job ${time_job:-none}, MPI test job ${test_job:-none}"
     # shellcheck disable=SC2029,SC2016
     ssh "${MACHINE}" "squeue -u \$USER -o '%.10i %.12j %.9T %.10M %.10l %R'; \
         for f in ${REMOTE_OUT}/logs/${run}/*.out; do [ -f \"\$f\" ] && { echo; echo \"== \$f\"; tail -n 6 \"\$f\"; }; done"
     cat <<EOF
 
-A job missing from the squeue list above has ended; its last log line says how (BUILD PASS/FAIL, TIME DONE).
+A job missing from the squeue list above has ended; its last log line says how (BUILD PASS/FAIL, TIME DONE/FAIL,
+MPITEST PASS/FAIL). A job killed by slurm (time limit) ends without one.
 Next: bash scripts/notes7/monte3.sh fetch
 EOF
 }
@@ -140,16 +234,17 @@ cmd_fetch() {
     cat <<EOF
 
 Results: ${LOCAL_OUT}/<run>/ (one folder per 'start'):
-  build-<job>.out   the build job: audit and verification lines, BUILD PASS/FAIL at the end
-  verify-*.log      the reference-solution and decomposition checks, with the sha256 of every executable
-  time-<job>.out    the timing job, with a best-of table at the end; ldc-*.log, share-*.log: every run
+  build-<job>.out    the build job: audit and verification lines, BUILD PASS/FAIL at the end
+  verify-*.log       the reference-solution and decomposition checks, with the sha256 of every executable
+  time-<job>.out     the timing job, with a best-of table at the end; ldc-*.log, share-*.log: every run
+  mpitest-<job>.out  the MPI test job (mpi_bench); mpitest-np<N>.log: each run's output
 Reports using these data must acknowledge the Monte Cimone project and cite DOI 10.1007/978-3-032-07612-0_44.
 EOF
 }
 
 #   =============================== node side (inside the slurm jobs) ===============================
 
-node_env() {   # paths, modules, Python environment of the jobs
+node_env() {   # paths, modules (GCC, MPI), Python environment of the jobs
     RUN="$1"
     BASE="$(dirname "${REPO}")"            # ~/02_ws
     #   Never write anywhere but under the home folder, and only from the real repo copy
@@ -158,24 +253,30 @@ node_env() {   # paths, modules, Python environment of the jobs
         || { echo "REFUSED: ${REPO} is not the repo copy (no scripts/notes7, no submodules/walberla)"; exit 1; }
     OUT="${BASE}/notes7"
     LOGS="${OUT}/logs/${RUN}"
-    VERIFIED="${OUT}/verified"             # the verify logs of the last build job: what the timing job may time
+    WORK="${OUT}/${MPI_MODULE}"            # build trees, verify dumps and mpi_bench of this MPI
+    VERIFIED="${WORK}/verified"            # the verify logs of the last build job: what the timing job may time
     VENV="${BASE}/venv"
     PY="${VENV}/bin/python"
     #   compiler processes: at most one per core and about 2 GB each (the heaviest waLBerla files need ~1.3 GB)
     JOBS="$(awk -v n="$(nproc)" '/^MemTotal/ {j = int($2 / 2097152); print (j < n ? j : n)}' /proc/meminfo)"
-    #   The gcc-14.2.0 module's own linker does not find libmpi's dependencies (libopen-rte, libm, ...);
-    #   this only tells it where to look at link time, the programs do not change.
-    LINK_FLAGS="-Wl,-rpath-link,/usr/lib64/openmpi/lib:/usr/lib64"
     mkdir -p "${LOGS}" "${VERIFIED}"
+    echo "== ${RUN}: job ${SLURM_JOB_ID:-?} on $(hostname), $(date), $(nproc) cores, load $(cut -d' ' -f1-3 /proc/loadavg)"
+    #   MPI after GCC: gcc-14.2.0 puts /lib64 into LD_LIBRARY_PATH, the MPI module's lib folder must come before it
     set +u
     # shellcheck disable=SC1091
-    source /usr/share/Modules/init/bash && module load gcc-14.2.0
+    source /usr/share/Modules/init/bash && module load gcc-14.2.0 && module load "${MPI_MODULE}"
     set -u
     export PATH="${VENV}/bin:${PATH}"
     export PYTHONPATH="${REPO}/submodules/pystencils/src:${REPO}/submodules/walberla/sweepgen/src"
     export XDG_CACHE_HOME="${BASE}/.cache"
-    echo "== ${RUN}: job ${SLURM_JOB_ID:-?} on $(hostname), $(date), $(nproc) cores, load $(cut -d' ' -f1-3 /proc/loadavg)"
-    echo "   $(gcc --version | head -1); $(clang --version | head -1); $(cmake --version | head -1); $(mpirun --version | head -1)"
+    MPI_PREFIX="$(dirname "$(dirname "${MPICXX:-/none/bin/x}")")"
+    [[ "$(command -v mpirun)" == "${MPI_PREFIX}/bin/mpirun" && -x "${MPI_PREFIX}/bin/mpicc" && -x "${MPICXX:-}" ]] \
+        || { echo "REFUSED: module ${MPI_MODULE} did not take effect (mpirun is $(command -v mpirun), MPICXX '${MPICXX:-}')"; exit 1; }
+    #   The module's linker (binutils 2.42) does not find libmpi's own dependencies by itself: tell it where to look
+    #   (link time only); -rpath: the programs find the module's libmpi also without LD_LIBRARY_PATH
+    LINK_FLAGS="-Wl,-rpath-link,${MPI_PREFIX}/lib:/usr/lib64 -Wl,-rpath,${MPI_PREFIX}/lib"
+    echo "   $(gcc --version | head -1); $(clang --version | head -1); $(cmake --version | head -1)"
+    echo "   MPI: $(command -v mpirun) ($(mpirun --version 2>&1 | head -1)); ${MPICXX} calls $("${MPICXX}" --showme 2>&1 | cut -d' ' -f1)"
 }
 
 ensure_python() {   # Python 3.12 (lbmpy 2.1.1 needs it; the node has 3.11) and the venv, built once in ~/02_ws
@@ -206,14 +307,14 @@ ensure_python() {   # Python 3.12 (lbmpy 2.1.1 needs it; the node has 3.11) and 
 }
 
 exe_of() {   # exe_of <cc> <prec> <variant>: scalar variants live in the -scalar tree
-    local tree="${OUT}/build-$1-$2"; [[ "$3" == scalar* ]] && tree+="-scalar"
+    local tree="${WORK}/build-$1-$2"; [[ "$3" == scalar* ]] && tree+="-scalar"
     echo "${tree}/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_$3"
 }
 
 count_vector() { llvm-objdump -d --no-show-raw-insn "$1" 2> /dev/null | awk '$2 ~ /^v[a-z]/ {n++} END {print n+0}'; }
 
-audit() {   # audit <tree> <kind> <target>: the generated sweeps' flags, and vector instructions
-    local tree=$1 kind=$2 t=$3 appdir="$1/apps/benchmarks/SweepgenLdcCPU" vlen flags want obj nexe nobj ok=1
+audit() {   # audit <tree> <kind> <target>: the generated sweeps' flags, vector instructions, the MPI library
+    local tree=$1 kind=$2 t=$3 appdir="$1/apps/benchmarks/SweepgenLdcCPU" vlen flags want obj nexe nobj libmpi ok=1
     vlen="$(sed -n 's/^WALBERLA_RISCV_VLEN:[A-Z]*=//p' "${tree}/CMakeCache.txt")"
     flags="$("${PY}" - "${tree}/compile_commands.json" "${t}" <<'EOF'
 import json, sys
@@ -226,18 +327,20 @@ EOF
     want="-march=rv64gcv_zvl${vlen}b -O3"; [[ "${kind}" == scalar ]] && want="-march=rv64gc -O3"
     obj="$(find "${appdir}/CMakeFiles/${t}.dir" -name 'SweepgenLdcCPU.cpp.o' -path '*_gen*' | head -1)"
     nexe="$(count_vector "${appdir}/${t}")"; nobj="$(count_vector "${obj}")"
+    libmpi="$(ldd "${appdir}/${t}" 2> /dev/null | awk '$1 ~ /^libmpi\.so/ {print $3}')"
     [[ "${flags}" == "${want}" ]] || ok=0
     [[ "${t}" == *_scalar* && "${nexe}" != 0 ]] && ok=0        # scalar: no vector instruction anywhere
     [[ "${t}" == *_explicit* && "${nobj}" == 0 ]] && ok=0      # explicit: RVV code in the generated sweeps
+    [[ "${libmpi}" == "${MPI_PREFIX}/lib/"* ]] || ok=0         # the module's MPI, not the system's
     echo "$( ((ok)) && echo PASS || echo FAIL) audit ${t} ($(basename "${tree}")): ${flags}, VLEN ${vlen:-none}," \
-        "vector instructions: executable ${nexe}, generated sweeps ${nobj}"
+        "vector instructions: executable ${nexe}, generated sweeps ${nobj}; libmpi ${libmpi:-not found}"
     ((ok)) || fails=$((fails + 1))
 }
 
 build_tree() {   # build_tree <cc> <prec> <scalar|vector>: configure (once), then build and audit its variants
     local cc=$1 prec=$2 kind=$3 cxx=g++ tree variants t extra=()
     [[ "${cc}" == clang ]] && cxx=clang++
-    tree="${OUT}/build-${cc}-${prec}"
+    tree="${WORK}/build-${cc}-${prec}"
     variants="${VECTOR_VARIANTS}"
     if [[ "${kind}" == scalar ]]; then
         #   CMAKE_<LANG>_FLAGS_RELEASE come after waLBerla's flags: -march=rv64gc wins in every file
@@ -247,6 +350,7 @@ build_tree() {   # build_tree <cc> <prec> <scalar|vector>: configure (once), the
     if [[ ! -f "${tree}/CMakeCache.txt" ]]; then
         cmake -S "${REPO}/submodules/walberla" -B "${tree}" -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER="${cc}" -DCMAKE_CXX_COMPILER="${cxx}" "${extra[@]}" \
+            -DMPI_C_COMPILER="${MPI_PREFIX}/bin/mpicc" -DMPI_CXX_COMPILER="${MPICXX}" \
             -DCMAKE_EXE_LINKER_FLAGS="${LINK_FLAGS}" -DCMAKE_SHARED_LINKER_FLAGS="${LINK_FLAGS}" \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DWALBERLA_DOUBLE_ACCURACY="$([[ "${prec}" == f64 ]] && echo ON || echo OFF)" \
             -DWALBERLA_ENABLE_V8CORE=ON -DWALBERLA_ENABLE_SWEEPGEN=ON -DWALBERLA_SWEEPGEN_MANAGED_VENV=OFF \
@@ -273,13 +377,45 @@ build_tree() {   # build_tree <cc> <prec> <scalar|vector>: configure (once), the
     done
 }
 
+tree() { local c; echo "$1"; for c in $(pgrep -P "$1"); do tree "${c}"; done; }   # a process and all its descendants
+
+limited() {   # limited <seconds> <command...>: run it; if it still runs after <seconds>, list its processes (twice,
+              # 5 s apart: state, core, CPU time, where they wait), stop it with all its processes, return 124
+    local s=$1 pid wd; shift
+    "$@" & pid=$!
+    (   #   the watchdog: USR1 while it sleeps means the command ended in time (exit 0); after the sleep it stops
+        #   the command and exits 3, whatever arrives
+        sp=""
+        trap 'kill "${sp}" 2> /dev/null; exit 0' USR1
+        sleep "${s}" & sp=$!; wait "${sp}"
+        trap '' USR1
+        for when in "at ${s} s" "5 s later"; do
+            echo "== still running ${when}; its processes (pid ppid state core cputime wchan command):"
+            ps -o pid=,ppid=,stat=,psr=,time=,wchan:24=,args= -p "$(tree "${pid}" | paste -sd,)" | cut -c1-200
+            [[ "${when}" == "5 s later" ]] || sleep 5
+        done
+        #   mpirun passes SIGTERM on to its ranks; whatever is left 15 s later (the tree as it was) gets SIGKILL
+        procs="$(tree "${pid}")"
+        kill -TERM "${pid}" 2> /dev/null; sleep 15
+        # shellcheck disable=SC2086
+        kill -KILL ${procs} 2> /dev/null
+        exit 3
+    ) & wd=$!
+    wait "${pid}"; local rc=$?
+    kill -USR1 "${wd}" 2> /dev/null
+    wait "${wd}" && return "${rc}"
+    return 124
+}
+
 run_app() {   # run_app <np> <cells> <steps> <dump prefix> <exe>: one run; prints its result line
-    local out
+    local out rc
     if [[ "$1" == 1 ]]; then
-        out="$(SWEEPGEN_LDC_DUMP="$4" "$5" "$2" "$3" 0 2>&1)"
+        out="$(limited "${RUN_LIMIT}" env SWEEPGEN_LDC_DUMP="$4" "$5" "$2" "$3" 0 2>&1)"; rc=$?
     else
-        out="$(SWEEPGEN_LDC_DUMP="$4" mpirun -np "$1" --bind-to core --map-by core -x SWEEPGEN_LDC_DUMP "$5" "$2" "$3" 0 2>&1)"
+        # shellcheck disable=SC2086
+        out="$(SWEEPGEN_LDC_DUMP="$4" limited "${RUN_LIMIT}" mpirun -np "$1" ${MPI_ARGS} -x SWEEPGEN_LDC_DUMP "$5" "$2" "$3" 0 2>&1)"; rc=$?
     fi
+    ((rc == 124)) && { echo "RUN HUNG np=$1 cells=$2 steps=$3 $5: stopped after ${RUN_LIMIT} s"; return 1; }
     grep '^SweepgenLdcCPU variant=' <<< "${out}" || { echo "RUN FAILED np=$1 cells=$2 steps=$3 $5: $(tail -3 <<< "${out}" | tr '\n' ' ')"; return 1; }
 }
 
@@ -294,7 +430,7 @@ verify() {   # verify <cc> <prec>: every built executable against the NumPy refe
     } > "${log}"
     for case in "1 16 100" "1 16 101" "2 16 101" "6 8 101"; do
         read -r np cells steps <<< "${case}"
-        dir="${OUT}/verify/${cc}-${prec}/oracle-np${np}-c${cells}-s${steps}"
+        dir="${WORK}/verify/${cc}-${prec}/oracle-np${np}-c${cells}-s${steps}"
         mkdir -p "${dir}"
         local dumps=() domains="" links=""
         for e in "${exes[@]}"; do
@@ -317,7 +453,7 @@ verify() {   # verify <cc> <prec>: every built executable against the NumPy refe
         fi
     done
     #   1 block of 32^3 against 8 blocks of 16^3: the same cavity, bit-identical fields
-    dir="${OUT}/verify/${cc}-${prec}/decomp"
+    dir="${WORK}/verify/${cc}-${prec}/decomp"
     mkdir -p "${dir}"
     for e in "${exes[@]}"; do
         local v l1 l8
@@ -337,8 +473,8 @@ verify() {   # verify <cc> <prec>: every built executable against the NumPy refe
 compare_compilers() {   # compare_compilers <prec>: Clang's fields against the GCC scalar build's, per reference case
     local prec=$1 d c others cmp
     [[ "${prec}" == f64 ]] && cmp=(--tol 2e-12 --inv-tol 1e-12) || cmp=(--calibrate 2)
-    for d in "${OUT}/verify/gcc-${prec}"/oracle-*; do
-        c="${OUT}/verify/clang-${prec}/$(basename "${d}")"
+    for d in "${WORK}/verify/gcc-${prec}"/oracle-*; do
+        c="${WORK}/verify/clang-${prec}/$(basename "${d}")"
         #   the Clang builds that exist (a failed build is already counted), its scalar build first
         others=("${c}/SweepgenLdcCPU_scalar")
         for v in ${SCALAR_VARIANTS} ${VECTOR_VARIANTS}; do
@@ -371,6 +507,104 @@ job_build() {
     [[ "${fails}" == 0 ]] && { echo "BUILD PASS"; exit 0; } || { echo "BUILD FAIL"; exit 1; }
 }
 
+#   ----- mpi_bench: the MPI test of the timing job and of the mpitest job -----
+
+build_bench() {   # build mpi_bench with the module's MPI; sets BENCH
+    BENCH="${WORK}/mpitest/mpi_bench"
+    mkdir -p "${WORK}/mpitest"
+    # shellcheck disable=SC2086
+    "${MPICXX}" -O2 -std=c++17 ${LINK_FLAGS} -o "${BENCH}" "${HERE}/mpi_bench.cpp" > "${WORK}/mpitest/build.log" 2>&1 \
+        || { echo "FAIL mpi_bench does not build: $(tail -3 "${WORK}/mpitest/build.log" | tr '\n' ' ')"; return 1; }
+}
+
+trace_summary() {   # trace_summary <output file> <np>: where each rank was when a traced mpi_bench run was stopped
+    awk -v np="$2" '
+    function compress(list,   n, a, i, out, first, prev) {   # "0,1,2,5,7,8" -> "0-2,5,7-8"
+        n = split(list, a, ","); out = ""; first = prev = a[1]
+        for (i = 2; i <= n + 1; i++) {
+            if (i <= n && a[i] == prev + 1) { prev = a[i]; continue }
+            out = out (out == "" ? "" : ",") (first == prev ? first : first "-" prev)
+            if (i <= n) first = prev = a[i]
+        }
+        return out
+    }
+    /^trace rank=/ {
+        r = substr($2, 6); step = $3 " " $4; seen[r] = 1
+        if ($5 == "enter") inside[r] = step; else { inside[r] = ""; done[r] = step }
+    }
+    END {
+        for (r = 0; r < np; r++) {
+            if (!(r in seen)) k = "never reached the first step (stuck in the start-up: mpirun, MPI_Init or the first gather)"
+            else if (inside[r] != "") k = "were stuck inside the step " inside[r]
+            else k = "had finished the step " done[r] " and were stuck right after it (its result reduction)"
+            grp[k] = grp[k] (grp[k] == "" ? "" : ",") r; cnt[k]++
+        }
+        for (k in grp) printf "   - %d of %d rank(s) %s: rank(s) %s\n", cnt[k], np, k, compress(grp[k])
+    }' "$1"
+}
+
+bench_run() {   # bench_run <np> <limit> <output file> [mpi_bench options]: one run; PASS or FAIL in words, details
+    local np=$1 limit=$2 log=$3 out rc reason; shift 3
+    # shellcheck disable=SC2086
+    out="$(limited "${limit}" mpirun -np "${np}" ${MPI_ARGS} "${BENCH}" --trace "$@" 2>&1)"; rc=$?
+    printf '%s\n' "${out}" > "${log}"
+    if ((rc == 0)) && grep -q '^mpi_bench done .*errors=0' <<< "${out}"; then
+        echo "PASS np=${np}: $(grep -c '^mpi_bench pattern=.*errors=0' <<< "${out}") step(s), every received byte right"
+        grep -E '^mpi_bench (pattern|threads)' <<< "${out}" | sed 's/^mpi_bench /   /'
+        return 0
+    fi
+    if ((rc == 124)); then
+        reason="hung: it did not finish within ${limit} s and was stopped"
+    elif grep -q '^mpi_bench done' <<< "${out}"; then
+        reason="wrong data: $(grep '^mpi_bench done' <<< "${out}" | grep -o 'errors=[0-9]*' | cut -d= -f2) received byte(s) were wrong"
+    else
+        reason="it stopped with exit code ${rc} before the end"
+    fi
+    echo "FAIL np=${np}: ${reason}"
+    grep '^mpi_bench pattern=' <<< "${out}" | sed 's/^mpi_bench /   finished: /'
+    if ((rc == 124)); then
+        echo "   where the ranks were when it was stopped:"
+        trace_summary "${log}" "${np}"
+    fi
+    #   mpirun's own messages and, for a hang, the process list (the trace is in the output file)
+    grep -v -E '^(trace |mpi_bench (start|pattern|threads|done) )' <<< "${out}" | sed 's/^/   /' | tail -n 400
+    return 1
+}
+
+job_mpitest() {   # job_mpitest <run> --np LIST --limit S [mpi_bench options]: mpi_bench at every process count
+    node_env "$1"; shift
+    local nps="" limit=120 bench_args=() np runs=0 passed=0 failed=()
+    while (($# > 0)); do
+        case "$1" in
+            --np) nps=$2; shift 2 ;;
+            --limit) limit=$2; shift 2 ;;
+            *) bench_args+=("$1"); shift ;;
+        esac
+    done
+    build_bench || { echo "MPITEST FAIL"; exit 1; }
+    echo "   process counts ${nps//,/ }; at most ${limit} s per run; mpi_bench options: ${bench_args[*]:-(defaults)}"
+    for np in ${nps//,/ }; do
+        echo "== ${np} process(es) (mpirun -np ${np} ${MPI_ARGS}) $(date +%T)"
+        runs=$((runs + 1))
+        if bench_run "${np}" "${limit}" "${LOGS}/mpitest-np${np}.log" "${bench_args[@]}" > "${LOGS}/mpitest-np${np}.txt"; then
+            passed=$((passed + 1))
+        else
+            failed+=("$(head -1 "${LOGS}/mpitest-np${np}.txt")")
+        fi
+        cat "${LOGS}/mpitest-np${np}.txt"; rm -f "${LOGS}/mpitest-np${np}.txt"
+    done
+    echo
+    if ((${#failed[@]} > 0)); then
+        echo "== ${#failed[@]} of ${runs} run(s) failed:"
+        printf '   %s\n' "${failed[@]}"
+        echo "MPITEST FAIL $(date): ${passed} of ${runs} run(s) passed"
+        exit 1
+    fi
+    echo "MPITEST PASS $(date): all ${runs} run(s) passed"
+}
+
+#   ----- the timing job -----
+
 busy_cores() {   # the cores busier than 3 % over 1 s (two samples of /proc/stat)
     local a b
     a="$(grep -E '^cpu[0-9]' /proc/stat)"; sleep 1; b="$(grep -E '^cpu[0-9]' /proc/stat)"
@@ -385,7 +619,7 @@ busy_cores() {   # the cores busier than 3 % over 1 s (two samples of /proc/stat
 }
 
 time_group() {   # time_group <cc> <prec> <cores> <variant>...: 3 interleaved rounds of 60 timed steps each
-    local cc=$1 prec=$2 cores=$3 vlog e h r out; shift 3
+    local cc=$1 prec=$2 cores=$3 vlog e h r out rc; shift 3
     vlog="${VERIFIED}/verify-${cc}-${prec}.log"
     echo "== ${cc} ${prec}, ${cores} core(s), 64^3 cells per core, 60 steps (+10 warm-up), 3 interleaved rounds," \
         "output ${SWEEPGEN_LDC_OUTPUT:-every}: $*"
@@ -400,28 +634,79 @@ time_group() {   # time_group <cc> <prec> <cores> <variant>...: 3 interleaved ro
         for v in "$@"; do
             e="$(exe_of "${cc}" "${prec}" "${v}")"
             if [[ "${cores}" == 1 ]]; then
-                out="$(taskset -c 2 "${e}" 64 60 10 2>&1)"
+                out="$(limited "${RUN_LIMIT}" taskset -c 2 "${e}" 64 60 10 2>&1)"; rc=$?
             else
-                out="$(mpirun -np "${cores}" --bind-to core --map-by core "${e}" 64 60 10 2>&1)"
+                # shellcheck disable=SC2086
+                out="$(limited "${RUN_LIMIT}" mpirun -np "${cores}" ${MPI_ARGS} "${e}" 64 60 10 2>&1)"; rc=$?
             fi
-            grep '^SweepgenLdcCPU variant=' <<< "${out}" || echo "SweepgenLdcCPU_${v} FAILED: $(tail -3 <<< "${out}" | tr '\n' ' ')"
+            if ((rc == 124)); then
+                echo "FAILED (hung): SweepgenLdcCPU_${v} (${cc} ${prec}) with ${cores} process(es) did not finish within ${RUN_LIMIT} s" \
+                    "(a normal run takes well under a minute) and was stopped; the rest of this group is not run"
+                sed 's/^/   /' <<< "${out}"
+                return
+            fi
+            grep '^SweepgenLdcCPU variant=' <<< "${out}" \
+                || echo "FAILED: SweepgenLdcCPU_${v} (${cc} ${prec}) with ${cores} process(es) ended without a result (exit code ${rc}): $(tail -3 <<< "${out}" | tr '\n' ' ')"
         done
     done
 }
 
 job_time() {
     node_env "$1"
-    local cc prec cores group
+    local cc prec cores group log hung reason msg line failures=() skipped=()
+    declare -A MPI_ERR=()
     declare -A GROUP=([scalar]="${SCALAR_VARIANTS}" [autovec]="autovec autovec_cse autovec_cse_aa"
                       [rvv]="explicit_cse explicit_cse_pf explicit_cse_aa explicit_cse_aa_pf explicit_cse_aa_split")
+    #   Preflight: mpi_bench (the halo exchange's pattern) at every process count; where it fails, every experiment
+    #   fails (they are not run)
+    echo "== MPI check (mpi_bench halo,allreduce 64K) at every process count $(date +%T)"
+    if build_bench; then
+        for cores in ${CORE_COUNTS}; do
+            [[ "${cores}" == 1 ]] && continue
+            bench_run "${cores}" "${MPI_LIMIT}" "${LOGS}/mpi-${cores}-output.log" --pattern halo,allreduce --bytes 64K \
+                > "${LOGS}/mpi-${cores}.log" || MPI_ERR[${cores}]="mpi_bench $(head -1 "${LOGS}/mpi-${cores}.log" | sed 's/^FAIL np=[0-9]*: //')"
+            head -1 "${LOGS}/mpi-${cores}.log"
+        done
+    else
+        for cores in ${CORE_COUNTS}; do
+            [[ "${cores}" == 1 ]] || MPI_ERR[${cores}]="mpi_bench does not build (${WORK}/mpitest/build.log)"
+        done
+    fi
+    if ((${#MPI_ERR[@]} > 0)); then
+        echo
+        echo "ERROR: MPI does not work on this node at some process counts:"
+        for cores in ${CORE_COUNTS}; do
+            [[ -n "${MPI_ERR[${cores}]:-}" ]] && echo "  - ${cores} processes: ${MPI_ERR[${cores}]}"
+        done
+        echo "  Every experiment at these process counts is marked FAILED (not run). Details: mpi-<count>.log next to"
+        echo "  this log. To look closer: bash scripts/notes7/monte3.sh start mpitest (on the laptop)."
+        echo
+    fi
     for cc in ${COMPILERS}; do
         for prec in f32 f64; do
+            hung=""
             for cores in ${CORE_COUNTS}; do
                 for group in scalar autovec rvv; do
+                    log="${LOGS}/ldc-${cc}-${group}-${prec}-${cores}core.log"
+                    reason=""
+                    if [[ -n "${hung}" ]]; then
+                        reason="${hung} hung before, so ${cc} ${prec} is not run with ${cores} or more processes"
+                    elif [[ -n "${MPI_ERR[${cores}]:-}" ]]; then
+                        reason="MPI does not work with ${cores} processes (see the ERROR above, mpi-${cores}.log)"
+                    fi
+                    if [[ -n "${reason}" ]]; then
+                        msg="FAILED (not run): ${cc} ${group} ${prec} with ${cores} processes: ${reason}"
+                        echo "${msg}" | tee "${log}"; failures+=("${msg}"); continue
+                    fi
                     echo "== ${cc} ${group} ${prec} ${cores} core(s) $(date +%T)"
                     # shellcheck disable=SC2086
-                    time_group "${cc}" "${prec}" "${cores}" ${GROUP[${group}]} > "${LOGS}/ldc-${cc}-${group}-${prec}-${cores}core.log" 2>&1
-                    grep -E "FAILED|SKIPPED" "${LOGS}/ldc-${cc}-${group}-${prec}-${cores}core.log"
+                    time_group "${cc}" "${prec}" "${cores}" ${GROUP[${group}]} > "${log}" 2>&1
+                    while IFS= read -r line; do
+                        echo "${line}"
+                        if [[ "${line}" == FAILED* ]]; then failures+=("${line}"); else skipped+=("${line}"); fi
+                    done < <(grep -E '^(FAILED|SKIPPED)' "${log}")
+                    line="$(grep -m 1 '^FAILED (hung): ' "${log}" | cut -d' ' -f3)"
+                    [[ -n "${line}" ]] && hung="${line} with ${cores} process(es)"
                 done
             done
             #   The fair pair: best scalar and the two fastest RVV builds, rho and u written in every step or
@@ -441,6 +726,17 @@ job_time() {
             sub("SweepgenLdcCPU_", "", v); if (m > best[v]) best[v] = m
         } END { for (v in best) printf "%-28s %-24s %8.2f\n", f, v, best[v] }' "${f}"
     done
+    echo
+    if ((${#skipped[@]} > 0)); then
+        echo "== ${#skipped[@]} group(s) skipped (executables not verified by the build job):"
+        printf '%s\n' "${skipped[@]}" | sort | uniq -c | sed 's/^ */   /; s/^   \([0-9]*\) /   \1 x /'
+    fi
+    if ((${#failures[@]} > 0)); then
+        echo "== ${#failures[@]} failure(s):"
+        printf '   %s\n' "${failures[@]}"
+        echo "TIME FAIL $(date): ${#failures[@]} experiment(s) failed, see the list above"
+        exit 1
+    fi
     echo "TIME DONE $(date)"
 }
 
@@ -451,7 +747,8 @@ case "${1:-help}" in
     status)    cmd_status ;;
     fetch)     cmd_fetch ;;
     help|-h|--help) cmd_help ;;
-    job-build) [[ -n "${SLURM_JOB_ID:-}" ]] || { echo "job-build runs inside a slurm job (use: start)"; exit 1; }; job_build "$2" ;;
-    job-time)  [[ -n "${SLURM_JOB_ID:-}" ]] || { echo "job-time runs inside a slurm job (use: start)"; exit 1; }; job_time "$2" ;;
+    job-build|job-time|job-mpitest)
+        [[ -n "${SLURM_JOB_ID:-}" ]] || { echo "$1 runs inside a slurm job (use: start)"; exit 1; }
+        mode="${1#job-}"; shift; "job_${mode}" "$@" ;;
     *)         usage; exit 1 ;;
 esac

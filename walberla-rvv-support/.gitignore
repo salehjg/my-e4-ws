@@ -14,3 +14,6 @@ my-e4-ws.zip
 # Results copied back from the boards (scripts/notes7/monte3.sh fetch): private, not committed.
 # push.to.sh excludes this folder too, so it never goes back to a shared machine.
 /00_private_data/
+
+# mpi_bench built by hand next to its source (scripts/notes7/mpi_bench.cpp, "Build:" line in its header)
+/scripts/notes7/mpi_bench

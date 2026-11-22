@@ -13,6 +13,11 @@ bash scripts/presentation6/submit.sh setup.sh                                 # 
 bash scripts/presentation6/submit.sh prepare.sh f64                           # build, audit, verify (4 h limit)
 bash scripts/presentation6/submit.sh --time=08:00:00 all.sh                   # or PARTS="steps matrix" ...
 ```
+On monte3, `setup.sh` loads the modules `gcc-14.2.0` and `openmpi-5.0.6` (the milkv Open MPI; the system's Open
+MPI 4.1.5 has a helper thread that spins at 100 % CPU and halves every core, see `docs/notes7`). Build trees made
+before this change were configured with the system MPI and are reused as they are: remove them first
+(`rm -rf ~/02_ws/presentation6/build-*` on monte3), then `setup.sh` and `prepare.sh` again.
+
 `submit.sh` creates the log folder (slurm does not: without it a job fails at once and writes nothing), submits
 through `peak.sbatch` and prints the log file. Job output: `../presentation6/logs/p6-<script>-<job id>.out`; each part also writes its own log there.
 

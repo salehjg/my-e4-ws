@@ -7,7 +7,8 @@
 #              than one per job; round 1 ran on mc-peak-2): Sophgo SG2044,
 #              64 C920v2 cores at 2.6 GHz, VLEN 128, 2 MB L2 per 4 cores, 64 MB L3, 1 NUMA node, 124 GB; openEuler
 #              24.03; x86-64 login node; GCC 14.2 from the module gcc-14.2.0 (system GCC 12 has no RVV intrinsics),
-#              system Clang 17.0.6, cmake 3.27.9 and Open MPI 4.1.5; Python 3.12 built from source by setup.sh
+#              system Clang 17.0.6, cmake 3.27.9, Open MPI 5.0.6 from the module openmpi-5.0.6 (not the system's
+#              4.1.5, see docs/notes7); Python 3.12 built from source by setup.sh
 #              (the system has 3.11); every job runs through sbatch (peak.sbatch: whole node, 64 tasks)
 #
 # The machine is recognized from /proc/cpuinfo and the host name; P6_MACHINE=<name> overrides (not MACHINE: some
