@@ -1,0 +1,27 @@
+% Slide "One code generator for 128- and 256-bit vectors": how the register width travels from the build
+% machine into the generated code (docs/notes7/rvv-vlen128-plan-opus5.5.md, section 3; implementation in the
+% forks: waLBerla cmake/compileroptions/RiscvVlen.cmake (try_run of a probe that reads the vlenb register),
+% GNU.cmake / Clang.cmake (-march=rv64gcv_zvl<V>b), sweepgen build_config.riscv_vlen -> Target.RISCV_RVV<V>;
+% pystencils codegen/target.py (RISCV_RVV128, RISCV_RVV256), backend/platforms/rvv.py, include/
+% pystencils_runtime/rvv_vlen128.hpp (sets PYSTENCILS_RVV_VLEN 128, includes rvv.hpp), rvv.hpp (#error unless
+% __riscv_v_min_vlen >= PYSTENCILS_RVV_VLEN; VLEN 256 code includes rvv.hpp directly, default 256).
+% __riscv_v_min_vlen is what the -march flag promises (zvl128b -> 128), not what the hardware has.
+\begin{tikzpicture}[
+    st/.style={box,text width=31mm,minimum height=13mm,font=\scriptsize,align=center},
+    hw/.style={st,info},
+    gen/.style={st,fill=psviolet!12,draw=psviolet!80!black},
+    cc/.style={st,added}]
+  \node[hw] (probe) at (0,0) {\textbf{CMake, at configure}\\runs a 5-line probe that\\reads the register width\\\code{vlenb} on this CPU};
+  \node[st] (v) at (4.1,0) {\code{WALBERLA\_RISCV\_VLEN}\\= 128 on the SG2044\\= 256 on the K1\\{\color{psgray}(can be set by hand)}};
+  \node[cc] (flags) at (8.2,0.95) {\textbf{compiler flags}\\\code{-march=rv64gcv\_zvl128b}\\``at least 128-bit vectors''};
+  \node[gen] (tgt) at (8.2,-0.95) {\textbf{pystencils target}\\\code{RISCV\_RVV128}\\lanes, \code{vl}, loop step};
+  \node[gen] (code) at (12.3,-0.95) {\textbf{generated C++}\\\code{\#include "rvv\_vlen128.hpp"}};
+  \node[cc,text width=33mm] (guard) at (12.3,0.95) {\textbf{header check}\\\code{\#error} unless the flags\\promise $\ge$ 128 bits};
+  \draw[arr] (probe) -- (v);
+  \draw[arr] (v.east) -- ++(0.25,0) |- (flags.west);
+  \draw[arr] (v.east) -- ++(0.25,0) |- (tgt.west);
+  \draw[arr] (tgt) -- (code);
+  \draw[arr] (flags) -- (guard);
+  \draw[arr] (code) -- (guard);
+  \node[lbl,anchor=north] at (4.1,-1.0) {one number for\\the whole build};
+\end{tikzpicture}

@@ -140,3 +140,17 @@ bash scripts/notes7/monte3.sh fetch     # the logs, to 00_private_data/monte3/<r
 bash scripts/notes7/monte3.sh start mpitest   # optional, minutes: MPI health check (mpi_bench) at 2-64 processes
 bash scripts/notes7/monte3.sh help      # what each job does, options, the rules for monte3
 ```
+
+## presentation7: the K1 and the SG2044 in one deck
+
+`docs/presentation7/`: RVV code generation for 256- and 128-bit vectors, measured on the K1 (presentation4's session)
+and on the SG2044 (notes7's full monte3 run, jobs 8565/8566). Shared material first, then a K1 part, an SG2044 part,
+and the cross-machine comparison. Every result number comes from `scripts/presentation7/slide_data.py`, which checks
+the logs first (run counts, field hashes, energies, verification, the job's own best-of table) and writes
+`docs/presentation7/tables/`. The SG2044 raw logs stay in `00_private_data/`; reports with them must acknowledge Monte
+Cimone (DOI 10.1007/978-3-032-07612-0_44).
+
+```bash
+python3 scripts/presentation7/slide_data.py     # checks, then tables/ (default: the last fetched monte3 run)
+cd docs/presentation7 && ./build.sh && pdfpc build/slides.pdf
+```

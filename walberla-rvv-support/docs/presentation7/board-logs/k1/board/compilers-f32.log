@@ -1,0 +1,132 @@
+== oracle-np1-c16-s100: GCC scalar against all Clang builds
+calibrated on /home/bananapi/saleh/presentation4/verify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+on4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar     f32     16x16x16   9.02e-10   1.19e-07       0
+4/verify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar     f32     16x16x16   5.97e-10   1.19e-07       0
+/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse_aa     f32     16x16x16   2.47e-10   1.19e-07       0
+ify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse     f32     16x16x16   3.06e-10   1.19e-07       0
+/verify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec     f32     16x16x16   5.97e-10   1.19e-07       0
+ng-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_pf     f32     16x16x16   2.76e-10   1.19e-07       0
+clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa     f32     16x16x16   2.76e-10   1.19e-07       0
+f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_split     f32     16x16x16   3.49e-10   1.19e-07       0
+clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_pf     f32     16x16x16   3.93e-10   1.19e-07       0
+fy/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse     f32     16x16x16   3.93e-10   1.19e-07       0
+y/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa     f32     16x16x16   2.47e-10   1.19e-07       0
+rify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse     f32     16x16x16   3.06e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar:
+input                                                         max|drho|    max|du|  identical cells
+4/verify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar   1.19e-07   2.24e-08         0/4096  
+/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse_aa   1.19e-07   2.24e-08         1/4096  
+ify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse   1.19e-07   3.73e-08         0/4096  
+/verify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec   1.19e-07   2.24e-08         0/4096  
+ng-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_pf   1.19e-07   2.24e-08         0/4096  
+clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa   1.19e-07   2.24e-08         0/4096  
+f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_split   1.19e-07   3.73e-08         0/4096  
+clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_pf   1.19e-07   2.14e-08         0/4096  
+fy/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse   1.19e-07   2.14e-08         0/4096  
+y/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa   1.19e-07   2.24e-08         1/4096  
+rify/clang-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse   1.19e-07   3.73e-08         0/4096  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS compilers oracle-np1-c16-s100
+== oracle-np1-c16-s101: GCC scalar against all Clang builds
+calibrated on /home/bananapi/saleh/presentation4/verify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+on4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar     f32     16x16x16   1.16e-10   1.19e-07       0
+4/verify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar     f32     16x16x16   3.78e-10   1.19e-07       0
+/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse_aa     f32     16x16x16   4.95e-10   1.19e-07       0
+ify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse     f32     16x16x16   5.24e-10   1.19e-07       0
+/verify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec     f32     16x16x16   3.78e-10   1.19e-07       0
+ng-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32     16x16x16   5.38e-10   1.19e-07       0
+clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa     f32     16x16x16   5.38e-10   1.19e-07       0
+f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32     16x16x16   1.06e-09   1.19e-07       0
+clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_pf     f32     16x16x16   7.71e-10   1.19e-07       0
+fy/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse     f32     16x16x16   7.71e-10   1.19e-07       0
+y/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f32     16x16x16   4.95e-10   1.19e-07       0
+rify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse     f32     16x16x16   5.24e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar:
+input                                                         max|drho|    max|du|  identical cells
+4/verify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar   1.19e-07   2.24e-08         2/4096  
+/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse_aa   1.19e-07   2.33e-08         0/4096  
+ify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse   1.19e-07   3.35e-08         0/4096  
+/verify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec   1.19e-07   2.24e-08         2/4096  
+ng-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf   1.19e-07   2.24e-08         0/4096  
+clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa   1.19e-07   2.24e-08         0/4096  
+f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split   1.19e-07   3.73e-08         0/4096  
+clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_pf   1.19e-07   1.96e-08         0/4096  
+fy/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse   1.19e-07   1.96e-08         0/4096  
+y/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa   1.19e-07   2.33e-08         0/4096  
+rify/clang-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse   1.19e-07   3.35e-08         0/4096  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS compilers oracle-np1-c16-s101
+== oracle-np2-c16-s101: GCC scalar against all Clang builds
+calibrated on /home/bananapi/saleh/presentation4/verify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+on4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar     f32     32x16x16   2.91e-11   1.19e-07       0
+4/verify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar     f32     32x16x16   7.28e-11   1.19e-07       0
+/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse_aa     f32     32x16x16   9.24e-10   1.19e-07       0
+ify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse     f32     32x16x16   9.97e-10   1.19e-07       0
+/verify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec     f32     32x16x16   7.28e-11   1.19e-07       0
+ng-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32     32x16x16   8.88e-10   1.19e-07       0
+clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa     f32     32x16x16   8.88e-10   1.19e-07       0
+f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32     32x16x16   7.79e-10   1.19e-07       0
+clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_pf     f32     32x16x16   1.03e-09   1.19e-07       0
+fy/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse     f32     32x16x16   1.03e-09   1.19e-07       0
+y/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f32     32x16x16   9.24e-10   1.19e-07       0
+rify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse     f32     32x16x16   9.97e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar:
+input                                                         max|drho|    max|du|  identical cells
+4/verify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar   1.19e-07   2.98e-08         1/8192  
+/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse_aa   1.19e-07   3.35e-08         1/8192  
+ify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse   1.19e-07   3.63e-08         0/8192  
+/verify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec   1.19e-07   2.98e-08         1/8192  
+ng-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf   1.19e-07   2.24e-08         0/8192  
+clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa   1.19e-07   2.24e-08         0/8192  
+f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split   1.19e-07   4.47e-08         0/8192  
+clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_pf   1.19e-07   2.33e-08         0/8192  
+fy/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse   1.19e-07   2.33e-08         0/8192  
+y/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa   1.19e-07   3.35e-08         1/8192  
+rify/clang-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse   1.19e-07   3.63e-08         0/8192  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS compilers oracle-np2-c16-s101
+== oracle-np6-c8-s101: GCC scalar against all Clang builds
+calibrated on /home/bananapi/saleh/presentation4/verify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+ion4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar     f32      16x24x8   2.13e-10   1.19e-07       0
+n4/verify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar     f32      16x24x8   5.82e-11   1.19e-07       0
+y/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse_aa     f32      16x24x8   1.75e-10   1.19e-07       0
+rify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse     f32      16x24x8   1.36e-10   1.19e-07       0
+4/verify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec     f32      16x24x8   5.82e-11   1.19e-07       0
+ang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32      16x24x8   5.04e-10   1.19e-07       0
+/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa     f32      16x24x8   5.04e-10   1.19e-07       0
+-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32      16x24x8   3.30e-10   1.19e-07       0
+/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_pf     f32      16x24x8   1.55e-10   1.19e-07       0
+ify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse     f32      16x24x8   1.55e-10   1.19e-07       0
+fy/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa     f32      16x24x8   1.75e-10   1.19e-07       0
+erify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse     f32      16x24x8   1.36e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar:
+input                                                         max|drho|    max|du|  identical cells
+n4/verify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar   1.19e-07   1.86e-08         0/3072  
+y/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse_aa   1.19e-07   1.86e-08         0/3072  
+rify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse   1.19e-07   2.24e-08         0/3072  
+4/verify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec   1.19e-07   1.86e-08         0/3072  
+ang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_pf   1.19e-07   2.61e-08         0/3072  
+/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa   1.19e-07   2.61e-08         0/3072  
+-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_split   1.19e-07   3.07e-08         0/3072  
+/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_pf   1.19e-07   1.86e-08         1/3072  
+ify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse   1.19e-07   1.86e-08         1/3072  
+fy/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa   1.19e-07   1.86e-08         0/3072  
+erify/clang-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse   1.19e-07   2.24e-08         0/3072  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS compilers oracle-np6-c8-s101

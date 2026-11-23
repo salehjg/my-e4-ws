@@ -1,0 +1,26 @@
+% Slide "The benchmark": the lid-driven cavity of waLBerla's UniformGridCPU LDC scenario, as the
+% benchmark SweepgenLdcCPU sets it up (its README): a closed box, the top face (y max) moves with
+% (0.05, 0, 0), the other five faces are fixed walls; the fluid starts at rest and the lid drags it
+% into a rotating flow. Cross-section in the x-y plane, 2D sketch (the vortex is only indicative).
+\begin{tikzpicture}
+  \def\L{2.85}
+  \def\t{0.13}
+  % fluid
+  \fill[psteal!10] (0,0) rectangle (\L,\L);
+  % fixed walls (left, right, bottom): hatched
+  \fill[pattern=north east lines,pattern color=psgray!80] (-\t,-\t) rectangle (0,\L);
+  \fill[pattern=north east lines,pattern color=psgray!80] (\L,-\t) rectangle (\L+\t,\L);
+  \fill[pattern=north east lines,pattern color=psgray!80] (-\t,-\t) rectangle (\L+\t,0);
+  % the lid
+  \fill[psorange!55] (-\t,\L) rectangle (\L+\t,\L+\t);
+  \draw[psgray!80] (0,0) rectangle (\L,\L);
+  \foreach \x in {0.2,1.05,1.9}
+    \draw[arr,psorange!85!black,very thick] (\x,\L+0.26) -- ++(0.75,0);
+  \node[font=\tiny,text=psorange!85!black,anchor=south] at (\L/2,\L+0.33) {moving lid, $u = 0.05$};
+  % the rotating flow
+  \draw[arr,psteal!75!black,thick] (2.1,2.1) arc[start angle=45,end angle=330,x radius=0.9,y radius=0.82];
+  \draw[arr,psteal!75!black] (1.6,1.68) arc[start angle=45,end angle=320,x radius=0.36,y radius=0.33];
+  \node[font=\tiny,text=psgray!90!black,rotate=90,anchor=south] at (-\t-0.02,\L/2) {fixed wall};
+  \node[font=\tiny,text=psgray!90!black,rotate=-90,anchor=south] at (\L+\t+0.02,\L/2) {fixed wall};
+  \node[lbl,anchor=north] at (\L/2,-0.2) {waLBerla's lid-driven cavity: a closed box,\\$64^3$ cells per core};
+\end{tikzpicture}
