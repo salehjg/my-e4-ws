@@ -1,0 +1,39 @@
+% Slide "The split loop: the same update in eight short passes".
+% Source: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py (class SplitAA), used by
+% SweepgenLdcCPU (--split=BY,GM,GP; CMakeLists.txt:63-70: f32 2,5,3, f64 1,5,3). For each block of BY
+% rows of one z-plane the generated driver LBM_SPLIT::streamCollide calls 8 passes (generated
+% SweepgenLdcCPU.cpp of explicit_cse_aa_split, e.g. build/presentation4-x86/gcc-f32/.../gen/
+% SweepgenLdcCPU.cpp:6933-6997): m0..m3 add up mass and momentum of 5, 5, 5, 4 values into the scratch
+% acc; macro computes rho, u (into the scratch scr, and into the outputs); c0..c2 reload 7, 6, 6
+% values (the rest value and 3 opposite pairs, then 3 pairs, 3 pairs), collide (relax) them and store them in
+% place. Arrays per pass: 5 / 4 outputs / 7 or 6 (plus the scratch, which stays in L1).
+% Block size, 64^3 block: f32 19 x 2 rows x 64 cells x 4 B = 9728 B; f64 19 x 1 x 64 x 8 B = 9728 B.
+% Scratch (driver): 9 x sc values, sc = 128 (f32) / 64 (f64): 4608 B. L1 data cache 32 KB.
+% The one-loop row: the in-place (AA) StreamCollide kernel: 19 + 4 = 23 arrays (see stream-def).
+% presentation7-v2 (user's review: "useless, does not convey what the split loop is for LBM; maybe a small code
+% snippet"): redrawn as two short pseudo-code boxes, the one loop and the split loop, with the arrays each loop or
+% pass walks through. Pass contents as in the generated driver above (m0..m3: 5, 5, 5, 4 values; macro; c0..c2: 7,
+% 6, 6 values). acc: the scratch with the running sums of mass and momentum (rho, j_x, j_y, j_z per cell).
+\begin{tikzpicture}
+  \tikzset{cb/.style={codebox,text width=#1,font=\ttfamily\scriptsize},
+           hd/.style={font=\scriptsize\bfseries,anchor=south west,inner sep=1pt}}
+  \def\c#1{\textcolor{psgray}{#1}}
+  \node[cb=56mm,anchor=north west] (one) at (0,0) {%
+for\ each\ cell\ x:\\
+\ \ load\ f0\ ...\ f18\ at\ x\ \ \ \ \ \ \ \ \c{//\ 19\ arrays}\\
+\ \ rho,\ u\ =\ sums\ of\ f0\ ...\ f18\\
+\ \ f0\ ...\ f18\ =\ collide(f,\ rho,\ u)\\
+\ \ store\ f0\ ...\ f18\ at\ x\ \ \ \ \ \ \ \c{//\ the\ same\ 19}\\
+\ \ store\ rho,\ u\ at\ x\ \ \ \ \ \ \ \ \ \ \ \c{//\ +\ 4\ arrays}};
+  \node[hd] at (one.north west) {one loop, in place: \textcolor{psred!85!black}{23 arrays at once}};
+  \node[cb=79mm,anchor=north west] (split) at (6.05,0) {%
+for\ each\ block\ of\ 2\ rows\ (128\ cells):\\
+\ \ for\ x\ in\ block:\ acc[x]\ =\ \ sums\ of\ f0..f4\ \ \ \c{//\ 5\ arrays}\\
+\ \ for\ x\ in\ block:\ acc[x]\ +=\ sums\ of\ f5..f9\ \ \ \c{//\ 5\ arrays}\\
+\ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \c{//\ f10..f18\ alike}\\
+\ \ for\ x\ in\ block:\ rho,\ u\ =\ from\ acc[x]\ \ \ \ \ \ \ \c{//\ 4\ outputs}\\
+\ \ for\ x\ in\ block:\ collide\ 7\ of\ the\ values\ \ \ \ \c{//\ 7\ arrays}\\
+\ \ for\ x\ in\ block:\ collide\ 6\ more\ \ \ \ \ \ \ \ \ \ \ \ \ \c{//\ 6\ arrays}\\
+\ \ for\ x\ in\ block:\ collide\ the\ last\ 6\ \ \ \ \ \ \ \ \ \c{//\ 6\ arrays}};
+  \node[hd] at (split.north west) {split loop: 8 short passes per block, \textcolor{psteal!70!black}{at most 7 arrays at once}};
+\end{tikzpicture}%

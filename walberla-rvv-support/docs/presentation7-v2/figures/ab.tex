@@ -1,0 +1,15 @@
+% The usual "AB" scheme: two arrays, A and B. Each step reads one and writes the other, then
+% they swap roles. Shown next to the AA pattern (aa-pattern.tex), which uses only array A.
+\begin{tikzpicture}[
+    cell/.style={draw=psgray!80,fill=codebg,minimum width=5mm,minimum height=5mm,inner sep=0pt},
+    st/.style={-{Stealth[length=1.8mm]},thick}]
+  \foreach \k in {0,...,6} {
+    \node[cell] at (\k*0.5+0.25,0) {};
+    \node[cell] at (\k*0.5+0.25,-1.9) {};
+  }
+  \node[font=\small\bfseries,anchor=east] at (-0.1,0) {A};
+  \node[font=\small\bfseries,anchor=east] at (-0.1,-1.9) {B};
+  \draw[st,psblue!85!black] (0.9,-0.32) -- node[left,font=\scriptsize,align=right,text=black] {step 1:\\read A,\\write B} (0.9,-1.58);
+  \draw[st,psorange!90!black] (2.6,-1.58) -- node[right,font=\scriptsize,align=left,text=black] {step 2:\\read B,\\write A} (2.6,-0.32);
+  \node[lbl,anchor=north] at (1.75,-2.3) {then repeat: two full copies of the data};
+\end{tikzpicture}

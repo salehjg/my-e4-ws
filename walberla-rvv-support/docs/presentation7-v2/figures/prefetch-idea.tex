@@ -1,0 +1,47 @@
+% Slide "K1: what a software prefetch does" (new in presentation7-v2; the user asked whether a prefetch also acts
+% as a load and whether loads are replaced by prefetches: no, the prefetch is added, the load stays).
+% Top: one array in f32, 4 cache lines of 64 B = 16 values (cache-line.tex). The vector loop step is 8 values on
+% the K1 (VLEN 256); the generated prefetch distance is 128 B = 32 f32 values (--prefetch-distance=128,
+% apps/benchmarks/SweepgenLdcCPU/CMakeLists.txt; prefetch-insert.tex), i.e. two lines ahead.
+% Bottom: a sketch of the time line of one stream (not to scale). About 360 cycles per memory access on the K1
+% (k1.tex: pointer chase, about 357 cycles); the in-order X60 waits for a load that misses. With prefetch the line
+% is requested two lines (4 loop steps) earlier and is in the cache when the load comes.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{v/.style={draw=psgray!45,line width=0.2pt},
+           lbx/.style={font=\scriptsize,inner sep=1pt},
+           tseg/.style={draw=white,line width=0.6pt,minimum height=5mm,inner sep=1pt,font=\tiny,anchor=west}}
+  \def\w{0.16}\def\h{0.4}
+  % ---- the array -------------------------------------------------------------------------
+  \fill[psteal!65] (0,0) rectangle (8*\w,\h);
+  \fill[psorange!35] (32*\w,0) rectangle (48*\w,\h);
+  \foreach \k in {0,...,63} \draw[v] (\k*\w,0) rectangle ++(\w,\h);
+  \foreach \l in {0,...,3} {
+    \draw[black!80,line width=1.1pt] ({\l*16*\w},0) rectangle ++({16*\w},\h);
+    \node[lbx,anchor=north,text=psgray!90!black] at ({(\l+0.5)*16*\w},-0.03) {cache line \l};
+  }
+  \draw[-{Stealth[length=1.8mm]},thick,psteal!60!black] (4*\w,\h+0.75) -- (4*\w,\h+0.05);
+  \node[lbx,anchor=south,align=center,text=psteal!40!black] at (4*\w,\h+0.75)
+    {\textbf{load} \code{vle32(\&f[x])}:\\8 values into a register};
+  \draw[-{Stealth[length=1.8mm]},thick,psorange!85!black] (32.5*\w,\h+0.75) -- (32.5*\w,\h+0.05);
+  \node[lbx,anchor=south,align=center,text=psorange!70!black] at (36*\w,\h+0.75)
+    {\textbf{prefetch} \code{prefetch\_read(\&f[x+32])}:\\the whole line comes into the cache, no register};
+  \draw[decorate,decoration={brace,amplitude=3pt,mirror},psgray!90!black] (0,-0.5) -- (32*\w,-0.5)
+    node[midway,below=2pt,lbx,text=psgray!90!black] {from $x$ to $x+32$: 32 values = 128 bytes = 2 cache lines ahead};
+
+  % ---- the time line -------------------------------------------------------------------
+  \begin{scope}[shift={(0,-1.75)}]
+    \node[lbx,anchor=east] at (-0.1,0) {without prefetch};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (a1) at (0,0) {compute};
+    \node[tseg,fill=psred!25,minimum width=3.6cm] (a2) at (a1.east) {load misses: the core waits, about 360 cycles};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (a3) at (a2.east) {compute};
+    \node[tseg,fill=psred!25,minimum width=1.9cm] (a4) at (a3.east) {waits again ...};
+    \node[lbx,anchor=east] at (-0.1,-0.75) {with prefetch};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (b1) at (0,-0.75) {compute};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (b2) at (b1.east) {compute};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (b3) at (b2.east) {compute};
+    \node[tseg,fill=ckernel!70,text=white,minimum width=1.2cm] (b4) at (b3.east) {compute};
+    \node[lbx,anchor=west,align=left,text=psteal!40!black] at ([xshift=1mm]b4.east)
+      {each load finds its line in the cache:\\it was requested 4 loop steps earlier};
+    \draw[arr] (0,-1.2) -- (8.4,-1.2) node[pos=0.5,below,lbl] {time (sketch, not to scale)};
+  \end{scope}
+\end{tikzpicture}%

@@ -1,0 +1,48 @@
+% Slide "Software prefetch: the RISC-V instruction behind it".
+% Top: the 32-bit word of prefetch.r 0(a0) = ori x0, a0, 1 = 0x00156013. Fields (bit 31 on the left):
+% imm[11:5] = offset/32 (here 0), imm[4:0] = type (0 = prefetch.i, 1 = prefetch.r, 3 = prefetch.w),
+% rs1 = a0 = x10 = 01010, funct3 = 110 (ORI), rd = x0, opcode = 0010011 (OP-IMM: arithmetic with a
+% constant). Checked on the laptop: riscv64-linux-gnu-g++ 16.2.1 -O3 -march=rv64gcv -c, then
+% llvm-objdump -d prints "00156013  prefetch.r 0x0(a0)" for asm volatile("ori x0, %0, 1").
+% Middle: the two readings of the same word. "X60 runs it": the stream test 176 -> 90 cycles per line
+% with pfr=128 (board-logs/board/streams-pattern.log); notes3 progress log: the X60's ISA string lists
+% zicbom and zicboz but not zicbop.
+% Bottom: include/pystencils_runtime/rvv.hpp:144-151 (submodules/pystencils/src/pystencils/), shortened
+% (comments added). GCC 16.2.1 with -march=rv64gcv compiles __builtin_prefetch to nothing, with
+% -march=rv64gcv_zicbop to prefetch.r/prefetch.w (checked on the laptop; notes3 says the same of GCC 14).
+\begin{tikzpicture}
+  \def\bw{2.35mm}   % width of one bit
+  \def\bh{5.5mm}    % height of the word
+  % field: first bit from the left (0 = bit 31) / number of bits / bits / label below / fill
+  \foreach \s/\n/\bits/\lab/\fil in {
+      0/7/0000000/{offset}/white,
+      7/5/00001/{1 = read\\3 = write}/psteal!22,
+      12/5/01010/{address\\(a0)}/white,
+      17/3/110/{OR}/white,
+      20/5/00000/{into x0\\(always 0)}/psgray!18,
+      25/7/0010011/{with a\\constant}/white} {
+    \draw[psgray!80,fill=\fil] (\s*\bw,0) rectangle ++(\n*\bw,\bh);
+    \node[font=\ttfamily\scriptsize] at (\s*\bw+\n*\bw/2,\bh/2) {\bits};
+    \node[lbl,anchor=north,font=\tiny,inner sep=1pt] at (\s*\bw+\n*\bw/2,-0.4mm) {\lab};
+  }
+  \node[font=\scriptsize\bfseries,anchor=south west,inner sep=1pt] at (0,\bh+0.6mm)
+    {one instruction word, 32 bits};
+  \node[font=\scriptsize,text=psgray,anchor=south east,inner sep=1pt] at (32*\bw,\bh+0.6mm)
+    {\code{0x00156013}};
+  % the two readings of the same bits
+  \node[box,quiet,text width=33mm,font=\scriptsize,anchor=north west] (old) at (0,-7.5mm)
+    {\textbf{core without Zicbop}\\[1pt]\code{ori x0, a0, 1}\\x0 stays 0: no effect};
+  \node[box,added,text width=33mm,font=\scriptsize,anchor=north east] (new) at (32*\bw,-7.5mm)
+    {\textbf{X60}\\[1pt]\code{prefetch.r 0(a0)}\\loads the line at a0};
+  % the runtime function that the generated loop calls
+  \node[codebox,anchor=north west] (rt) at (0,-24mm) {%
+void\ prefetch\_read(const\ T\ *p)\ \{\\
+\#if\ defined(\_\_riscv\_zicbop)\ \ \ \ \ \textcolor{psgray}{//\ -march\ names\ Zicbop:}\\
+\ \ \_\_builtin\_prefetch(p,\ 0,\ 3);\ \ \textcolor{psgray}{//\ GCC\ writes\ prefetch.r}\\
+\#else\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ our\ builds:\ the\ bits\ by\ hand}\\
+\ \ asm\ volatile("ori\ x0,\ \%0,\ 1"\ :\ :\ "r"(p));\\
+\#endif\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west,inner sep=1pt] at ([yshift=0.4mm]rt.north west)
+    {the function the generated loop calls};
+\end{tikzpicture}

@@ -1,0 +1,28 @@
+% Slide "pystencils: one backend for each instruction set" (new in presentation7-v2; answers the todo "how many
+% backends, and is the RVV backend duplicated for VLEN 128 / 256 or per microarchitecture").
+% Source: the fork submodules/pystencils/src/pystencils/: backend/platforms/ has one platform class per family:
+% generic_cpu.py (GenericCpu), x86.py (X86VectorCpu; X86VectorArch = SSE, AVX, AVX512 ...), neon.py (NeonCpu),
+% sve.py (SveCpu), rvv.py (RvvCpu), cuda.py, hip.py, sycl.py (+ generic_gpu.py). codegen/target.py: X86_SSE,
+% X86_AVX, X86_AVX512, ARM_NEON, ARM_SVE, RISCV_RVV128, RISCV_RVV256 (RISCV_RVV = RISCV_RVV256), CUDA, HIP, SYCL.
+% rvv.py: class RvvCpu(GenericVectorCpu), __init__(ctx, vlen), SUPPORTED_VLENS = (128, 256): one class, the
+% width is a parameter. grep for X60 / C920 / SpacemiT / Sophgo in the package finds only comments (examples of
+% machines), no code that depends on the chip.
+\begin{tikzpicture}
+  \tikzset{be/.style={box,quiet,text width=24mm,minimum height=12mm,font=\scriptsize},
+           ours/.style={box,added,text width=30mm,minimum height=12mm,font=\scriptsize},
+           tg/.style={box,added,fill=psteal!5,text width=27mm,font=\scriptsize,minimum height=7mm}}
+  \node[box,info,text width=80mm,font=\scriptsize] (ps) at (6.1,1.75)
+    {\textbf{pystencils}: turns the formulas into a loop over all cells};
+  \node[be] (gen) at (0,0) {\textbf{generic CPU}\\plain C++,\\no vector code};
+  \node[be] (x86) at (2.85,0) {\textbf{x86}\\one backend, targets\\SSE, AVX, AVX-512};
+  \node[be] (arm) at (5.7,0) {\textbf{ARM}\\two backends:\\NEON and SVE};
+  \node[ours] (rvv) at (8.95,0) {\textbf{RISC-V RVV} (this work)\\[1pt]\textbf{one} backend\\for every width};
+  \node[be] (gpu) at (12.2,0) {\textbf{GPU}\\CUDA, HIP,\\SYCL};
+  \foreach \b in {gen,x86,arm,rvv,gpu} \draw[arr] (ps.south) -- (\b.north);
+  \node[tg] (t128) at (7.35,-1.75) {\code{RISCV\_RVV128}\\for the SG2044};
+  \node[tg] (t256) at (10.55,-1.75) {\code{RISCV\_RVV256}\\for the K1};
+  \draw[arr] (rvv.south) -- (t128.north);
+  \draw[arr] (rvv.south) -- (t256.north);
+  \node[lbl,anchor=east,align=right] (two) at (5.6,-1.75) {two targets: the same code generator,\\only the width differs};
+  \draw[psgray!70,densely dotted] (two.east) -- (t128.west);
+\end{tikzpicture}%

@@ -1,0 +1,41 @@
+% Slide "Fewer streams, way 1: update in place (the AA pattern)": the AA pattern for one pair of directions,
+% seen from cell x (as in lbmpy's AA accessors). Two of a cell's 19 slots are drawn: the slot of f_3 (the value
+% moving west, D3Q19 in lbmpy's order: c_3 = (-1, 0, 0)) and the slot of f_4 (moving east, c_4 = (+1, 0, 0)).
+% Even step: read both slots of x, collide, write each new value into the slot of the OPPOSITE direction of the
+% same cell (so the two values swap slots and nothing moves yet). Odd step: read from the neighbours' slots (f_3
+% of x-1, f_4 of x+1, where the even step left the values) and write the new values back into the same slots,
+% which completes the move of both steps. Every step reads and writes the same addresses: one set of arrays.
+% presentation7-v2 (user's review): the slots were labelled W and E without a definition; now f_3 and f_4 with
+% arrows, and a legend that says what they are.
+\begin{tikzpicture}[
+    slot/.style={draw=psgray!80,fill=codebg,minimum width=6.4mm,minimum height=4.6mm,inner sep=0pt,font=\tiny},
+    coll/.style={circle,draw=psgray!90,fill=white,inner sep=1pt,font=\tiny},
+    rd/.style={-{Stealth[length=1.4mm]},semithick,draw=psblue!85!black,dashed},
+    wr/.style={-{Stealth[length=1.4mm]},semithick,draw=psorange!90!black}]
+  \foreach \p/\py/\ttl in {e/0/{even step: the new values stay in cell $x$, in swapped slots},
+                           o/-1.95/{odd step: read the neighbours' slots, write back there}} {
+    \foreach \c/\lab in {0/$x{-}1$, 1/$x$, 2/$x{+}1$} {
+      \node[slot] (\p W\c) at (\c*1.66+0.3,\py) {$f_3\,\leftarrow$};
+      \node[slot] (\p E\c) at (\c*1.66+0.94,\py) {$f_4\,\rightarrow$};
+      \node[font=\tiny,text=psgray] at (\c*1.66+0.62,\py-0.38) {cell \lab};
+    }
+    \node[coll] (\p col) at (2.28,\py+0.85) {collide};
+    \node[font=\scriptsize\bfseries,anchor=west] at (-0.05,\py+1.3) {\ttl};
+  }
+  %   even step: read both slots of x, write each new value into the other slot
+  \draw[rd] (eE1.north) to[bend right=10] (ecol);
+  \draw[rd] (eW1.north) to[bend left=10] (ecol);
+  \draw[wr] (ecol.west) to[bend right=45] (eW1.north west);
+  \draw[wr] (ecol.east) to[bend left=45] (eE1.north east);
+  %   odd step: the value coming from x-1 (moving east) sits in the f_3 slot of x-1, where the even step put it;
+  %   the one coming from x+1 (moving west) in the f_4 slot of x+1. The new values go back into the same two slots.
+  \draw[rd] (oW0.north) to[bend left=10] (ocol);
+  \draw[rd] (oE2.north) to[bend right=10] (ocol);
+  \draw[wr] (ocol.east) to[bend left=20] (oE2.north west);
+  \draw[wr] (ocol.west) to[bend right=20] (oW0.north east);
+  %   legend
+  \draw[rd] (0,-2.66) -- ++(0.45,0) node[right,font=\tiny,text=black] {read};
+  \draw[wr] (1.25,-2.66) -- ++(0.45,0) node[right,font=\tiny,text=black] {write};
+  \node[font=\tiny,text=black!80,anchor=west,align=left] at (2.45,-2.66)
+    {each cell has 19 slots; two are shown:\\$f_3$ moves west ($\leftarrow$), $f_4$ moves east ($\rightarrow$)};
+\end{tikzpicture}

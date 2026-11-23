@@ -1,0 +1,42 @@
+% Slide "SG2044: the hardware, and how jobs run". The Sophgo SG2044 on the peak node of Monte Cimone
+% (mc-peak-2), as read by scripts/presentation6/recon.sh (recon round 1, 2026-11-20; summary in
+% docs/presentation6/presentation6-progress-opus5.5.md, "The machines" and "Round 1"): 64 cores, 1 NUMA node,
+% 2.6 GHz; L1 64 KB per core, L2 2 MB per 4 cores, L3 64 MB shared; 124 GB memory (MemTotal); VLEN 128 (vlenb
+% register; CMake measures it again in every build: "RISC-V VLEN: 128 bits (measured)"). Core type XuanTie C920v2.
+% Cache line 64 B: NOT from recon; from the SG2042 device tree (same XuanTie C920 family, d-cache-block-size =
+% <64>); the slide carries a todo until it is read on monte3.
+% Nothing else is drawn that recon did not report (no memory latency or bandwidth: not measured on this machine).
+% Right: one 128-bit RVV register as 4 f32 or 2 f64 lanes (compare figures/k1.tex: 256 bits, 8 or 4).
+\begin{tikzpicture}[
+    cl/.style={box,minimum width=1.02cm,minimum height=0.72cm,fill=white,draw=psblue!70!black,
+      font=\tiny,align=center,inner sep=1pt}]
+  % ---- the chip: 16 groups of 4 cores ------------------------------------------------
+  \draw[psblue!70!black,fill=psblue!4,rounded corners=3pt] (0,0) rectangle (9.1,2.95);
+  \node[anchor=north west,font=\scriptsize\bfseries,text=psblue!80!black] at (0.1,2.92)
+    {Sophgo SG2044: 64 C920v2 cores, 2.6\,GHz; L1 64\,KB per core; 64-byte lines};
+  \foreach \r in {0,1} \foreach \k in {0,...,7} {
+    \pgfmathtruncatemacro{\a}{4*(8*\r+\k)}
+    \pgfmathtruncatemacro{\b}{\a+3}
+    \node[cl] at (0.62+\k*1.124,2.12-\r*0.9) {\textbf{cores \a--\b}\\[1pt]L2: 2\,MB};
+  }
+  \node[box,fill=psblue!14,draw=psblue!70!black,font=\tiny,minimum height=4.5mm,minimum width=8.75cm,
+    inner sep=1pt] (l3) at (4.55,0.36) {L3: 64\,MB, shared by all 64 cores};
+  % ---- main memory -------------------------------------------------------------------
+  \node[box,fill=psgray!12,minimum width=9.1cm,minimum height=5mm,font=\scriptsize,anchor=north]
+    (mem) at (4.55,-0.3) {main memory, 124\,GB, one NUMA node (every core reaches all of it the same way)};
+  \draw[<->,semithick,psgray!90!black] (l3.south) -- (l3.south |- mem.north);
+
+  % ---- one core's vector register ------------------------------------------------------
+  \begin{scope}[shift={(9.75,0.35)}]
+    \def\w{0.52}
+    \node[font=\scriptsize\bfseries,anchor=south west,inner sep=0pt] at (0,2.1) {one \term{RVV} vector register: 128 bits};
+    \foreach \k in {0,...,3}
+      \node[draw=white,line width=0.6pt,minimum height=4.5mm,inner sep=0pt,font=\tiny,fill=psblue!30,
+        minimum width=\w cm] at (\k*\w+\w/2,1.6) {f32};
+    \foreach \k in {0,...,1}
+      \node[draw=white,line width=0.6pt,minimum height=4.5mm,inner sep=0pt,font=\tiny,fill=psorange!30,
+        minimum width=2*\w cm] at (\k*2*\w+\w,0.95) {f64};
+    \node[lbl,anchor=north west,align=left] at (0,0.6)
+      {one instruction works on all lanes:\\4 numbers in f32, 2 in f64\\(the K1: 8 and 4)};
+  \end{scope}
+\end{tikzpicture}

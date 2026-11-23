@@ -1,0 +1,33 @@
+% Slide "The split loop in code, and why it needs no prefetch".
+% Top: the generated driver LBM_SPLIT::streamCollide (lbm_split.py driver_code; generated
+% SweepgenLdcCPU.cpp of explicit_cse_aa_split, e.g. build/presentation4-x86/gcc-f32/apps/benchmarks/
+% SweepgenLdcCPU/_gen/SweepgenLdcCPU_explicit_cse_aa_split/gen/SweepgenLdcCPU.cpp:6933-6997), f32 (2 rows
+% per block), even step with output, shortened: argument lists cut to the arrays, the odd step and the
+% no-output flavour dropped. Bottom: pass m1_0 of the same file (lines 4443-4540), shortened: the y
+% and z momentum and the remainder loop left out, indexing written as f5[y][x]. That file is the x86
+% build (AVX loads); the board's RVV build has the same passes with RVV loads (vle32 = __riscv_vle32_v_f32m1).
+% D3Q19 in lbmpy's order: c_x of values 7, 8, 9 is -1, +1, -1, so x-momentum gets v8 - v7 - v9.
+\begin{tikzpicture}
+  \node[codebox,anchor=north west] (drv) at (0,0) {%
+for\ (z\ =\ 0;\ z\ <\ 64;\ z++)\\
+\ \ for\ (y0\ =\ 0;\ y0\ <\ 64;\ y0\ +=\ 2)\ \{\ \ \ \ \textcolor{psgray}{//\ one\ block:\ 2\ rows}\\
+\ \ \ \ m0(f,\ acc,\ y0);\ \ m1(f,\ acc,\ y0);\ \ \textcolor{psgray}{//\ add\ up\ f0..f9}\\
+\ \ \ \ m2(f,\ acc,\ y0);\ \ m3(f,\ acc,\ y0);\ \ \textcolor{psgray}{//\ add\ up\ f10..f18}\\
+\ \ \ \ macro(acc,\ scr,\ rho,\ u,\ y0);\ \ \ \ \ \ \textcolor{psgray}{//\ density,\ velocity}\\
+\ \ \ \ c0(f,\ scr,\ y0);\ \ c1(f,\ scr,\ y0);\ \ \textcolor{psgray}{//\ collide\ 7\ +\ 6\ values}\\
+\ \ \ \ c2(f,\ scr,\ y0);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ collide\ 6\ values}\\
+\ \ \}};
+  \node[font=\scriptsize\bfseries,anchor=south west,inner sep=1pt] at ([yshift=0.4mm]drv.north west)
+    {the generated driver: 8 passes per block};
+  \node[codebox,anchor=north west] (pass) at ([yshift=-5mm]drv.south west) {%
+void\ m1(...)\ \{\\
+\ \ for\ (y\ =\ y0;\ y\ <\ y0\ +\ 2;\ y++)\ \ \ \ \ \ \ \textcolor{psgray}{//\ the\ block's\ 2\ rows}\\
+\ \ \ \ for\ (x\ =\ 0;\ x\ <\ 64;\ x\ +=\ 8)\ \{\ \ \ \ \ \textcolor{psgray}{//\ 8\ cells\ per\ step}\\
+\ \ \ \ \ \ v5\ =\ vle32(\&f5[y][x]);\ ...\ v9\ =\ vle32(\&f9[y][x]);\\
+\ \ \ \ \ \ acc\_rho[y][x]\ +=\ v5\ +\ v6\ +\ v7\ +\ v8\ +\ v9;\\
+\ \ \ \ \ \ acc\_jx[y][x]\ \ +=\ v8\ -\ v7\ -\ v9;\ \ \textcolor{psgray}{//\ momentum\ x;\ y,\ z\ alike}\\
+\ \ \ \ \}\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west,inner sep=1pt] at ([yshift=0.4mm]pass.north west)
+    {one pass: 5 arrays read, sums kept in the scratch};
+\end{tikzpicture}
