@@ -337,6 +337,29 @@ def main():
         N[f"{m}:splitfastest"] = str(sum(1 for cc in COMPILERS for p in PRECS for c in cfg["cores"]
                                          if N[f"{m}:fastest:{cc}:{p}:{c}"] == "split"))
         N[f"{m}:ncolumns"] = str(len(COMPILERS) * len(PRECS) * len(cfg["cores"]))
+        # a clear win: the split build's slowest run beats the best run of every other build in the column;
+        # otherwise the runs overlap (a tie within the run-to-run spread)
+        clear, ties = 0, []
+        for cc in COMPILERS:
+            for p in PRECS:
+                for c in cfg["cores"]:
+                    sp = res[(cc, p, c, "explicit_cse_aa_split")]
+                    rest = max(res[(cc, p, c, v)]["best"] for v in VARIANTS if v != "explicit_cse_aa_split")
+                    if sp["min"] > rest:
+                        clear += 1
+                    else:
+                        ties.append((cc, p, c))
+        N[f"{m}:splitclear"] = str(clear)
+        if m == "kone":   # the slides name the tied columns: GCC, 8 cores, f32 and f64
+            check(sorted(ties) == [("gcc", "f32", 8), ("gcc", "f64", 8)], f"K1 tied columns changed: {ties}")
+        else:
+            check(ties == [], f"SG2044 tied columns: {ties}")
+        report.append(f"{cfg['name']}: split loop fastest in {N[f'{m}:splitfastest']} of {N[f'{m}:ncolumns']} "
+                      f"columns, a clear win (no run overlap) in {clear}; ties {ties}")
+        for prec in PRECS:
+            for c in cfg["cores"]:
+                for v in VARIANTS:
+                    N[f"{m}:clangslower:{prec}:{c}:{SHORT[v]}"] = f"{100 * (1 - res[('clang', prec, c, v)]['best'] / res[('gcc', prec, c, v)]['best']):.0f}"
 
         # ---- tables ----
         maxc = cfg["cores"][-1]
@@ -495,6 +518,57 @@ def main():
         mlups = data["sg"][("gcc", p, 64, "explicit_cse_aa_split")]["best"]
         N[f"sg:bytes:{p}:lo"], N[f"sg:bytes:{p}:hi"] = str(lo), str(hi)
         N[f"sg:gbs:{p}:lo"], N[f"sg:gbs:{p}:hi"] = f"{lo * mlups / 1000:.0f}", f"{hi * mlups / 1000:.0f}"
+    # the same estimate during the kernel only (the best run's MLUP/s scaled by total time / kernel time), at the
+    # largest core count of each machine; this is how the K1's 4.6 GB/s in presentation6 was made
+    for m, maxc in (("kone", 8), ("sg", 64)):
+        for p, b in (("f32", 4), ("f64", 8)):
+            lo, hi = (19 + 19 + 4) * b, (19 + 19 + 4 + 4) * b
+            s_ = data[m][("gcc", p, maxc, "explicit_cse_aa_split")]
+            r = s_["run"]
+            kmlups = s_["best"] * (r["t_bulk"] + r["t_comm"] + r["t_bc"]) / r["t_bulk"]
+            N[f"{m}:kmlups:{p}"] = f"{kmlups:.0f}" if kmlups >= 100 else f"{kmlups:.1f}"
+            prec_ = 0 if kmlups * lo / 1000 >= 20 else 1
+            N[f"{m}:gbsk:{p}:lo"] = f"{lo * kmlups / 1000:.{prec_}f}"
+            N[f"{m}:gbsk:{p}:hi"] = f"{hi * kmlups / 1000:.{prec_}f}"
+            report.append(f"traffic estimate {m} {p} {maxc} cores, GCC split, kernel only: {kmlups:.1f} MLUP/s, "
+                          f"{lo * kmlups / 1000:.1f} to {hi * kmlups / 1000:.1f} GB/s")
+
+    # ---- statements the slides make in words: stop if the data no longer supports them ----
+    sg, k1 = data["sg"], data["kone"]
+    def b(d, cc, p, c, v):
+        return d[(cc, p, c, v)]["best"]
+    # SG2044 prefetch slide: not in place, prefetch slows GCC f32, leaves GCC f64 within 1 %, helps Clang (both);
+    # in place, it helps both compilers in both precisions
+    check(b(sg, "gcc", "f32", 1, "explicit_cse_pf") < b(sg, "gcc", "f32", 1, "explicit_cse"), "SG2044: pf no longer slows GCC f32")
+    check(abs(b(sg, "gcc", "f64", 1, "explicit_cse_pf") / b(sg, "gcc", "f64", 1, "explicit_cse") - 1) < 0.01,
+          "SG2044: GCC f64 pf no longer within 1 % of no pf")
+    for p in PRECS:
+        check(b(sg, "clang", p, 1, "explicit_cse_pf") > b(sg, "clang", p, 1, "explicit_cse"), f"SG2044: pf no longer helps Clang {p}")
+        for cc in COMPILERS:
+            check(b(sg, cc, p, 1, "explicit_cse_aa_pf") > b(sg, cc, p, 1, "explicit_cse_aa"), f"SG2044: aa_pf not faster than aa {cc} {p}")
+        # the Clang anomaly: about half speed with output last, in every round; GCC does not slow down
+        e = fts[("clang", p, "every", "explicit_cse_aa_pf")]
+        l = fts[("clang", p, "last", "explicit_cse_aa_pf")]
+        check(l["best"] < 0.6 * e["min"], f"SG2044: Clang aa_pf output-last anomaly gone ({p})")
+        check(fts[("gcc", p, "last", "explicit_cse_aa_pf")]["best"] >= fts[("gcc", p, "every", "explicit_cse_aa_pf")]["best"],
+              f"SG2044: GCC aa_pf slower with output last ({p})")
+    # auto-vectorization: never more than 2 % faster than scalar, on either machine
+    for m in ("kone", "sg"):
+        check(float(N[f"{m}:autovecgain"]) < 2.0, f"{m}: autovec gain >= 2 %")
+    # SG2044, one core, split build: Clang is 15-25 % slower than GCC
+    for p in PRECS:
+        check(15 <= float(N[f"sg:clangslower:{p}:1:split"]) <= 25, f"SG2044: Clang split slowdown out of 15-25 % ({p})")
+    # both machines, kernel only: f32 and f64 move about the same bytes per second (within 10 %)
+    for m in ("kone", "sg"):
+        a, c = float(N[f"{m}:gbsk:f32:hi"]), float(N[f"{m}:gbsk:f64:hi"])
+        check(abs(a / c - 1) < 0.10, f"{m}: f32 and f64 traffic differ by more than 10 %")
+    # time split: the halo exchange is below 1 % on one core, the wall pass's share grows with the split loop
+    for m, maxc in (("kone", 8), ("sg", 64)):
+        for p in PRECS:
+            check(float(N[f"{m}:share:{p}:1:split:comm"]) < 1, f"{m}: halo exchange share on one core >= 1 %")
+            check(float(N[f"{m}:share:{p}:1:split:wall"]) > float(N[f"{m}:share:{p}:1:best:wall"]),
+                  f"{m}: wall share of split not above best scalar")
+    report.append("statements in the slide text: all supported by the data")
 
     # ---- numbers.tex ----
     srcs_all = all_sources + verify_src + [bfile, tfile] + srck + srcs

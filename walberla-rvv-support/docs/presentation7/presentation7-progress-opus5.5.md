@@ -114,6 +114,62 @@ Without `default_dtype="float32"`, the default lane count follows f64, which giv
   - The time-share colours violet, aqua and yellow: all-pairs ΔE ≥ 9.1. Aqua and yellow are below 3:1 contrast,
     so every segment that is big enough carries its number.
 
+## Round 2 (2026-11-23): independent check, restructure, simpler text
+
+The user asked to re-read the slides, verify every result, put less text on each slide in simple English, and add
+overview slides as the talk progresses.
+
+**Independent re-check.** I wrote a second parser that shares no code with `slide_data.py`. It recomputed, from the
+raw logs of both machines:
+- every best-of MLUP/s and every ratio over plain and best scalar: all equal `numbers.tex`
+- spreads, energies, the fair-test ratios, the time shares, the per-core numbers, the scaling factors
+
+Two findings changed the slides:
+
+| finding | before | now |
+|---|---|---|
+| On the K1, GCC, 8 cores (f32 and f64), the runs of the split build overlap with those of in place + prefetch (lead 0.5 % and 0.6 %, within the run-to-run spread) | "split loop fastest in 12 of 12" | "clear win in 10 of 12; in the other 2 (GCC, 8 cores) a tie". On the SG2044, the split build's slowest run beats the runner-up's best run in all 24 columns (smallest lead 4.2 %) |
+| The traffic estimates used different methods: the K1's 4.6 GB/s counted only the kernel time, the SG2044's 93-116 GB/s the whole step | mixed | Both machines now count the kernel time only (MLUP/s × total time / kernel time × bytes per cell). K1, 8 cores: 4.2-4.6 GB/s (f32), 4.1-4.4 (f64). SG2044, 64 cores: 125-137 (f32), 129-141 (f64). On each machine f32 and f64 move about the same bytes per second |
+
+**`slide_data.py` additions:**
+- `m:splitclear`: columns where the split build's slowest run beats every other build's best run. The script
+  stops if the tied K1 columns are not exactly GCC 8 cores f32/f64, or if any SG2044 column is a tie.
+- `m:clangslower:...`: how much slower Clang is than GCC, in %.
+- `m:kmlups:p` and `m:gbsk:p:{lo,hi}`: the kernel-only traffic estimate.
+- "Statements in the slide text": the script stops if a claim made in words stops holding:
+  - SG2044 prefetch directions (not in place: slows GCC f32, GCC f64 within 1 %, helps Clang; in place: helps both)
+  - the Clang output-last anomaly (below 0.6 × the slowest normal round) and that GCC does not show it
+  - auto-vectorization gain below 2 % on both machines
+  - Clang 15-25 % slower than GCC in the SG2044 split build at one core
+  - f32 and f64 traffic within 10 % on both machines
+  - halo exchange below 1 % on one core, and a larger wall-pass share for the split build than for best scalar
+
+**Structure:**
+- The question, then the main results.
+- Seven sections. Each starts with an overview slide that shows the current section in colour, its subsections
+  indented below it, and the other sections in grey:
+  1. Background
+  2. Code for two vector widths
+  3. The kernel and its memory traffic
+  4. Part 1: K1
+  5. Part 2: SG2044
+  6. The two machines compared
+  7. Summary
+- The overview frames come from `\AtBeginSection`, with beamer's TOC spacing patched from 1.5em to 0.7em so that
+  all seven sections fit.
+- The frame titles show short section names, so they do not run into long titles.
+
+**Text:**
+- About four bullets per slide, in full, simple sentences, and one short takeaway.
+- Method details went into the grey note or the backup.
+- The first-person "we" is used for what was done.
+
+**Plots:** no stray "1" tick label on the right panels, no thousands comma on the log axes, and the fair-test plot
+re-spaced.
+
+**Build:** 0 errors and 1 open `\todo` (the workspace commit). One 2.7 pt overfull hbox remains in the build-run
+figure, which presentation6 also has. All slides were rendered and looked at.
+
 ## Open
 
 - The workspace commit on the code slide, once the user commits.
