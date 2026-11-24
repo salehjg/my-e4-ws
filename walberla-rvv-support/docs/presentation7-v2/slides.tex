@@ -59,7 +59,6 @@
 \definecolor{psgray}{HTML}{5F6368}
 \definecolor{codebg}{HTML}{F6F8FA}
 \definecolor{psviolet}{HTML}{7A3E9D}   % generated code (build-run figure)
-\newif\ifbrmarkers                       % markers in figures/build-run.tex
 %   Result plots (checked with the dataviz skill's palette validator, light mode):
 %   compiler = colour AND pattern: GCC solid blue, Clang hatched orange (CVD dE 24.7, normal 33.6, both >= 3:1);
 %   time shares: kernel violet, halo exchange aqua, wall pass yellow (all-pairs CVD dE >= 9.1; aqua and yellow
@@ -387,35 +386,20 @@
     Only the kernel is generated as vector code.}
 \end{frame}
 
-% -----------------------------------------------------------------------------
-\subsection{RISC-V vectors}
-\begin{frame}{RISC-V vectors: each chip chooses its register width}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.52\textwidth}
-    \vspace{4mm}
-    \centering\resizebox{0.98\linewidth}{!}{\input{figures/vlen}}
-    \column{0.46\textwidth}
-    \vspace{2mm}
-    \begin{itemize}\small
-      \item \term{RVV 1.0}
-      \item K1: VLEN = 256 bits.\\ SG2044: VLEN = 128 bits.
-      \item One PyStencil backend for both, VLEN is set in compile-time.
-    \end{itemize}
-  \end{columns}
-  \takeaway{Targetting max speedup of \sx{8} on the K1 and \sx{4} on the SG2044 (f32).\\
-    For f64 the limits are \sx{4} and \sx{2}.}
-\end{frame}
-
 % =============================================================================
 \section[Code for two widths]{Code for two vector widths}
 \subsection{From Python to a running program}
 
+%  figures/build-run.tex has the sources (libraries, settings, MPI/OpenMP options, pystencils backends).
 \begin{frame}{From Python to a running program}
   \vspace{1mm}
   \centering\input{figures/build-run}
+
   \vspace{1mm}
-  \raggedright{\scriptsize\color{psgray}\textit{V} is the vector width in bits: 256 on the K1, 128 on the SG2044.\par}
-  \takeaway{Python runs only while the program is built. The program that runs is plain C++.}
+  \raggedright{\scriptsize\color{psgray}\term{RVV}: the RISC-V vector extension. \textit{V} (\term{VLEN}): its
+  register width, 256 bits on the K1 and 128 on the SG2044, so one f32 instruction handles 8 or 4 numbers.
+  OpenMP threads are off (waLBerla's default): one MPI process per core.\par}
+  \takeaway{Python runs only while the program is built. We added one RVV backend that serves both widths.}
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -445,23 +429,6 @@
 \end{frame}
 
 % -----------------------------------------------------------------------------
-%  figures/backends.tex has the sources (the platform classes and targets of the pystencils fork).
-\begin{frame}{pystencils: one backend for each instruction set}
-  \vspace{2mm}
-  \centering\resizebox{\textwidth}{!}{\input{figures/backends}}
-
-  \vspace{1mm}
-  \raggedright
-  \begin{itemize}\small
-    \item A \term{backend} turns the loop into code for one instruction set. The \term{target} chooses the
-          backend and its options, for example the vector width.
-    \item We added one RVV backend for every width, as x86 has one backend for SSE, AVX and AVX-512. Nothing in
-          it is written for a particular chip: the X60 and the C920v2 get the same generator.
-  \end{itemize}
-  \takeaway{One RVV backend, two targets: \code{RISCV\_RVV128} and \code{RISCV\_RVV256}.}
-\end{frame}
-
-% -----------------------------------------------------------------------------
 \begin{frame}{How the build chooses the target}
   \vspace{4mm}
   \centering\resizebox{\textwidth}{!}{\input{figures/vlen-flow}}
@@ -477,44 +444,25 @@
 \end{frame}
 
 % -----------------------------------------------------------------------------
-%  Generated on the laptop with the fork (pystencils 78afe1ff): a 2D 4-point stencil, f32,
-%  Target.RISCV_RVV256 and RISCV_RVV128, cpu.vectorize.enable, assume_inner_stride_one, default_dtype float32
-%  (the generator script is recorded in the progress file). Lines shortened with "...".
-\begin{frame}[fragile]{The generated code at the two widths}
+%  figures/vtypes.tex has the sources (sizeof and intrinsic names checked with g++ and riscv64-linux-gnu-g++).
+%  The earlier slide "The generated code at the two widths" (a 2D stencil generated for RISCV_RVV256 and
+%  RISCV_RVV128 with pystencils 78afe1ff: the same code with 8 or 4 as vl and loop step) is folded into it.
+\begin{frame}{Vector types on x86 and on RVV}
   \vspace{1mm}
-  {\small A small stencil in f32, generated for each target:\par}
+  \centering\resizebox{\textwidth}{!}{\input{figures/vtypes}}
+
   \vspace{2mm}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.49\textwidth}
-    {\scriptsize\bfseries \code{RISCV\_RVV256} (K1)\par}
-    \begin{tikzpicture}
-      \node[codebox,text width=0.93\textwidth] {%
-        \textcolor{psgray}{\#include "rvv.hpp"}\\[2pt]
-        for (x = 1; x < end; x += \textcolor{psred}{\textbf{8}}) \{\\
-        \ \ v = \_\_riscv\_vle32\_v\_f32m1(\&src[x], \textcolor{psred}{\textbf{8}});\\
-        \ \ ...\\
-        \ \ \_\_riscv\_vse32\_v\_f32m1(\&dst[x], r, \textcolor{psred}{\textbf{8}});\\
-        \}};
-    \end{tikzpicture}
-    \column{0.49\textwidth}
-    {\scriptsize\bfseries \code{RISCV\_RVV128} (SG2044)\par}
-    \begin{tikzpicture}
-      \node[codebox,text width=0.93\textwidth] {%
-        \textcolor{psgray}{\#include "rvv\_vlen128.hpp"}\\[2pt]
-        for (x = 1; x < end; x += \textcolor{psred}{\textbf{4}}) \{\\
-        \ \ v = \_\_riscv\_vle32\_v\_f32m1(\&src[x], \textcolor{psred}{\textbf{4}});\\
-        \ \ ...\\
-        \ \ \_\_riscv\_vse32\_v\_f32m1(\&dst[x], r, \textcolor{psred}{\textbf{4}});\\
-        \}};
-    \end{tikzpicture}
-  \end{columns}
-  \vspace{3mm}
-  \begin{itemize}\small
-    \item \code{vle32} loads and \code{vse32} stores. The last argument (\term{vl}) is how many numbers one
-          instruction handles.
-    \item The type \code{f32m1} means one register of f32 numbers: 8 on the K1, 4 on the SG2044.
+  \raggedright
+  \begin{itemize}\footnotesize
+    \item An x86 type has a fixed size, so the width is part of every name. Going from AVX2 to AVX-512 renames
+          every type and intrinsic. An RVV type has no fixed size, so the names stay the same.
+    \item This is not what lets one backend serve both widths: pystencils' x86 backend also serves SSE, AVX and
+          AVX-512, by switching the names. Both fix the width when they generate the code. On RVV, VLEN then
+          enters only as a number.
+    \item The sizeless types would also allow one program for every width, by asking the chip for \code{vl} at
+          run time (\code{\_\_riscv\_vsetvl\_e32m1(n)}). We do not use this: each build is made for one width.
   \end{itemize}
-  \takeaway{Only two numbers change between the widths: \code{vl} and the loop step.}
+  \takeaway{When the width changes, x86 code changes its names, but RVV code changes only two numbers.}
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -576,7 +524,8 @@
 \section[The kernel]{The kernel and its memory traffic}
 \subsection{Updating one cell}
 
-\begin{frame}{The stencil: the cells needed to update one cell}
+% Only the last overlay (everything shown) is kept (user, 2026-11-24).
+\begin{frame}<4>{The stencil: the cells needed to update one cell}
   \begin{columns}[T,onlytextwidth]
     \column{0.53\textwidth}
     \vspace{4mm}
@@ -595,78 +544,50 @@
 \end{frame}
 
 % -----------------------------------------------------------------------------
+%  figures/fzyx.tex and figures/ghost.tex have the sources (waLBerla's Field.hpp, the strides of our arrays).
 \begin{frame}{How the 19 values are stored in memory}
-  \centering\input{figures/field-layout}
+  \vspace{0mm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.53\textwidth}
+    {\small\bfseries Layout \term{fzyx}: each value has its own array\par}
+    \vspace{1mm}
+    \begin{tikzpicture}
+      \node[codebox,font=\ttfamily\scriptsize,anchor=north west,inner sep=3pt] {%
+        f\ =\ np.empty((19,\ 66,\ 66,\ 68),\ np.float32)\ \ \textcolor{psgray}{\#\ fzyx}\\
+        \textcolor{psorange!85!black}{\textbf{f[i,\ z,\ y,\ x]}}\ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{\#\ the\ value\ $f_i$\ of\ cell\ (x,\ y,\ z)}};
+    \end{tikzpicture}\par
+    {\tiny\color{psgray}66 = 64 cells + 2 ghost cells (waLBerla counts them as $-1$ and 64); 68 = 66 + 2 values of
+    padding (f32 only).\par}
+    \vspace{0.5mm}
+    \input{figures/fzyx}
+    \column{0.44\textwidth}
+    {\small\bfseries The \term{ghost layer} around each block\par}
+    \vspace{3mm}
+    \centering\input{figures/ghost}
 
-  \raggedright
-  \uncover<6->{\footnotesize Each of the 19 values has its own 3D array like this one (\term{layout fzyx}).
-  A \term{ghost layer} of one cell surrounds the block and holds the neighbour's values.\par}
-  \takeaway{Neighbours in $x$ are next to each other. The 19 values of one cell are 1.2\,MB apart (f32).}
+    \vspace{1mm}
+    \raggedright
+    {\scriptsize A 64$^3$ block is stored as 66$^3$ cells. The kernel reads neighbour values from the ghost layer
+    but updates only the inner cells. After each step, the halo exchange refills the ghost layers.\par}
+  \end{columns}
+  \takeaway{fzyx means \code{f[i, z, y, x]}: $x$ is the fastest index. The 19 values of one cell are 1.2\,MB apart.}
 \end{frame}
 
-% -----------------------------------------------------------------------------
-\begin{frame}{The kernel code: updating one cell, step by step}
-  \vspace{-2.5mm}
-  \centering\input{figures/kernel-code}
 
-  \raggedright
-  {\scriptsize\color{psgray}\code{f} holds the 19 arrays of old values, \code{g} the 19 arrays of new values.
-  The numbers are the distances from the last slide in f32 values: a row is 68, a plane 4488, an array 296\,208.
-  The real loop has about 300 lines. In the last step, RVV updates L = 8 (K1) or 4 (SG2044) cells at once.\par}
-  \takeaway{Each cell update loads from 19 arrays, does about 200 operations and stores into 23 arrays.}
-\end{frame}
 
 % -----------------------------------------------------------------------------
 \subsection{Cache lines and data streams}
-%  figures/cache-line.tex has the sources of the line sizes (K1: read on the board; SG2044: SG2042 device tree).
-\begin{frame}{Cache lines and streams}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.56\textwidth}
-    \centering\input{figures/cache-line}
+%  figures/stream-why.tex has the sources (cache line sizes, the stream limit of the K1, the 42 arrays).
+\begin{frame}{What a stream is, and why it matters}
+  \vspace{2mm}
+  \centering\input{figures/stream-why}
 
-    \vspace{0.5mm}
-    {\footnotesize\renewcommand{\arraystretch}{1.1}
-    \begin{tabular}{@{}lrr@{}}
-      \toprule
-      & \textbf{K1} & \textbf{SG2044}\\
-      \midrule
-      cache line & 64 bytes & 64 bytes\\
-      values in one line, f32 / f64 & 16 / 8 & 16 / 8\\
-      f32 values in one vector load & 8 & 4\\
-      \bottomrule
-    \end{tabular}\par}
-    \todo{SG2044: 64 B from the SG2042 device tree; confirm on monte3.}
-    \column{0.42\textwidth}
-    \vspace{1mm}
-    \begin{itemize}\small
-      \item The memory does not send single numbers to the cache. It sends whole \term{cache lines} of 64 bytes.
-      \item The loop walks along $x$, so it uses one cache line after the other.
-      \item<2-> A \term{stream} is such a run of consecutive cache lines that the loop walks through in order.
-      \item<2-> The \term{hardware prefetcher} notices a stream and loads the next lines before the loop needs
-            them.
-    \end{itemize}
-  \end{columns}
-  \takeaway{Walking through one array along $x$ is one stream: one cache line after the other.}
-\end{frame}
-
-% -----------------------------------------------------------------------------
-\begin{frame}{Which accesses belong to the same stream}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.6\textwidth}
-    \vspace{1mm}
-    \input{figures/stream-count}
-    \column{0.38\textwidth}
-    \vspace{1mm}
-    \begin{itemize}\small
-      \item If one array held all values, $x-1$, $x$ and $x+1$ would lie in the same cache line: one stream.
-      \item The rows $y\pm1$ (272 bytes away) and the planes $z\pm1$ (18\,KB away) lie in other lines. Each of
-            them is a stream of its own: 5 in total.
-      \item<2-> In our kernel, each value has its own array, 1.2\,MB after the previous one. So each of the 19
-            reads is a stream of its own.
-    \end{itemize}
-  \end{columns}
-  \takeaway{Two accesses belong to the same stream only if they fall into the same or the next cache line.
-    Our loop reads 19 streams.}
+  \vspace{1mm}
+  \raggedright
+  {\scriptsize\color{psgray}Cache lines are 64 bytes on both machines. The limit of about 20 streams is measured in
+  Part 1. \todo{SG2044 line size: from the SG2042 device tree; confirm on monte3.}\par}
+  \takeaway{A stream is one array walked through line by line. The prefetcher helps every stream it follows, but
+    it can follow only about 20, and our loop has 42.}
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -721,7 +642,7 @@
 
 % -----------------------------------------------------------------------------
 \begin{frame}{Fewer streams, way 2: the split loop}
-  \vspace{4mm}
+  \vspace{2mm}
   \centering\input{figures/split-loop}
 
   \vspace{2mm}
@@ -729,15 +650,82 @@
   \begin{itemize}\small
     \item Collide needs $\rho$ and $u$, and they depend on all 19 values. So the split loop first adds up the values
           in four passes of at most 5 arrays, and keeps the sums in a small scratch array (\code{acc}).
-    \item A block of 2 rows is small enough to stay in the L1 cache. So the three collide passes reload their
-          values from L1, not from memory.
+    \item A block of 2 rows (9.7\,KB, plus 4.6\,KB of scratch) stays in the L1 cache. So the collide passes reload
+          their values from L1, not from memory.
   \end{itemize}
-  \vspace{1mm}
-  {\scriptsize\color{psgray}One block: 19 values $\times$ 128 cells $\times$ 4 bytes = 9.7\,KB, plus 4.6\,KB of
-  scratch. L1 data cache: 32\,KB per core on the K1, 64\,KB on the SG2044. f64: blocks of 1 row, the same size in
-  bytes.\par}
   \takeaway{Each short pass uses at most 7 arrays, so the hardware prefetcher can follow it. The split loop always
     updates in place.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  figures/split-action.tex has the source (lbm_split.py: the passes and their arrays).
+\begin{frame}{The split loop in action: one block, 8 passes}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.6\textwidth}
+    \vspace{0mm}
+    \centering\input{figures/split-action}
+    \column{0.38\textwidth}
+    \vspace{3mm}
+    \begin{itemize}\small
+      \item All 8 passes run over one block of 2 rows (128 cells). Then the loop moves on to the next block.
+      \item Passes 1 to 4 read 5, 5, 5 and 4 arrays and add up mass and momentum in the scratch.
+      \item Pass 5 turns the sums into $\rho$ and $u$.
+      \item Passes 6 to 8 reload the values (from L1), collide them and store them in place. Each value goes
+            with its opposite direction, for example $f_1$ (north) with $f_2$ (south).
+    \end{itemize}
+  \end{columns}
+  \takeaway{Each pass walks through at most 7 arrays in memory. The scratch is small and stays in L1.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  figures/kernel-cse.tex has the source (the generated StreamCollide of the scalar CSE build) and the counts.
+\begin{frame}{The kernel code: updating one cell}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.67\textwidth}
+    \vspace{1mm}
+    \input{figures/kernel-cse}
+    \column{0.31\textwidth}
+    \vspace{1mm}
+    \scriptsize
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item \textcolor{psorange!85!black}{\code{f[i, z, y, x]}}: a load of the value $f_i$ from a neighbour (layout
+            slide). The code reads 19 different addresses.
+      \item \textcolor{psviolet}{\textbf{\code{xi\_5}, \code{vel0Term}}}: \term{CSE}. A part of the formulas that is
+            needed several times is computed once (\code{xi\_5} is used 3 times).
+      \item Every other name (\code{xi\_5}, \code{rho}, \ldots, about 50 per cell) is kept in a \term{register}, not
+            in memory. In the RVV code these are vector registers.
+      \item \textcolor{psteal!65!black}{\textbf{\code{rho}, \code{u\_0}}}: the density and velocity of the cell.
+      \item \textcolor{psblue!85!black}{\textbf{\code{g[\ldots] =}, \code{rho\_out[\ldots] =}}}: the 19 new values
+            and 4 outputs are stored.
+    \end{itemize}
+  \end{columns}
+  \vspace{1mm}
+  {\scriptsize\color{psgray}The generated C++ of the scalar build with CSE, written in Python and shortened; names as
+  generated. The RVV build
+  has the same statements, but each one works on L = 8 (K1) or 4 (SG2044) cells at once.\par}
+  \takeaway{Per cell: 19 loads, about 200 arithmetic operations in registers, 23 stores.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  figures/split-cse.tex has the source (the generated split-loop code: driver, passes m1, macro, c0).
+\begin{frame}{The split loop in code}
+  \vspace{1mm}
+  \centering\input{figures/split-cse}
+
+  \vspace{1.5mm}
+  \raggedright
+  {\scriptsize
+  \textcolor{psorange!85!black}{\code{f[\ldots]}} loaded,
+  \textcolor{psblue!85!black}{\textbf{\code{f[\ldots] =}}} stored in place,
+  \textcolor{ccomm!65!black}{\textbf{\code{acc}, \code{scr}}} the scratch of the block (in L1),
+  \textcolor{psviolet}{\textbf{\code{xi\_}, \code{e\_}, \code{o\_}}} CSE values,
+  \textcolor{psteal!65!black}{\textbf{\code{rho}, \code{u}}} density and velocity; all other names are registers.
+  In the even step the new $f_1$ goes into the slot of $f_2$ and the other way round (the AA swap).\par}
+  \vspace{0.5mm}
+  {\scriptsize\color{psgray}The generated C++ of the split build, written in Python and shortened; names as
+  generated. The RVV
+  code has the same statements on L cells at once.\par}
+  \takeaway{The same update as the one loop, but no pass loads more than 7 of the 19 arrays.}
 \end{frame}
 
 % =============================================================================
@@ -808,51 +796,28 @@
 \end{frame}
 
 % -----------------------------------------------------------------------------
+%  figures/prefetch-code.tex has the sources. Split loop without prefetch: kernel lab, docs/notes3/board-logs/
+%  lab7.log (late lines per cell 1.8 in place vs 0.34 split; split with prefetch 2-13 % slower). X60 executes
+%  Zicbop: stream test 176 -> 90 cycles per line (board-logs/board/streams-pattern.log).
 \begin{frame}{K1: software prefetch in the generated code}
-  \vspace{0mm}
-  \centering\input{figures/prefetch-insert}
-
-  \vspace{0mm}
-  {\scriptsize\color{psgray}42 prefetches per step: 19 for the arrays the loop reads, 23 for those it writes.
-  A step covers half a line, so each line is requested twice, which is cheap.\par}
-  \takeaway{A new pass adds one prefetch for every array of a vector loop. The loads stay as they were.}
-\end{frame}
-
-% -----------------------------------------------------------------------------
-\begin{frame}{K1: the RISC-V prefetch instruction}
   \begin{columns}[T,onlytextwidth]
-    \column{0.56\textwidth}
-    \input{figures/zicbop}
-    \column{0.41\textwidth}
+    \column{0.52\textwidth}
+    \vspace{4mm}
+    \input{figures/prefetch-code}
+    \column{0.45\textwidth}
     \vspace{1mm}
     \begin{itemize}\small
-      \item RVV has no prefetch. It comes from a small scalar extension, \term{Zicbop}.
-      \item Its target register is x0, which is always 0. So it never produces a value and cannot replace a load.
-      \item It is a \term{hint}: cores without Zicbop run it as an instruction that does nothing.
-      \item The X60 runs Zicbop, but its list of extensions does not name it. So we write the instruction by hand
-            (\term{inline assembly}).
+      \item A new pass in pystencils adds one prefetch per array, 128 bytes (two cache lines) ahead. The loads
+            stay as they were.
+      \item The prefetch comes from a small RISC-V extension, \term{Zicbop}. It writes to x0, which is always 0,
+            so it returns no value. Cores without Zicbop skip it.
+      \item The X60 runs it, although its list of extensions does not name Zicbop. A cache line then costs 90
+            cycles instead of 176.
+      \item The split loop needs no prefetch: each pass uses at most 7 arrays, and the hardware prefetcher
+            follows them. With prefetch added, it was 2 to 13\,\% slower.
     \end{itemize}
   \end{columns}
-  \takeaway{Prefetch is safe on any RISC-V core. On the X60 it cuts the cost of a line from 176 to 90 cycles.}
-\end{frame}
-
-% -----------------------------------------------------------------------------
-%  Unchanged from presentation6 (kernel lab: docs/notes3/board-logs/lab7.log; streams-ldc.log).
-\begin{frame}{K1: the split loop needs no prefetch}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.57\textwidth}
-    \vspace{0.5mm}
-    \input{figures/split-code}
-    \column{0.41\textwidth}
-    \vspace{1mm}
-    \machine{K1}
-    \begin{itemize}\small
-      \item Each pass uses at most 7 arrays, so the hardware prefetcher keeps up.
-      \item Late cache lines per cell: 1.8 in place, 0.34 with the split loop.
-      \item With prefetch added, the split loop was 2 to 13\,\% slower.
-    \end{itemize}
-  \end{columns}
-  \takeaway{So the split build has no prefetch, on both machines.}
+  \takeaway{The in-place RVV build gets one prefetch per array. The split loop needs none.}
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -1290,6 +1255,9 @@
     \item Tuning for each chip: register grouping (LMUL), prefetch distance, size of the split passes. The generator
           has these options, but we have not tested them yet.
     \item Does the memory layout (huge pages) matter on the SG2044 as it does on the K1?
+    \item Would MPI and OpenMP together help? For example, one MPI process for each group of cores that shares an
+          L2 cache, with one OpenMP thread per core. That means fewer, larger blocks and less halo exchange. All
+          our runs so far use MPI only, with OpenMP off.
   \end{itemize}
 \end{frame}
 
@@ -1361,7 +1329,6 @@
     \column{0.49\textwidth}
     \scriptsize
     \begin{description}\setlength{\itemsep}{0.8pt}
-      \item[Hint] an instruction that cores without the extension run as an instruction that does nothing.
       \item[Huge page] a 2\,MB page of memory instead of 4\,KB.
       \item[In order] a core that runs instructions strictly in program order, so it waits for each missing value.
       \item[Interleaved rounds] each round runs every build once, so slow changes affect all builds alike.

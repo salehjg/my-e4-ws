@@ -1,96 +1,66 @@
-% From source to a running simulation (report r02, chapter "Code Generation" and its figure
-% build-flow.tex). CMake configures; during "make", CMake runs the Python generator scripts
-% (sweepgen sets jit = no_jit: generate only), then compiles the generated C++ together with
-% the hand-written waLBerla core. The executable runs without Python. The time loop runs the kernel, the halo
-% exchange and the wall pass (generated index-list loops, Target.GenericCPU: plain C++ in every build). Everything ran on the
-% board. Violet = generated code. Each column is one step; the small arrows between the
-% headers carry the results from step to step (no wires across columns).
-%
-% With \brmarkerstrue (slide "Where each change lives") numbered markers show what we changed:
-% blue = part 1, teal = part 2 (10 to 12: the last three changes, see the open-work slide).
-% The markers sit on the nodes a2, g0, g2, g3, i1, i2 and cc.
+% Slide "From Python to a running program" (presentation7-v2, redrawn after the user's review: only the libraries,
+% their real names, and the important settings on the arrows; the pystencils backends, formerly a slide of their
+% own, are the panel on the right).
+% Libraries (apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU.py:37-45 imports pystencils, lbmpy, pystencilssfg and
+% sweepgen): CMake configures and measures VLEN (cmake/compileroptions/RiscvVlen.cmake, vlen-flow.tex); during
+% make it runs the generator script; lbmpy derives the update rule (D3Q19, AA or pull streaming, CSE); pystencils
+% builds the loop (target RISCV_RVV<V>, prefetch distance, split, from the script's options); sweepgen with
+% pystencils-sfg writes the C++ files. GCC or Clang compiles them with the waLBerla core library.
+% MPI and OpenMP: waLBerla has both options; our build trees have WALBERLA_BUILD_WITH_MPI=ON and
+% WALBERLA_BUILD_WITH_OPENMP=OFF (OFF is waLBerla's default, CMakeLists.txt:71; e.g. build/presentation4-x86/
+% gcc-f32/CMakeCache.txt). So each core runs one MPI process, without threads.
+% Backends (right): backend/platforms/ of the pystencils fork: GenericCpu, X86VectorCpu (SSE, AVX, AVX-512),
+% NeonCpu, SveCpu, RvvCpu (one class, VLEN 128 or 256), CUDA, HIP, SYCL.
 \begin{tikzpicture}[
-    hdr/.style={font=\scriptsize\bfseries,text=white,align=center,inner sep=2pt,
-      minimum height=8mm,anchor=north west},
-    b/.style={box,font=\scriptsize,minimum height=5.5mm,inner sep=2pt,
+    lib/.style={box,font=\scriptsize,minimum height=6mm,inner sep=1.5pt,
       execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
-    gen/.style={b,fill=psviolet!12,draw=psviolet!80!black},
-    hdrarr/.style={fill=psgray!80},
-    mk/.style={circle,text=white,font=\tiny\bfseries,inner sep=0pt,minimum size=3.7mm}]
-  \ifbrmarkers\tikzset{mkl/.style={align=left}}\else\tikzset{mkl/.style={}}\fi
-  % ---- column headers, with arrows from step to step --------------------------------
-  \node[hdr,fill=psblue!75!black,minimum width=2.6cm] at (0,0)
-    {1 configure\\[-1pt]{\mdseries cmake reads the CPU}};
-  \node[hdr,fill=psblue!75!black,minimum width=4.1cm] at (2.85,0)
-    {2 generate code\\[-1pt]{\mdseries make runs Python}};
-  \node[hdr,fill=psblue!75!black,minimum width=3.4cm] at (7.2,0)
-    {3 compile\\[-1pt]{\mdseries make runs GCC or Clang}};
-  \node[hdr,fill=psteal!80!black,minimum width=3.55cm] at (10.85,0)
-    {4 run\\[-1pt]{\mdseries no Python}};
-  \foreach \x in {2.62,6.97,10.62}
-    \fill[hdrarr] (\x,-0.22) -- ++(0.2,-0.18) -- ++(-0.2,-0.18) -- cycle;
-
-  % ---- 1 configure: two settings for the later steps --------------------------------
-  \node[b,text width=2.4cm] (a3) at (1.3,-1.4) {\textbf{target} for step 2:\\RVV with this CPU's \textit{V}};
-  \node[b,text width=2.4cm,font=\tiny] (a2) at (1.3,-2.55)
-    {{\scriptsize\textbf{flags} for step 3:}\\\code{-march=rv64gcv\_zvl}\textit{V}\code{b}};
-  \node[anchor=north west,font=\tiny,align=left,inner sep=0pt] at (0.1,-3.55)
-    {\tikz\fill[psviolet!20,draw=psviolet!80!black] (0,0) rectangle (2.4mm,1.6mm);\ generated code\\[3pt]
-     \tikz\draw[psgray!80] (0,0) rectangle (2.4mm,1.6mm);\ written by hand};
-
-  % ---- 2 generate: the Python tool chain ---------------------------------------------
-  \node[b,text width=3.85cm] (g0) at (4.9,-1.27) {\textbf{generator script} of the program};
-  \node[b,text width=3.85cm] (g1) at (4.9,-2.17) {\textbf{lbmpy}: formulas for one cell};
-  \node[b,text width=3.85cm] (g2) at (4.9,-3.2) {\textbf{pystencils}: loop over all cells,\\C++ with RVV};
-  \node[b,text width=3.85cm] (g3) at (4.9,-4.35) {\textbf{sweepgen}: writes the C++ files,\\a class around the loop};
-  \foreach \u/\v in {g0/g1,g1/g2,g2/g3} \draw[arr] (\u) -- (\v);
-
-  % ---- 3 compile: hand-written and generated C++ together ----------------------------
-  \node[b,mkl,text width=3.15cm] (i1) at (8.9,-1.27) {\textbf{waLBerla core} library};
-  \node[b,mkl,text width=3.15cm] (i2) at (8.9,-1.92) {the program's \code{main()}};
-  \node[gen,text width=3.15cm] (i0) at (8.9,-2.57) {generated C++ files};
-  \begin{scope}[on background layer]
-    \node[fill=psgray!12,rounded corners=2pt,inner sep=2.5pt,fit=(i1)(i2)(i0)] (src) {};
+    py/.style={lib,fill=psviolet!10,draw=psviolet!80!black},
+    cpp/.style={lib,fill=psblue!7,draw=psblue!70!black},
+    pa/.style={font=\tiny,text=psorange!65!black,inner sep=1pt,align=center,fill=white,fill opacity=0.9,
+      text opacity=1},
+    be/.style={box,quiet,font=\tiny,text width=21mm,minimum height=5mm,inner sep=1.5pt},
+    tg/.style={box,added,fill=psteal!5,font=\tiny,text width=20mm,minimum height=4.5mm,inner sep=1pt}]
+  % ---- CMake on top --------------------------------------------------------------------------
+  \node[lib,fill=psgray!10,minimum width=9.1cm,minimum height=5.5mm] (cm) at (4.55,0)
+    {\textbf{CMake} (configure): measures the vector width \textit{V} of this CPU and sets the options};
+  % ---- the Python libraries, run once while the program is built -------------------------------
+  \node[py,text width=23mm] (gs) at (1.2,-1.3) {\textbf{generator script}\\\code{SweepgenLdcCPU.py}};
+  \node[py,text width=26mm] (lb) at (4.55,-1.3) {\textbf{lbmpy}: the formulas\\for one cell};
+  \node[py,text width=26mm] (ps) at (4.55,-2.4) {\textbf{pystencils}: the loop\\over all cells};
+  \node[py,text width=26mm] (sg) at (4.55,-3.5) {\textbf{sweepgen} and\\\textbf{pystencils-sfg}: C++ files};
+  % ---- the C++ side ----------------------------------------------------------------------------
+  \node[cpp,text width=23mm] (wc) at (7.95,-1.3) {\textbf{waLBerla core}\\(C++ library)};
+  \node[cpp,text width=23mm] (cc) at (7.95,-3.5) {\textbf{GCC 14.2} or \textbf{Clang}};
+  \node[cpp,text width=23mm,fill=psteal!10,draw=psteal!80!black] (ex) at (7.95,-4.6) {\textbf{the program}\\(no Python)};
+  \node[cpp,text width=23mm] (mp) at (1.2,-4.6) {\textbf{Open MPI}\\(messages between processes)};
+  % ---- arrows and the settings they carry --------------------------------------------------------
+  \draw[arr] (gs.north |- cm.south) -- (gs.north) node[pos=0.5,right,pa] {\textit{V}; f32 or f64};
+  \draw[arr] (wc.north |- cm.south) -- (wc.north) node[pos=0.5,left,pa,align=right] {MPI on,\\OpenMP off};
+  \draw[arr] ([xshift=-1mm]cm.south east) -- ++(0,-0.25) -| ([xshift=3.5mm]cc.east) -- (cc.east);
+  \node[pa,anchor=west,align=left] at ([xshift=3.8mm]wc.east |- 0,-2.4)
+    {\code{-march=}\\\code{rv64gcv\_}\\\code{zvl}\textit{V}\code{b},\\\code{-O3}};
+  \draw[arr] (gs) -- (lb) node[midway,above=1pt,pa] {D3Q19,\\AA, CSE};
+  \draw[arr] (lb) -- (ps) node[midway,right=1pt,pa] {update rule};
+  \draw[arr] (gs.south) |- (ps.west) node[pos=0.75,above=1pt,pa] {target \code{RISCV\_RVV}\textit{V},\\prefetch, split};
+  \draw[arr] (ps) -- (sg) node[midway,right=1pt,pa] {the loop};
+  \draw[arr] (sg) -- (cc) node[midway,above=1pt,pa] {generated\\C++};
+  \draw[arr] (wc) -- (cc) node[midway,right=1pt,pa] {library};
+  \draw[arr] (cc) -- (ex);
+  \draw[arr,{Stealth[length=2mm]}-{Stealth[length=2mm]}] (mp) -- (ex)
+    node[midway,above=1pt,pa] {\code{mpirun -np} $N$: one process per core};
+  % ---- the pystencils backends ----------------------------------------------------------------
+  \begin{scope}[shift={(10.25,0)}]
+    \node[font=\scriptsize\bfseries,anchor=north west,inner sep=0pt,text=psviolet!70!black] at (0,0.28)
+      {the backends of pystencils};
+    \node[be,anchor=north west] (b1) at (0,-0.1) {\textbf{generic CPU}: plain C++};
+    \node[be,anchor=north west] (b2) at (0,-0.72) {\textbf{x86}: SSE, AVX, AVX-512};
+    \node[be,anchor=north west] (b3) at (0,-1.34) {\textbf{ARM}: NEON, SVE};
+    \node[box,added,font=\tiny,text width=21mm,inner sep=1.5pt,anchor=north west] (b4) at (0,-1.96)
+      {\textbf{RISC-V RVV} (this work):\\one backend, two targets};
+    \node[tg,anchor=north west] (t1) at (0.4,-2.85) {\code{RISCV\_RVV128}: SG2044};
+    \node[tg,anchor=north west] (t2) at (0.4,-3.42) {\code{RISCV\_RVV256}: K1};
+    \node[be,anchor=north west] (b5) at (0,-4.1) {\textbf{GPU}: CUDA, HIP, SYCL};
+    \draw[psteal!80!black,semithick] ([xshift=1.5mm]b4.south west) |- (t1.west);
+    \draw[psteal!80!black,semithick] ([xshift=1.5mm]b4.south west) |- (t2.west);
   \end{scope}
-  \node[b,text width=3.15cm,fill=psgray!8] (cc) at (8.9,-3.6) {\textbf{GCC or Clang}\\with the flags of step 1};
-  \node[b,text width=3.15cm] (exe) at (8.9,-4.47) {the executable};
-  \draw[arr] (src) -- (cc);
-  \draw[arr] (cc) -- (exe);
-
-  % ---- 4 run: set up, then the time loop (kernel, halo exchange, wall pass; notes5 F16) ----
-  \node[b,text width=2.8cm] (r0) at (12.45,-1.2) {set up blocks and fields};
-  \node[gen,text width=2.8cm] (r1) at (12.45,-2.05) {\textbf{generated kernel}\\on each block};
-  \node[b,text width=2.8cm] (r2) at (12.45,-2.88) {\textbf{halo exchange}};
-  \node[gen,text width=2.8cm] (rw) at (12.45,-3.6) {\textbf{wall pass}, plain C++};
-  \node[b,text width=2.8cm] (r3) at (12.45,-4.45) {print MLUP/s and checksum};
-  \draw[arr] (r0) -- (r1);
-  \draw[arr] (r1) -- (r2);
-  \draw[arr] (r2) -- (rw);
-  \draw[arr] (rw.east) -- ++(0.12,0) |- (r1.east);
-  \node[lbl,rotate=90] at (14.27,-2.82) {200 steps};
-  \draw[arr] (rw) -- (r3);
-
-  % ---- time bands ----------------------------------------------------------------------
-  \fill[psblue!8] (0,-4.95) rectangle (10.6,-5.37);
-  \node[font=\scriptsize,text=psblue!75!black] at (5.3,-5.16)
-    {\textbf{build time}: once, on the board (all builds together take hours)};
-  \fill[psteal!10] (10.85,-4.95) rectangle (14.4,-5.37);
-  \node[font=\scriptsize,text=psteal!75!black] at (12.62,-5.16) {\textbf{run time}: seconds};
-
-  % ---- markers: what we changed ------------------------------------------------------
-  \ifbrmarkers
-    \tikzset{mk/.append style={minimum size=3.2mm}}
-    %   \brmark: on top of the box's upper border; \brmarkin: inside the box, at its right end
-    \def\brmark#1#2#3#4{% node, slot (0 = rightmost), colour, number
-      \node[mk,fill=#3] at ([xshift={-2.2mm-#2*3.6mm},yshift=1.3mm]#1.north east) {#4};}
-    \def\brmarkin#1#2#3#4{%
-      \node[mk,fill=#3] at ([xshift={-2.2mm-#2*3.6mm}]#1.east) {#4};}
-    \brmark{a2}{0}{psblue}{1}   \brmark{a2}{1}{psteal}{8}
-    \brmark{g0}{0}{psblue}{3}
-    \brmark{g2}{0}{psblue}{2}   \brmark{g2}{1}{psteal}{5}   \brmark{g2}{2}{psteal}{12}
-    \brmark{g3}{0}{psteal}{6}   \brmark{g3}{1}{psteal}{10}
-    \brmarkin{i1}{0}{psteal}{11} \brmarkin{i1}{1}{psteal}{7}
-    \brmarkin{i2}{0}{psteal}{9}    \brmarkin{i2}{1}{psblue}{3}
-    \brmark{cc}{0}{psblue}{4}
-  \fi
-\end{tikzpicture}
+\end{tikzpicture}%

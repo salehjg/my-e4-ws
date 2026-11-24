@@ -1,5 +1,5 @@
 % Slide "How many streams the stencil needs" (new in presentation5, after the user asked how many streams the
-% flat arrays of the layout slide stand for). Same strip, numbers and colours as figures/field-layout.tex: the
+% flat arrays of the layout slide stand for). Same strip, numbers and colours as figures/fzyx.tex: the
 % 3 x 3 x 3 cube stored x fastest, then y, then z; cell 13 in the middle (blue), its 6 face neighbours (teal).
 % Top: if ONE array held all 7 values, the reads at 12, 13, 14 (same row, same cache line) form one stream,
 % and 10 (row y-1), 16 (row y+1), 4 (plane z-1), 22 (plane z+1) one each: 5 streams (the classic 7-point
@@ -13,7 +13,7 @@
 % Overlays: 1 one array, 5 streams; 2 our kernel, 7 arrays, 7 streams; 3 all 19 arrays and the total.
 % presentation7-v2 (user's review: "missing the important thing: the cache line and where it falls"): redrawn
 % with real distances instead of the 3 x 3 x 3 toy array. Each piece is ONE cache line of 64 B = 16 f32 values
-% (cache-line.tex). Real f32 strides of our arrays (field-layout.tex): row 68 values = 272 B, plane 4488 values =
+% (cache-line.tex). Real f32 strides of our arrays (fzyx.tex): row 68 values = 272 B, plane 4488 values =
 % 17 952 B (about 18 KB), array 296 208 values = 1 184 832 B (about 1.2 MB). The cell x is drawn at position 6 of
 % its line, so x-1 and x+1 lie in the same line (at a line border one of them falls into the next line, which the
 % loop needs next anyway).

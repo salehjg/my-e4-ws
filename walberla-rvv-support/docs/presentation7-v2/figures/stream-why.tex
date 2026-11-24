@@ -1,0 +1,74 @@
+% Slide "What a stream is, and why it matters" (presentation7-v2; replaces cache-line.tex and stream-count.tex after
+% the user's review: one picture instead of 5 overlays).
+% Cache line 64 B: K1 read on the board (sysfs coherency_line_size, device tree); SG2044 from the SG2042 device
+% tree (same C920 family; todo on the slide). 64 B = 16 f32 = 8 f64.
+% Left: one array read along x; lines already used, the line in use, two lines the hardware prefetcher has
+% requested after seeing the regular pattern, lines not touched yet.
+% Right: the prefetcher follows a limited number of streams: on the K1 about 20 (Part 1, figures/streams.tex: up
+% to 19 read streams the lines arrive in time, from about 21 on every vector load waits, about 360 cycles).
+% Our loop: 19 read + 19 written + 4 outputs = 42 arrays = 42 streams (AB pattern; stream-def.tex).
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{ln/.style={draw=black!75,line width=0.8pt},
+           sub/.style={draw=psgray!40,line width=0.2pt},
+           done/.style={fill=psgray!30}, now/.style={fill=psteal!65}, nxt/.style={fill=psteal!20},
+           pfb/.style={box,info,font=\scriptsize,align=center,inner sep=2pt,minimum height=5mm},
+           ttl/.style={font=\small\bfseries,anchor=west,inner sep=0pt},
+           tx/.style={font=\scriptsize,align=left,anchor=north west,inner sep=0pt},
+           bl/.style={font=\tiny,text=psgray!90!black,inner sep=1pt,align=center}}
+  \path (0,0.2) rectangle (14.2,4.45);
+  % ================= 1: what a stream is ===================================================
+  \node[ttl] at (0,4.3) {1.\ A stream};
+  \begin{scope}[shift={(2.2,4.22)}]
+    \fill[done] (0,0) rectangle ++(0.28,0.16); \node[bl,anchor=west] at (0.32,0.08) {used};
+    \fill[now] (1.05,0) rectangle ++(0.28,0.16); \node[bl,anchor=west] at (1.37,0.08) {in use};
+    \fill[nxt] (2.2,0) rectangle ++(0.28,0.16); \draw[psgray!40] (2.2,0) rectangle ++(0.28,0.16);
+    \node[bl,anchor=west] at (2.52,0.08) {loaded early};
+  \end{scope}
+  \def\sx{1.05}\def\lw{0.66}\def\sy{2.3}\def\sh{0.48}
+  \foreach \k/\st in {0/done,1/done,2/done,3/now,4/nxt,5/nxt,6/,7/} {
+    \ifx\st\empty\else\fill[\st] (\sx+\k*\lw,\sy) rectangle ++(\lw,\sh);\fi
+    \foreach \j in {1,...,15} \draw[sub] (\sx+\k*\lw+\j*\lw/16,\sy) -- ++(0,\sh);
+    \draw[ln] (\sx+\k*\lw,\sy) rectangle ++(\lw,\sh);
+  }
+  \node[font=\scriptsize,anchor=east] at (\sx-0.06,\sy+\sh/2) {array $f_0$};
+  \draw[arr] (\sx,\sy-0.18) -- (\sx+8*\lw,\sy-0.18) node[pos=0.33,below,bl] {addresses grow: the loop walks along $x$};
+  \draw[decorate,decoration={brace,amplitude=2.5pt,mirror},psgray!90!black] (\sx+7*\lw,\sy-0.5) -- (\sx+8*\lw,\sy-0.5);
+  \node[bl,anchor=north east] at (\sx+8*\lw,\sy-0.62) {one cache line: 64 B = 16 f32 or 8 f64};
+  %   the loop and the prefetcher
+  \node[font=\scriptsize,text=psteal!40!black,anchor=south,align=center] (lp) at (\sx+1.3*\lw,\sy+0.9) {the loop\\reads here};
+  \draw[-{Stealth[length=1.8mm]},thick,psteal!60!black] (lp.south) -- (\sx+3.5*\lw,\sy+\sh+0.04);
+  \node[pfb,anchor=south,text width=3.3cm] (pf) at (\sx+5.0*\lw,\sy+0.9)
+    {\textbf{hardware prefetcher}: sees line after line, loads the next two early};
+  \draw[-{Stealth[length=1.8mm]},thick,psblue!70!black] (pf.south) -- (\sx+4.5*\lw,\sy+\sh+0.04);
+  \draw[-{Stealth[length=1.8mm]},thick,psblue!70!black] (pf.south) -- (\sx+5.5*\lw,\sy+\sh+0.04);
+  \node[tx,text width=6.5cm] at (0,1.3) {A \term{stream} is one array that the loop walks through, one cache line
+    after the other. The prefetcher sees this pattern and loads the next lines \textbf{before} the loop needs
+    them. So the loads do not wait for memory.};
+
+  % ================= 2: why the number of streams matters ==============================================
+  \draw[psgray!40] (6.85,4.45) -- (6.85,0.2);
+  \node[ttl] at (7.1,4.3) {2.\ Why the number matters};
+  \node[font=\scriptsize,anchor=west,inner sep=0pt] at (7.1,3.92) {Our loop walks through \textbf{42 arrays}: 42 streams.};
+  \def\xa{7.85}
+  \foreach \r/\t/\ok in {0/{$f_0$}/1, 1/{$f_1$}/1, 2/{$f_2$}/1, 4/{$f_{18}$}/1, 5/{$f'_0$}/1, 7/{$f'_{18}$}/0,
+                         8/{$\rho$}/0, 10/{$u_z$}/0} {
+    \pgfmathsetmacro\yy{3.38-\r*0.3}
+    \foreach \k in {0,...,7} \draw[draw=psgray!60,line width=0.2pt] (\xa+\k*0.18,\yy) rectangle ++(0.18,0.22);
+    \fill[psteal!65] (\xa+3*0.18,\yy) rectangle ++(0.18,0.22);
+    \ifnum\ok=1 \fill[psteal!20] (\xa+4*0.18,\yy) rectangle ++(0.36,0.22);\fi
+    \draw[black!70,line width=0.5pt] (\xa,\yy) rectangle ++(1.44,0.22);
+    \node[font=\tiny,anchor=east] at (\xa-0.05,\yy+0.11) {\t};
+    \ifnum\ok=1
+      \coordinate (s\r) at (\xa+1.48,\yy+0.11);
+    \else
+      \node[font=\small\bfseries,text=psred!85!black] at (\xa+1.7,\yy+0.11) {$\times$};
+    \fi
+  }
+  \foreach \r in {3,6,9} \node[font=\tiny,text=psgray] at (\xa+0.72,{3.38-\r*0.3+0.13}) {$\vdots$};
+  \node[pfb,anchor=north west,text width=3.3cm] (tab) at (10.75,3.5)
+    {\textbf{hardware prefetcher}: follows only a limited number of streams, about 20 on the K1};
+  \foreach \r in {0,1,2,4,5} \draw[psblue!70!black,semithick] (s\r) -- ([yshift={(2-\r)*0.6mm}]tab.west);
+  \node[tx,text width=3.4cm,text=psred!70!black] at (10.75,2.15)
+    {$\times$ The other streams get no help. Each of their cache lines comes from memory while the core
+     waits: about 360 cycles on the K1.};
+\end{tikzpicture}%

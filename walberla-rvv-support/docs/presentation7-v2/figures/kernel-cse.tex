@@ -1,0 +1,36 @@
+% Slide "The kernel code" (presentation7-v2, replaces kernel-code.tex after the user's review: one slide, the real
+% code, colour-coded). Source: the generated StreamCollide of SweepgenLdcCPU_scalar_cse (GCC f32, build/
+% presentation4-x86/gcc-f32/apps/benchmarks/SweepgenLdcCPU/_gen/SweepgenLdcCPU_scalar_cse/gen/SweepgenLdcCPU.cpp,
+% lines 41-345), shortened: names (xi_5, vel0Term, xi_7, delta_rho, rho, xi_3, u_0, xi_24, xi_23, xi_21, xi_0) and
+% formulas are copied; "..." marks what is left out. Written in Python with NumPy indexing (user, 2026-11-24):
+% f[i, z, y, x] is _data_f[x * _stride_f_0 + y * _stride_f_1 + z * _stride_f_2 + i * _stride_f_3] (fzyx, the
+% layout slide), g[...] is _data_f_tmp[...] (the second set of arrays, AB pattern), rho_out / u_out are _data_rho /
+% _data_u. The C type "const float" of every temporary is dropped (they are the values kept in registers).
+% Counts in that loop: 54 "const float" values (36 of them xi_*); _data_f appears 70 times in the source but at
+% only 19 different addresses (the compiler loads each once); 19 stores to _data_f_tmp, then rho and 3 u.
+% xi_5, vel0Term and xi_7 are each used 3 times. The RVV kernel (explicit_cse) has the same statements with
+% vfloat32m1_t instead of float, loads / stores of L cells (vle32 / vse32) and the loop step L.
+\begin{tikzpicture}
+  \def\Ld#1{\textcolor{psorange!85!black}{#1}}          % a load of one value f_i
+  \def\Cs#1{\textcolor{psviolet}{\textbf{#1}}}           % a common subexpression (CSE)
+  \def\Mc#1{\textcolor{psteal!65!black}{\textbf{#1}}}    % density and velocity
+  \def\St#1{\textcolor{psblue!85!black}{\textbf{#1}}}    % a store
+  \def\Cm#1{\textcolor{psgray}{#1}}
+  \node[codebox,font=\ttfamily\scriptsize,anchor=north west,text width=94mm] (code) at (0,0) {%
+for\ z\ in\ range(64):\\
+\ \ for\ y\ in\ range(64):\\
+\ \ \ \ for\ x\ in\ range(64):\\
+\ \ \ \ \ \ \Cs{xi\_5}\ =\ \Ld{f[3,\ z,\ y,\ x+1]}\ +\ \Ld{f[9,\ z,\ y+1,\ x+1]}\ +\ \Ld{f[17,\ z+1,\ y,\ x+1]}\\
+\ \ \ \ \ \ \Cs{vel0Term}\ =\ \Ld{f[14,\ z-1,\ y,\ x-1]}\ +\ ...\ +\ \Ld{f[4,\ z,\ y,\ x-1]}\\
+\ \ \ \ \ \ \Cs{xi\_7}\ =\ \Cs{vel0Term}\ -\ \Cs{xi\_5}\ -\ \Ld{f[13,\ z-1,\ y,\ x+1]}\ -\ \Ld{f[7,\ z,\ y-1,\ x+1]}\\
+\ \ \ \ \ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ the\ same\ for\ y\ and\ z}\\
+\ \ \ \ \ \ \Cs{delta\_rho}\ =\ \Cs{vel0Term}\ +\ \Cs{vel1Term}\ +\ ...\ +\ \Ld{f[0,\ z,\ y,\ x]}\ +\ ...\\
+\ \ \ \ \ \ \Mc{rho}\ =\ 1.0\ +\ \Cs{delta\_rho}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ density}\\
+\ \ \ \ \ \ \Cs{xi\_3}\ =\ 1.0\ /\ \Mc{rho}\\
+\ \ \ \ \ \ \Mc{u\_0}\ =\ \Cs{xi\_3}\ *\ \Cs{xi\_7}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ velocity\ x}\\
+\ \ \ \ \ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ about\ 40\ more:\ xi\_10\ ...\ xi\_36}\\
+\ \ \ \ \ \ \St{g[7,\ z,\ y,\ x]}\ =\ (omega\ *\ (-\Cs{xi\_24}\ -\ \Ld{f[7,\ z,\ y-1,\ x+1]}\\
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ +\ \Mc{rho}\ *\ (\Cs{xi\_23}\ -\ \Cs{xi\_21}))\ +\ \Ld{f[7,\ z,\ y-1,\ x+1]})\\
+\ \ \ \ \ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ the\ other\ 18\ new\ values}\\
+\ \ \ \ \ \ \St{rho\_out[z,\ y,\ x]}\ =\ \Mc{rho};\ \ \St{u\_out[0,\ z,\ y,\ x]}\ =\ \Cs{xi\_0};\ \ ...};
+\end{tikzpicture}%

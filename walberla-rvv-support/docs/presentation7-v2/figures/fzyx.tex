@@ -1,0 +1,60 @@
+% Slide "How the 19 values are stored in memory", left picture (presentation7-v2, replaces field-layout.tex after
+% the user's review): the field f in waLBerla's layout fzyx, zoomed in four levels.
+% As an ndarray (C order, last index fastest): float f[19][66][66][68], value f_i of cell (x, y, z) = f[i][z][y][x]
+% (f32; f64: double f[19][66][66][66]). The name fzyx lists the axes from slowest to fastest, as the declaration.
+% Source: submodules/walberla/include/walberla/v8/memory/Field.hpp:215-252: ONE buffer per field, allocated shape
+% (64 + 2 ghost) per axis and F_SIZE = 19, linearization order x, y, z, f (x fastest, f slowest), offsets = the
+% ghost layer (so x = 0 is the first cell of the block, the ghost cell is x = -1), and for fzyx each x line padded
+% to the alignment (BufferSystem.hpp:441-452; 16 B: 66 f32 = 264 B become 68 f32 = 272 B; 66 f64 = 528 B need no
+% padding). Strides in f32 values: y 68, z 68 * 66 = 4488, f 4488 * 66 = 296208 (17 952 B and 1 184 832 B);
+% f64: 66, 4356, 287496. The index is the one of the generated kernels (_data_f[x + y * _stride_f_1 + z *
+% _stride_f_2 + i * _stride_f_3]).
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{sg/.style={draw=psgray!70,line width=0.3pt,minimum height=4.2mm,inner sep=0pt,font=\tiny,anchor=west},
+           hi/.style={fill=psblue!25,draw=psblue!80!black},
+           gh/.style={fill=psgray!35},
+           pd/.style={fill=white,densely dashed},
+           zl/.style={densely dashed,psgray!70},
+           br/.style={decorate,decoration={brace,amplitude=2.5pt,mirror},psgray!90!black},
+           bl/.style={font=\tiny,text=psgray!90!black,inner sep=1pt},
+           lv/.style={font=\scriptsize\bfseries,anchor=east,inner sep=1pt}}
+  \def\W{6.6}
+  % ---- level 1: the whole field, 19 arrays one after the other ------------------------------
+  \node[lv] at (-0.05,0) {field};
+  \foreach \i in {0,...,18} {
+    \pgfmathsetmacro\xx{\i*\W/19}
+    \ifnum\i=0 \node[sg,hi,minimum width=\W/19 cm] (a\i) at (\xx,0) {$f_0$};
+    \else\ifnum\i<3 \node[sg,minimum width=\W/19 cm] (a\i) at (\xx,0) {$f_{\i}$};
+    \else\ifnum\i=18 \node[sg,minimum width=\W/19 cm] (a\i) at (\xx,0) {\tiny$f_{18}$};
+    \else \node[sg,minimum width=\W/19 cm] (a\i) at (\xx,0) {};\fi\fi\fi
+  }
+  \node[bl,anchor=south] at (\W/2,0.22) {the 19 arrays $f_0 \ldots f_{18}$, one after the other};
+  % ---- level 2: one array = 66 planes --------------------------------------------------------
+  \def\y{-0.9}
+  \node[lv] at (-0.05,\y) {$f_0$};
+  \foreach \k/\t/\st in {0/ghost/gh, 1/{$z{=}0$}/hi, 2/{$z{=}1$}/, 3/{$\cdots$}/, 4/{$z{=}63$}/, 5/ghost/gh}
+    \node[sg,\st,minimum width=1.1cm] (b\k) at (\k*1.1,\y) {\t};
+  \draw[zl] (a0.south west) -- (b0.north west);
+  \draw[zl] (a0.south east) -- (b5.north east);
+  \draw[br] (b1.south west) -- (b1.south east) node[midway,below=2pt,bl] {one plane: 18\,KB};
+  \node[bl,anchor=north east] at (\W,\y-0.22) {one array: 66 planes, 1.2\,MB};
+  % ---- level 3: one plane = 66 rows ------------------------------------------------------------
+  \def\y{-1.85}
+  \node[lv] at (-0.05,\y) {plane};
+  \foreach \k/\t/\st in {0/ghost/gh, 1/{$y{=}0$}/hi, 2/{$y{=}1$}/, 3/{$\cdots$}/, 4/{$y{=}63$}/, 5/ghost/gh}
+    \node[sg,\st,minimum width=1.1cm] (c\k) at (\k*1.1,\y) {\t};
+  \draw[zl] (b1.south west) -- (c0.north west);
+  \draw[zl] (b1.south east) -- (c5.north east);
+  \draw[br] (c1.south west) -- (c1.south east) node[midway,below=2pt,bl] {one row: 272\,B};
+  % ---- level 4: one row = 1 ghost + 64 cells + 1 ghost + 2 padding ------------------------------
+  \def\y{-2.8}
+  \node[lv] at (-0.05,\y) {row};
+  \def\cw{0.42}
+  \foreach \k/\t/\st in {0/{}/gh, 1/{0}/hi, 2/{1}/hi, 3/{2}/hi, 4/{3}/hi, 5/{}/, 6/{$\cdots$}/, 7/{}/, 8/{62}/hi,
+                         9/{63}/hi, 10/{}/gh, 11/{}/pd, 12/{}/pd}
+    \node[sg,\st,minimum width=\cw cm] (d\k) at ({\k*\cw},\y) {\t};
+  \draw[zl] (c1.south west) -- (d0.north west);
+  \draw[zl] (c1.south east) -- (d12.north east);
+  \draw[br] (d1.south west) -- (d9.south east) node[midway,below=2pt,bl] {the 64 cells $x = 0 \ldots 63$, a ghost cell at each end};
+  \node[bl,anchor=west,align=left] at ([xshift=1mm]d12.east) {2 values of\\padding};
+\end{tikzpicture}%

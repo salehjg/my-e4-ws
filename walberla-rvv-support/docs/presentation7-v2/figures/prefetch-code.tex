@@ -1,0 +1,22 @@
+% Slide "K1: software prefetch in the generated code" (presentation7-v2; user's review 2026-11-24: the three slides
+% prefetch-insert / Zicbop instruction / "the split loop needs no prefetch" merged into one, extra text dropped).
+% Code: the generated StreamCollide of SweepgenLdcCPU_explicit_cse_pf, GCC f32 (board file build-gcc-f32/apps/
+% benchmarks/SweepgenLdcCPU/_gen/SweepgenLdcCPU_explicit_cse_pf/gen/SweepgenLdcCPU.cpp, lines 96-150), shortened;
+% the pass: pystencils backend/transformations/insert_prefetches.py, --prefetch-distance=128 (SweepgenLdcCPU/
+% CMakeLists.txt:58). Instruction: include/pystencils_runtime/rvv.hpp:144-151 (asm volatile("ori x0, %0, 1"));
+% llvm-objdump prints "00156013 prefetch.r 0x0(a0)" (see zicbop.tex).
+\begin{tikzpicture}
+  \node[codebox,anchor=north west] (code) at (0,0) {%
+for\ (x\ =\ 0;\ x\ <\ end;\ x\ +=\ 8)\ \{\ \ \ \ \textcolor{psgray}{//\ 8\ cells\ per\ step}\\
+\ \ \textcolor{psorange!80!black}{\textbf{prefetch\_read(\&f0[x\ +\ 32]);}}\ \ \ \ \ \textcolor{psgray}{//\ added:\ 128\ B\ ahead}\\
+\ \ \textcolor{psorange!80!black}{\textbf{prefetch\_read(\&f1[x\ +\ 32]);}}\ ...\ \textcolor{psgray}{//\ one\ per\ array}\\
+\ \ a\ =\ vle32(\&f0[x]);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ the\ loads\ stay}\\
+\ \ b\ =\ vle32(\&f1[x]);\ ...\\
+\ \ ...\ compute,\ then\ store\ ...\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (code.north west) {an RVV loop with prefetch (names shortened)};
+  \node[codebox,anchor=north west] (ins) at ([yshift=-7mm]code.south west) {%
+\textcolor{psorange!80!black}{\textbf{ori\ x0,\ a0,\ 1}}\ \ \ \ \ \textcolor{psgray}{//\ =\ prefetch.r\ 0(a0)\ in\ Zicbop}};
+  \draw[arr] ([xshift=8mm]code.south west) -- ([xshift=8mm]ins.north west)
+    node[midway,right,font=\scriptsize] {each \code{prefetch\_read} is one instruction};
+\end{tikzpicture}%

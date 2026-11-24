@@ -203,3 +203,67 @@ Done (the deck now has 56 frames plus the backup; `./build.sh` builds with no ne
 Open todos: SG2044 line size (confirm on monte3 with
 `cat /sys/devices/system/cpu/cpu0/cache/index*/coherency_line_size` inside a peak.sbatch job); autovec as fast as
 scalar (frames on K1 one core); the my-e4-ws commit on the last slide (after the user commits).
+
+## Review 2026-11-24: slide 9
+
+- `figures/build-run.tex` now shows only the libraries with their real names: CMake, the generator script, lbmpy,
+  pystencils, sweepgen with pystencils-sfg, the waLBerla core, GCC/Clang, the program and Open MPI. The arrows
+  carry the main settings: V, f32/f64, `-march=rv64gcv_zvlVb -O3`, MPI on, OpenMP off, the target RISCV_RVVV,
+  prefetch, split, and `mpirun -np N`. The pystencils backends panel is on the right; the separate backends
+  slide and `figures/backends.tex` are gone (55 frames).
+- OpenMP: waLBerla has `WALBERLA_BUILD_WITH_OPENMP`. It is OFF by default (CMakeLists.txt:71) and OFF in all our
+  build trees (`WALBERLA_BUILD_WITH_MPI=ON`), so the benchmark runs one MPI process per core and no threads. The
+  slide says so in its grey note.
+- Removed the slide "RISC-V vectors: each chip chooses its register width" and its subsection (user: useless).
+  RVV and VLEN are now defined in the grey note of "From Python to a running program". `figures/vlen.tex` is no
+  longer used. Added the MPI+OpenMP hybrid as an open question. 54 frames.
+- "How the 19 values are stored in memory": the 6-overlay `field-layout` frame was replaced by one static frame
+  with two pictures. `figures/fzyx.tex` zooms from the field (19 arrays) to one array (66 planes, 1.2 MB), one
+  plane (66 rows, 18 KB) and one row (ghost, 64 cells, ghost, 2 padding values), with the index formula.
+  `figures/ghost.tex` shows two blocks with their ghost rings and which border cells the halo exchange copies
+  where (Field.hpp:215-252). `figures/field-layout.tex` is no longer used. The stencil frame keeps only its
+  last overlay.
+- The kernel-code frame (5 overlays) was replaced by one static frame (`figures/kernel-cse.tex`). It shows the real
+  generated StreamCollide of the scalar CSE build, shortened, with the generated names kept. Colours: the loads
+  f(i,x,y,z) orange, the CSE values violet, `const float` (registers) red, rho/u teal, the stores blue. Counts:
+  54 const float values, 19 distinct load addresses, xi_5 used 3 times.
+- New frame "The split loop in action" (`figures/split-action.tex`), placed after "Fewer streams, way 2". It is a
+  grid of the arrays against the 8 passes (from lbm_split.py): passes 1-4 read f0-4, f5-9, f10-14, f15-18 into
+  acc; pass 5 writes rho, u and scr; passes 6-8 update f0 + (1,2)(3,4)(5,6), then (7,10)(8,9)(11,16), then
+  (12,15)(13,18)(14,17) in place. Arrays in memory per pass: 5 5 5 4 4 7 6 6. `figures/kernel-code.tex` is no
+  longer used.
+- Slide 16: added the ndarray form `float f[19][66][66][68]`, value = `f[i][z][y][x]` (fzyx = slowest to fastest); the flat-index box was removed.
+- New frame "The split loop in code" (`figures/split-cse.tex`), placed after "The split loop in action". It shows the real generated split code (driver, m1, macro, c0; scalar form, suffixes dropped) with the colours of the kernel slide, plus green for the scratch acc/scr. 56 frames.
+- Moved "The kernel code: updating one cell" to just before "The split loop in code" (user). Its key now says "f[i][z][y][x] of the layout slide".
+- "Cache lines and streams" and "Which accesses belong to the same stream" (5 overlays) were replaced by one static frame "What a stream is, and why it matters" (`figures/stream-why.tex`). Left: one array, its cache lines, the loop and the prefetcher loading ahead. Right: our 42 arrays and a prefetcher that follows only about 20 (K1). `cache-line.tex` and `stream-count.tex` are no longer used. 55 frames.
+- The code slides are now in Python with NumPy indexing (user: no invented load/store syntax). Layout: `f = np.empty((19, 66, 66, 68), np.float32)`, `f[i, z, y, x]`. Kernel and split-loop code: `f[3, z, y, x+1]`, `g[7, z, y, x] = ...`, `acc[0, y, x] += ...`. Way 2: `f[:, z, y, x]` and `f[0:5, z, rows]`. The C slides with intrinsics (generated code at two widths, prefetch, Zicbop, K1 split-code, stream test) stay C.
+- Way 2: the split box now writes every index: `f[0:5, z, y0:y0+2, :]` (z, the block's 2 rows of y, all x) instead of the hidden `rows` slice.
+
+- 2026-11-24: the three prefetch slides ("software prefetch in the generated code", "the RISC-V prefetch
+  instruction", "the split loop needs no prefetch") merged into one frame with the new figures/prefetch-code.tex:
+  the loop with prefetch, the instruction `ori x0, a0, 1`, and four bullets (the pass, Zicbop/x0, the X60 runs it
+  176 -> 90 cycles, split loop needs none, 2-13 % slower with it). The bit-field picture, the runtime function, the
+  before/after code pair and the split driver code are gone. Glossary entry "Hint" removed (unused).
+  figures/prefetch-insert.tex, zicbop.tex, split-code.tex are now unused. Deck: 53 pages.
+
+- 2026-11-24: slide 9 "What we added" (figures/chain.tex) redrawn from the fork diffs (walberla 0c8ed8c9..HEAD,
+  pystencils 20d7dcf0..HEAD): five boxes, waLBerla CMake (VLEN probe, -march, -mtune), sweepgen (VLEN ->
+  RISCV_RVV128/256 target, AA sweeps, output-free sweeps), pystencils (RVV backend, prefetch and row-pointer
+  passes, VLEN #error check), waLBerla core (AA ghost-layer exchange), benchmark apps (lid-driven cavity, split
+  loop). Grey line: lbmpy and pystencils-sfg unchanged. The old 4-box chain had no sweepgen and no waLBerla core.
+
+- 2026-11-24: slide 10 "How the build chooses the target": new figures/sizeless.tex (one vfloat32m1_t register,
+  8 lanes on the K1 and 4 on the SG2044, plus the GCC error "RVV type 'vfloat32m1_t' does not have a fixed size",
+  checked with riscv64-linux-gnu-g++ 16.2.1) and three bullets: RVV types have no fixed size, so the code uses the
+  same types and intrinsics at both widths (only vl and the loop step change), so one backend with VLEN as a
+  parameter. Flow diagram scaled to 0.76 textwidth. Dropped bullets: "CMake measures..." (the diagram and the
+  takeaway say it) and "At 256 bits the generator writes the same code as before" (K1 results still hold).
+
+- 2026-11-24 (later): the sizeless-type note moved off slide 10 (back to the flow diagram + its two bullets;
+  figures/sizeless.tex deleted). The slide "The generated code at the two widths" is replaced by "Vector types on
+  x86 and on RVV" (new figures/vtypes.tex): a table AVX2 | AVX-512 | RVV K1 (256) | RVV SG2044 (128) with lanes,
+  C type, sizeof (32 B / 64 B / none), load and add intrinsics, loop step, and what changes with the width
+  (x86: every name; RVV: vl and the loop step). Bullets correct the earlier claim: the sizeless types are NOT why one
+  backend works (X86VectorCpu also serves SSE/AVX/AVX-512 by switching prefixes); both backends fix the width at
+  generation time (VLS); sizeless types would allow VLA (vsetvl at run time), which we do not use. All names and
+  sizes compile-checked (g++ -mavx512f, riscv64-linux-gnu-g++ 16.2.1).

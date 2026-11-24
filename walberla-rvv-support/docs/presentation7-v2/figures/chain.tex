@@ -1,12 +1,38 @@
-% Slide "What we added": the four pieces that were missing on RISC-V (report r02, chapter "What
-% Was Missing"): compiler flags in the waLBerla build, an RVV target in pystencils, a compile-time
-% check for the register width (it checks the compiler flags, not the hardware: notes5 F10), and a benchmark program that asks for vector code.
+% Slide "What we added": every library we changed for RVV, in the order they act during the build (user's review
+% 2026-11-24: "didn't we add sweepgen or some other libraries?"). Sources: the fork commits,
+% git diff 0c8ed8c9..HEAD in submodules/walberla and 20d7dcf0..HEAD in submodules/pystencils:
+%  - waLBerla CMake: cmake/compileroptions/RiscvVlen.cmake (reads the vlenb register, CSR 0xc22, at configure
+%    time), GNU.cmake / Clang.cmake (-march=rv64gcv_zvl<VLEN>b, -mtune=<vendor>-<core> from /proc/cpuinfo uarch,
+%    e.g. spacemit-x60, if the compiler accepts it).
+%  - sweepgen (lives in the waLBerla repository): build_config.py + SweepgenConfig.template.py (riscv_vlen ->
+%    Target.RISCV_RVV128 / RISCV_RVV256, pystencils cannot measure VLEN itself); prefabs/lbm_bulk.py (the aa
+%    streaming pattern: StreamCollideEven/Odd; output_free_sweeps: sweeps without rho and u).
+%  - pystencils: backend/platforms/rvv.py (RvvCpu), codegen/target.py (RISCV_RVV128/256), transformations
+%    insert_prefetches.py and hoist_row_pointers.py, include/pystencils_runtime/rvv.hpp (intrinsic wrappers,
+%    prefetch_read/write; #error unless __riscv_v_min_vlen >= the VLEN the code was generated for).
+%  - waLBerla core: include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp (GenericAAPullPackInfo,
+%    GenericAAPushPackInfo), PackInfoSelection.hpp (aaPullSync, aaPushSync).
+%  - benchmark apps: apps/benchmarks/SweepgenLdcCPU (lid-driven cavity, all build variants), SweepgenLbmCPU/
+%    lbm_split.py (the split loop, used by SweepgenLdcCPU).
+%  Unchanged: lbmpy, pystencils-sfg (pip packages).
 \begin{tikzpicture}[
-    pc/.style={added,text width=29mm,minimum height=12mm,font=\scriptsize,align=center}]
-  \def\dx{3.6}
-  \node[pc] (a1) at (0,0)     {\textbf{waLBerla build}\\measures VLEN, sets\\\code{-march=rv64gcv\_zvl}\textit{V}\code{b}};
-  \node[pc] (a2) at (\dx,0)   {\textbf{pystencils}\\new RVV targets (128, 256):\\C++ with RVV intrinsics};
-  \node[pc] (a3) at (2*\dx,0) {\textbf{safety check}\\compile error unless the\\flags promise that VLEN};
-  \node[pc] (a4) at (3*\dx,0) {\textbf{benchmark program}\\builds the scalar, auto-vec.\\and RVV versions};
-  \foreach \u/\v in {a1/a2,a2/a3,a3/a4} \draw[arr] (\u) -- (\v);
+    pc/.style={added,text width=25.5mm,minimum height=21mm,font=\tiny,align=left,anchor=north,inner sep=2pt,
+      execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000\raggedright}},
+    hd/.style={font=\scriptsize\bfseries,anchor=south,inner sep=1pt}]
+  \def\dx{2.9}
+  \node[pc] (a1) at (0,0) {$\bullet$ measures VLEN on the build machine\\
+    $\bullet$ sets \code{-march=rv64gcv\_zvl}\textit{V}\code{b} and \code{-mtune} for the core};
+  \node[pc] (a2) at (\dx,0) {$\bullet$ passes VLEN to pystencils: target \code{RISCV\_RVV128} or \code{RVV256}\\
+    $\bullet$ LBM sweeps for the \term{in-place} pattern, and without $\rho$, $u$ output};
+  \node[pc] (a3) at (2*\dx,0) {$\bullet$ new \textbf{RVV backend}: C++ with RVV intrinsics\\
+    $\bullet$ new passes: software prefetch, row pointers\\
+    $\bullet$ compile error unless the flags promise that VLEN};
+  \node[pc] (a4) at (3*\dx,0) {$\bullet$ ghost-layer exchange for the in-place pattern};
+  \node[pc] (a5) at (4*\dx,0) {$\bullet$ lid-driven cavity program: builds all variants\\
+    $\bullet$ the \term{split loop}};
+  \foreach \n/\t in {a1/waLBerla CMake, a2/sweepgen, a3/pystencils, a4/waLBerla core, a5/benchmark apps}
+    \node[hd] at (\n.north) {\t};
+  \node[font=\tiny,text=psgray,anchor=north west,inner sep=0pt] at ([yshift=-1.5mm]a1.south west)
+    {Unchanged: lbmpy (the formulas for one cell) and pystencils-sfg (writes the C++ files).};
+  \foreach \u/\v in {a1/a2,a2/a3,a3/a4,a4/a5} \draw[arr] (\u) -- (\v);
 \end{tikzpicture}

@@ -1,0 +1,41 @@
+% Slide "How the 19 values are stored in memory", right picture (presentation7-v2, after the user's review: the
+% ghost layer was vague). A cut through two neighbouring blocks (x-y plane), 64 x 64 cells drawn as 5 x 5.
+% Facts: one ghost layer on every face (Field.hpp:215-226: allocShape = shape + 2 * numGhostLayers, 64^3 -> 66^3
+% cells per array; 66^3 / 64^3 = 1.097). The kernel reads its neighbours' values from the ghost layer (pull
+% streaming: the value moving east into a border cell comes from x - 1, which for x = 0 is the ghost cell) and
+% writes only the 64^3 inner cells. After each step the halo exchange copies every block's border cells into the
+% neighbours' ghost layers (MPI between processes; figures/parallel.tex, time-step.tex).
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \def\c{0.33}
+  \tikzset{cl/.style={draw=psgray!60,line width=0.3pt},
+           inner cell/.style={cl,fill=psblue!12}, ghost cell/.style={cl,fill=psgray!35},
+           sa/.style={cl,fill=psteal!55}, sb/.style={cl,fill=psorange!55},
+           bl/.style={font=\tiny,text=psgray!90!black,inner sep=1pt,align=center},
+           cp/.style={-{Stealth[length=1.8mm]},thick}}
+  %   \blk{x offset}{name}: a block of 5 x 5 inner cells with its ghost ring (7 x 7)
+  \def\blk#1#2{%
+    \foreach \i in {0,...,6} \foreach \j in {0,...,6} {
+      \ifnum\i=0 \def\st{ghost cell}\else\ifnum\i=6 \def\st{ghost cell}\else\ifnum\j=0 \def\st{ghost cell}\else\ifnum\j=6 \def\st{ghost cell}\else
+        \def\st{inner cell}\fi\fi\fi\fi
+      \draw[\st] (#1+\i*\c,\j*\c) rectangle ++(\c,\c);}
+    \draw[black!75,line width=0.9pt] (#1+\c,\c) rectangle ++(5*\c,5*\c);
+    \node[font=\scriptsize\bfseries,anchor=north] at (#1+3.5*\c,-0.05) {#2};}
+  \blk{0}{block A}
+  \blk{3.1}{block B}
+  %   the border columns that are copied, and where they go
+  \foreach \j in {1,...,5} {
+    \draw[sa] (5*\c,\j*\c) rectangle ++(\c,\c);           % A's last inner column
+    \draw[sa] (3.1,\j*\c) rectangle ++(\c,\c);             % -> B's ghost column
+    \draw[sb] (3.1+\c,\j*\c) rectangle ++(\c,\c);         % B's first inner column
+    \draw[sb] (6*\c,\j*\c) rectangle ++(\c,\c);           % -> A's ghost column
+  }
+  \draw[cp,psteal!70!black] (5.5*\c,6*\c+0.02) to[out=60,in=120] node[pos=0.5,above,bl,text=psteal!50!black]
+    {A's border cells $\rightarrow$ B's ghost layer} (3.1+0.5*\c,6*\c+0.02);
+  \draw[cp,psorange!85!black] (3.1+1.5*\c,-0.02) to[out=-120,in=-60] node[pos=0.5,below,bl,text=psorange!70!black]
+    {B's border cells $\rightarrow$ A's ghost layer} (6.5*\c,-0.02);
+  %   legend
+  \begin{scope}[shift={(0,-1.35)}]
+    \draw[inner cell] (0,0) rectangle ++(0.25,0.18); \node[bl,anchor=west] at (0.3,0.09) {the block's 64$^3$ cells};
+    \draw[ghost cell] (2.35,0) rectangle ++(0.25,0.18); \node[bl,anchor=west] at (2.65,0.09) {ghost layer: one cell thick};
+  \end{scope}
+\end{tikzpicture}%
