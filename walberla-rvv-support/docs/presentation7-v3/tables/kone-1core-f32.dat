@@ -1,0 +1,48 @@
+% written by scripts/presentation7/slide_data.py; do not edit by hand
+% K1, f32, one core, best of 3, MLUP/s and speedup over plain scalar of the same compiler
+% source 9c353b8f8238af08 docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f32-1core.log
+% source d919d426ead826fd docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f32-1core.log
+% source 5ddea86544f3bfa5 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f32-1core.log
+% source 71647774850a0554 docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f32-4core.log
+% source cc25932787802d7f docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f32-4core.log
+% source 4c1a7e2567aea7f2 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f32-4core.log
+% source 0d5ee8fadfcc0c60 docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f32-8core.log
+% source ec4dce60813e50f3 docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f32-8core.log
+% source 9c45f588f0c78f12 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f32-8core.log
+% source 84313f628e655ae8 docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f64-1core.log
+% source 84193137e008fd7e docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f64-1core.log
+% source 09db3b14734d5800 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f64-1core.log
+% source 82b58890093873bf docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f64-4core.log
+% source cf354173e2a137ee docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f64-4core.log
+% source a79e6be8a4ba9768 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f64-4core.log
+% source 0b1573e24c0054af docs/presentation7/board-logs/k1/board/ldc-gcc-scalar-f64-8core.log
+% source 96fb4995d04eda72 docs/presentation7/board-logs/k1/board/ldc-gcc-autovec-f64-8core.log
+% source d966f1714e72fb30 docs/presentation7/board-logs/k1/board/ldc-gcc-rvv-f64-8core.log
+% source 685927922a50b6c4 docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f32-1core.log
+% source d432730248cee74c docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f32-1core.log
+% source 5da9f642d6b52c8d docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f32-1core.log
+% source ca1e00a73d68bde5 docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f32-4core.log
+% source 99f10b72116b143d docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f32-4core.log
+% source 833c26f5b34397ee docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f32-4core.log
+% source f567f8a6ad26e9f9 docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f32-8core.log
+% source efbe4a69a42d7b02 docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f32-8core.log
+% source 9443864ade46d03b docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f32-8core.log
+% source b32253399d30d932 docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f64-1core.log
+% source 2a44dae4a3e86585 docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f64-1core.log
+% source fd62e2395405401d docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f64-1core.log
+% source 9ded76986176e231 docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f64-4core.log
+% source 2a957f6d3fc7dded docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f64-4core.log
+% source b8b3bc6355dde063 docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f64-4core.log
+% source 562100697c16227f docs/presentation7/board-logs/k1/board/ldc-clang-scalar-f64-8core.log
+% source 13b722b3185a00e8 docs/presentation7/board-logs/k1/board/ldc-clang-autovec-f64-8core.log
+% source f7c4a2565b9896ef docs/presentation7/board-logs/k1/board/ldc-clang-rvv-f64-8core.log
+build gcc clang gccspd clangspd show
+plain 1.384 1.359 1.000 1.000 1
+plainav 1.379 1.358 0.997 0.999 0
+best 2.002 2.112 1.447 1.554 1
+bestav 2.006 2.096 1.449 1.542 0
+rvv 2.343 2.233 1.693 1.642 0
+pf 4.585 4.204 3.313 3.093 0
+aa 2.913 2.902 2.105 2.135 0
+aapf 6.557 6.186 4.738 4.551 0
+split 7.678 7.543 5.548 5.550 1

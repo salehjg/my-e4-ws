@@ -4,7 +4,8 @@
 % cells per array; 66^3 / 64^3 = 1.097). The kernel reads its neighbours' values from the ghost layer (pull
 % streaming: the value moving east into a border cell comes from x - 1, which for x = 0 is the ghost cell) and
 % writes only the 64^3 inner cells. After each step the halo exchange copies every block's border cells into the
-% neighbours' ghost layers (MPI between processes; figures/parallel.tex, time-step.tex).
+% neighbours' ghost layers (MPI between processes; figures/parallel.tex, time-step.tex). The picture names the two
+% copies "halo exchange" and points at the grey ring as the "ghost layer".
 \begin{tikzpicture}[x=1cm,y=1cm]
   \def\c{0.33}
   \tikzset{cl/.style={draw=psgray!60,line width=0.3pt},
@@ -29,12 +30,24 @@
     \draw[sb] (3.1+\c,\j*\c) rectangle ++(\c,\c);         % B's first inner column
     \draw[sb] (6*\c,\j*\c) rectangle ++(\c,\c);           % -> A's ghost column
   }
+  %   the blocks' bold outlines again, on top of the coloured columns (otherwise those hide them)
+  \draw[black!75,line width=0.9pt] (\c,\c) rectangle ++(5*\c,5*\c);
+  \draw[black!75,line width=0.9pt] (3.1+\c,\c) rectangle ++(5*\c,5*\c);
   \draw[cp,psteal!70!black] (5.5*\c,6*\c+0.02) to[out=60,in=120] node[pos=0.5,above,bl,text=psteal!50!black]
-    {A's border cells $\rightarrow$ B's ghost layer} (3.1+0.5*\c,6*\c+0.02);
+    (top) {A's border cells $\rightarrow$ B's ghost layer} (3.1+0.5*\c,6*\c+0.02);
+  %   the two copies together are the halo exchange (user's review 2026-11-25: name it in the picture)
+  \node[font=\scriptsize\bfseries,text=black!80,anchor=south,inner sep=1pt] at (top.north)
+    {halo exchange, after every step:};
+  %   point at the grey ring itself
+  \node[bl,text=black!70,anchor=north] (gl) at (0.1,-0.32) {ghost layer};
+  \draw[-{Stealth[length=1.4mm]},black!60,line width=0.5pt] (gl.north) -- (0.5*\c,1.5*\c);
+  %   "halo" is another name for the same ring (the halo exchange refills it)
+  \node[bl,text=black!70,anchor=north] (hl) at (3.1+6.3*\c,-0.32) {halo = ghost layer};
+  \draw[-{Stealth[length=1.4mm]},black!60,line width=0.5pt] (hl.north) -- (3.1+6.5*\c,1.5*\c);
   \draw[cp,psorange!85!black] (3.1+1.5*\c,-0.02) to[out=-120,in=-60] node[pos=0.5,below,bl,text=psorange!70!black]
     {B's border cells $\rightarrow$ A's ghost layer} (6.5*\c,-0.02);
   %   legend
-  \begin{scope}[shift={(0,-1.35)}]
+  \begin{scope}[shift={(0,-1.1)}]
     \draw[inner cell] (0,0) rectangle ++(0.25,0.18); \node[bl,anchor=west] at (0.3,0.09) {the block's 64$^3$ cells};
     \draw[ghost cell] (2.35,0) rectangle ++(0.25,0.18); \node[bl,anchor=west] at (2.65,0.09) {ghost layer: one cell thick};
   \end{scope}

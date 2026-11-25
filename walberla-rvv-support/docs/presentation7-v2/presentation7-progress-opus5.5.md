@@ -267,3 +267,40 @@ scalar (frames on K1 one core); the my-e4-ws commit on the last slide (after the
   backend works (X86VectorCpu also serves SSE/AVX/AVX-512 by switching prefixes); both backends fix the width at
   generation time (VLS); sizeless types would allow VLA (vsetvl at run time), which we do not use. All names and
   sizes compile-checked (g++ -mavx512f, riscv64-linux-gnu-g++ 16.2.1).
+
+- 2026-11-25: SG2044 cache line confirmed on monte3. The user ran
+  `cat /sys/devices/system/cpu/cpu0/cache/index*/coherency_line_size` on mc-peak-2: 64 for all four entries
+  (index0-3: L1I, L1D, L2, L3). The todo on "What a stream is, and why it matters" is removed; the source comments in
+  figures/sg2044.tex, cache-line.tex and stream-why.tex now cite this reading instead of the SG2042 device tree.
+  Open todos: autovec as fast as scalar (2) and the my-e4-ws commit on the last slide.
+
+- 2026-11-25: slide 16, right picture (figures/ghost.tex): it now names the halo exchange (bold label "halo
+  exchange, after every step:" over the two copy arrows) and points at the grey ring with an arrow labelled
+  "ghost layer". The column heading is now "The ghost layer and the halo exchange". (The user had read block A/B
+  as the AB pattern; it is two neighbouring blocks, not the two copies of f.)
+- 2026-11-25 (later): slide 16 also has an arrow under block B, "halo = ghost layer", pointing at B's right ghost
+  column (the user asked to show what the halo is).
+- 2026-11-25 (later): figures/ghost.tex redraws both blocks' bold outlines after the coloured columns, which hid them.
+
+- 2026-11-25: new slide 20 "Fewer streams, way 1: the halo exchange in AB and in AA", right after slide 19 (deck: 54
+  pages). Same two columns as slide 19, but the figures are four panels in the style of figures/ghost.tex (new
+  figures/halo-steps.tex, macros \halopanel and \halolegend): two blocks with their ghost ring; (1) blue = cells the
+  kernel writes in the step; (2) arcs = the copies of the halo exchange, teal left->right, orange right->left.
+  AB step 1 / step 2 and AA even: border -> neighbour's ghost layer. AA odd: the kernel also writes the ghost ring
+  (blue), and the copy goes back, ghost layer -> neighbour's border. Sources: SweepgenLbmCPU.cpp:110-169
+  (aaPull after the even sweep, aaPush after the odd one; streamPullSync after every AB step) and
+  GenericFieldPackInfos.hpp (AAPull: borderSlice -> ghostSlice; AAPush: ghostSlice -> borderSlice). Footnote: only
+  the 5 of 19 values that cross a face are copied. Blocks are named "block 1/2" (not A/B, which are the arrays).
+- Slide 16: the legend of figures/ghost.tex moved up (shift -1.1) so the new labels do not overflow the frame.
+- 2026-11-25 (later): slide 20 redrawn after the user's review ("arrows not connected", "A and B not labelled",
+  "copy: border -> ghost layer is horrible"). Each copied column now has a bold dashed frame in its colour; each
+  arrow runs from the source frame to the destination frame. Every grid is labelled "block 1/2, array A/B". The
+  left label says which array the step reads and writes; the right labels are gone. Column headings: "The usual way
+  (AB): two arrays, A and B" and "In place (AA): one array, A". Legend: (1) blue = written by the kernel,
+  (2) framed cell -> framed cell = copied by the halo exchange.
+- 2026-11-25 (later): slide 20 again (user: "no idea what A and B are", "(1) and (2) still confusing"). The circled
+  1/2 are gone; the legend says it in words ("the kernel writes these cells during the step", framed -> framed "the
+  halo exchange copies them after the step"). The takeaway box now defines A and B: two copies of all the data of
+  a block, 19 arrays each, ghost layer included; AB reads one and writes the other (f_i and f'_i of slide 18), AA
+  has only A. The footnote "5 of the 19 values cross a face" was dropped for space (the fact stays in the source
+  comment of figures/halo-steps.tex).

@@ -1,0 +1,29 @@
+% Slide "Vector types on x86 and on RVV" (presentation7-v2, user's review 2026-11-24: "draw a comparison"; replaces
+% the slide "The generated code at the two widths"). Checked on the laptop:
+%  - g++ (x86-64): sizeof(__m128), sizeof(__m256), sizeof(__m512) = 16, 32, 64; _mm256_loadu_ps / _mm256_add_ps /
+%    _mm512_loadu_ps / _mm512_add_ps compile with -mavx512f.
+%  - riscv64-linux-gnu-g++ 16.2.1 -march=rv64gcv: sizeof(vfloat32m1_t) -> "error: RVV type 'vfloat32m1_t' does not
+%    have a fixed size"; __riscv_vle32_v_f32m1(p, vl), __riscv_vfadd_vv_f32m1(a, b, vl), __riscv_vsetvl_e32m1(n)
+%    compile.
+%  pystencils: X86VectorCpu picks the prefix _mm / _mm256 / _mm512 by width (backend/platforms/x86.py:61-74);
+%  RvvCpu(vlen) passes the lane count as vl (rvv.py _vl) and uses m1 at the default LMUL at both VLENs (_lmul).
+\providecommand{\lanes}[2]{\tikz[baseline=-0.6mm]{\foreach \k in {1,...,#1}
+  \draw[draw=#2!80!black,fill=#2!18,line width=0.3pt] ({(\k-1)*1.55mm},-1.05mm) rectangle ++(1.55mm,2.1mm);}}
+\providecommand{\chg}[1]{\textcolor{psred!85!black}{\textbf{#1}}}
+{\scriptsize\renewcommand{\arraystretch}{1.35}\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}r|ll|ll@{}}
+  & \multicolumn{2}{c|}{\textbf{x86}} & \multicolumn{2}{c}{\textbf{RISC-V RVV}}\\
+  & \textbf{AVX2} & \textbf{AVX-512} & \textbf{K1}, VLEN 256 & \textbf{SG2044}, VLEN 128\\
+  \hline
+  one register of f32 & \lanes{8}{psblue} & \lanes{16}{psblue} & \lanes{8}{psteal} & \lanes{4}{psteal}\\
+  C type & \code{\chg{\_\_m256}} & \code{\chg{\_\_m512}} & \code{vfloat32m1\_t} & \code{vfloat32m1\_t}\\
+  its size (\code{sizeof}) & 32 bytes & 64 bytes & \multicolumn{2}{l}{none: the chip decides how many numbers fit}\\
+  load & \code{\_mm\chg{256}\_loadu\_ps(p)} & \code{\_mm\chg{512}\_loadu\_ps(p)}
+       & \code{\_\_riscv\_vle32\_v\_f32m1(p,\ \chg{8})} & \code{\_\_riscv\_vle32\_v\_f32m1(p,\ \chg{4})}\\
+  add & \code{\_mm\chg{256}\_add\_ps(a,\ b)} & \code{\_mm\chg{512}\_add\_ps(a,\ b)}
+      & \code{\_\_riscv\_vfadd\_vv\_f32m1(a,\ b,\ \chg{8})} & \code{\_\_riscv\_vfadd\_vv\_f32m1(a,\ b,\ \chg{4})}\\
+  loop step & \chg{8} & \chg{16} & \chg{8} & \chg{4}\\
+  \hline
+  \textbf{changes with the width} & \multicolumn{2}{l|}{every type and every intrinsic name}
+    & \multicolumn{2}{l}{only two numbers: \code{vl} (the last argument) and the loop step}\\
+\end{tabular}}%

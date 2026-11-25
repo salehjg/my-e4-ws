@@ -1,0 +1,84 @@
+% Slide "The halo exchange in AB and in AA" (presentation7-v2, user's review 2026-11-25: show at a glance how the
+% copying works in the two patterns, in the style of figures/ghost.tex). Defines \halopanel; slides.tex calls it
+% four times (AB step 1 and 2, AA even and odd).
+% Facts (waLBerla fork, apps/benchmarks/SweepgenLbmCPU/SweepgenLbmCPU.cpp:110-169 and
+% include/walberla/v8/halo_exchange/fields/GenericFieldPackInfos.hpp):
+%  - AB (streamPullSync, GenericStreamPullPackInfo): after every step, each block's border cells are copied into the
+%    neighbour's ghost layer (pack borderSlice, unpack ghostSlice of the neighbour).
+%  - AA even step: the kernel reads and writes only inside each cell. Then aaPullSync (GenericAAPullPackInfo):
+%    border cells -> the neighbour's ghost layer, as in AB (but the slots of the opposite directions).
+%  - AA odd step: cell x writes slot i at x + c_i, so the border cells write into the ghost layer of their own block.
+%    Then aaPushSync (GenericAAPushPackInfo): the ghost layer -> the neighbour's border cells (pack ghostSlice,
+%    unpack borderSlice of the neighbour): the copy goes the other way.
+%  - Per face only the values that cross it are copied: D3Q19 has 5 directions through each face.
+% Two blocks of 5 x 2 inner cells with their ghost ring (64^3 in reality), each labelled with its array (AB: the
+% array the step writes; AA: the one array A). Blue: cells the kernel writes in the step. Bold dashed frames:
+% the cells the halo exchange copies after the step, source and destination in the same colour; each arrow runs
+% from its source frame to its destination frame. Teal: core 2 -> core 3, orange: core 3 -> core 2 (block names as on the slides before).
+% presentation7-v2, second version after the user's review: the arrows now start and end on the frames, every grid
+% names its array, and the side labels "copy: border -> ghost layer" are gone.
+%
+%   \halopanel{mode}{left label}{array name}
+%     mode = border: the kernel writes the inner cells only; copy border -> neighbour's ghost layer
+%     mode = ghost:  the kernel also writes the ghost ring;   copy ghost layer -> neighbour's border
+\newcommand{\halopanel}[3]{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \def\c{0.25}\def\gx{2.5}
+  \tikzset{cl/.style={draw=psgray!60,line width=0.3pt},
+           gc/.style={cl,fill=psgray!35}, wc/.style={cl,fill=psblue!38},
+           sa/.style={cl,fill=psteal!55}, sb/.style={cl,fill=psorange!55},
+           fa/.style={draw=psteal!60!black,line width=1.1pt,dash pattern=on 2.2pt off 1.4pt},
+           fb/.style={draw=psorange!80!black,line width=1.1pt,dash pattern=on 2.2pt off 1.4pt},
+           cpa/.style={-{Stealth[length=1.7mm]},line width=0.9pt,psteal!60!black},
+           cpb/.style={-{Stealth[length=1.7mm]},line width=0.9pt,psorange!80!black},
+           num/.style={circle,draw=black!70,fill=white,inner sep=0.5pt,font=\tiny\bfseries},
+           bn/.style={font=\tiny,text=black!75,inner sep=1pt},
+           side/.style={font=\scriptsize,align=left,inner sep=1pt}}
+  \def\mode{#1}\def\ghostmode{ghost}%
+  \ifx\mode\ghostmode \def\gsty{wc}\else\def\gsty{gc}\fi
+  %   the two blocks: 7 x 4 cells, a ghost ring around 5 x 2 inner cells
+  \foreach \ox in {0,\gx} {
+    \foreach \i in {0,...,6} \foreach \j in {0,...,3} {
+      \ifnum\i=0 \def\sty{\gsty}\else\ifnum\i=6 \def\sty{\gsty}\else\ifnum\j=0 \def\sty{\gsty}\else
+        \ifnum\j=3 \def\sty{\gsty}\else \def\sty{wc}\fi\fi\fi\fi
+      \draw[\sty] (\ox+\i*\c,\j*\c) rectangle ++(\c,\c);}
+  }
+  \draw[black!75,line width=0.8pt] (\c,\c) rectangle ++(5*\c,2*\c);
+  \draw[black!75,line width=0.8pt] (\gx+\c,\c) rectangle ++(5*\c,2*\c);
+  %   x positions of the copied columns: source and destination of the teal and the orange copy
+  \ifx\mode\ghostmode
+    \def\ta{6}\def\tb{(\gx/\c+1)}\def\oa{(\gx/\c)}\def\ob{5}%   ghost column -> neighbour's border column
+  \else
+    \def\ta{5}\def\tb{(\gx/\c)}\def\oa{(\gx/\c+1)}\def\ob{6}%   border column -> neighbour's ghost column
+  \fi
+  \foreach \j in {1,2} {
+    \draw[sa] ({\ta*\c},\j*\c) rectangle ++(\c,\c); \draw[sa] ({\tb*\c},\j*\c) rectangle ++(\c,\c);
+    \draw[sb] ({\oa*\c},\j*\c) rectangle ++(\c,\c); \draw[sb] ({\ob*\c},\j*\c) rectangle ++(\c,\c);
+  }
+  \draw[fa] ({\ta*\c},\c) rectangle ++(\c,2*\c) ;
+  \draw[fa] ({\tb*\c},\c) rectangle ++(\c,2*\c);
+  \draw[fb] ({\oa*\c},\c) rectangle ++(\c,2*\c);
+  \draw[fb] ({\ob*\c},\c) rectangle ++(\c,2*\c);
+  %   the copies: from the top of the source frame to the top of the destination frame (teal, above), and from the
+  %   bottom of the source frame to the bottom of the destination frame (orange, below)
+  \draw[cpa] ({(\ta+0.5)*\c},3*\c) .. controls +(0,0.75) and +(0,0.75) .. ({(\tb+0.5)*\c},3*\c+0.02);
+  \draw[cpb] ({(\oa+0.5)*\c},\c) .. controls +(0,-0.75) and +(0,-0.75) .. ({(\ob+0.5)*\c},\c-0.02);
+  \node[bn,anchor=north] at (2.5*\c,-0.03) {core 2, \textbf{array #3}};
+  \node[bn,anchor=north] at (\gx+4.5*\c,-0.03) {core 3, \textbf{array #3}};
+  \node[side,anchor=east] at (-0.12,2*\c) {#2};
+\end{tikzpicture}}
+%   legend, shared by the four panels (no step numbers: the user found the circled 1 and 2 confusing)
+\newcommand{\halolegend}{%
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{cl/.style={draw=psgray!60,line width=0.3pt},
+           fr/.style={draw=psteal!60!black,line width=1.1pt,dash pattern=on 2.2pt off 1.4pt,fill=psteal!55},
+           lb/.style={font=\scriptsize,anchor=base west,inner sep=1pt}}
+  \draw[cl,fill=psblue!38] (0,-0.02) rectangle ++(0.24,0.18);
+  \node[lb] (t1) at (0.28,0) {the kernel writes these cells during the step};
+  \draw[fr] ([xshift=12pt]t1.base east) ++(0,-0.02) rectangle ++(0.2,0.18) coordinate (q1);
+  \draw[-{Stealth[length=1.5mm]},line width=0.9pt,psteal!60!black] ([xshift=2pt]q1 |- 0,0.07) -- ++(0.4,0) coordinate (q2);
+  \draw[fr] ([xshift=2pt]q2 |- 0,-0.02) rectangle ++(0.2,0.18) coordinate (q3);
+  \node[lb] (t2) at ([xshift=3pt]q3 |- 0,0) {the halo exchange copies them after the step};
+  \draw[cl,fill=psgray!35] ([xshift=12pt]t2.base east) ++(0,-0.02) rectangle ++(0.24,0.18) coordinate (q4);
+  \node[lb] at ([xshift=2pt]q4 |- 0,0) {ghost layer};
+\end{tikzpicture}}

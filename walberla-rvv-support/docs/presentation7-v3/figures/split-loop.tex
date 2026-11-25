@@ -1,0 +1,45 @@
+% Slide "The split loop: the same update in eight short passes".
+% Source: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py (class SplitAA), used by
+% SweepgenLdcCPU (--split=BY,GM,GP; CMakeLists.txt:63-70: f32 2,5,3, f64 1,5,3). For each block of BY
+% rows of one z-plane the generated driver LBM_SPLIT::streamCollide calls 8 passes (generated
+% SweepgenLdcCPU.cpp of explicit_cse_aa_split, e.g. build/presentation4-x86/gcc-f32/.../gen/
+% SweepgenLdcCPU.cpp:6933-6997): m0..m3 add up mass and momentum of 5, 5, 5, 4 values into the scratch
+% acc; macro computes rho, u (into the scratch scr, and into the outputs); c0..c2 reload 7, 6, 6
+% values (the rest value and 3 opposite pairs, then 3 pairs, 3 pairs), collide (relax) them and store them in
+% place. Arrays per pass: 5 / 4 outputs / 7 or 6 (plus the scratch, which stays in L1).
+% Block size, 64^3 block: f32 19 x 2 rows x 64 cells x 4 B = 9728 B; f64 19 x 1 x 64 x 8 B = 9728 B.
+% Scratch (driver): 9 x sc values, sc = 128 (f32) / 64 (f64): 4608 B. L1 data cache 32 KB.
+% The one-loop row: the in-place (AA) StreamCollide kernel: 19 + 4 = 23 arrays (see stream-def).
+% presentation7-v2 (user's review: "useless, does not convey what the split loop is for LBM; maybe a small code
+% snippet"): redrawn as two short pseudo-code boxes, the one loop and the split loop, with the arrays each loop or
+% pass walks through. Pass contents as in the generated driver above (m0..m3: 5, 5, 5, 4 values; macro; c0..c2: 7,
+% 6, 6 values). acc: the scratch with the running sums of mass and momentum (rho, j_x, j_y, j_z per cell).
+% presentation7-v2, 2026-11-24: written in Python with NumPy indexing (user: no invented syntax). f[:, z, y, x]
+% = the 19 values of one cell; f[0:5, z, y0:y0+2, :] = values 0-4 of the block's cells (rows y0, y0+1, all x); the three collide groups are the
+% opposite pairs of lbm_split.py (split-action.tex). sums / moments / macro / collide name the formulas.
+\begin{tikzpicture}
+  \tikzset{cb/.style={codebox,text width=#1,font=\ttfamily\scriptsize},
+           hd/.style={font=\scriptsize\bfseries,anchor=south west,inner sep=1pt}}
+  \def\c#1{\textcolor{psgray}{#1}}
+  \node[cb=50mm,anchor=north west] (one) at (0,0) {%
+for\ z,\ y,\ x\ in\ all\_cells:\\
+\ \ v\ =\ f[:,\ z,\ y,\ x]\ \ \ \ \ \ \ \c{\#\ 19\ arrays}\\
+\ \ rho,\ u\ =\ moments(v)\\
+\ \ v\ =\ collide(v,\ rho,\ u)\\
+\ \ f[:,\ z,\ y,\ x]\ =\ v\ \ \ \ \ \ \ \c{\#\ the\ same\ 19}\\
+\ \ rho\_out[z,\ y,\ x]\ =\ rho\ \ \c{\#\ +\ 4\ arrays}\\
+\ \ u\_out[:,\ z,\ y,\ x]\ =\ u};
+  \node[hd] at (one.north west) {one loop, in place: \textcolor{psred!85!black}{23 arrays at once}};
+  \node[cb=87mm,anchor=north west] (split) at (5.4,0) {%
+groups\ =\ [[0,1,2,3,4,5,6],\ [7,10,8,9,11,16],\ [12,15,13,18,14,17]]\\
+for\ z\ in\ range(64):\\
+\ \ for\ y0\ in\ range(0,\ 64,\ 2):\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \c{\#\ chunk:\ rows\ y0,\ y0+1}\\
+\ \ \ \ acc\ \ =\ sums(f[0:5,\ \ \ z,\ y0:y0+2,\ :])\ \ \ \c{\#\ 5\ arrays}\\
+\ \ \ \ acc\ +=\ sums(f[5:10,\ \ z,\ y0:y0+2,\ :])\ \ \ \c{\#\ 5\ arrays}\\
+\ \ \ \ acc\ +=\ sums(f[10:15,\ z,\ y0:y0+2,\ :])\ \ \ \c{\#\ 5\ arrays}\\
+\ \ \ \ acc\ +=\ sums(f[15:19,\ z,\ y0:y0+2,\ :])\ \ \ \c{\#\ 4\ arrays}\\
+\ \ \ \ rho,\ u\ =\ macro(acc)\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \c{\#\ 4\ outputs}\\
+\ \ \ \ for\ grp\ in\ groups:\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \c{\#\ 7,\ 6,\ 6\ arrays}\\
+\ \ \ \ \ \ f[grp,\ z,\ y0:y0+2,\ :]\ =\ collide(f[grp,\ z,\ y0:y0+2,\ :],\ rho,\ u)};
+  \node[hd] at (split.north west) {split loop: 8 short passes per chunk of 2 rows, \textcolor{psteal!70!black}{at most 7 arrays at once}};
+\end{tikzpicture}%

@@ -561,8 +561,8 @@
     \vspace{0.5mm}
     \input{figures/fzyx}
     \column{0.44\textwidth}
-    {\small\bfseries The \term{ghost layer} around each block\par}
-    \vspace{3mm}
+    {\small\bfseries The \term{ghost layer} and the \term{halo exchange}\par}
+    \vspace{2mm}
     \centering\input{figures/ghost}
 
     \vspace{1mm}
@@ -585,7 +585,7 @@
   \vspace{1mm}
   \raggedright
   {\scriptsize\color{psgray}Cache lines are 64 bytes on both machines. The limit of about 20 streams is measured in
-  Part 1. \todo{SG2044 line size: from the SG2042 device tree; confirm on monte3.}\par}
+  Part 1.\par}
   \takeaway{A stream is one array walked through line by line. The prefetcher helps every stream it follows, but
     it can follow only about 20, and our loop has 42.}
 \end{frame}
@@ -638,6 +638,35 @@
   {\scriptsize\color{psgray}Bytes per cell for f32, counting that the cache loads a line before it writes to it
   (\term{write-allocate}).\par}
   \takeaway{In place: half the arrays, 23 streams instead of 42, and less data per cell.}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+%  Copy of the slide above with the halo exchange drawn instead (user's review 2026-11-25).
+%  figures/halo-steps.tex has the sources (SweepgenLbmCPU.cpp, GenericFieldPackInfos.hpp).
+\input{figures/halo-steps}
+\begin{frame}{Fewer streams, way 1: the halo exchange in AB and in AA}
+  \vspace{0mm}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+    {\small\bfseries The usual way (AB): two arrays, A and B\par}
+    \vspace{1mm}
+    \centering
+    \halopanel{border}{\textbf{step 1}\\reads A,\\writes B}{B}\par
+    \vspace{1mm}
+    \halopanel{border}{\textbf{step 2}\\reads B,\\writes A}{A}\par
+    \column{0.49\textwidth}
+    {\small\bfseries In place (AA): one array, A\par}
+    \vspace{1mm}
+    \centering
+    \halopanel{border}{\textbf{even step}\\reads and\\writes A}{A}\par
+    \vspace{1mm}
+    \halopanel{ghost}{\textbf{odd step}\\also writes\\the ghost\\layer of A}{A}\par
+  \end{columns}
+  \vspace{-1mm}
+  \centering\halolegend\par
+  \takeaway{\textbf{A} and \textbf{B} are two copies of all the data of a block: each holds the 19 arrays, one per
+    value, ghost layer included. AB uses both: a step reads one copy and writes the new values into the other
+    (the $f_i$ and $f'_i$ of the previous slides). AA has only \textbf{A} and overwrites it in place.}
 \end{frame}
 
 % -----------------------------------------------------------------------------

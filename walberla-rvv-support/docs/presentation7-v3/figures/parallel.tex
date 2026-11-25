@@ -1,0 +1,57 @@
+% Slide "How waLBerla splits the work" (report r02, section "The block-structured domain" and its
+% figure blockforest.tex). The benchmark uses a uniform block grid with one 64^3 block per MPI
+% process and one process per core; no threads (WALBERLA_BUILD_WITH_OPENMP is OFF). The halo
+% exchange copies locally between blocks of the same process and sends MPI messages otherwise;
+% with one process the periodic domain makes the block its own neighbour (a local copy).
+% presentation7-v3: the third panel (one RVV instruction on a row) is gone; RVV is defined only in the next section.
+\begin{tikzpicture}[
+    cell/.style={draw=psgray!70,line width=0.3pt},
+    ttl/.style={font=\scriptsize\bfseries,anchor=south west,text=black!80,inner sep=0pt}]
+  % ---- 1: the domain, one block per core ------------------------------------------
+  \def\bs{0.82}
+  \node[ttl] at (0,2.75) {1\enspace domain: one block per core};
+  \foreach \i in {0,...,3} \foreach \j in {0,1} {
+    \pgfmathtruncatemacro{\c}{\i+4*\j}
+    \fill[psblue!12] (\i*\bs,0.6+\j*\bs) rectangle ++(\bs,\bs);
+    \draw[psgray!80] (\i*\bs,0.6+\j*\bs) rectangle ++(\bs,\bs);
+    \node[font=\tiny,text=psblue!80!black,align=center] at (\i*\bs+0.5*\bs,0.6+\j*\bs+0.5*\bs) {core\\[-2pt]\c};
+  }
+  \draw[black!80,line width=1pt] (2*\bs,0.6) rectangle ++(\bs,\bs);   % core 2: zoomed in panel 2
+  \draw[psorange!85!black,line width=1pt,densely dashed] (3*\bs,0.6) rectangle ++(\bs,\bs); % core 3: its east neighbour
+  \node[lbl,anchor=north] at (2*\bs,0.5) {8 cores: 8 blocks\\of $64^3$ cells each};
+  %   zoom onto the block of panel 2
+  \draw[psgray!60,dashed] (3*\bs,0.6+\bs) -- (4.3,7*0.33);
+  \draw[psgray!60,dashed] (3*\bs,0.6) -- (4.3,0);
+
+  % ---- 2: one block, its ghost layer and the halo exchange -------------------------
+  %   Colours as in figures/ghost.tex: light blue = the block's cells, grey = ghost layer, orange = the neighbour's
+  %   border column and the ghost column it is copied into (presentation7-v3: one picture language for all slides).
+  \begin{scope}[shift={(4.3,0)}]
+    \def\s{0.33}
+    \node[ttl] at (0,2.75) {2\enspace one block, its ghost layer and a neighbour};
+    \fill[psgray!35] (0,0) rectangle (7*\s,7*\s);
+    \fill[psblue!12] (\s,\s) rectangle (6*\s,6*\s);
+    \fill[psorange!55] (6*\s,\s) rectangle (7*\s,6*\s);          % its east ghost column, filled from the neighbour
+    \draw[cell,step=\s] (0,0) grid (7*\s,7*\s);
+    \draw[black!75,line width=0.9pt] (\s,\s) rectangle (6*\s,6*\s);
+    \node[font=\scriptsize\bfseries,anchor=north] at (3.5*\s,-0.05) {block of core 2};
+    %   the east neighbour, the block of core 3 (another MPI process): its first column of cells
+    \begin{scope}[shift={(7*\s+0.85,0)}]
+      \fill[psgray!35] (0,0) rectangle (3*\s,7*\s);
+      \fill[psblue!12] (\s,\s) rectangle (3*\s,6*\s);
+      \fill[psorange!55] (\s,\s) rectangle (2*\s,6*\s);
+      \draw[cell,step=\s] (0,0) grid (3*\s,7*\s);
+      \draw[black!75,line width=0.9pt] (3*\s,\s) -- (\s,\s) -- (\s,6*\s) -- (3*\s,6*\s);
+      \node[font=\scriptsize\bfseries,anchor=north] at (1.5*\s,-0.05) {block of core 3};
+    \end{scope}
+    \draw[-{Stealth[length=1.8mm]},thick,psorange!85!black] (7*\s+0.85+1.5*\s,6*\s+0.02) to[out=120,in=60]
+      node[above,font=\tiny,text=psorange!70!black,inner sep=1pt] {halo exchange} (6.5*\s,6*\s+0.02);
+    %   legend
+    \begin{scope}[shift={(0,-0.75)}]
+      \draw[cell,fill=psblue!12] (0,0) rectangle ++(0.22,0.16);
+      \node[lbl,anchor=west] at (0.25,0.08) {its $64^3$ cells};
+      \draw[cell,fill=psgray!35] (1.9,0) rectangle ++(0.22,0.16);
+      \node[lbl,anchor=west] at (2.15,0.08) {ghost layer: copies of the neighbours' border cells};
+    \end{scope}
+  \end{scope}
+\end{tikzpicture}

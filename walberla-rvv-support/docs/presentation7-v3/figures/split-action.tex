@@ -1,0 +1,63 @@
+% Slide "The split loop in action" (new in presentation7-v2, user's review): which arrays each of the 8 passes
+% touches, for one block. Source: submodules/walberla/apps/benchmarks/SweepgenLbmCPU/lbm_split.py (SplitAA):
+%   moment passes m0..m3, GM = 5 directions each: f0-f4, f5-f9, f10-f14, f15-f18; they add delta_rho and the 3
+%   momentum components into the scratch acc (m0 writes acc, m1-m3 add to it);
+%   macro: acc -> rho, u (the 4 output arrays, when output is on) and into the scratch scr;
+%   collision passes c0..c2, GP = 3 opposite pairs each, the rest direction with the first:
+%   pairs (i, inv i) with i < inv i in lbmpy's D3Q19 order (stencil-d3q19.tex): (1,2) (3,4) (5,6) (7,10) (8,9)
+%   (11,16) (12,15) (13,18) (14,17); c0 = f0 + (1,2) (3,4) (5,6), c1 = (7,10) (8,9) (11,16),
+%   c2 = (12,15) (13,18) (14,17); they read scr and their values and store them in place.
+% Block: 2 rows (f32) or 1 row (f64) of one z-plane (SweepgenLdcCPU/CMakeLists.txt: --split 2,5,3 / 1,5,3).
+% The scratch (acc, scr) is 4.6 KB and stays in L1, so it is not counted as a stream.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \def\cw{0.86}\def\rh{0.172}\def\xo{1.05}
+  \tikzset{rd/.style={fill=psblue!35,draw=psblue!70!black,line width=0.2pt},
+           rw/.style={fill=psteal!60,draw=psteal!80!black,line width=0.2pt},
+           wr/.style={fill=psorange!55,draw=psorange!85!black,line width=0.2pt},
+           grid/.style={draw=psgray!25,line width=0.2pt},
+           rl/.style={font=\tiny,anchor=east,inner sep=1pt},
+           hd/.style={font=\tiny,align=center,anchor=south,inner sep=1pt}}
+  %   row y of a named row
+  \def\ry#1{-(#1)*\rh}
+  %   \mk{column}{row}{style}
+  \def\mk#1#2#3{\draw[#3] ({\xo+(#1)*\cw+0.08},{\ry{#2}-0.02}) rectangle ++({\cw-0.16},{-\rh+0.04});}
+  %   rows: 0..18 = f_0..f_18, 19.6..22.6 = rho, u_x, u_y, u_z, 23.8, 24.8 = acc, scr
+  \foreach \i in {0,...,18} \node[rl] at (\xo-0.03,{\ry{\i}-\rh/2}) {$f_{\i}$};
+  \foreach \r/\t in {19.6/{$\rho$}, 20.6/{$u_x$}, 21.6/{$u_y$}, 22.6/{$u_z$}}
+    \node[rl] at (\xo-0.03,{\ry{\r}-\rh/2}) {\t};
+  \foreach \r/\t in {23.8/{scratch \code{acc}}, 24.8/{scratch \code{scr}}}
+    \node[rl] at (\xo-0.03,{\ry{\r}-\rh/2}) {\t};
+  %   grid
+  \foreach \c in {0,...,7} {
+    \foreach \r in {0,...,18,19.6,20.6,21.6,22.6,23.8,24.8}
+      \draw[grid] ({\xo+\c*\cw},{\ry{\r}}) rectangle ++(\cw,-\rh);
+  }
+  %   column headers
+  \foreach \c/\t in {0/{1\\sum}, 1/{2\\sum}, 2/{3\\sum}, 3/{4\\sum}, 4/{5\\$\rho$, $u$}, 5/{6\\collide},
+                     6/{7\\collide}, 7/{8\\collide}}
+    \node[hd] at ({\xo+(\c+0.5)*\cw},0.02) {\t};
+  \node[font=\tiny\bfseries,anchor=south east,inner sep=1pt] at (\xo-0.03,0.02) {pass};
+  % ---- passes 1-4: read 5, 5, 5, 4 values, add into acc --------------------------------------------
+  \foreach \c/\a/\b in {0/0/4, 1/5/9, 2/10/14, 3/15/18} {
+    \foreach \i in {\a,...,\b} {\mk{\c}{\i}{rd}}
+    \mk{\c}{23.8}{rw}
+  }
+  % ---- pass 5: acc -> rho, u (outputs) and scr ------------------------------------------------------
+  \mk{4}{23.8}{rd}
+  \foreach \r in {19.6,20.6,21.6,22.6,24.8} {\mk{4}{\r}{wr}}
+  % ---- passes 6-8: reload, collide, store in place ----------------------------------------------------
+  \foreach \i in {0,1,2,3,4,5,6} {\mk{5}{\i}{rw}}
+  \foreach \i in {7,10,8,9,11,16} {\mk{6}{\i}{rw}}
+  \foreach \i in {12,15,13,18,14,17} {\mk{7}{\i}{rw}}
+  \foreach \c in {5,6,7} {\mk{\c}{24.8}{rd}}
+  % ---- arrays in memory per pass ----------------------------------------------------------------------
+  \foreach \pc/\pn in {0/5, 1/5, 2/5, 3/4, 4/4, 5/7, 6/6, 7/6}
+    \node[font=\scriptsize\bfseries,text=psteal!50!black] at ({\xo+(\pc+0.5)*\cw},{\ry{25.9}-0.1}) {\pn};
+  \node[rl,align=right] at (\xo-0.03,{\ry{25.9}-0.1}) {arrays in memory};
+  % ---- legend ----------------------------------------------------------------------------------------------
+  \begin{scope}[shift={(\xo,{\ry{28.0}})}]
+    \draw[rd] (0,0) rectangle ++(0.3,0.15); \node[rl,anchor=west] at (0.35,0.075) {read};
+    \draw[wr] (1.25,0) rectangle ++(0.3,0.15); \node[rl,anchor=west] at (1.6,0.075) {written};
+    \draw[rw] (2.7,0) rectangle ++(0.3,0.15); \node[rl,anchor=west] at (3.05,0.075) {read, then written in place};
+  \end{scope}
+\end{tikzpicture}%

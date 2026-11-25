@@ -1,0 +1,48 @@
+% Slide "What a data stream is": the memory one step of the inner loop touches (AB pattern, the
+% generated StreamCollide kernel). Each of the 19 values of a cell has its own array (waLBerla's
+% fzyx layout); pull streaming reads value i at the neighbour x - c_i (still consecutive addresses
+% along x), the AB pattern writes a second set of 19 arrays, and the kernel writes rho and u
+% (4 arrays): 19 + 19 + 4 = 42 sequences of consecutive addresses, all advancing together.
+% Evidence: the generated StreamCollide of SweepgenLdcCPU_explicit_cse_pf (GCC f32, board) has
+% exactly 19 prefetch_read and 23 prefetch_write calls in its loop, one per array it walks through.
+% presentation7-v2: no overlays any more (the single-array animation moved to figures/cache-line.tex). Every box
+% is one cache line of 64 bytes; all 42 arrays are at the same place of the loop (line 5).
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{cl/.style={draw=psgray!70,fill=white,line width=0.3pt},
+           clnow/.style={draw=psteal!80!black,fill=psteal!65,line width=0.3pt},
+           clnext/.style={draw=psteal!60,fill=psteal!18,line width=0.3pt},
+           cldone/.style={draw=psgray!70,fill=psgray!28,line width=0.3pt},
+           arrlbl/.style={font=\scriptsize,anchor=east,inner sep=1pt}}
+  %   \strip{y}{label}: one array as 10 cache lines; the loop is in line 5, the two after it are on their way
+  \newcommand{\strip}[2]{%
+    \foreach \k in {0,...,9} {
+      \ifnum\k<5 \def\st{cldone}\else\ifnum\k=5 \def\st{clnow}\else
+        \ifnum\k<8 \def\st{clnext}\else \def\st{cl}\fi\fi\fi
+      \draw[\st] (\k*0.4,#1) rectangle ++(0.4,0.22);
+    }
+    \node[arrlbl] at (-0.05,#1+0.11) {#2};}
+  \newcommand{\vdotsat}[1]{\node[font=\scriptsize,text=psgray] at (2.2,#1) {$\vdots$};}
+  \newcommand{\grp}[4]{% y bottom, y top, count, what
+    \draw[decorate,decoration={brace,amplitude=3pt},psgray!90!black] (4.15,#2) -- (4.15,#1)
+      node[midway,right=3pt,font=\scriptsize,align=left] {\textbf{#3} #4};}
+
+  \strip{3.5}{$f_0$} \strip{3.23}{$f_1$} \vdotsat{2.98} \strip{2.62}{$f_{18}$}
+  \grp{2.62}{3.72}{19}{read\\from A}
+  \strip{2.12}{$f'_0$} \strip{1.85}{$f'_1$} \vdotsat{1.6} \strip{1.24}{$f'_{18}$}
+  \grp{1.24}{2.34}{19}{written\\into B}
+  \strip{0.74}{$\rho$} \strip{0.47}{$u_x$} \vdotsat{0.22} \strip{-0.14}{$u_z$}
+  \grp{-0.14}{0.96}{4}{outputs}
+  \node[font=\tiny,text=psteal!50!black,anchor=south,inner sep=1pt] at (5*0.4+0.2,3.74) {$\downarrow$ loop};
+
+  \draw[arr] (0,-0.42) -- (4.0,-0.42) node[midway,below,lbl] {the loop goes along $x$: addresses grow};
+  \node[draw=psteal!80!black,fill=psteal!8,rounded corners=2pt,font=\small\bfseries,anchor=west]
+    at (4.3,-0.45) {= 42 streams};
+  %   legend
+  \node[lbl,anchor=west] at (-0.05,4.55) {each box is one cache line of 64 bytes};
+  \draw[clnow] (0,4.1) rectangle ++(0.3,0.18);
+  \node[lbl,anchor=west] at (0.35,4.19) {in use};
+  \draw[clnext] (1.35,4.1) rectangle ++(0.3,0.18);
+  \node[lbl,anchor=west] at (1.7,4.19) {loading early};
+  \draw[cldone] (3.65,4.1) rectangle ++(0.3,0.18);
+  \node[lbl,anchor=west] at (4.0,4.19) {already used};
+\end{tikzpicture}

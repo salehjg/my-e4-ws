@@ -1,0 +1,74 @@
+% Slide "The stencil: the cells needed to update one cell" (new in presentation5), drawn in 3D.
+% D3Q19 in lbmpy's order, the order of the generated code (direction c_i = (c_x, c_y, c_z)):
+%   0 C (0,0,0)   1 N (0,1,0)   2 S (0,-1,0)  3 W (-1,0,0)  4 E (1,0,0)   5 T (0,0,1)   6 B (0,0,-1)
+%   7 NW (-1,1,0) 8 NE (1,1,0)  9 SW (-1,-1,0) 10 SE (1,-1,0) 11 TN (0,1,1) 12 TS (0,-1,1) 13 TW (-1,0,1)
+%   14 TE (1,0,1) 15 BN (0,1,-1) 16 BS (0,-1,-1) 17 BW (-1,0,-1) 18 BE (1,0,-1)
+% Pull: the new f_i of cell x is the old f_i of the cell x - c_i. Checked against the generated StreamCollide
+% (SweepgenLdcCPU_scalar_cse, build/presentation4-x86/gcc-f32, gen/SweepgenLdcCPU.cpp:44-130): f_3 is read at
+% ctr_0 + 1, f_4 at ctr_0 - 1, f_1 at ctr_1 - 1, f_5 at ctr_2 - 1, f_9 at (ctr_0 + 1, ctr_1 + 1),
+% f_14 at (ctr_0 - 1, ctr_2 - 1), f_17 at (ctr_0 + 1, ctr_2 + 1).
+% Each dot is a cell; it is labelled with the value the update takes from it, and its arrow points the way
+% that value moves (c_i), into the cell in the middle. Axes: i = +x (east), j = +y (north, into the page),
+% k = +z (top); ctr_0, ctr_1, ctr_2 in the generated code.
+% Overlays: 1 the 3 x 3 x 3 cells around the cell and the cell itself, 2 the 6 face neighbours (f_4 in orange:
+% the example of the text), 3 the 12 edge neighbours, 4 the 8 corners, which D3Q19 does not read.
+\begin{tikzpicture}[x={(1.45cm,0cm)},y={(0.78cm,0.5cm)},z={(0cm,1.45cm)}]
+  \tikzset{
+    lat/.style={draw=psgray!28,line width=0.35pt},
+    pt/.style={circle,draw=psgray!55,fill=white,inner sep=0pt,minimum size=1.5mm},
+    me/.style={circle,draw=psblue!80!black,fill=psblue!55,inner sep=0pt,minimum size=3.2mm},
+    nb/.style={circle,draw=psteal!70!black,inner sep=0pt,minimum size=2.5mm},
+    %   #1: the overlay on which this group appears (strong colour there, light afterwards)
+    grp/.style={nb,visible on=<#1->,alt=<#1>{fill=psteal!75}{fill=psteal!30}},
+    mv/.style={-{Stealth[length=1.5mm]},semithick,draw=psteal!60!black},
+    fl/.style={font=\scriptsize,inner sep=0.6pt,fill=white,fill opacity=0.8,text opacity=1},
+    ax/.style={-{Stealth[length=1.6mm]},thick,draw=black!75},
+    axl/.style={font=\scriptsize,inner sep=1pt},
+  }
+  \coordinate (C) at (0,0,0);
+  % ---- the 27 cells around and including the cell, with faint lattice lines (back to front)
+  \foreach \a in {-1,0,1} \foreach \b in {-1,0,1} {
+    \draw[lat] (-1,\a,\b) -- (1,\a,\b);
+    \draw[lat] (\a,-1,\b) -- (\a,1,\b);
+    \draw[lat] (\a,\b,-1) -- (\a,\b,1);
+  }
+  \foreach \b in {1,0,-1} \foreach \a in {-1,0,1} \foreach \c in {-1,0,1}
+    \node[pt] at (\a,\b,\c) {};
+
+  %   \nbr{overlay}{a}{b}{c}{i}: the neighbour at (a,b,c) sends f_i into the cell
+  \newcommand{\nbr}[5]{%
+    \coordinate (P) at (#2,#3,#4);
+    \draw[mv,visible on=<#1->] ($(P)!1.6mm!(C)$) -- ($(C)!2.4mm!(P)$);
+    \node[grp=#1] at (P) {};
+    \node[fl,visible on=<#1->] at ($(P)!-3.4mm!(C)$) {$f_{#5}$};}
+  %   back plane (y = +1) first, so the front is drawn on top
+  \nbr{2}{0}{1}{0}{2}
+  \nbr{3}{1}{1}{0}{9}   \nbr{3}{-1}{1}{0}{10}  \nbr{3}{0}{1}{-1}{12}  \nbr{3}{0}{1}{1}{16}
+  \nbr{2}{1}{0}{0}{3}   \nbr{2}{0}{0}{-1}{5}   \nbr{2}{0}{0}{1}{6}
+  \nbr{3}{1}{0}{-1}{13} \nbr{3}{-1}{0}{-1}{14} \nbr{3}{1}{0}{1}{17}   \nbr{3}{-1}{0}{1}{18}
+  \nbr{2}{0}{-1}{0}{1}
+  \nbr{3}{1}{-1}{0}{7}  \nbr{3}{-1}{-1}{0}{8}  \nbr{3}{0}{-1}{-1}{11} \nbr{3}{0}{-1}{1}{15}
+  %   f_4 last and in orange on overlay 2: it moves east, so it comes from the west neighbour
+  \coordinate (P) at (-1,0,0);
+  \draw[mv,visible on=<2->,alt=<2>{draw=psorange!90!black,very thick}{}] ($(P)!1.6mm!(C)$) -- ($(C)!2.4mm!(P)$);
+  \node[nb,visible on=<2->,alt=<2>{fill=psorange!70,draw=psorange!90!black}{fill=psteal!30}] at (P) {};
+  \node[fl,visible on=<2->] at ($(P)!-3.4mm!(C)$) {$f_{4}$};
+  % ---- the cell itself; f_0 stays
+  \node[me] at (C) {};
+  \node[fl,font=\scriptsize\bfseries,anchor=north west] at ([xshift=0.6mm,yshift=-0.6mm]C) {$f_0$};
+  \node[font=\scriptsize,text=psblue!80!black,anchor=south east,visible on=<1>] at ([xshift=-1.5mm,yshift=1.5mm]C)
+    {the cell being updated};
+
+  % ---- 4: the 8 corners are not part of D3Q19
+  \foreach \a in {-1,1} \foreach \b in {-1,1} \foreach \c in {-1,1}
+    \draw[psred!80!black,semithick,visible on=<4->] ([shift={(-0.9mm,-0.9mm)}]\a,\b,\c) -- ++(1.8mm,1.8mm)
+      ([shift={(-0.9mm,0.9mm)}]\a,\b,\c) -- ++(1.8mm,-1.8mm);
+  \node[font=\scriptsize,text=psred!80!black,anchor=west,visible on=<4->] at ([xshift=1.5mm]1,-1,-1) {corners: not used};
+
+  % ---- axes: the unit vectors i, j, k of x, y, z, in a corner of their own
+  \begin{scope}[shift={(-3.85cm,1.15cm)}]
+    \draw[ax] (0,0,0) -- (0.5,0,0) node[axl,anchor=west] {$\mathbf{i}$: $x$, east};
+    \draw[ax] (0,0,0) -- (0,0.75,0) node[axl,anchor=south west] {$\mathbf{j}$: $y$, north};
+    \draw[ax] (0,0,0) -- (0,0,0.5) node[axl,anchor=south] {$\mathbf{k}$: $z$, top};
+  \end{scope}
+\end{tikzpicture}

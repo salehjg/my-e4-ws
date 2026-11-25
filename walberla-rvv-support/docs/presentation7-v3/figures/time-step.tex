@@ -1,0 +1,50 @@
+% Slide "What one time step does" (new in presentation7-v2, so that "wall pass" is defined before the time-share
+% plots use it). The order in the benchmark's time loop (submodules/walberla/apps/benchmarks/SweepgenLdcCPU/
+% SweepgenLdcCPU.cpp:33-35 and 210-256): StreamCollide (the kernel), then the halo exchange (streamPullSync, or
+% aaPullSync / aaPushSync), then NoSlip and UBB on the wall links (the wall pass). The app times the three parts
+% separately: t_bulk, t_comm, t_bc (line 361), which are the three colours of the time-share plots.
+% Bottom: the wall rule (bounce-back) in 2D. NoSlip: a value that would stream into a fixed wall comes back in the
+% opposite direction. UBB (the lid): the same, plus a small change that carries the lid's speed into the fluid.
+% The wall pass is generated for Target.GenericCPU in every variant (SweepgenLdcCPU.py:28-29, 135-141).
+% Segment widths are only a sketch; the measured shares are on the "where the time goes" slides.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{seg/.style={draw=white,line width=0.8pt,minimum height=7mm,inner sep=2pt,font=\scriptsize,
+             align=center,anchor=west},
+           dsc/.style={font=\scriptsize,align=left,anchor=north west,inner sep=0pt,text width=#1},
+           cellb/.style={draw=psgray!55,line width=0.3pt,fill=psteal!8}}
+  % ---- one time step: three parts, one after the other -------------------------------
+  \node[font=\scriptsize\bfseries,anchor=south west,inner sep=0pt] at (0,0.45) {one time step};
+  \node[seg,fill=ckernel,text=white,minimum width=7.6cm] (k) at (0,0) {\textbf{1.\ kernel}};
+  \node[seg,fill=ccomm,minimum width=2.6cm] (h) at (k.east) {\textbf{2.\ halo exchange}};
+  \node[seg,fill=cwall,minimum width=2.6cm] (w) at (h.east) {\textbf{3.\ wall pass}};
+  \draw[arr] (0,-0.5) -- (12.8,-0.5) node[pos=0.5,below,lbl] {time; then A and B swap, and the next step starts};
+  \node[dsc=7.3cm] at (0.05,-0.95) {For every cell: read its 19 values $f_i$ from A (stream), compute the 19 new
+    values $f'_i$ (collide) and write them into B. This part is generated code.};
+  \node[dsc=2.5cm] at (7.7,-0.95) {Each block copies its border cells of B into its neighbours' ghost layers (MPI).};
+  \node[dsc=2.5cm] at (10.3,-0.95) {The cells next to a wall are corrected.};
+
+  % ---- the wall rule: bounce-back ------------------------------------------------------
+  \begin{scope}[shift={(0.6,-4.25)}]
+    \def\s{0.5}
+    %   fixed wall below, the lid above, fluid cells between
+    \fill[pattern=north east lines,pattern color=psgray!80] (0,-0.13) rectangle (6*\s,0);
+    \fill[psorange!55] (0,3*\s) rectangle (6*\s,3*\s+0.13);
+    \foreach \i in {0,...,5} \foreach \j in {0,1,2} \draw[cellb] (\i*\s,\j*\s) rectangle ++(\s,\s);
+    \draw[arr,psorange!85!black,very thick] (1.0,3*\s+0.3) -- ++(1.0,0)
+      node[right,font=\tiny,text=psorange!85!black] {moving lid};
+    \node[font=\tiny,text=psgray!90!black,anchor=north] at (3*\s,-0.15) {fixed wall};
+    %   a value heading into the fixed wall comes back the other way
+    \draw[-{Stealth[length=1.6mm]},thick,psblue!85!black] (1.5*\s,0.5*\s+0.25) -- (1.5*\s+0.22,0.03);
+    \draw[-{Stealth[length=1.6mm]},thick,psred!85!black] (1.5*\s+0.18,0.06) -- (1.5*\s-0.06,0.5*\s+0.27);
+    %   and one heading into the lid
+    \draw[-{Stealth[length=1.6mm]},thick,psblue!85!black] (4.5*\s,2.5*\s-0.25) -- (4.5*\s+0.22,3*\s-0.03);
+    \draw[-{Stealth[length=1.6mm]},thick,psred!85!black] (4.5*\s+0.18,3*\s-0.06) -- (4.5*\s-0.12,2.5*\s-0.2);
+  \end{scope}
+  \node[dsc=8.7cm] at (4.3,-2.6) {%
+    \textbf{The wall rule (bounce-back).} A value that would flow into a wall
+    (\textcolor{psblue!85!black}{blue}) comes back in the opposite direction
+    (\textcolor{psred!85!black}{red}). At the moving lid it also picks up some of the lid's speed: this is what
+    drives the flow.\\[3pt]
+    The wall pass applies this rule to the cells next to the walls only. Its code is plain C++, never vector
+    code, so it does not get faster when the kernel does.};
+\end{tikzpicture}%

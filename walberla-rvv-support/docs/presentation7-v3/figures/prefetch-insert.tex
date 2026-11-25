@@ -1,0 +1,40 @@
+% Slide "Software prefetch: where the code generator puts it".
+% Left: where the pass sits (submodules/pystencils/src/pystencils/codegen/driver.py:313-315: after the
+% vector loops are prepared, before the RVV intrinsics are chosen); the pass is
+% backend/transformations/insert_prefetches.py, the option cpu.vectorize.prefetch_distance
+% (codegen/config.py:278), set by the app (apps/benchmarks/SweepgenLdcCPU/CMakeLists.txt:58,
+% --prefetch-distance=128; SweepgenLdcCPU.py:76-77).
+% Right, top: the generated StreamCollide of SweepgenLdcCPU_explicit_cse_pf, GCC f32 (board file
+% build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/_gen/SweepgenLdcCPU_explicit_cse_pf/gen/SweepgenLdcCPU.cpp,
+% lines 96-150), shortened: namespaces dropped, 19 + 23 calls shown as 2 + 1. Right, bottom: the
+% runtime function (include/pystencils_runtime/rvv.hpp:144-151, the branch without -march=..._zicbop).
+% presentation7-v2 (user's review: "not clear if prefetching also acts as a load; are we replacing load
+% intrinsics with prefetch ones?"): the right side is now the same loop without and with the new pass, so that
+% one sees the loads stay and the prefetches are added in front of them. The runtime function moved to the
+% Zicbop slide only (zicbop.tex).
+\begin{tikzpicture}
+  \tikzset{st/.style={box,text width=33mm,font=\scriptsize,minimum height=5mm,inner sep=2pt}}
+  \node[st,quiet] (b1) at (0,0) {lbmpy: the update rule};
+  \node[st,quiet,below=2.5mm of b1] (b2) {pystencils: loops, vectorized};
+  \node[st,added,below=2.5mm of b2] (b3) {\textbf{InsertPrefetches} (new pass)\\[-1pt]
+    {\tiny one prefetch per array, 128 B ahead}};
+  \node[st,quiet,below=2.5mm of b3] (b4) {RVV intrinsics, C++ source};
+  \node[st,quiet,below=2.5mm of b4] (b5) {compiler: \code{prefetch.r}, \code{.w}};
+  \foreach \a/\b in {b1/b2,b2/b3,b3/b4,b4/b5} \draw[arr] (\a) -- (\b);
+  \node[codebox,anchor=north west] (old) at (2.3,0.25) {%
+for\ (x\ =\ 0;\ x\ <\ end;\ x\ +=\ 8)\ \{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ 8\ cells\ per\ step\ (f32)}\\
+\ \ a\ =\ vle32(\&f0[x]);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ loads:\ each\ may\ miss\ and\ wait}\\
+\ \ b\ =\ vle32(\&f1[x]);\ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ ...\ 19\ loads}\\
+\ \ ...\ compute,\ then\ store\ ...\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (old.north west) {without prefetch};
+  \node[codebox,anchor=north west] (new) at ([yshift=-5mm]old.south west) {%
+for\ (x\ =\ 0;\ x\ <\ end;\ x\ +=\ 8)\ \{\\
+\ \ \textcolor{psorange!80!black}{\textbf{prefetch\_read(\&f0[x\ +\ 32]);}}\ \ \ \ \ \ \ \textcolor{psgray}{//\ added:\ 32\ floats\ =\ 128\ B\ ahead}\\
+\ \ \textcolor{psorange!80!black}{\textbf{prefetch\_read(\&f1[x\ +\ 32]);}}\ \ ...\ \ \ \textcolor{psgray}{//\ one\ per\ array:\ 19\ +\ 23}\\
+\ \ a\ =\ vle32(\&f0[x]);\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ the\ same\ loads\ as\ before;}\\
+\ \ b\ =\ vle32(\&f1[x]);\ \ ...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \textcolor{psgray}{//\ now\ they\ find\ their\ lines}\\
+\ \ ...\ compute,\ then\ store\ ...\\
+\}};
+  \node[font=\scriptsize\bfseries,anchor=south west] at (new.north west) {with prefetch: what the new pass writes (names shortened)};
+\end{tikzpicture}%

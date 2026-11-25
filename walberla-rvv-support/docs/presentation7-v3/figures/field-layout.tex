@@ -1,0 +1,175 @@
+% Slide "How the 19 values are stored in memory" (new in presentation5; redrawn after the user's reviews).
+% The small array is the same 3 x 3 x 3 cube as on the stencil slide (the cell in the middle and its 26
+% neighbours), drawn with its three planes pulled apart, every cell numbered with its place in memory, and the
+% same numbers in one contiguous strip of memory: x fastest, then y, then z (waLBerla's layout fzyx). The cell
+% in the middle is 13; its 6 face neighbours are 13 -+ 1 (x), 13 -+ 3 (y), 13 -+ 9 (z). Colours as on the
+% stencil slide: the cell being updated in blue, its neighbours in teal.
+% Then one row of our real arrays, colour-coded: 1 ghost cell + 64 cells of the block + 1 ghost cell + 2 values
+% of padding = 68 values. Real arrays: waLBerla's v8 fields, layout fzyx (submodules/walberla
+% include/walberla/v8/memory/Field.hpp: 215-252): allocated shape (64 + 2 ghost) per axis, linearization order
+% x, y, z, f (x fastest, f = the direction slowest), the x line padded to the host alignment
+% (BufferSystem.hpp:441-452; 16 B on the board, so a row of 66 floats becomes 68, notes3 progress "Loop 3").
+% Strides in f32 values: x 1, y 68, z 68 * 66 = 4488, f 4488 * 66 = 296208, i.e. +4 B, +272 B, +17 952 B
+% (about 18 KB), +1 184 832 B (about 1.2 MB). (f64: 66, 4356, 287496 values.) The index is the one of the
+% generated vector kernels (explicit_*: x stride 1; gen/SweepgenLdcCPU.cpp:94-96 of explicit_cse, gcc-f32),
+% here for f_4:
+%   _data_f[ctr_0 + ctr_1 * _stride_f_1 + ctr_2 * _stride_f_2 + 4LL * _stride_f_3]
+% presentation7-v2: the text says that the numbers are cell positions in the array of ONE value (f_4), not the
+% values f_0..f_18 (user's review).
+% Overlays: 1 the empty cube and memory; 2 the first row (x fastest); 3 the other rows of plane 0 (then y);
+% 4 planes 1 and 2 (then z); 5 the neighbours of cell 13 and the index x + 3y + 9z; 6 one row of our real
+% arrays (ghost cells, padding) and the index of the generated code.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{
+    cb/.style={draw=psgray!60,line width=0.3pt},
+    num/.style={font=\scriptsize,inner sep=0pt},
+    me/.style={draw=psblue!80!black,fill=psblue!50,line width=1.1pt},
+    nb/.style={draw=psteal!70!black,fill=psteal!40,line width=1.1pt},
+    hop/.style={-{Stealth[length=1.5mm]},semithick,draw=psteal!60!black},
+    lb/.style={font=\scriptsize,text=psgray!90!black,inner sep=1pt},
+    tl/.style={font=\tiny,text=psgray!90!black,inner sep=1pt},
+    ob/.style={font=\scriptsize,text=psteal!60!black,inner sep=1pt},
+    ax/.style={-{Stealth[length=1.4mm]},semithick,draw=black!75},
+    ghost/.style={cb,fill=psgray!50},
+    inner/.style={cb,fill=psblue!22},
+    pad/.style={draw=psgray!80,densely dashed,line width=0.3pt,fill=white},
+    pin/.style={draw=psgray!80,line width=0.4pt},
+  }
+  \path (-1.45,-2.05) rectangle (12.95,3.05);   % the same size on every overlay
+  %   the cube in 3D: x step (0.62, 0), y step (0.38, 0.24); planes z = 0, 1, 2 at heights 0.35, 1.33, 2.31
+  \def\cx{0.62}\def\cyx{0.38}\def\cyy{0.24}
+  \def\base#1{\ifcase#1 0.35\or 1.33\or 2.31\fi}
+  %   \cellat{x}{y}{z}{options}: the parallelogram of one cell; \cellc: its centre
+  \def\cellat#1#2#3#4{\draw[#4] ({\cx*#1+\cyx*#2},{\base{#3}+\cyy*#2}) -- ++(\cx,0) -- ++(\cyx,\cyy) -- ++(-\cx,0) -- cycle;}
+  \def\cellc#1#2#3{({\cx*(#1+0.5)+\cyx*(#2+0.5)},{\base{#3}+\cyy*(#2+0.5)})}
+  %   the three planes are one block: dashed lines join their corners
+  \foreach \px/\py in {0/0, 1.86/0, 3.0/0.72, 1.14/0.72}
+    \draw[densely dashed,psgray!45] (\px,0.35+\py) -- (\px,2.31+\py);
+  %   cells: white, then coloured and numbered from the overlay that reaches them
+  %   (orange = plane z = 0, violet = plane z = 1, grey = plane z = 2; darker = larger y)
+  \foreach \z in {0,1,2} \foreach \y in {0,1,2} \foreach \x in {0,1,2} {
+    \pgfmathtruncatemacro\n{\x+3*\y+9*\z}
+    \pgfmathtruncatemacro\s{ifthenelse(\n<3,2,ifthenelse(\n<9,3,4))}
+    \pgfmathtruncatemacro\sh{12+13*\y}
+    \ifcase\z \def\hue{psorange}\or\def\hue{psviolet}\or\def\hue{psgray}\fi
+    \cellat{\x}{\y}{\z}{cb,fill=white}
+    \cellat{\x}{\y}{\z}{cb,fill=\hue!\sh,visible on=<\s->}
+    \node[num,visible on=<\s->] at \cellc{\x}{\y}{\z} {\n};
+  }
+  %   5: the cell in the middle (13) and its 6 face neighbours, coloured as on the stencil slide
+  \begin{scope}[visible on=<5->]
+    \foreach \x/\y/\z/\n in {1/2/1/16, 0/1/1/12, 2/1/1/14, 1/0/1/10, 1/1/0/4, 1/1/2/22} {
+      \cellat{\x}{\y}{\z}{nb}
+      \node[num] at \cellc{\x}{\y}{\z} {\n};
+    }
+    \cellat{1}{1}{1}{me}
+    \node[num,font=\scriptsize\bfseries] at \cellc{1}{1}{1} {13};
+  \end{scope}
+  %   axis labels on the cube
+  \foreach \x in {0,1,2} \node[tl,anchor=north] at ({\cx*(\x+0.5)},0.33) {\x};
+  \node[tl,anchor=north east] at (0,0.33) {$x$:};
+  \foreach \y in {0,1,2} \node[tl,anchor=west] at ({3*\cx+\cyx*(\y+0.5)+0.03},{0.35+\cyy*(\y+0.5)}) {\y};
+  \node[tl,anchor=west] at ({3*\cx+\cyx*3+0.03},{0.35+\cyy*3+0.02}) {$y$};
+  \foreach \z in {0,1,2} \node[tl,anchor=east,fill=white] at ({\cyx*1.5-0.06},{\base{\z}+\cyy*1.5}) {$z = \z$};
+  %   the unit vectors, as on the stencil slide
+  \begin{scope}[shift={(-1.35,1.0)}]
+    \draw[ax] (0,0) -- (0.5,0) node[tl,text=black,anchor=west] {$\mathbf{i}$ ($x$)};
+    \draw[ax] (0,0) -- (0.34,0.23) node[tl,text=black,anchor=south west] {$\mathbf{j}$ ($y$)};
+    \draw[ax] (0,0) -- (0,0.5) node[tl,text=black,anchor=south west] {$\mathbf{k}$ ($z$)};
+  \end{scope}
+
+  % ================= memory: one strip with the same numbers (overlays 1-5) ==========================
+  \def\sw{0.42}\def\smx{0.5}
+  \node[lb,anchor=east,align=right] at (\smx-0.06,-0.32) {memory:\\array of $f_4$};
+  \node[tl,anchor=south east,visible on=<1-5>] at (\smx+27*\sw,-0.12) {addresses grow $\rightarrow$};
+  \foreach \k in {0,...,26} {
+    \pgfmathtruncatemacro\r{\k/3}
+    \pgfmathtruncatemacro\y{mod(\r,3)}
+    \pgfmathtruncatemacro\z{\k/9}
+    \pgfmathtruncatemacro\s{ifthenelse(\k<3,2,ifthenelse(\k<9,3,4))}
+    \pgfmathtruncatemacro\sh{12+13*\y}
+    \ifcase\z \def\hue{psorange}\or\def\hue{psviolet}\or\def\hue{psgray}\fi
+    \draw[cb,fill=white,visible on=<1-5>] ({\smx+\k*\sw},-0.5) rectangle ++(\sw,0.36);
+    \draw[cb,fill=\hue!\sh,visible on=<\s-5>] ({\smx+\k*\sw},-0.5) rectangle ++(\sw,0.36);
+    \node[num,visible on=<\s-5>] at ({\smx+(\k+0.5)*\sw},-0.32) {\k};
+  }
+  \foreach \r in {0,...,8} {
+    \pgfmathtruncatemacro\y{mod(\r,3)}
+    \pgfmathtruncatemacro\s{ifthenelse(\r<1,2,ifthenelse(\r<3,3,4))}
+    \node[tl,anchor=north,visible on=<\s-5>] at ({\smx+(3*\r+1.5)*\sw},-0.52) {row $y = \y$};
+  }
+  \foreach \z/\hue/\s in {0/psorange/3, 1/psviolet/4, 2/psgray/4}
+    \draw[decorate,decoration={brace,amplitude=3pt,mirror},\hue!90!black,visible on=<\s-5>]
+      ({\smx+9*\z*\sw},-0.73) -- ({\smx+9*(\z+1)*\sw},-0.73)
+      node[midway,below=1pt,font=\scriptsize,text=\hue!80!black] {plane $z = \z$};
+  %   5: the neighbours of cell 13 in memory
+  \begin{scope}[visible on=<5>]
+    \foreach \k in {4,10,12,14,16,22} {
+      \draw[nb] ({\smx+\k*\sw},-0.5) rectangle ++(\sw,0.36);
+      \node[num] at ({\smx+(\k+0.5)*\sw},-0.32) {\k};
+    }
+    \draw[me] ({\smx+13*\sw},-0.5) rectangle ++(\sw,0.36);
+    \node[num,font=\scriptsize\bfseries] at ({\smx+13.5*\sw},-0.32) {13};
+    \foreach \k/\b/\p/\t in {14/80/0.5/{+1}, 16/35/0.55/{+3}, 22/18/0.55/{+9}}
+      \draw[hop] ({\smx+13.5*\sw+0.05},-0.12) to[bend left=\b] node[above,ob,pos=\p] {$\t$} ({\smx+(\k+0.5)*\sw},-0.12);
+    \foreach \k/\b/\p/\t in {12/80/0.5/{-1}, 10/35/0.55/{-3}, 4/18/0.55/{-9}}
+      \draw[hop] ({\smx+13.5*\sw-0.05},-0.12) to[bend right=\b] node[above,ob,pos=\p] {$\t$} ({\smx+(\k+0.5)*\sw},-0.12);
+  \end{scope}
+
+  % ================= 6: one row of our real arrays, colour-coded ====================================
+  \def\rsw{0.16}
+  \begin{scope}[visible on=<6>]
+    \foreach \k in {0,...,67} {
+      \ifnum\k=0 \def\st{ghost}\else\ifnum\k<65 \def\st{inner}\else\ifnum\k=65 \def\st{ghost}\else
+        \def\st{pad}\fi\fi\fi
+      \draw[\st] ({\smx+\k*\rsw},-0.5) rectangle ++(\rsw,0.36);
+    }
+    \draw[decorate,decoration={brace,amplitude=3pt},psgray!90!black]
+      ({\smx},-0.1) -- ({\smx+68*\rsw},-0.1)
+      node[midway,above=2pt,font=\scriptsize] {one row of our real arrays: 68 values, or 272 bytes in f32};
+    \draw[decorate,decoration={brace,amplitude=3pt,mirror},psblue!80!black]
+      ({\smx+\rsw+0.02},-0.56) -- ({\smx+65*\rsw-0.02},-0.56)
+      node[midway,below=2pt,font=\scriptsize,text=psblue!80!black] {the 64 cells of the block in this row};
+    \draw[pin] ({\smx+0.5*\rsw},-0.5) -- ++(0,-0.3) node[lb,text=black,anchor=north] {ghost cell};
+    \draw[pin] ({\smx+65.5*\rsw},-0.5) -- ++(0,-0.3) node[lb,text=black,anchor=north east] {ghost cell};
+    \draw[pin] ({\smx+67*\rsw},-0.5) -- ++(0,-0.3) node[lb,text=black,anchor=north west] {padding};
+  \end{scope}
+
+  % ================= what the overlays say ==========================================================
+  \node[anchor=north west,text width=9.0cm,align=left,font=\scriptsize,inner sep=0pt] at (3.9,3.05) {%
+    \begin{itemize}\setlength{\itemsep}{0.5pt}
+      \item Take the array of one of the 19 values, say $f_4$, and imagine it has only $3 \times 3 \times 3$
+            cells: the 27 cells around one cell from the last slide.
+      \item Each number is the position of a cell in this array. It is \textbf{not} one of the values $f_0$ to
+            $f_{18}$: each of those has an array like this one.
+      \item<2-> $x$ changes fastest: the 3 cells of a row are stored side by side.
+      \item<3-> Then $y$: the rows of a plane follow each other.
+      \item<4-> Then $z$: the planes follow each other.
+      \item<5-> So for the cell in the middle (number 13), the neighbours in $x$ are 1 position away, in $y$
+            3 positions (one row), and in $z$ 9 positions (one plane).
+    \end{itemize}};
+
+  % ================= the index: first for the small array, then for ours ============================
+  \begin{scope}[visible on=<5->,every node/.style={font=\ttfamily\scriptsize,inner sep=0pt,anchor=base west}]
+    \node (t0) at (-1.05,-1.47) {\alt<6>{f4[z][y][x]\ \ is\ \ \_data\_f[\ }{cell[z][y][x]\ \ is\ \ a[\ }\mbox{}};
+    \node[base right=0pt of t0] (t1) {x};
+    \node[base right=0pt of t1] (p1) {\alt<6>{\ +\ }{\ \ \ +\ \ \ }\mbox{}};
+    \node[base right=0pt of p1] (t2) {\alt<6>{y*\_stride\_f\_1}{3*y}};
+    \node[base right=0pt of t2] (p2) {\alt<6>{\ +\ }{\ \ \ +\ \ \ }\mbox{}};
+    \node[base right=0pt of p2] (t3) {\alt<6>{z*\_stride\_f\_2}{9*z}};
+    \node[base right=0pt of t3] (p3) {\alt<6>{\ +\ \mbox{}}{}};
+    \node[base right=0pt of p3] (t4) {\alt<6>{4*\_stride\_f\_3}{}};
+    \node[base right=0pt of t4] (t5) {\ ]};
+  \end{scope}
+  \begin{scope}[on background layer]
+    \node[draw=psgray!80,fill=codebg,rounded corners=2pt,inner sep=3pt,fit=(t0)(t5),visible on=<5->] (ix) {};
+  \end{scope}
+  \node[lb,anchor=west,align=left,visible on=<5->] at ([xshift=2mm]ix.east)
+    {\alt<6>{generated code; strides in\\f32: 68, 4\,488 and 296\,208}%
+            {small array: 3 positions per\\row, 9 per plane}};
+  %   braces under the terms
+  \def\brc#1#2{\draw[decorate,decoration={brace,amplitude=2.5pt,mirror},psteal!70!black]
+      ([yshift=-1.3mm]#1.south west) -- ([yshift=-1.3mm]#1.south east) node[midway,below=1.5pt,ob] {#2};}
+  \only<5>{\brc{t1}{$+1$}\brc{t2}{$+3$}\brc{t3}{$+9$}}
+  \only<6>{\brc{t1}{$+4$\,B}\brc{t2}{$+272$\,B}\brc{t3}{$+18$\,KB}\brc{t4}{$+1.2$\,MB: $f_5$}}
+\end{tikzpicture}%

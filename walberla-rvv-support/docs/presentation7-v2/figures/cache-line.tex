@@ -2,9 +2,9 @@
 % for the line size of both machines, checked).
 % Cache line size. K1: read on the board (bananapi, 2026-11-23): /sys/devices/system/cpu/cpu0/cache/index{0,1,2}/
 % coherency_line_size = 64 (L1I 32K, L1D 32K, L2 512K), getconf LEVEL1_DCACHE_LINESIZE = 64, device tree
-% d-cache-block-size = riscv,cbom-block-size = riscv,cboz-block-size = 64. SG2044 (C920v2): 64 B from the
-% SG2042 device tree (same XuanTie C920 family: d-cache-block-size = <64>); not yet read on monte3 itself (todo
-% on the slide). 64 B = 16 f32 or 8 f64 values. One vector load (vle32, LMUL 1) is VLEN / 32 f32 values:
+% d-cache-block-size = riscv,cbom-block-size = riscv,cboz-block-size = 64. SG2044 (C920v2): read on monte3
+% (mc-peak-2, 2026-11-25): /sys/devices/system/cpu/cpu0/cache/index{0,1,2,3}/coherency_line_size = 64 for all
+% four caches (L1I, L1D, L2, L3). 64 B = 16 f32 or 8 f64 values. One vector load (vle32, LMUL 1) is VLEN / 32 f32 values:
 % 8 on the K1 (half a line), 4 on the SG2044 (a quarter of a line).
 % One array drawn value by value along x (4 cache lines = 64 values in f32). Overlays: 1 the lines and what fits
 % in one; 2 the loop in line 0, the hardware prefetcher already loading lines 1 and 2; 3 the loop in line 1.

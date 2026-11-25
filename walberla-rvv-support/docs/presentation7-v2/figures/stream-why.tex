@@ -1,7 +1,7 @@
 % Slide "What a stream is, and why it matters" (presentation7-v2; replaces cache-line.tex and stream-count.tex after
 % the user's review: one picture instead of 5 overlays).
-% Cache line 64 B: K1 read on the board (sysfs coherency_line_size, device tree); SG2044 from the SG2042 device
-% tree (same C920 family; todo on the slide). 64 B = 16 f32 = 8 f64.
+% Cache line 64 B: K1 read on the board (sysfs coherency_line_size, device tree); SG2044 read on monte3 (sysfs
+% coherency_line_size = 64 for index0-3, 2026-11-25). 64 B = 16 f32 = 8 f64.
 % Left: one array read along x; lines already used, the line in use, two lines the hardware prefetcher has
 % requested after seeing the regular pattern, lines not touched yet.
 % Right: the prefetcher follows a limited number of streams: on the K1 about 20 (Part 1, figures/streams.tex: up

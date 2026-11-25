@@ -1,0 +1,311 @@
+== verify f32, Mon Nov 16 07:59:04 AM CST 2026, riscv64, 11 executable(s)
+   sha256 29d176d9876b2e76 /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar
+   sha256 b04256301b725f46 /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse
+   sha256 6c86e49b9fef4d7e /home/bananapi/saleh/presentation4/build-gcc-f32-scalar/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_scalar_cse_aa
+   sha256 e90e8b4b14dda4ce /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec
+   sha256 6ee16e29c8399e93 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse
+   sha256 1ad6a279c7191d78 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_autovec_cse_aa
+   sha256 b9b593d0d47675ed /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse
+   sha256 ddd9e6e659320046 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_pf
+   sha256 c89950706f0ffd9c /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa
+   sha256 d48953de35d72c41 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_pf
+   sha256 864a7d8042e9a3f8 /home/bananapi/saleh/presentation4/build-gcc-f32/apps/benchmarks/SweepgenLdcCPU/SweepgenLdcCPU_explicit_cse_aa_split
+
+== oracle: 1 process(es), 16^3 cells each, 100 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0x340b2bba04d3cee2 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_scalar_cse fieldhash=0x6f12960c9ac32c6a links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0x8a23138d92bca11f links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec fieldhash=0x340b2bba04d3cee2 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec_cse fieldhash=0x6f12960c9ac32c6a links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec_cse_aa fieldhash=0x8a23138d92bca11f links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse fieldhash=0x78c73d9de9873018 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_pf fieldhash=0x78c73d9de9873018 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa fieldhash=0x1e39486e5aaa618e links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa_pf fieldhash=0x1e39486e5aaa618e links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa_split fieldhash=0x2d2543d624b1d89f links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=100 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.3744984517675579 mass=4096.0
+calibrated on /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+esentation4/verify/gcc-f32/oracle-np1-c16-s100/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+on4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar     f32     16x16x16   9.02e-10   1.19e-07       0
+verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse     f32     16x16x16   1.89e-10   1.19e-07       0
+ify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa     f32     16x16x16   1.75e-10   1.19e-07       0
+n4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec     f32     16x16x16   9.02e-10   1.19e-07       0
+erify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse     f32     16x16x16   1.89e-10   1.19e-07       0
+fy/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse_aa     f32     16x16x16   1.75e-10   1.19e-07       0
+rify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse     f32     16x16x16   3.93e-10   1.19e-07       0
+y/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_pf     f32     16x16x16   3.93e-10   1.19e-07       0
+y/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa     f32     16x16x16   2.76e-10   1.19e-07       0
+cc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_pf     f32     16x16x16   2.76e-10   1.19e-07       0
+f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_split     f32     16x16x16   3.49e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s100/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+on4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar   7.17e-08   4.47e-08         0/4096  
+verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse   6.97e-08   4.19e-08         0/4096  
+ify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_scalar_cse_aa   7.17e-08   4.24e-08         0/4096  
+n4/verify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec   7.17e-08   4.47e-08         0/4096  
+erify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse   6.97e-08   4.19e-08         0/4096  
+fy/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_autovec_cse_aa   7.17e-08   4.24e-08         0/4096  
+rify/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse   7.17e-08   4.12e-08         0/4096  
+y/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_pf   7.17e-08   4.12e-08         0/4096  
+y/gcc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa   7.17e-08   4.43e-08         0/4096  
+cc-f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_pf   7.17e-08   4.43e-08         0/4096  
+f32/oracle-np1-c16-s100/SweepgenLdcCPU_explicit_cse_aa_split   6.97e-08   2.10e-08         0/4096  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS oracle np=1 cells=16 steps=100
+
+== oracle: 1 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xc5e55e77f5609a75 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_scalar_cse fieldhash=0x5b70c36334aad45d links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0xc54d59e8e971552d links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec fieldhash=0xc5e55e77f5609a75 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec_cse fieldhash=0x5b70c36334aad45d links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_autovec_cse_aa fieldhash=0xc54d59e8e971552d links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse fieldhash=0xf3663dc921a5a4b0 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_pf fieldhash=0xf3663dc921a5a4b0 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa fieldhash=0xa08f9ceb08eee710 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa_pf fieldhash=0xa08f9ceb08eee710 links_noslip=6208 links_ubb=1280 
+   variant=SweepgenLdcCPU_explicit_cse_aa_split fieldhash=0x0095f0ff6166155a links_noslip=6208 links_ubb=1280 
+ldc_reference domain=16x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=1280 energy=0.3753928218591154 mass=4096.0
+calibrated on /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+esentation4/verify/gcc-f32/oracle-np1-c16-s101/reference.npz ref-f64     16x16x16   0.00e+00   2.22e-16       0
+on4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar     f32     16x16x16   1.16e-10   1.19e-07       0
+verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse     f32     16x16x16   5.97e-10   1.19e-07       0
+ify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f32     16x16x16   8.00e-10   1.19e-07       0
+n4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec     f32     16x16x16   1.16e-10   1.19e-07       0
+erify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse     f32     16x16x16   5.97e-10   1.19e-07       0
+fy/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse_aa     f32     16x16x16   8.00e-10   1.19e-07       0
+rify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse     f32     16x16x16   7.71e-10   1.19e-07       0
+y/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_pf     f32     16x16x16   7.71e-10   1.19e-07       0
+y/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa     f32     16x16x16   5.38e-10   1.19e-07       0
+cc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32     16x16x16   5.38e-10   1.19e-07       0
+f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32     16x16x16   1.06e-09   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np1-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+on4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar   7.17e-08   4.36e-08         0/4096  
+verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse   7.04e-08   4.29e-08         0/4096  
+ify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_scalar_cse_aa   7.17e-08   4.28e-08         0/4096  
+n4/verify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec   7.17e-08   4.36e-08         0/4096  
+erify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse   7.04e-08   4.29e-08         0/4096  
+fy/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_autovec_cse_aa   7.17e-08   4.28e-08         0/4096  
+rify/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse   7.48e-08   4.17e-08         0/4096  
+y/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_pf   7.48e-08   4.17e-08         0/4096  
+y/gcc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa   7.17e-08   4.28e-08         0/4096  
+cc-f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf   7.17e-08   4.28e-08         0/4096  
+f32/oracle-np1-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split   6.35e-08   2.45e-08         0/4096  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS oracle np=1 cells=16 steps=101
+
+== oracle: 2 process(es), 16^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xf73747b43ad31c86 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_scalar_cse fieldhash=0x94d5fb188a1b0006 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0xc26f4318617dfbd8 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_autovec fieldhash=0xf73747b43ad31c86 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_autovec_cse fieldhash=0x94d5fb188a1b0006 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_autovec_cse_aa fieldhash=0xc26f4318617dfbd8 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_explicit_cse fieldhash=0x8a1e14aaa11df548 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_explicit_cse_pf fieldhash=0x8a1e14aaa11df548 links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_explicit_cse_aa fieldhash=0xe34551897f3dbd9a links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_explicit_cse_aa_pf fieldhash=0xe34551897f3dbd9a links_noslip=9984 links_ubb=2560 
+   variant=SweepgenLdcCPU_explicit_cse_aa_split fieldhash=0xbdb1677d1dc10f64 links_noslip=9984 links_ubb=2560 
+ldc_reference domain=32x16x16 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=9984 links_ubb=2560 energy=0.8764116203957387 mass=8192.0
+calibrated on /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+esentation4/verify/gcc-f32/oracle-np2-c16-s101/reference.npz ref-f64     32x16x16   0.00e+00   2.22e-16       0
+on4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar     f32     32x16x16   2.91e-11   1.19e-07       0
+verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse     f32     32x16x16   1.36e-09   1.19e-07       0
+ify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa     f32     32x16x16   1.35e-09   1.19e-07       0
+n4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec     f32     32x16x16   2.91e-11   1.19e-07       0
+erify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse     f32     32x16x16   1.36e-09   1.19e-07       0
+fy/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse_aa     f32     32x16x16   1.35e-09   1.19e-07       0
+rify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse     f32     32x16x16   1.03e-09   1.19e-07       0
+y/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_pf     f32     32x16x16   1.03e-09   1.19e-07       0
+y/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa     f32     32x16x16   8.88e-10   1.19e-07       0
+cc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32     32x16x16   8.88e-10   1.19e-07       0
+f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32     32x16x16   7.79e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np2-c16-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+on4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar   9.16e-08   6.03e-08         0/8192  
+verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse   9.16e-08   5.91e-08         0/8192  
+ify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_scalar_cse_aa   9.16e-08   6.09e-08         0/8192  
+n4/verify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec   9.16e-08   6.03e-08         0/8192  
+erify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse   9.16e-08   5.91e-08         0/8192  
+fy/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_autovec_cse_aa   9.16e-08   6.09e-08         0/8192  
+rify/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse   9.16e-08   5.95e-08         0/8192  
+y/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_pf   9.16e-08   5.95e-08         0/8192  
+y/gcc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa   9.16e-08   5.71e-08         0/8192  
+cc-f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_pf   9.16e-08   5.71e-08         0/8192  
+f32/oracle-np2-c16-s101/SweepgenLdcCPU_explicit_cse_aa_split   7.32e-08   2.98e-08         0/8192  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS oracle np=2 cells=16 steps=101
+
+== oracle: 6 process(es), 8^3 cells each, 101 steps
+   variant=SweepgenLdcCPU_scalar fieldhash=0xe0d267a05e65dbce links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_scalar_cse fieldhash=0xe1d6815ad0d18068 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_scalar_cse_aa fieldhash=0xba127b8e7079b645 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_autovec fieldhash=0xe0d267a05e65dbce links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_autovec_cse fieldhash=0xe1d6815ad0d18068 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_autovec_cse_aa fieldhash=0xba127b8e7079b645 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_explicit_cse fieldhash=0xb4f17a0caa8cedda links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_explicit_cse_pf fieldhash=0xb4f17a0caa8cedda links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_explicit_cse_aa fieldhash=0xeb119855dd9e2419 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_explicit_cse_aa_pf fieldhash=0xeb119855dd9e2419 links_noslip=6208 links_ubb=640 
+   variant=SweepgenLdcCPU_explicit_cse_aa_split fieldhash=0xea953479e8daab66 links_noslip=6208 links_ubb=640 
+ldc_reference domain=16x24x8 steps=101 omega=1.8 u_lid=0.05 finite=True links_noslip=6208 links_ubb=640 energy=0.16526027832386786 mass=3072.0
+calibrated on /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar (x2, floor 4.77e-07): rho 4.77e-07, u 4.77e-07, mass 4.77e-07, sym 4.77e-07
+
+input                                                           type       domain   mass_err    sym_err subnorm
+resentation4/verify/gcc-f32/oracle-np6-c8-s101/reference.npz ref-f64      16x24x8   0.00e+00   2.22e-16       0
+ion4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar     f32      16x24x8   2.13e-10   1.19e-07       0
+/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse     f32      16x24x8   2.72e-10   1.19e-07       0
+rify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa     f32      16x24x8   7.18e-10   1.19e-07       0
+on4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec     f32      16x24x8   2.13e-10   1.19e-07       0
+verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse     f32      16x24x8   2.72e-10   1.19e-07       0
+ify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse_aa     f32      16x24x8   7.18e-10   1.19e-07       0
+erify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse     f32      16x24x8   1.55e-10   1.19e-07       0
+fy/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_pf     f32      16x24x8   1.55e-10   1.19e-07       0
+fy/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa     f32      16x24x8   5.04e-10   1.19e-07       0
+gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_pf     f32      16x24x8   5.04e-10   1.19e-07       0
+-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_split     f32      16x24x8   3.30e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/oracle-np6-c8-s101/reference.npz:
+input                                                         max|drho|    max|du|  identical cells
+ion4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar   6.92e-08   4.35e-08         0/3072  
+/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse   7.73e-08   4.31e-08         0/3072  
+rify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_scalar_cse_aa   6.70e-08   4.13e-08         0/3072  
+on4/verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec   6.92e-08   4.35e-08         0/3072  
+verify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse   7.73e-08   4.31e-08         0/3072  
+ify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_autovec_cse_aa   6.70e-08   4.13e-08         0/3072  
+erify/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse   6.92e-08   4.54e-08         0/3072  
+fy/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_pf   6.92e-08   4.54e-08         0/3072  
+fy/gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa   6.70e-08   4.52e-08         0/3072  
+gcc-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_pf   6.70e-08   4.52e-08         0/3072  
+-f32/oracle-np6-c8-s101/SweepgenLdcCPU_explicit_cse_aa_split   6.30e-08   2.21e-08         0/3072  
+
+RESULT PASS (thresholds: d rho 4.76837e-07, d u 4.76837e-07, mass 4.76837e-07, sym 4.76837e-07)
+PASS oracle np=6 cells=8 steps=101
+
+== decomposition: 1 x 32^3 against 8 x 16^3, 61 steps, must be bit-identical
+input                                                           type       domain   mass_err    sym_err subnorm
+resentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar-np1     f32     32x32x32   4.58e-10   1.19e-07       0
+resentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar-np8     f32     32x32x32   4.58e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar-np1:
+input                                                         max|drho|    max|du|  identical cells
+resentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_scalar (fieldhash=0x179e89b851d68412)
+input                                                           type       domain   mass_err    sym_err subnorm
+ntation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse-np1     f32     32x32x32   1.27e-11   1.19e-07       0
+ntation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse-np8     f32     32x32x32   1.27e-11   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse-np1:
+input                                                         max|drho|    max|du|  identical cells
+ntation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_scalar_cse (fieldhash=0x43cd873106b31f5a)
+input                                                           type       domain   mass_err    sym_err subnorm
+tion4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse_aa-np1     f32     32x32x32   1.42e-10   1.19e-07       0
+tion4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse_aa-np8     f32     32x32x32   1.42e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse_aa-np1:
+input                                                         max|drho|    max|du|  identical cells
+tion4/verify/gcc-f32/decomp/SweepgenLdcCPU_scalar_cse_aa-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_scalar_cse_aa (fieldhash=0x10b587a49c315393)
+input                                                           type       domain   mass_err    sym_err subnorm
+esentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec-np1     f32     32x32x32   4.58e-10   1.19e-07       0
+esentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec-np8     f32     32x32x32   4.58e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec-np1:
+input                                                         max|drho|    max|du|  identical cells
+esentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_autovec (fieldhash=0x179e89b851d68412)
+input                                                           type       domain   mass_err    sym_err subnorm
+tation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse-np1     f32     32x32x32   1.27e-11   1.19e-07       0
+tation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse-np8     f32     32x32x32   1.27e-11   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse-np1:
+input                                                         max|drho|    max|du|  identical cells
+tation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_autovec_cse (fieldhash=0x43cd873106b31f5a)
+input                                                           type       domain   mass_err    sym_err subnorm
+ion4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse_aa-np1     f32     32x32x32   1.42e-10   1.19e-07       0
+ion4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse_aa-np8     f32     32x32x32   1.42e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse_aa-np1:
+input                                                         max|drho|    max|du|  identical cells
+ion4/verify/gcc-f32/decomp/SweepgenLdcCPU_autovec_cse_aa-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_autovec_cse_aa (fieldhash=0x10b587a49c315393)
+input                                                           type       domain   mass_err    sym_err subnorm
+ation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse-np1     f32     32x32x32   2.84e-10   1.19e-07       0
+ation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse-np8     f32     32x32x32   2.84e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse-np1:
+input                                                         max|drho|    max|du|  identical cells
+ation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_explicit_cse (fieldhash=0x8c83e7dcbe2ff38f)
+input                                                           type       domain   mass_err    sym_err subnorm
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_pf-np1     f32     32x32x32   2.84e-10   1.19e-07       0
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_pf-np8     f32     32x32x32   2.84e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_pf-np1:
+input                                                         max|drho|    max|du|  identical cells
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_pf-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_explicit_cse_pf (fieldhash=0x8c83e7dcbe2ff38f)
+input                                                           type       domain   mass_err    sym_err subnorm
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa-np1     f32     32x32x32   1.51e-10   1.19e-07       0
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa-np8     f32     32x32x32   1.51e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa-np1:
+input                                                         max|drho|    max|du|  identical cells
+on4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa (fieldhash=0xfe2aa8c19d3a9f95)
+input                                                           type       domain   mass_err    sym_err subnorm
+/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_pf-np1     f32     32x32x32   1.51e-10   1.19e-07       0
+/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_pf-np8     f32     32x32x32   1.51e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_pf-np1:
+input                                                         max|drho|    max|du|  identical cells
+/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_pf-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_pf (fieldhash=0xfe2aa8c19d3a9f95)
+input                                                           type       domain   mass_err    sym_err subnorm
+rify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_split-np1     f32     32x32x32   2.31e-10   1.19e-07       0
+rify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_split-np8     f32     32x32x32   2.31e-10   1.19e-07       0
+
+against /home/bananapi/saleh/presentation4/verify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_split-np1:
+input                                                         max|drho|    max|du|  identical cells
+rify/gcc-f32/decomp/SweepgenLdcCPU_explicit_cse_aa_split-np8   0.00e+00   0.00e+00     32768/32768 
+
+RESULT PASS (thresholds: d rho 0, d u 0, mass inf, sym inf)
+PASS decomp SweepgenLdcCPU_explicit_cse_aa_split (fieldhash=0x5a07fcbb3dd088c1)
+
+== verify done Mon Nov 16 08:02:19 AM CST 2026: 0 failure(s)
+VERIFY PASS

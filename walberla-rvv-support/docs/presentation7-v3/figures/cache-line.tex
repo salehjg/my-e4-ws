@@ -1,0 +1,57 @@
+% Slide "Cache lines and streams" (new in presentation7-v2; the user asked for the cache line to be visible and
+% for the line size of both machines, checked).
+% Cache line size. K1: read on the board (bananapi, 2026-11-23): /sys/devices/system/cpu/cpu0/cache/index{0,1,2}/
+% coherency_line_size = 64 (L1I 32K, L1D 32K, L2 512K), getconf LEVEL1_DCACHE_LINESIZE = 64, device tree
+% d-cache-block-size = riscv,cbom-block-size = riscv,cboz-block-size = 64. SG2044 (C920v2): read on monte3
+% (mc-peak-2, 2026-11-25): /sys/devices/system/cpu/cpu0/cache/index{0,1,2,3}/coherency_line_size = 64 for all
+% four caches (L1I, L1D, L2, L3). 64 B = 16 f32 or 8 f64 values. One vector load (vle32, LMUL 1) is VLEN / 32 f32 values:
+% 8 on the K1 (half a line), 4 on the SG2044 (a quarter of a line).
+% One array drawn value by value along x (4 cache lines = 64 values in f32). Overlays: 1 the lines and what fits
+% in one; 2 the loop in line 0, the hardware prefetcher already loading lines 1 and 2; 3 the loop in line 1.
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \tikzset{v/.style={draw=psgray!45,line width=0.2pt,fill=white},
+           now/.style={fill=psteal!65}, next/.style={fill=psteal!18}, done/.style={fill=psgray!30},
+           lbx/.style={font=\scriptsize,inner sep=1pt},
+           vl/.style={decorate,decoration={brace,amplitude=2.5pt},line width=0.6pt}}
+  \path (-0.2,-1.6) rectangle (7.5,1.75);   % the same size on every overlay
+  \def\w{0.11}   % one f32 value
+  \def\h{0.42}
+  %   \lstate{line}{style}: colour one whole cache line
+  \def\lstate#1#2#3{\fill[#2,visible on=<#3>] ({#1*16*\w},0) rectangle ++({16*\w},\h);}
+  \lstate{0}{now}{2} \lstate{1}{next}{2} \lstate{2}{next}{2}
+  \lstate{0}{done}{3} \lstate{1}{now}{3} \lstate{2}{next}{3} \lstate{3}{next}{3}
+  \foreach \k in {0,...,63} \draw[v,fill=none] (\k*\w,0) rectangle ++(\w,\h);
+  %   the cache lines: thick borders every 16 values
+  \foreach \l in {0,...,3} {
+    \draw[black!80,line width=1.1pt] ({\l*16*\w},0) rectangle ++({16*\w},\h);
+    \node[lbx,anchor=north] at ({(\l+0.5)*16*\w},-0.05) {cache line \l};
+  }
+  \draw[arr] (0,-0.5) -- (64*\w,-0.5) node[pos=0.5,below,lbl] {the loop walks along $x$: addresses grow};
+  %   1: what fits in one line, and one vector load
+  \begin{scope}[visible on=<1>]
+    \draw[vl,psblue!80!black] (0,\h+0.32) -- (16*\w,\h+0.32)
+      node[midway,above=2pt,lbx,text=psblue!80!black,align=center] {64 bytes = 16 f32 values\\(or 8 f64 values)};
+    \draw[vl,psteal!70!black] (32*\w,\h+0.32) -- (40*\w,\h+0.32)
+      node[midway,above=2pt,lbx,text=psteal!50!black,align=center] {one vector load:\\8 f32 on the K1};
+    \draw[vl,psorange!85!black] (48*\w,\h+0.32) -- (52*\w,\h+0.32)
+      node[midway,above=2pt,lbx,text=psorange!70!black,align=center] {4 f32 on\\the SG2044};
+  \end{scope}
+  %   2, 3: the loop and the hardware prefetcher
+  \foreach \o/\l in {2/0,3/1}
+    \node[font=\scriptsize,text=psteal!50!black,anchor=south,inner sep=1pt,visible on=<\o>]
+      at ({(\l+0.5)*16*\w},\h+0.05) {$\downarrow$ the loop is here};
+  \node[lbx,anchor=south,visible on=<2>,text=psteal!50!black] at ({2*16*\w},\h+0.62)
+    {the hardware prefetcher is already loading these two lines};
+  \draw[decorate,decoration={brace,amplitude=2.5pt},psteal!60!black,visible on=<2>] (16*\w,\h+0.55) -- (48*\w,\h+0.55);
+  \node[lbx,anchor=south,visible on=<3>,text=psteal!50!black] at ({3*16*\w},\h+0.62)
+    {loading early};
+  \draw[decorate,decoration={brace,amplitude=2.5pt},psteal!60!black,visible on=<3>] (32*\w,\h+0.55) -- (64*\w,\h+0.55);
+  \node[lbx,anchor=south,visible on=<3>,text=psgray!90!black] at ({0.5*16*\w},\h+0.62) {already used};
+  %   legend
+  \begin{scope}[shift={(0,-1.45)},visible on=<2->]
+    \fill[now] (0,0) rectangle ++(0.3,0.18); \node[lbl,anchor=west] at (0.35,0.09) {in use};
+    \fill[next] (1.4,0) rectangle ++(0.3,0.18); \draw[psgray!45] (1.4,0) rectangle ++(0.3,0.18);
+    \node[lbl,anchor=west] at (1.75,0.09) {loading early};
+    \fill[done] (3.5,0) rectangle ++(0.3,0.18); \node[lbl,anchor=west] at (3.85,0.09) {already used};
+  \end{scope}
+\end{tikzpicture}%

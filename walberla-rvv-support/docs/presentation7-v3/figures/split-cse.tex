@@ -1,0 +1,44 @@
+% Slide "The split loop in code" (new in presentation7-v2, the companion of kernel-cse.tex). Source: the generated
+% SweepgenLdcCPU_explicit_cse_aa_split, GCC f32 (build/presentation4-x86/gcc-f32/apps/benchmarks/SweepgenLdcCPU/
+% _gen/SweepgenLdcCPU_explicit_cse_aa_split/gen/SweepgenLdcCPU.cpp): driver streamCollide (lines 6933-6997),
+% passes m1_0 (4443-4540), macro_0 (4738-4847) and c0_0 (4848-5550), even step with output. Shortened: the
+% scalar form of the statements (the file's remainder loops; the main loops are the same with vector
+% intrinsics), the suffixes __0 / __2 of the names dropped. Written in Python with NumPy indexing (user,
+% 2026-11-24): f[i, z, y, x] = _data_f[...] (in place: the AA pattern, one set of arrays), acc[k, y, x] /
+% scr[k, y, x] = the scratch _data_acc / _data_scr of the block (y = the row inside the block). In c0 the even
+% step stores the new f_1 into the slot of f_2 and the new f_2 into the slot of f_1 (lines of c0_0's remainder
+% loop: "2LL * _stride_f_3] = v_1__0 + omega * (xi_6__0 - v_1__0 + xi_7__0 * (e_1__0 + o_1__0))").
+\begin{tikzpicture}
+  \def\Ld#1{\textcolor{psorange!85!black}{#1}}          % a load of one value f_i
+  \def\Cs#1{\textcolor{psviolet}{\textbf{#1}}}           % a common subexpression (CSE)
+  \def\Mc#1{\textcolor{psteal!65!black}{\textbf{#1}}}    % density and velocity
+  \def\St#1{\textcolor{psblue!85!black}{\textbf{#1}}}    % a store
+  \def\Sc#1{\textcolor{ccomm!65!black}{\textbf{#1}}}     % the scratch (stays in L1)
+  \def\Cm#1{\textcolor{psgray}{#1}}
+  \node[codebox,font=\ttfamily\scriptsize,anchor=north west,text width=72mm] (l) at (0,0) {%
+for\ z\ in\ range(64):\\
+\ \ for\ y0\ in\ range(0,\ 64,\ 2):\ \ \ \ \ \ \ \Cm{\#\ a\ chunk:\ 2\ rows}\\
+\ \ \ \ m0();\ m1();\ m2();\ m3();\ macro()\\
+\ \ \ \ c0();\ c1();\ c2()\\[3pt]
+\Cm{\#\ pass\ m1,\ for\ each\ cell\ of\ the\ chunk:}\\
+v\_5\ =\ \Ld{f[5,\ z,\ y,\ x]};\ ...\ v\_9\ =\ \Ld{f[9,\ z,\ y,\ x]}\\
+\Sc{acc[0,\ y,\ x]}\ +=\ v\_5\ +\ v\_6\ +\ v\_7\ +\ v\_8\ +\ v\_9\ \ \Cm{\#\ mass}\\
+\Sc{acc[1,\ y,\ x]}\ +=\ v\_8\ -\ v\_7\ -\ v\_9\ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ momentum\ x}\\[3pt]
+\Cm{\#\ pass\ macro,\ for\ each\ cell\ of\ the\ chunk:}\\
+\Mc{rho}\ =\ 1.0\ +\ \Sc{acc[0,\ y,\ x]}\\
+\Mc{u\_0}\ =\ 1.0\ /\ \Mc{rho}\ *\ \Sc{acc[1,\ y,\ x]};\ \ ...\\
+\Sc{scr[1,\ y,\ x]}\ =\ \Mc{rho};\ \ \St{rho\_out[z,\ y,\ x]}\ =\ \Mc{rho};\ \ ...};
+  \node[codebox,font=\ttfamily\scriptsize,anchor=north west,text width=62mm] (r) at ([xshift=3mm]l.north east) {%
+\Cm{\#\ pass\ c0:\ f\_0\ and\ 3\ opposite\ pairs}\\
+\Mc{rho}\ =\ \Sc{scr[1,\ y,\ x]}\\
+\Mc{u\_1}\ =\ \Sc{scr[3,\ y,\ x]};\ \ ...\\
+v\_1\ =\ \Ld{f[1,\ z,\ y,\ x]}\\
+v\_2\ =\ \Ld{f[2,\ z,\ y,\ x]};\ \ ...\\
+\Cs{e\_1}\ =\ \Cs{xi\_3}\ -\ \Cs{xi\_1}\ -\ \Cs{xi\_5}\\
+\Cs{o\_1}\ =\ 3.0\ *\ \Mc{u\_1}\\
+\St{f[2,\ z,\ y,\ x]}\ =\ v\_1\ +\ omega\ *\ (\Cs{xi\_6}\ -\ v\_1\\
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ +\ \Cs{xi\_7}\ *\ (\Cs{e\_1}\ +\ \Cs{o\_1}))\\
+\St{f[1,\ z,\ y,\ x]}\ =\ v\_2\ +\ omega\ *\ (\Cs{xi\_6}\ -\ v\_2\\
+\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ +\ \Cs{xi\_7}\ *\ (\Cs{e\_1}\ -\ \Cs{o\_1}))\\
+...\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \Cm{\#\ f\_0,\ f\_3\ ...\ f\_6}};
+\end{tikzpicture}%

@@ -1,0 +1,17 @@
+% written by scripts/presentation7/slide_data.py; do not edit by hand
+% fastest RVV build over best scalar, both with density and velocity only in the last step, one core
+% source 7b0f4f12a6edd43c docs/presentation7/board-logs/k1/notes5/e2-A-output-last.log
+% source 5e0578deddc12edf docs/presentation7/board-logs/k1/notes5/e10-A-clang-output-last.log
+% source 003700cbbfbd405d 00_private_data/monte3/20261122-214637/share-gcc-f32-every.log
+% source 0a2dda1189158b88 00_private_data/monte3/20261122-214637/share-gcc-f32-last.log
+% source 349d420e127044ed 00_private_data/monte3/20261122-214637/share-gcc-f64-every.log
+% source 949be1d16f3dece6 00_private_data/monte3/20261122-214637/share-gcc-f64-last.log
+% source 086b346135fae201 00_private_data/monte3/20261122-214637/share-clang-f32-every.log
+% source 1a73492e096629d4 00_private_data/monte3/20261122-214637/share-clang-f32-last.log
+% source 1f2a578294a76794 00_private_data/monte3/20261122-214637/share-clang-f64-every.log
+% source bf01c83fb179bb26 00_private_data/monte3/20261122-214637/share-clang-f64-last.log
+group lanes gcc clang
+konef32 8 2.079 2.362
+konef64 4 1.395 1.449
+sgf32 4 2.003 2.230
+sgf64 2 1.541 1.440

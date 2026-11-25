@@ -1,0 +1,21 @@
+% Slide "RISC-V vectors: the register width differs between chips". The RVV specification lets each chip
+% choose its register width VLEN; the instructions are the same. K1: VLEN 256 (SpacemiT X60), SG2044: VLEN 128
+% (C920v2), both measured from the vlenb register (presentation4 / notes7 builds: CMake "RISC-V VLEN").
+% The intrinsic type vfloat32m1_t means "one register of f32": 8 lanes on the K1, 4 on the SG2044.
+\begin{tikzpicture}
+  \def\w{0.55}
+  \foreach \row/\n/\lab/\y in {0/8/{K1 (SpacemiT X60): VLEN = 256 bits}/0, 1/4/{SG2044 (XuanTie C920v2): VLEN = 128 bits}/-1.75} {
+    \node[font=\scriptsize\bfseries,anchor=south west,inner sep=0pt] at (0,\y+0.42) {\lab};
+    \foreach \k in {1,...,\n}
+      \node[draw=white,line width=0.6pt,minimum height=4.5mm,inner sep=0pt,font=\tiny,fill=psblue!30,
+        minimum width=\w cm] at (\k*\w-\w/2,\y) {f32};
+    \pgfmathtruncatemacro{\h}{\n/2}
+    \foreach \k in {1,...,\h}
+      \node[draw=white,line width=0.6pt,minimum height=4.5mm,inner sep=0pt,font=\tiny,fill=psorange!30,
+        minimum width=2*\w cm] at (\k*2*\w-\w,\y-0.5) {f64};
+  }
+  \draw[psgray!60,densely dashed] (4*\w,-2.5) -- (4*\w,0.3);
+  \node[lbl,anchor=north west,align=left] at (0,-2.55)
+    {same instructions, same C type (\code{vfloat32m1\_t}: one register of f32),\\but one instruction
+     covers 8 or 4 numbers, depending on the chip};
+\end{tikzpicture}
