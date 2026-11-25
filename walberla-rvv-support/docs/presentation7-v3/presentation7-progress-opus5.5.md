@@ -394,3 +394,31 @@ scalar (frames on K1 one core); the my-e4-ws commit on the last slide (after the
   the speedup plots shortened to "speedup over plain scalar" (the long one overflowed the frame).
 - Every badge is a link: \kid -> frame label ids-kone ("K1: the 11 builds"), \sid -> ids-sg. Checked in the PDF:
   102 links to ids-kone, 106 to ids-sg, both destinations defined.
+
+- 2026-11-25: data integrity check (independent checker written from scratch, not reusing slide_data.py; kept in
+  the session scratchpad). Result: no wrong number found.
+  - K1, recomputed from the raw logs board-logs/k1/board/ldc-*.log (3 runs per build, best of 3): every value of
+    kone-1core-*.dat (MLUP/s and speedups), kone-table-*.tex, kone-scaling-*.dat (plain, best, aapf, split, per
+    core, split/best, split/plain), kone-time-*.dat (shares, ms per step), cmp-fair.dat (notes5 e2-A, e10-A), the
+    derived kone-ids.tex / kone-full-*.tex, and the sha256 in the table headers. K1 \nv values recomputed too:
+    autovecgain, splitclear, ncolumns, spread (median, n, nthree, headline), energyspread, referr, verified,
+    gbsk (kernel-only traffic, exact 4.44 -> 4.4), share. 2728 checks, 0 problems.
+  - SG2044: the raw run (20261122-214637, jobs 8565/8566) is NOT on this machine (00_private_data/monte3 has only
+    20261121-142513, without timing logs). Checked instead: sg-1core / sg-scaling / sg-ids / sg-full against
+    sg-table (agree within rounding), every derived value (speedups, per core, split/best, split/plain,
+    clangslower, fair, gbsk, shares sum to 100, ms per step = cells / MLUP/s). All consistent.
+  - Typed-in figure data: figures/streams.tex (all 7 series) equals the coordinates printed by
+    scripts/presentation4/streams_table.py --tex from docs/presentation4/board-logs/board; the five numbers of
+    stream-test.tex too; the K1 layout table equals docs/presentation6/board-logs/notes5/e6-layout.log (12 cells).
+  - Plot wiring checked: bar plots read gcc/clang and *spd; scaling plots plain/best/split with the ideal line
+    from kone/sg:gcc:<p>:1:split; gain plots *splitbest; per-core plot *pc; time plots best/split at 1 and N
+    cores; badges and names sit on the right bars (③ = best scalar = 2.00 on the K1, ⑪ = 7.68).
+- 2026-11-25 (later): SG2044 raw run now available at 00_private_data/monte3_all/20261122-214637 (the run the
+  slides cite, jobs 8565/8566). All 670 "% source" references in the table headers match these files (sha256).
+  Independent SG checker (scratchpad check_sg.py): every value of sg-table, sg-full, sg-ids, sg-1core (MLUP/s,
+  speedups), sg-scaling (all columns), sg-time (shares, ms per step) and cmp-fair recomputed from the raw logs
+  (3 interleaved rounds each, 60 steps, parameters checked); the split loop really is the fastest build in all 24
+  columns (it is bolded); 60 SG \nv values recomputed (build values and ratios, rounds 240, busy rounds 1, spreads,
+  autovec gain, Clang slower, kernel-only traffic, halo share, energy spread, reference error, 44 verified
+  executables, output-last throughputs incl. Clang's 6.66 / 3.28, MPI halo 373 / 3,512 us). 4535 checks, 0
+  problems. No SKIPPED in any log: every timed executable passed the sha256 gate of monte3.sh.
