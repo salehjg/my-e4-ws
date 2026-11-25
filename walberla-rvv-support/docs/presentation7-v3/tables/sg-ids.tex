@@ -1,0 +1,14 @@
+% written by make_id_tables.py from tables/sg-table-f32/f64.tex; do not edit by hand
+\sid{1} & plain scalar & \no & \no & \no & \no & \no & 42 & 5.90 & 4.06 & 261.25 & 178.69 \\
+\sid{2} & scalar + CSE & \yes & \no & \no & \no & \no & 42 & 6.18 & 4.27 & 261.65 & 181.48 \\
+\sid{3} & best scalar & \yes & \yes & \no & \no & \no & 23 & 10.34 & 7.83 & 468.43 & 280.94 \\
+\midrule
+\sid{4} & auto-vectorized & \no & \no & auto & \no & \no & 42 & 5.90 & 4.07 & 262.23 & 178.06 \\
+\sid{5} & auto-vec.\ + CSE & \yes & \no & auto & \no & \no & 42 & 6.19 & 4.28 & 262.98 & 182.85 \\
+\sid{6} & best auto-vec. & \yes & \yes & auto & \no & \no & 23 & 10.34 & 7.83 & 469.82 & 279.08 \\
+\midrule
+\sid{7} & RVV & \yes & \no & \textbf{RVV} & \no & \no & 42 & 13.81 & 5.28 & 377.97 & 185.35 \\
+\sid{8} & RVV + prefetch & \yes & \no & \textbf{RVV} & \yes & \no & 42 & 11.94 & 5.27 & 385.66 & 211.71 \\
+\sid{9} & RVV in place & \yes & \yes & \textbf{RVV} & \no & \no & 23 & 11.85 & 5.57 & 374.25 & 185.98 \\
+\sid{10} & RVV in place + prefetch & \yes & \yes & \textbf{RVV} & \yes & \no & 23 & 15.90 & 8.03 & 533.37 & 294.76 \\
+\sid{11} & RVV split loop & \yes & \yes & \textbf{RVV} & \no & \yes & $\le$7 per pass & \textbf{24.84} & \textbf{14.26} & \textbf{555.51} & \textbf{314.88} \\

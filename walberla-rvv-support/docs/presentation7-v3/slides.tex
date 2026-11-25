@@ -168,11 +168,14 @@
   idealline/.style={black!55,densely dotted,thick,domain=1:64,samples=2},
   %   one core: x = 9 builds
   %   x labels: the full build names, rotated; "with prefetch" = the build on its left plus software prefetch
-  onecorebars/.style={ybar=0.8pt, bar width=5.4pt, width=7.3cm, height=4.0cm,
-    symbolic x coords={plain,plainav,best,bestav,rvv,pf,aa,aapf,split}, xtick=data,
+  onecorebars/.style={ybar=0.8pt, bar width=5.4pt, width=7.3cm, height=3.9cm,
+    symbolic x coords={plain,best,plainav,bestav,rvv,pf,aa,aapf,split}, xtick=data,   % in build-ID order 1 3 4 6 7 8 9 10 11
+    %   names below a row of build-ID badges (the badges are extra x ticks, set in \onecorefig); the names come in
+    %   the row order of the .dat files, because xtick=data hands the labels out in that order
     xticklabels={plain scalar,plain auto-\\vectorized,best scalar,best auto-\\vectorized,RVV,RVV with\\prefetch,
       RVV in place,RVV in place\\with prefetch,\textbf{RVV split loop}},
-    xticklabel style={font=\tiny,align=right,rotate=90,anchor=east,inner sep=1.5pt}, enlarge x limits=0.065,
+    xticklabel style={font=\tiny,align=right,rotate=90,anchor=east,inner sep=1.5pt}, xticklabel shift=3.6mm,
+    enlarge x limits=0.065,
     visualization depends on={value \thisrow{show}\as\showlbl},
     nodes near coords style={font=\tiny,rotate=90,anchor=west,inner xsep=1.5pt}},
   fairbars/.style={ybar=2pt, bar width=11pt, width=4.6cm, height=5.4cm},
@@ -186,6 +189,12 @@
 \newcommand{\onecorefig}[7]{%
 \begin{tikzpicture}
   \begin{groupplot}[res,group style={group size=2 by 1,horizontal sep=4mm,y descriptions at=edge left},onecorebars,ymin=0,ymax=#4,extra y ticks={#7},
+      %   the build-ID badges: one extra tick per bar, upright, right under the axis (the names sit below them)
+      extra x ticks={plain,best,plainav,bestav,rvv,pf,aa,aapf,split},
+      extra x tick labels={\bidsm{#1}{1},\bidsm{#1}{3},\bidsm{#1}{4},\bidsm{#1}{6},\bidsm{#1}{7},\bidsm{#1}{8},
+        \bidsm{#1}{9},\bidsm{#1}{10},\bidsm{#1}{11}},
+      extra x tick style={major tick length=0pt,xticklabel shift=0pt,
+        xticklabel style={rotate=-90,anchor=north,inner sep=1pt}},   % TikZ adds rotations: -90 undoes the names' 90
       extra y tick style={grid=major,major grid style={black!65,densely dashed},tick label style={font=\scriptsize\bfseries}},
       nodes near coords={\ifnum\showlbl=1 \pgfmathprintnumber[fixed,precision=#6,zerofill]{\pgfplotspointmeta}\fi}]
     \nextgroupplot[title={f32 (single precision)},ylabel={#5}]
@@ -219,8 +228,9 @@
       \addplot[clangline,mark=*] table[x=cores,y=clangplain]{tables/#1-scaling-f64.dat};
       \addplot[clangline,mark=square*] table[x=cores,y=clangbest]{tables/#1-scaling-f64.dat};
       \addplot[clangline,mark=triangle*,mark size=2.4pt] table[x=cores,y=clangsplit]{tables/#1-scaling-f64.dat};
-      \legend{GCC plain scalar,GCC best scalar,GCC RVV split loop,{GCC RVV split, 1 core $\times$ processes},
-        Clang plain scalar,Clang best scalar,Clang RVV split loop}
+      \legend{GCC \bid{#1}{1} plain scalar,GCC \bid{#1}{3} best scalar,GCC \bid{#1}{11} RVV split loop,
+        {GCC \bid{#1}{11}, 1 core $\times$ processes},
+        Clang \bid{#1}{1} plain scalar,Clang \bid{#1}{3} best scalar,Clang \bid{#1}{11} RVV split loop}
   \end{groupplot}
 \end{tikzpicture}}
 %   \gainfig{machine}{ymax}: RVV split loop over best scalar, bars per process count
@@ -235,7 +245,7 @@
   \begin{groupplot}[res,group style={group size=2 by 1,horizontal sep=4mm,y descriptions at=edge left},gainbars,ymin=0,ymax=#2,
       symbolic x coords={#3},xtick=data,enlarge x limits=0.12,
       xlabel={MPI processes (one per core, one $64^3$ block each)},
-      ylabel={RVV split loop / best scalar},
+      ylabel={speedup: \bid{#1}{11} / \bid{#1}{3}},
       extra y ticks={1},extra y tick style={grid=major,major grid style={black!65,densely dashed}},
       nodes near coords={\pgfmathprintnumber[fixed,precision=2,zerofill]{\pgfplotspointmeta}},
       nodes near coords style={font=\tiny,rotate=90,anchor=west,inner xsep=1.5pt}]
@@ -254,7 +264,7 @@
 \begin{tikzpicture}
   \begin{groupplot}[res,group style={group size=2 by 1,horizontal sep=4mm,y descriptions at=edge left},stackbars,ymin=0,ymax=100.5,ytick={0,20,...,100},
       symbolic x coords={best1,split1,best#2,split#2},xtick=data,enlarge x limits=0.2,
-      xticklabels={best scalar\\1 core,RVV split\\1 core,best scalar\\#2 cores,RVV split\\#2 cores},
+      xticklabels={\bid{#1}{3} best scalar\\1 core,\bid{#1}{11} RVV split\\1 core,\bid{#1}{3} best scalar\\#2 cores,\bid{#1}{11} RVV split\\#2 cores},
       xticklabel style={font=\tiny,align=center},
       ylabel={share of the time step, \%},
       point meta=explicit symbolic,
@@ -320,6 +330,71 @@
 \author{\presenter}
 \date{November 2026}
 
+%   Build IDs (presentation7-v3, user 2026-11-25): every build has a number, drawn as a small badge whose shape names
+%   the machine: K1 = black circle with white digits, SG2044 = black rounded square with yellow digits. Fixed size,
+%   so 1 and 11 give the same badge. The badges are drawn once into boxes, so they also work inside plot labels.
+%   \kid{n}: K1 build n; \sid{n}: SG2044 build n; \bid{kone|sg}{n}: the badge of that machine.
+\definecolor{badgeyellow}{HTML}{FFD21F}
+\newcommand{\badgeK}[1]{\tikz[baseline={([yshift=-0.62ex]b.center)}]\node[circle,fill=black,text=white,
+  font=\fontsize{5.2}{5.2}\selectfont\bfseries,minimum size=3.4mm,inner sep=0pt] (b) {#1};}
+\newcommand{\badgeS}[1]{\tikz[baseline={([yshift=-0.62ex]b.center)}]\node[rectangle,rounded corners=1pt,fill=black,
+  text=badgeyellow,font=\fontsize{5.2}{5.2}\selectfont\bfseries,minimum size=3.2mm,inner sep=0pt] (b) {#1};}
+\makeatletter
+\@tempcnta=0
+\loop\ifnum\@tempcnta<21
+  \expandafter\newsavebox\csname kid@box@\the\@tempcnta\endcsname
+  \expandafter\newsavebox\csname sid@box@\the\@tempcnta\endcsname
+  \advance\@tempcnta by 1
+\repeat
+\AtBeginDocument{%
+  \@tempcnta=0
+  \loop\ifnum\@tempcnta<21
+    \global\expandafter\setbox\csname kid@box@\the\@tempcnta\endcsname\hbox{\badgeK{\the\@tempcnta}}%
+    \global\expandafter\setbox\csname sid@box@\the\@tempcnta\endcsname\hbox{\badgeS{\the\@tempcnta}}%
+    \advance\@tempcnta by 1
+  \repeat}
+%   every badge is a link to the slide that defines the builds of its machine (frame labels ids-kone, ids-sg)
+\newcommand{\kid}[1]{\hyperlink{ids-kone}{\usebox{\csname kid@box@#1\endcsname}}}
+\newcommand{\sid}[1]{\hyperlink{ids-sg}{\usebox{\csname sid@box@#1\endcsname}}}
+\makeatother
+\newcommand{\bid}[2]{\ifstrequal{#1}{kone}{\kid{#2}}{\sid{#2}}}
+%   smaller badges for the tick labels of the bar plots (same fixed-size rule)
+\newcommand{\badgeKs}[1]{\tikz[baseline={([yshift=-0.55ex]b.center)}]\node[circle,fill=black,text=white,
+  font=\fontsize{4.2}{4.2}\selectfont\bfseries,minimum size=2.7mm,inner sep=0pt] (b) {#1};}
+\newcommand{\badgeSs}[1]{\tikz[baseline={([yshift=-0.55ex]b.center)}]\node[rectangle,rounded corners=0.8pt,fill=black,
+  text=badgeyellow,font=\fontsize{4.2}{4.2}\selectfont\bfseries,minimum size=2.55mm,inner sep=0pt] (b) {#1};}
+\makeatletter
+\@tempcnta=0
+\loop\ifnum\@tempcnta<21
+  \expandafter\newsavebox\csname kids@box@\the\@tempcnta\endcsname
+  \expandafter\newsavebox\csname sids@box@\the\@tempcnta\endcsname
+  \advance\@tempcnta by 1
+\repeat
+\AtBeginDocument{%
+  \@tempcnta=0
+  \loop\ifnum\@tempcnta<21
+    \global\expandafter\setbox\csname kids@box@\the\@tempcnta\endcsname\hbox{\badgeKs{\the\@tempcnta}}%
+    \global\expandafter\setbox\csname sids@box@\the\@tempcnta\endcsname\hbox{\badgeSs{\the\@tempcnta}}%
+    \advance\@tempcnta by 1
+  \repeat}
+\newcommand{\bidsm}[2]{\ifstrequal{#1}{kone}{\hyperlink{ids-kone}{\usebox{\csname kids@box@#2\endcsname}}}{\hyperlink{ids-sg}{\usebox{\csname sids@box@#2\endcsname}}}}
+\makeatother
+
+%   \idtable{machine}{all-cores header}: the build-ID table (tables/<machine>-ids.tex, written by make_id_tables.py
+%   from slide_data.py's tables). One row per build ID.
+\newcommand{\idtable}[2]{%
+  \CatchFileDef{\idrows}{tables/#1-ids.tex}{}%
+  {\scriptsize\renewcommand{\arraystretch}{1.0}\setlength{\tabcolsep}{3.8pt}
+  \begin{tabular}{@{}cl*{5}{c}l*{4}{r}@{}}
+    \toprule
+    & & & & & & & & \multicolumn{2}{c}{\textbf{MLUP/s, 1 core}} & \multicolumn{2}{c}{\textbf{MLUP/s, #2}}\\
+    \cmidrule(lr){9-10}\cmidrule(l){11-12}
+    \textbf{ID} & \textbf{build} & \textbf{CSE} & \textbf{in place} & \textbf{vectors} & \textbf{prefetch} & \textbf{split}
+      & \textbf{streams} & f32 & f64 & f32 & f64\\
+    \midrule
+    \idrows
+    \bottomrule
+  \end{tabular}\par}}
 \begin{document}
 
 % =============================================================================
@@ -666,24 +741,20 @@
   \vspace{2mm}
   \centering\input{figures/chain}
 
-  \vspace{4mm}
-  {\footnotesize\renewcommand{\arraystretch}{1.12}
-  \begin{tabular}{@{}lll@{}}
-    \toprule
-    \textbf{build} & \textbf{kernel} & \textbf{compiler flags}\\
-    \midrule
-    plain scalar & plain C++ & \code{-march=rv64gc}: no vector instructions\\
-    auto-vectorized & plain C++ & \code{-march=rv64gcv\_zvl}\textit{V}\code{b}: the compiler may vectorize\\
-    best scalar & plain C++ with \term{CSE} and \term{in-place} update & \code{-march=rv64gc}\\
-    \textbf{RVV} & \textbf{RVV intrinsics}, with options: in place, & \code{-march=rv64gcv\_zvl}\textit{V}\code{b}\\
-    & \hspace{1em}\term{software prefetch}, \term{split loop} & \\
-    \bottomrule
-  \end{tabular}\par}
-
-  \vspace{2mm}
-  {\scriptsize\color{psgray}CSE: repeated parts of the formulas are computed once. In place and the split loop are explained in
-  the previous section, software prefetch later in this one. 11 builds in total, each with GCC~14.2 and Clang (18.1 on the K1, 17 on the SG2044), \code{-O3}, in f32
-  and f64.\par}
+  \vspace{3mm}
+  \raggedright
+  {\small We compare 11 builds on each machine. Each has an ID: \kid{1} to \kid{11} on the K1, \sid{1} to \sid{11} on
+  the SG2044.\par}
+  \begin{itemize}\small
+    \item Builds 1 to 3, \textbf{scalar}: plain C++ without vector instructions (\code{-march=rv64gc}).
+    \item Builds 4 to 6, \textbf{auto-vectorized}: the same C++, but the compiler may use vectors
+          (\code{-march=rv64gcv\_zvl}\textit{V}\code{b}).
+    \item Builds 7 to 11, \textbf{RVV}: our RVV intrinsics, with the in-place update, \term{software prefetch} or the
+          \term{split loop}.
+  \end{itemize}
+  {\scriptsize\color{psgray}Builds 2, 3, 5 to 11 also use \term{CSE}: repeated parts of the formulas are computed once.
+  The full list opens each machine's results. Each build with GCC~14.2 and Clang (18.1 on the K1, 17 on the
+  SG2044), \code{-O3}, in f32 and f64.\par}
 \end{frame}
 % -----------------------------------------------------------------------------
 \begin{frame}{How the build chooses the target}
@@ -908,6 +979,22 @@
 \end{frame}
 % -----------------------------------------------------------------------------
 \subsection{K1 (256-bit vectors)}
+% -----------------------------------------------------------------------------
+%  The K1 build IDs (presentation7-v3, user 2026-11-25): replaces the table of "K1: where the speedup comes from"
+%  and the build table of "What we added". Numbers: tables/kone-ids.tex (make_id_tables.py, from slide_data.py's
+%  kone-table-*.tex: best of 3 runs of 200 steps after 10 warm-up, 64^3 cells per core).
+\begin{frame}[label=ids-kone]{K1: the 11 builds}
+  \vspace{-1mm}
+  \centering\idtable{kone}{all 8 cores}
+
+  \vspace{1.5mm}
+  \raggedright
+  {\scriptsize\color{psgray}\machine{K1} GCC~14.2, \code{-O3}; Clang~18.1 and every core count: backup. Scalar:
+  \code{-march=rv64gc}; auto-vectorized and RVV: \code{-march=rv64gcv\_zvl256b}. Best of 3 runs of 200 steps, $64^3$
+  cells per core. Bold: fastest.\par}
+  \takeaway{Not all of the gain is the vectors: \kid{3} has none and is already \sx{\nv{kone:gcc:f32:1:best/plain}}
+    as fast as \kid{1}.}
+\end{frame}
 %  tables/kone-1core-*.dat from board-logs/k1/board/ldc-*-1core.log (presentation4 all.sh, 2026-11-16):
 %  best of 3 runs of 200 steps after 10 warm-up, 64^3, one core.
 \begin{frame}{K1, one core: throughput of each build}
@@ -915,16 +1002,16 @@
   \centering\onecorefig{kone}{gcc}{clang}{9}{MLUP/s, one core}{2}{}
 
   \vspace{-1mm}
-  {\scriptsize\color{psgray}\machine{K1} Each bar is a separate build; ``with prefetch'' is the build on its left
-  plus software prefetch. $64^3$ cells, best of 3 runs of 200 steps (after 10 warm-up steps).\par}
+  {\scriptsize\color{psgray}\machine{K1} Each bar is one build, labelled with its ID (slide ``K1: the 11
+  builds''). $64^3$ cells, best of 3 runs of 200 steps (after 10 warm-up steps).\par}
   \todo{Auto-vectorized is as fast as scalar: check why (any vector instructions in the plain kernels?)}
-  \takeaway{The split loop is the fastest build: \nv{kone:gcc:f32:1:split} MLUP/s in f32 and
+  \takeaway{The split loop \kid{11} is the fastest build: \nv{kone:gcc:f32:1:split} MLUP/s in f32 and
     \nv{kone:gcc:f64:1:split} in f64 (GCC).}
 \end{frame}
 % -----------------------------------------------------------------------------
 \begin{frame}{K1, one core: speedup over plain scalar}
   \vspace{0mm}
-  \centering\onecorefig{kone}{gccspd}{clangspd}{6.5}{speedup over plain scalar (same compiler)}{2}{1}
+  \centering\onecorefig{kone}{gccspd}{clangspd}{6.5}{speedup over plain scalar}{2}{1}
 
   \vspace{-1mm}
   {\scriptsize\color{psgray}\machine{K1} Each compiler is compared with its own plain scalar build. Same runs as
@@ -934,32 +1021,6 @@
     (f64) as fast as plain scalar. Auto-vectorization changes almost nothing.}
 \end{frame}
 % -----------------------------------------------------------------------------
-\begin{frame}{K1: where the speedup comes from}
-  \vspace{1mm}
-  {\small Several changes add up. Only one of them is the vector instructions.\par}
-  \vspace{2mm}
-  \centering
-  {\footnotesize\renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{@{}lccccrr@{}}
-    \toprule
-    \textbf{build} & \textbf{CSE} & \textbf{in place} & \textbf{prefetch or split} & \textbf{vectors}
-      & \textbf{streams} & \textbf{MLUP/s, f32}\\
-    \midrule
-    plain scalar & \no & \no & \no & \no & 42 & \nv{kone:gcc:f32:1:plain}\\
-    best scalar & \yes & \yes & \no & \no & 23 & \nv{kone:gcc:f32:1:best}\\
-    RVV, in place + prefetch & \yes & \yes & prefetch & \yes & 23, prefetched & \nv{kone:gcc:f32:1:aapf}\\
-    RVV, split loop & \yes & \yes & split & \yes & at most 7 per pass & \nv{kone:gcc:f32:1:split}\\
-    \bottomrule
-  \end{tabular}\par}
-  \vspace{3mm}
-  \raggedright
-  \begin{itemize}\small
-    \item Prefetch and the split loop both get around the limit of about 20 streams.
-    \item The generator applies them only to vector code. So the best scalar build still waits for memory.
-  \end{itemize}
-  \takeaway{To measure the vectors alone, the scalar build must also stay below 20 streams.
-    We do this for both machines on the slide ``The vectors alone''.}
-\end{frame}
 % -----------------------------------------------------------------------------
 %  Unchanged from presentation6 (notes5 F6, F18; board-logs/notes5/e6-layout.log in docs/presentation6).
 \begin{frame}{K1: the place of the arrays in memory matters}
@@ -971,10 +1032,10 @@
     \multicolumn{2}{@{}l}{MLUP/s, f32, GCC, one core, two runs}
       & \textbf{default} & \textbf{huge pages} & \textbf{one heap}\\
     \midrule
-    periodic box & RVV, in place + prefetch & 7.3 to 7.8 & \textcolor{psred}{3.5 to 3.7} & 7.8 to 7.9\\
-                 & RVV, split loop          & 6.3 to 6.4 & 6.2 to 7.3 & 5.6 to 5.9\\
-    lid-driven cavity & RVV, in place + prefetch & 6.5 & \textcolor{psred}{4.3 to 7.1} & 6.9\\
-                 & RVV, split loop          & 7.6 to 7.7 & 8.0 & 7.6 to 7.7\\
+    periodic box & \kid{10} RVV in place + prefetch & 7.3 to 7.8 & \textcolor{psred}{3.5 to 3.7} & 7.8 to 7.9\\
+                 & \kid{11} RVV split loop & 6.3 to 6.4 & 6.2 to 7.3 & 5.6 to 5.9\\
+    lid-driven cavity & \kid{10} RVV in place + prefetch & 6.5 & \textcolor{psred}{4.3 to 7.1} & 6.9\\
+                 & \kid{11} RVV split loop & 7.6 to 7.7 & 8.0 & 7.6 to 7.7\\
     \bottomrule
   \end{tabular}\par}
 
@@ -1003,7 +1064,7 @@
 % -----------------------------------------------------------------------------
 \begin{frame}{K1: what RVV adds over the best scalar build, 1 to 8 cores}
   \vspace{-1mm}
-  \cmpline{RVV split loop}{\chip{CSE}\,\chip{in place}\,\chipnew{split loop}\,\chipnew{vectors}}{best scalar}{\chip{CSE}\,\chip{in place}}
+  \cmpline{\kid{11} RVV split loop}{\chip{CSE}\,\chip{in place}\,\chipnew{split loop}\,\chipnew{vectors}}{\kid{3} best scalar}{\chip{CSE}\,\chip{in place}}
   \vspace{0.5mm}
   {\footnotesize CSE and the in-place update are in both builds, so they cancel. Each bar shows what the
   \textbf{split loop and the vectors add together} (1 = nothing). They cannot be separated here, because the split
@@ -1034,21 +1095,35 @@
 % -----------------------------------------------------------------------------
 \subsection{SG2044 (128-bit vectors)}
 \overviewframesub
+%  The SG2044 build IDs: tables/sg-ids.tex (make_id_tables.py, from slide_data.py's sg-table-*.tex: best of 3
+%  interleaved rounds of 60 steps after 10 warm-up, 64^3 cells per core).
+\begin{frame}[label=ids-sg]{SG2044: the 11 builds}
+  \vspace{-1mm}
+  \centering\idtable{sg}{all 64 cores}
+
+  \vspace{1.5mm}
+  \raggedright
+  {\scriptsize\color{psgray}\machine{SG2044} GCC~14.2, \code{-O3}; Clang~17 and every core count: backup. Scalar:
+  \code{-march=rv64gc}; auto-vectorized and RVV: \code{-march=rv64gcv\_zvl128b}. Best of 3 interleaved rounds of
+  60 steps, $64^3$ cells per core. Bold: fastest.\par}
+  \takeaway{The same 11 builds as on the K1, with 128-bit vectors. \sid{11} is the fastest in every column.}
+\end{frame}
+% -----------------------------------------------------------------------------
 \begin{frame}{SG2044, one core: throughput of each build}
   \vspace{0mm}
   \centering\onecorefig{sg}{gcc}{clang}{28}{MLUP/s, one core}{1}{}
 
   \vspace{-1mm}
-  {\scriptsize\color{psgray}\machine{SG2044} Each bar is a separate build; ``with prefetch'' is the build on its
-  left plus software prefetch. $64^3$ cells, best of 3 rounds of 60 time steps.\par}
-  \takeaway{The split loop is the fastest build: \nv{sg:gcc:f32:1:split} MLUP/s in f32 and
+  {\scriptsize\color{psgray}\machine{SG2044} Each bar is one build, labelled with its ID (slide ``SG2044: the
+  11 builds''). $64^3$ cells, best of 3 rounds of 60 time steps.\par}
+  \takeaway{The split loop \sid{11} is the fastest build: \nv{sg:gcc:f32:1:split} MLUP/s in f32 and
     \nv{sg:gcc:f64:1:split} in f64 (GCC). Clang is \nv{sg:clangslower:f32:1:split}\,\% and
     \nv{sg:clangslower:f64:1:split}\,\% slower.}
 \end{frame}
 % -----------------------------------------------------------------------------
 \begin{frame}{SG2044, one core: speedup over plain scalar}
   \vspace{0mm}
-  \centering\onecorefig{sg}{gccspd}{clangspd}{5}{speedup over plain scalar (same compiler)}{2}{1}
+  \centering\onecorefig{sg}{gccspd}{clangspd}{5}{speedup over plain scalar}{2}{1}
 
   \vspace{-1mm}
   {\scriptsize\color{psgray}\machine{SG2044} Each compiler is compared with its own plain scalar build. Same runs as
@@ -1072,12 +1147,12 @@
     \cmidrule(lr){2-3}\cmidrule(l){4-5}
     & f32 & f64 & f32 & f64\\
     \midrule
-    RVV & \nv{sg:gcc:f32:1:rvv} & \nv{sg:gcc:f64:1:rvv} & \nv{sg:clang:f32:1:rvv} & \nv{sg:clang:f64:1:rvv}\\
-    RVV + prefetch & \nv{sg:gcc:f32:1:pf} & \nv{sg:gcc:f64:1:pf} & \nv{sg:clang:f32:1:pf} & \nv{sg:clang:f64:1:pf}\\
+    \sid{7} RVV & \nv{sg:gcc:f32:1:rvv} & \nv{sg:gcc:f64:1:rvv} & \nv{sg:clang:f32:1:rvv} & \nv{sg:clang:f64:1:rvv}\\
+    \sid{8} RVV + prefetch & \nv{sg:gcc:f32:1:pf} & \nv{sg:gcc:f64:1:pf} & \nv{sg:clang:f32:1:pf} & \nv{sg:clang:f64:1:pf}\\
     \midrule
-    RVV, in place & \nv{sg:gcc:f32:1:aa} & \nv{sg:gcc:f64:1:aa} & \nv{sg:clang:f32:1:aa} & \nv{sg:clang:f64:1:aa}\\
-    RVV, in place + prefetch & \nv{sg:gcc:f32:1:aapf} & \nv{sg:gcc:f64:1:aapf} & \nv{sg:clang:f32:1:aapf} & \nv{sg:clang:f64:1:aapf}\\
-    \hspace{1em}the same, output only at the end & \nv{sg:aapf:gcc:f32:last} & \nv{sg:aapf:gcc:f64:last}
+    \sid{9} RVV in place & \nv{sg:gcc:f32:1:aa} & \nv{sg:gcc:f64:1:aa} & \nv{sg:clang:f32:1:aa} & \nv{sg:clang:f64:1:aa}\\
+    \sid{10} RVV in place + prefetch & \nv{sg:gcc:f32:1:aapf} & \nv{sg:gcc:f64:1:aapf} & \nv{sg:clang:f32:1:aapf} & \nv{sg:clang:f64:1:aapf}\\
+    \hspace{1em}\sid{10}, output only at the end & \nv{sg:aapf:gcc:f32:last} & \nv{sg:aapf:gcc:f64:last}
       & \textcolor{psred}{\nv{sg:aapf:clang:f32:last}} & \textcolor{psred}{\nv{sg:aapf:clang:f64:last}}\\
     \bottomrule
   \end{tabular}\par}
@@ -1124,7 +1199,7 @@
         \addplot[clangline,mark=*] table[x=cores,y=clangplainpc]{tables/sg-scaling-f64.dat};
         \addplot[clangline,mark=square*] table[x=cores,y=clangbestpc]{tables/sg-scaling-f64.dat};
         \addplot[clangline,mark=triangle*,mark size=2.4pt] table[x=cores,y=clangsplitpc]{tables/sg-scaling-f64.dat};
-        \legend{GCC plain scalar,GCC best scalar,GCC RVV split loop,Clang plain scalar,Clang best scalar,Clang RVV split loop}
+        \legend{GCC \sid{1} plain scalar,GCC \sid{3} best scalar,GCC \sid{11} RVV split loop,Clang \sid{1} plain scalar,Clang \sid{3} best scalar,Clang \sid{11} RVV split loop}
     \end{groupplot}
   \end{tikzpicture}
 
@@ -1140,7 +1215,7 @@
 % -----------------------------------------------------------------------------
 \begin{frame}{SG2044: what RVV adds over the best scalar build, 1 to 64 cores}
   \vspace{-1mm}
-  \cmpline{RVV split loop}{\chip{CSE}\,\chip{in place}\,\chipnew{split loop}\,\chipnew{vectors}}{best scalar}{\chip{CSE}\,\chip{in place}}
+  \cmpline{\sid{11} RVV split loop}{\chip{CSE}\,\chip{in place}\,\chipnew{split loop}\,\chipnew{vectors}}{\sid{3} best scalar}{\chip{CSE}\,\chip{in place}}
   \vspace{0.5mm}
   {\footnotesize CSE and the in-place update are in both builds, so they cancel. Each bar shows what the
   \textbf{split loop and the vectors add together} (1 = nothing). They cannot be separated here, because the split
@@ -1178,7 +1253,7 @@
     \vspace{1mm}
     \begin{tikzpicture}
       \begin{groupplot}[res,group style={group size=2 by 1,horizontal sep=3mm,y descriptions at=edge left},
-          fairbars,ymin=0,ymax=9,height=4.6cm,
+          fairbars,ymin=0,ymax=9,height=4.4cm,
           symbolic x coords={f32,f64},xtick=data,enlarge x limits=0.5,
           ylabel={speedup: fastest RVV / best scalar},
           nodes near coords={\pgfmathprintnumber[fixed,precision=2,zerofill]{\pgfplotspointmeta}},
@@ -1204,18 +1279,18 @@
     \column{0.43\textwidth}
     \vspace{1mm}
     \begin{itemize}\small
-      \item \textbf{Goal: the vectors alone.} The split loop helps mainly because the scalar loop has more
-            streams (23) than the prefetcher can follow.
+      \item \textbf{Goal: the vectors alone.} The split loop helps mainly because the scalar loop has 23
+            streams, too many for the prefetcher.
       \item Here density and velocity are written only in the last step: the scalar loop has 19 streams and no
             longer waits for memory.
-      \item So the bar is mostly the vectors. Dashed: the number of lanes, the most that vectors can give.
+      \item So the bar is mostly the vectors. Dashed: the number of lanes, the most vectors can give.
     \end{itemize}
   \end{columns}
   \vspace{0.5mm}
-  {\scriptsize\color{psgray}One core, $64^3$ cells, best of 3 rounds (K1 Clang: 2). The RVV build is the split loop
-  (K1 GCC f64: in place + prefetch), so the ratio also includes the effect of its short passes.\par}
-  \takeaway{The vectors alone give \sx{\nv{kone:fair:gcc:f32}} of a possible \sx{8} on the K1 and
-    \sx{\nv{sg:fair:gcc:f32}} of \sx{4} on the SG2044 (f32, GCC): far below the number of lanes on both machines.}
+  {\scriptsize\color{psgray}One core, $64^3$ cells, best of 3 rounds (K1 Clang: 2). Builds \kid{11}/\kid{3} (GCC f64:
+  \kid{10}/\kid{3}) and \sid{11}/\sid{3}; the ratio also includes the short passes.\par}
+  \takeaway{Vectors alone (f32, GCC): \sx{\nv{kone:fair:gcc:f32}} of 8 lanes on the K1, \sx{\nv{sg:fair:gcc:f32}} of 4 on
+    the SG2044.}
 \end{frame}
 % -----------------------------------------------------------------------------
 \begin{frame}{What holds on both machines}
@@ -1338,7 +1413,7 @@
   \begin{columns}[T,onlytextwidth]
     \column{0.49\textwidth}
     \scriptsize
-    \begin{description}\setlength{\itemsep}{0.8pt}
+    \begin{description}\setlength{\itemsep}{0pt}
       \item[A, B] the two sets of 19 arrays of a block: A holds the values $f_i$, B the new values $f'_i$.
       \item[AA pattern] in-place update: only A is read and written; even and odd steps alternate.
       \item[AB pattern] the usual update: read A, write B, then swap the two.
@@ -1346,14 +1421,15 @@
       \item[Backend] the part of pystencils that writes code for one instruction set (x86, ARM, RVV, \ldots).
       \item[Best scalar build] no vector instructions, but with CSE and the in-place update.
       \item[Block] a box of cells; waLBerla cuts the domain into blocks, here one per process.
+      \item[Build ID] a build's number; circle: K1 (\kid{7}), square: SG2044 (\sid{7}).
       \item[Bounce-back] the wall rule: a value that would flow into the wall comes back in the opposite direction.
       \item[C920v2] the XuanTie core type of the SG2044.
       \item[Cache line] the unit in which memory moves to the cache: 64 bytes on both machines, i.e.\ 16 f32 or 8 f64 values.
-      \item[Cache miss] the data is not in the cache and must come from main memory.
     \end{description}
     \column{0.49\textwidth}
     \scriptsize
-    \begin{description}\setlength{\itemsep}{0.8pt}
+    \begin{description}\setlength{\itemsep}{0pt}
+      \item[Cache miss] the data is not in the cache and must come from main memory.
       \item[Chunk] two rows of a block; the split loop runs all 8 passes on one chunk, then on the next.
       \item[CSE] common subexpression elimination: each repeated part of a formula is computed once.
       \item[D3Q19] the LBM model used here: 3 dimensions, 19 directions per cell.
@@ -1364,7 +1440,6 @@
       \item[GCC, Clang] the two C++ compilers we compare.
       \item[Ghost layer] a one-cell layer around each block that holds copies of the neighbour's border cells.
       \item[Halo exchange] the update of the ghost layers after each time step.
-      \item[Hardware prefetcher] a part of the cache that detects regular access patterns and loads data early.
     \end{description}
   \end{columns}
 \end{frame}
@@ -1374,6 +1449,7 @@
     \column{0.49\textwidth}
     \scriptsize
     \begin{description}\setlength{\itemsep}{0.8pt}
+      \item[Hardware prefetcher] a part of the cache that detects regular access patterns and loads data early.
       \item[Huge page] a 2\,MB page of memory instead of 4\,KB.
       \item[In order] a core that runs instructions strictly in program order, so it waits for each missing value.
       \item[Interleaved rounds] each round runs every build once, so slow changes affect all builds alike.
@@ -1441,7 +1517,7 @@
 % -----------------------------------------------------------------------------
 %  Full tables: tables/<machine>-table-<prec>.tex (slide_data.py), best MLUP/s, all cores together.
 \newcommand{\fulltable}[4]{% #1 machine, #2 precision, #3 core count header cells, #4 number of core counts
-  \CatchFileDef{\fulltablerows}{tables/#1-table-#2.tex}{}%
+  \CatchFileDef{\fulltablerows}{tables/#1-full-#2.tex}{}%
   {\scriptsize\renewcommand{\arraystretch}{1.02}\setlength{\tabcolsep}{3.2pt}
   \begin{tabular}{@{}l*{#4}{r}*{#4}{r}@{}}
     \toprule

@@ -372,3 +372,25 @@ scalar (frames on K1 one core); the my-e4-ws commit on the last slide (after the
   little and the bar is mostly the vectors. Table on "What holds on both machines" relabelled accordingly.
 - Overview slide inside the results, between K1 and SG2044 (\overviewframesub: current subsection in colour).
 - 2026-11-25 (later): open-questions slide cut to 5 + 5 short bullets, each at most two lines (user: no essays).
+
+- 2026-11-25: build IDs. \kid{n} (K1: black circle, white digits) and \sid{n} (SG2044: black rounded square,
+  yellow digits), fixed size (3.4 / 3.2 mm) so 1 and 11 look the same; drawn once into boxes at begin document so
+  they work inside pgfplots labels; \bid{kone|sg}{n} picks by machine. IDs in the order the optimizations pile up:
+  1 plain scalar, 2 scalar + CSE, 3 best scalar, 4 auto-vectorized, 5 auto-vec. + CSE, 6 best auto-vec., 7 RVV,
+  8 RVV + prefetch, 9 RVV in place, 10 RVV in place + prefetch, 11 RVV split loop.
+  - make_id_tables.py (run by build.sh) writes tables/{kone,sg}-ids.tex and tables/{kone,sg}-full-{f32,f64}.tex
+    from slide_data.py's tables/*-table-*.tex; it stops if the build names do not match. No number typed in.
+  - New slides "K1: the 11 builds" (opens the K1 results) and "SG2044: the 11 builds" (after the SG overview): one
+    row per ID: CSE, in place, vectors, prefetch, split, streams, GCC MLUP/s on 1 core and all cores (f32, f64).
+  - Removed: the build table of "What we added" (now three lines: builds 1-3 scalar, 4-6 auto-vectorized, 7-11
+    RVV) and the slide "K1: where the speedup comes from" (its point is the takeaway of the K1 ID slide). Backup
+    "Numbers" tables keep every core count and Clang, rows now labelled with the IDs.
+  - Plots: one-core bars labelled only with the ID badges (upright, in ID order; xtick=data hands out labels in
+    the .dat row order, hence {1,4,3,6,...}); scaling and per-core legends, gain-plot y label, time-share labels,
+    cmplines, the SG prefetch table and the K1 layout table carry the IDs. Glossary: Build ID.
+- 2026-11-25 (later): bar plots keep their rotated build names (user: both names and IDs). The IDs are extra x
+  ticks with smaller badges (\bidsm: 2.7 / 2.55 mm), upright (rotate=-90 undoes the names' 90; TikZ adds rotations)
+  in one row under the axis; the names are shifted down (xticklabel shift=3.6mm); plot height 3.9 cm. Y label of
+  the speedup plots shortened to "speedup over plain scalar" (the long one overflowed the frame).
+- Every badge is a link: \kid -> frame label ids-kone ("K1: the 11 builds"), \sid -> ids-sg. Checked in the PDF:
+  102 links to ids-kone, 106 to ids-sg, both destinations defined.

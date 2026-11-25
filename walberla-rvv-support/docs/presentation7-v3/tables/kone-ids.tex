@@ -1,0 +1,14 @@
+% written by make_id_tables.py from tables/kone-table-f32/f64.tex; do not edit by hand
+\kid{1} & plain scalar & \no & \no & \no & \no & \no & 42 & 1.38 & 0.92 & 8.77 & 5.17 \\
+\kid{2} & scalar + CSE & \yes & \no & \no & \no & \no & 42 & 1.57 & 0.97 & 9.12 & 5.33 \\
+\kid{3} & best scalar & \yes & \yes & \no & \no & \no & 23 & 2.00 & 1.46 & 12.50 & 7.59 \\
+\midrule
+\kid{4} & auto-vectorized & \no & \no & auto & \no & \no & 42 & 1.38 & 0.91 & 8.79 & 5.21 \\
+\kid{5} & auto-vec.\ + CSE & \yes & \no & auto & \no & \no & 42 & 1.57 & 0.96 & 9.17 & 5.32 \\
+\kid{6} & best auto-vec. & \yes & \yes & auto & \no & \no & 23 & 2.01 & 1.44 & 12.52 & 7.63 \\
+\midrule
+\kid{7} & RVV & \yes & \no & \textbf{RVV} & \no & \no & 42 & 2.34 & 1.14 & 10.82 & 5.61 \\
+\kid{8} & RVV + prefetch & \yes & \no & \textbf{RVV} & \yes & \no & 42 & 4.58 & 2.42 & 13.89 & 7.09 \\
+\kid{9} & RVV in place & \yes & \yes & \textbf{RVV} & \no & \no & 23 & 2.91 & 1.47 & 13.72 & 7.29 \\
+\kid{10} & RVV in place + prefetch & \yes & \yes & \textbf{RVV} & \yes & \no & 23 & 6.56 & 3.89 & 19.40 & 10.29 \\
+\kid{11} & RVV split loop & \yes & \yes & \textbf{RVV} & \no & \yes & $\le$7 per pass & \textbf{7.68} & \textbf{4.71} & \textbf{19.49} & \textbf{10.35} \\

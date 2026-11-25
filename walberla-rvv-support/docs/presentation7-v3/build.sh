@@ -43,6 +43,8 @@ build_pdf() {
     # $1 = extra TeX code run before the document (used by 'final' to hide the todos)
     need latexmk; need pdflatex
     mkdir -p "$BUILD_DIR"
+    # the build-ID tables are derived from the tables of slide_data.py (make_id_tables.py)
+    python3 make_id_tables.py >/dev/null
     local pretex=()
     [[ -n "${1:-}" ]] && pretex=("-usepretex=$1")
     # latexmk does not rebuild when only the pretex changes, so force it then.

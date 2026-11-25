@@ -1,0 +1,14 @@
+% written by make_id_tables.py from tables/kone-table-f32.tex; do not edit by hand
+\kid{1}\ plain scalar & 1.38 & 5.27 & 8.77 & 1.36 & 5.23 & 8.54 \\
+\kid{2}\ scalar + CSE & 1.57 & 5.62 & 9.12 & 1.68 & 5.97 & 9.38 \\
+\kid{3}\ best scalar & 2.00 & 7.30 & 12.50 & 2.11 & 7.66 & 12.91 \\
+\midrule
+\kid{4}\ auto-vectorized & 1.38 & 5.31 & 8.79 & 1.36 & 5.23 & 8.66 \\
+\kid{5}\ auto-vec.\ + CSE & 1.57 & 5.57 & 9.17 & 1.68 & 5.91 & 9.47 \\
+\kid{6}\ best auto-vec. & 2.01 & 7.27 & 12.52 & 2.10 & 7.66 & 12.90 \\
+\midrule
+\kid{7}\ RVV & 2.34 & 7.69 & 10.82 & 2.23 & 7.52 & 10.64 \\
+\kid{8}\ RVV + prefetch & 4.58 & 12.35 & 13.89 & 4.20 & 11.88 & 13.40 \\
+\kid{9}\ RVV in place & 2.91 & 9.28 & 13.72 & 2.90 & 9.12 & 13.47 \\
+\kid{10}\ RVV in place + prefetch & 6.56 & 17.91 & 19.40 & 6.19 & 17.19 & 18.79 \\
+\kid{11}\ RVV split loop & \textbf{7.68} & \textbf{18.31} & \textbf{19.49} & \textbf{7.54} & \textbf{17.90} & \textbf{19.21} \\
