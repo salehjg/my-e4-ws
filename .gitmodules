@@ -4,3 +4,6 @@
 [submodule "submodules/walberla"]
 	path = walberla-rvv-support/submodules/walberla
 	url = https://github.com/salehjg/mirrored-walberla.git
+[submodule "walberla-rvv-support/submodules/waLBerla-wind"]
+	path = walberla-rvv-support/submodules/waLBerla-wind
+	url = git@github.com:salehjg/waLBerla-wind.git
