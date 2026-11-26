@@ -1,0 +1,56 @@
+% =============================================================================
+%  macros.tex -- styles and macros only report r04 uses. \input by report.tex
+%  before anything else. Do not use these in titles or captions (see preamble.tex).
+%  Names start with r04 so they cannot clash with other reports' definitions.
+% =============================================================================
+
+% ---- TikZ styles for the diagrams in figures/ -----------------------------------
+\tikzset{
+  r04box/.style={draw=psgray!80,fill=white,rounded corners=1.5pt,align=center,
+    font=\footnotesize,inner sep=3.5pt,minimum height=7mm},
+  r04code/.style={r04box,fill=codebg,font=\ttfamily\scriptsize},
+  r04ours/.style={draw=psteal!90!black,fill=psteal!10,line width=0.8pt},
+  r04changed/.style={draw=psorange!90!black,fill=psorange!12,line width=0.8pt},
+  r04group/.style={draw=psgray!60,dashed,rounded corners=3pt,inner sep=5pt},
+  r04arrow/.style={-{Stealth[length=2mm]},semithick,draw=psgray!90!black},
+  r04label/.style={font=\scriptsize,text=psgray!90!black,align=center},
+}
+
+% ---- Boxes --------------------------------------------------------------------
+\newtcolorbox{r04fork}[1][Ours: not in upstream pystencils, waLBerla or waLBerla-wind]{psbox,
+  colback=psteal!5,colframe=psteal!85,title={#1}}
+
+% ---- Listings -----------------------------------------------------------------
+\lstdefinestyle{r04cmake}{
+  language={},
+  morekeywords={set,foreach,endforeach,if,endif,add_executable,target_link_libraries,
+    waLBerla_generate_target_from_python,add_custom_command,add_library,CACHE,STRING,
+    NAME,FILE,CODEGEN_CFG,OUT_FILES,OUTPUT,DEPENDS,COMMAND},
+  keywordstyle=\color{kwcolor}\bfseries,
+  comment=[l]{\#},
+  commentstyle=\color{commentcolor},
+  morestring=[b]",
+  stringstyle=\color{strcolor},
+}
+\lstnewenvironment{r04cmakecode}[1][]{\lstset{style=r04cmake,#1}}{}
+\lstdefinestyle{r04diff}{
+  language={},
+  moredelim=[l][\color{psred!85!black}]{-\ },
+  moredelim=[l][\color{psteal!85!black}]{+\ },
+  moredelim=[l][\color{psgray}]{@@},
+}
+\lstnewenvironment{r04diffcode}[1][]{\lstset{style=r04diff,#1}}{}
+
+% ---- Small helpers ------------------------------------------------------------
+%   \rfourx{2.0}: a speedup factor
+\newcommand{\rfourx}[1]{#1\ensuremath{\times}}
+%   \isa{rvv_ext-vf}: an instruction set name
+\newcommand{\isa}[1]{\code{#1}}
+
+% ---- Page breaks ----------------------------------------------------------------
+%   \rfourneedspace{len}: start a new page unless at least len of vertical space is left
+\makeatletter
+\newcommand{\rfourneedspace}[1]{\par\penalty-100\begingroup
+  \setlength{\dimen@}{#1}\dimen@ii\pagegoal\advance\dimen@ii-\pagetotal
+  \ifdim\dimen@>\dimen@ii\ifdim\dimen@ii>\z@\vfil\fi\penalty-10000\fi\endgroup}
+\makeatother

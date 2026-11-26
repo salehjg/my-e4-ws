@@ -1,0 +1,170 @@
+\chapter{How pystencils 1.4 Vectorizes}\label{r04:ch:vectorizer}
+
+This chapter describes the part of \ps{}~1.4 that every vector instruction set goes
+through, RVV included. Its design explains both what upstream's \isa{rvv} looks like
+(\cref{r04:ch:upstream-rvv}) and why our extras could be written without touching any
+of it (\cref{r04:ch:rvv-ext}). \Cref{r04:fig:vectorizer} is the map. The files are in
+\file{src/pystencils/} of the pystencils submodule at \code{release/1.4}.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.92\linewidth}{!}{\input{reports/r04/figures/vectorizer}}
+  \caption[pystencils 1.4: from assignments to vectorized C code]{\ps{}~1.4 from
+    assignments to vectorized C code. All instruction sets share the pipeline on the
+    left; an instruction set is a dictionary of C string templates (right) that the
+    vectorizer reads for the vector width and the loop rule, and that the printer fills
+    in. \texttt{rvv} and \texttt{rvv\_ext} differ only in that dictionary.}
+  \label{r04:fig:vectorizer}
+\end{figure}
+
+\section{From assignments to an AST}
+
+\code{create_kernel} (\file{kernelcreation.py}) checks the assignments and builds the
+CPU kernel (\file{cpu/kernelcreation.py}): it types all symbols, wraps the assignments
+in a loop nest over the fields' domain, resolves field accesses to pointer arithmetic
+with one base pointer per field and row (the $y$, $z$ and index offsets are added
+outside the innermost loop), and moves constant subexpressions in front of the loops.
+Loop blocking and OpenMP follow if requested. Only then, on this finished scalar AST, it
+calls the vectorizer:
+\begin{pycode}
+if config.cpu_vectorize_info:                                  # kernelcreation.py
+    if isinstance(config.cpu_vectorize_info, dict):
+        vectorize(ast, **config.cpu_vectorize_info)
+\end{pycode}
+Note what that means for constants: a hoisted constant is a \emph{scalar} declaration
+before the loops (\code{const float xi_20 = 2.0f;}). Inside the vector loop it is used
+in vector expressions, so the vectorizer wraps every use in a cast to a vector type,
+and the printer turns each cast into a broadcast (\cref{r04:sec:printer}).
+
+\section{The options}
+
+\code{vectorize} (\file{cpu/vectorization.py}) takes five keyword options, the same
+keys that waLBerla's \code{cpu_vectorize_info} carries (\cref{r04:sec:where-isa}):
+\begin{description}[style=nextline]
+  \item[\code{instruction_set}] a name such as \code{'avx'}, \code{'neon'},
+    \code{'sve256'}, \code{'rvv'}; \code{'best'} takes the last entry of
+    \code{get_supported_instruction_sets()}; \code{None} skips vectorization.
+  \item[\code{assume_inner_stride_one}] replaces the innermost stride by 1, so that
+    accesses along $x$ are contiguous. Kernels with runtime strides cannot be vectorized
+    without it; the caller must guarantee it (waLBerla's fields in \code{fzyx} layout do).
+  \item[\code{assume_aligned}] the first inner cell of each row is aligned, so some
+    accesses may use aligned loads and stores (only for instruction sets that have them).
+  \item[\code{nontemporal}] \code{True} or a set of fields whose stores should bypass
+    the cache (\cref{r04:sec:nontemporal}).
+  \item[\code{assume_sufficient_line_padding}] with aligned access: run the vector loop
+    past the row end instead of adding a scalar remainder loop.
+\end{description}
+All fields of a kernel must have the same floating-point type; it decides between the
+\code{float} and \code{double} variant of the instruction set.
+
+\section{An instruction set is a dictionary}\label{r04:sec:dict}
+
+\code{get_vector_instruction_set(data_type, name)}
+(\file{backends/simd_instruction_sets.py}) returns a Python dictionary. Its keys name
+operations, its values are C code with \code{str.format} placeholders. A few entries of
+upstream's RVV dictionary for \code{float}:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{key} & \textbf{value}\\
+  \midrule
+  \code{'+'} & \code{__riscv_vfadd_vv_f32m1({0},{1},{loop_stop} - {loop_counter})}\\
+  \code{'loadU'} & \code{__riscv_vle32_v_f32m1({0},{loop_stop} - {loop_counter})}\\
+  \code{'makeVecConst'} & \code{__riscv_vfmv_v_f_f32m1({0}, {loop_stop} - {loop_counter})}\\
+  \code{'width'} & \code{__riscv_vsetvlmax_e32m1()} (a C expression, not a number)\\
+  \code{'float'} & \code{vfloat32m1_t}\\
+  \code{'headers'} & \code{<riscv_vector.h>}, \code{"riscv_v_helpers.h"}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The dispatcher picks the module by name: \code{neon}, \code{sme} and names starting with
+\code{sve} go to the ARM module, \code{vsx} to PowerPC, \code{rvv} to the RISC-V module,
+everything else to x86. Our \isa{rvv_ext} adds one branch there
+(\cref{r04:sec:ext-rules}).
+
+\section{The innermost loop}\label{r04:sec:loop}
+
+\code{vectorize_inner_loops_and_adapt_load_stores} visits every innermost loop and
+first decides what to do with the loop's end. The rule depends only on the dictionary:
+\begin{enumerate}
+  \item If the store template contains \code{{loop_stop}}, the loop is kept whole:
+    the instruction set handles the last, partial vector itself. This is the case for
+    the scalable instruction sets (\isa{rvv}, \isa{sve}), whose every intrinsic gets
+    ``elements left'' as its active length.
+  \item Otherwise, with \code{assume_aligned} and \code{assume_sufficient_line_padding},
+    the loop end is rounded up to a multiple of the width.
+  \item Otherwise the loop is cut at the last multiple of the width into a vector loop
+    and a scalar remainder loop (\code{cut_loop}, which deep-copies the loop body). This
+    needs an integer width; it is what SSE, AVX, NEON, \isa{sve256} and our
+    \isa{rvv_ext-vls256} get.
+\end{enumerate}
+Then every field access whose index depends on the loop counter becomes a
+\code{VectorMemoryAccess}: unit-stride, or strided if the instruction set has strided
+loads and stores (RVV has). An access that is neither makes the vectorizer give up on
+that loop with the warning ``Could not vectorize loop because of non-consecutive memory
+access''; the loop stays scalar. Finally the loop step becomes the width, conditionals
+become masks, and \code{insert_vector_casts} marks every scalar inside a vector
+expression for broadcasting.
+
+\section{Printing: templates filled in}\label{r04:sec:printer}
+
+The C code is printed by \code{VectorizedCustomSympyPrinter}
+(\file{backends/cbackend.py}), the same class for all instruction sets. For every
+vector node it looks up the template and calls \code{format} on it with the already
+printed operands:
+\begin{pycode}
+# _print_Add, simplified: positive terms first, then '+' or '-' templates
+processed = summands[0].term
+for summand in summands[1:]:
+    func = self.instruction_set['-'] if summand.sign == -1 else self.instruction_set['+']
+    processed = func.format(processed, summand.term, **self._kwargs)
+\end{pycode}
+\code{self._kwargs} holds \code{loop_counter} and \code{loop_stop} of the enclosing
+loop; the loop printer sets them. That is how the RVV templates get their active length
+\code{{loop_stop} - {loop_counter}} without the printer knowing anything about RVV.
+A scalar marked for broadcasting is printed through \code{'makeVecConst'}, a number
+through \code{'makeVecConst'} as well, an index vector through \code{'makeVecIndex'}.
+
+\begin{keyidea}[Why this matters for our extras]
+  The printer never looks inside a template; it only calls \code{format} on it. A
+  template that is a subclass of \code{str} with its own \code{format} method can
+  therefore decide, at print time, to print something else. Our \isa{vf} and
+  \isa{fma} options are built on exactly this (\cref{r04:sec:ext-vf-fma}).
+\end{keyidea}
+
+\section{Nontemporal stores and cache-line zeroing}\label{r04:sec:nontemporal}
+
+A store to a cache line that is not in the cache normally reads the line from memory
+first (write-allocate). Instruction sets avoid that read in two ways, and the printer
+supports both:
+\begin{itemize}
+  \item true nontemporal (streaming) store instructions, templates \code{'stream'}
+    (x86, SVE) plus a fence after the kernel (\code{'streamFence'});
+  \item zeroing the whole cache line before writing it, template \code{'cachelineZero'}
+    (NEON, VSX and RVV), so that it never has to be read.
+\end{itemize}
+Zeroing is only safe if the whole line will be written and lies inside the array, so
+for every nontemporal unit-stride store the printer emits a guard. This is the guard in
+waLBerla-wind's generated kernel for one PDF direction:
+\begin{ccode}
+if (((uintptr_t) &_data_pdfs[_stride_pdfs_1*ctr_1 + _stride_pdfs_2*ctr_2 + ctr_0] & _clsize_mask) == 0
+    && (_stride_pdfs_1*ctr_1 + _stride_pdfs_2*ctr_2 + ctr_0 + _clsize/4) < _size_pdfs_0*_size_pdfs_1*_size_pdfs_2) {
+    cachelineZero((void*) &_data_pdfs[_stride_pdfs_1*ctr_1 + _stride_pdfs_2*ctr_2 + ctr_0]);
+}
+\end{ccode}
+The first condition asks whether the address starts a cache line; the second whether a
+whole line fits before the end of the array. \code{_clsize} and \code{_clsize_mask} are
+computed once at the start of the kernel from the template \code{'cachelineSize'}. The
+second condition multiplies the spatial sizes of the \emph{stored} field, so the
+vectorizer sets \code{use_all_written_field_sizes} on the kernel, and every written
+field's sizes become kernel parameters, even sizes the loops do not use. That flag is
+the root of the waLBerla bug of \cref{r04:sec:blockwise-bug}.
+
+\section{Detecting the hardware}\label{r04:sec:detect}
+
+\code{get_supported_instruction_sets()} is what \code{'best'} and waLBerla's
+\code{OPTIMIZE_FOR_LOCALHOST} rely on. On RISC-V Linux it reads \code{AT_HWCAP} with
+\code{getauxval} and returns \code{['rvv']} if the bit for the V extension is set,
+otherwise an empty list. The environment variable \code{PYSTENCILS_SIMD} (a
+comma-separated list) overrides the detection on any machine. Detection never returns
+\isa{rvv_ext}: our instruction set is used only where it is named.

@@ -1,0 +1,333 @@
+diff --git a/src/blockforest/communication/GeneratedNonUniformFieldPackInfo.impl.h b/src/blockforest/communication/GeneratedNonUniformFieldPackInfo.impl.h
+index 960711f7..4045c76b 100644
+--- a/src/blockforest/communication/GeneratedNonUniformFieldPackInfo.impl.h
++++ b/src/blockforest/communication/GeneratedNonUniformFieldPackInfo.impl.h
+@@ -38,7 +38,7 @@ void GeneratedNonUniformFieldPackInfo< Field_T, PackingKernels_T >::packDataEqua
+    auto field = const_cast< Block* >(sender)->getData< Field_T >(fieldID_);
+    CellInterval packInterval = field::refinement::equalLevelPackInterval( dir, field->xyzSize(), uint_t{1} );
+    uint_t size = sizeEqualLevelSend(sender, dir);
+-   auto bufferPtr = buffer.forward(size);
++   auto bufferPtr = buffer.forwardAligned< value_type >(size);
+    kernels_.packEqual(field, packInterval, bufferPtr);
+ }
+ 
+@@ -48,7 +48,7 @@ void GeneratedNonUniformFieldPackInfo< Field_T, PackingKernels_T >::unpackDataEq
+    auto field = receiver->getData< Field_T >(fieldID_);
+    CellInterval unpackInterval = field::refinement::equalLevelUnpackInterval(dir, field->xyzSize(), uint_t{1} );
+    uint_t size = sizeEqualLevelSend(receiver, dir);
+-   auto bufferPtr = buffer.skip(size);
++   auto bufferPtr = buffer.skipAligned< value_type >(size);
+    kernels_.unpackEqual(field, unpackInterval, bufferPtr);
+ }
+ 
+@@ -75,7 +75,7 @@ void GeneratedNonUniformFieldPackInfo< Field_T, PackingKernels_T >::packDataCoar
+    auto field = const_cast< Block* >(coarseSender)->getData< Field_T >(fieldID_);
+    CellInterval packInterval = field::refinement::coarseToFinePackInterval( dir, field->xyzSize(), fineReceiver );
+    auto size = sizeCoarseToFineSend(coarseSender, fineReceiver, dir);
+-   auto bufferPtr = buffer.forward(size);
++   auto bufferPtr = buffer.forwardAligned< value_type >(size);
+    kernels_.packEqual(field, packInterval, bufferPtr);
+ }
+ 
+@@ -86,7 +86,7 @@ void GeneratedNonUniformFieldPackInfo< Field_T, PackingKernels_T >::unpackDataCo
+    auto field = fineReceiver->getData< Field_T >( fieldID_ );
+    CellInterval unpackInterval = field::refinement::coarseToFineUnpackInterval( dir, field->xyzSize(), fineReceiver->getId() );
+    auto size = sizeCoarseToFineReceive(fineReceiver, dir);
+-   auto bufferPtr = buffer.skip(size);
++   auto bufferPtr = buffer.skipAligned< value_type >(size);
+    kernels_.unpackCoarseToFine(field, unpackInterval, bufferPtr);
+ }
+ 
+@@ -122,7 +122,7 @@ void GeneratedNonUniformFieldPackInfo< Field_T, PackingKernels_T >::packDataFine
+    auto field = const_cast< Block* >(fineSender)->getData< Field_T >(fieldID_);
+    CellInterval packInterval = field::refinement::fineToCoarsePackInterval( dir, field->xyzSize() );
+    auto size = sizeFineToCoarseSend(fineSender, dir);
+-   auto bufferPtr = buffer.forward(size);
++   auto bufferPtr = buffer.forwardAligned< value_type >(size);
+    kernels_.packFineToCoarse(field, packInterval, bufferPtr);
+ }
+ 
+@@ -140,7 +140,7 @@ template< typename Field_T, typename PackingKernels_T >
+    auto field = coarseReceiver->getData< Field_T >( fieldID_ );
+    CellInterval unpackInterval = field::refinement::fineToCoarseUnpackInterval( dir, field->xyzSize(), fineSender );
+    auto size = sizeFineToCoarseSend(coarseReceiver, dir);
+-   auto bufferPtr = buffer.skip(size);
++   auto bufferPtr = buffer.skipAligned< value_type >(size);
+    kernels_.unpackEqual(field, unpackInterval, bufferPtr);
+ }
+ 
+diff --git a/src/core/mpi/RecvBuffer.h b/src/core/mpi/RecvBuffer.h
+index 839e6bc7..6a950892 100644
+--- a/src/core/mpi/RecvBuffer.h
++++ b/src/core/mpi/RecvBuffer.h
+@@ -34,6 +34,7 @@
+ 
+ #include <algorithm>
+ #include <cstring>
++#include <memory>
+ #include <type_traits>
+ 
+ namespace walberla {
+@@ -139,6 +140,7 @@ public:
+                           inline void resize ( size_t newSize     );
+    template< typename V >        void peek   ( V& value ) const;
+                           inline T *  skip   ( size_t elements    );
++   template< typename V > inline T *  skipAligned( size_t elements );
+                           inline void clear  ();
+                           inline void reset  ();
+                           inline void readDebugMarker( const char * marker );
+@@ -601,6 +603,32 @@ T * GenericRecvBuffer<T>::skip( size_t elements )
+ //**********************************************************************************************************************
+ 
+ 
++//**********************************************************************************************************************
++/*!\brief Skipping the given number of elements, at a position that is aligned for values of type \a V.
++//
++// \param elements The number of elements (bytes) of the values of type \a V.
++// \return Position of the values, aligned for \a V.
++//
++// Reads data written with GenericSendBuffer::forwardAligned, with the same \a V and number of elements: skips
++// sizeof(V) elements more than \a elements and returns the first position in that range that is aligned for
++// \a V.
++*/
++template< typename T >  // Element type
++template< typename V >  // Type of the values read at the returned position
++T * GenericRecvBuffer<T>::skipAligned( size_t elements )
++{
++   static_assert( sizeof(T) == 1, "skipAligned needs a buffer of bytes" );
++
++   std::size_t space = elements + sizeof(V);
++   void * ptr = skip( space );
++   ptr = std::align( alignof(V), elements, ptr, space );
++   WALBERLA_ASSERT_NOT_NULLPTR( ptr );
++
++   return static_cast< T * >( ptr );
++}
++//**********************************************************************************************************************
++
++
+ //**********************************************************************************************************************
+ /*!\brief Clearing the receive buffer.
+ //
+diff --git a/src/core/mpi/SendBuffer.h b/src/core/mpi/SendBuffer.h
+index 3e784d1c..619f3019 100644
+--- a/src/core/mpi/SendBuffer.h
++++ b/src/core/mpi/SendBuffer.h
+@@ -37,6 +37,7 @@
+ #include <algorithm>
+ #include <typeinfo>
+ #include <cstring>
++#include <memory>
+ #include <type_traits>
+ 
+ namespace walberla {
+@@ -152,6 +153,8 @@ public:
+    //**Repositioning ***************************************************************************************************
+    /*!\name Repositioning */
+    inline T *  forward( uint_t elements );
++   template< typename V >
++   inline T *  forwardAligned( uint_t elements );
+    inline void rewind(const size_t & size);
+    //@}
+    //*******************************************************************************************************************
+@@ -547,6 +550,37 @@ T * GenericSendBuffer<T,G>::forward( uint_t elements )
+ 
+    return previous;
+ }
++//**********************************************************************************************************************
++
++
++//**********************************************************************************************************************
++/*!\brief Forward the given number of elements, at a position that is aligned for values of type \a V.
++//
++// \param elements The number of elements (bytes) needed for the values of type \a V.
++// \return Position of the values, aligned for \a V.
++//
++// The send buffer is char-aligned: whatever was written before leaves the current position at an arbitrary
++// byte offset. Code that writes the values through a pointer to \a V, like the generated packing kernels, needs
++// them aligned: misaligned accesses are undefined behavior, and some hardware faults on them (e.g. vector stores
++// on RISC-V). This function forwards sizeof(V) elements more than \a elements and returns the first position in
++// that range that is aligned for \a V. The receiver reads the data with GenericRecvBuffer::skipAligned, with the
++// same \a V and number of elements. Both find the same position: both buffers are allocated with new[], which
++// aligns them for every fundamental type, and the data is at the same offset in both.
++*/
++template< typename T    // Element type
++        , typename G >  // Growth policy
++template< typename V >  // Type of the values written at the returned position
++T * GenericSendBuffer<T,G>::forwardAligned( uint_t elements )
++{
++   static_assert( sizeof(T) == 1, "forwardAligned needs a buffer of bytes" );
++
++   std::size_t space = elements + sizeof(V);
++   void * ptr = forward( space );
++   ptr = std::align( alignof(V), elements, ptr, space );
++   WALBERLA_ASSERT_NOT_NULLPTR( ptr );
++
++   return static_cast< T * >( ptr );
++}
+ 
+ //**********************************************************************************************************************
+ /*!\brief Rewinds the stream to a previous position
+diff --git a/src/lbm_generated/communication/NonuniformGeneratedPdfPackInfo.impl.h b/src/lbm_generated/communication/NonuniformGeneratedPdfPackInfo.impl.h
+index dbe99c06..621af7ca 100644
+--- a/src/lbm_generated/communication/NonuniformGeneratedPdfPackInfo.impl.h
++++ b/src/lbm_generated/communication/NonuniformGeneratedPdfPackInfo.impl.h
+@@ -74,7 +74,7 @@ void NonuniformGeneratedPdfPackInfo< PdfField_T >::unpackDataEqualLevel(Block* r
+    cell_idx_t gls = skipsThroughCoarseBlock(receiver, dir) ? 2 : 1;
+    field->getGhostRegion(dir, ci, gls, false);
+    uint_t size              = kernels_.size(ci, dir);
+-   unsigned char* bufferPtr = buffer.skip(size);
++   unsigned char* bufferPtr = buffer.skipAligned< typename PdfField_T::value_type >(size);
+    kernels_.unpackDirection(field, ci, bufferPtr, dir);
+ }
+ 
+@@ -101,7 +101,7 @@ void NonuniformGeneratedPdfPackInfo< PdfField_T >::packDataEqualLevelImpl(
+    CellInterval ci;
+    cell_idx_t gls = skipsThroughCoarseBlock(sender, dir) ? 2 : 1;
+    field->getSliceBeforeGhostLayer(dir, ci, gls, false);
+-   unsigned char* bufferPtr = buffer.forward(kernels_.size(ci, dir));
++   unsigned char* bufferPtr = buffer.forwardAligned< typename PdfField_T::value_type >(kernels_.size(ci, dir));
+    kernels_.packDirection(field, ci, bufferPtr, dir);
+ }
+ 
+@@ -121,7 +121,7 @@ void NonuniformGeneratedPdfPackInfo< PdfField_T >::packDataCoarseToFineImpl(
+    for (auto t : intervals)
+    {
+       CellInterval ci          = t.second;
+-      unsigned char* bufferPtr = buffer.forward(kernels_.size(ci));
++      unsigned char* bufferPtr = buffer.forwardAligned< typename PdfField_T::value_type >(kernels_.size(ci));
+       kernels_.packAll(field, ci, bufferPtr);
+    }
+ }
+@@ -140,7 +140,7 @@ void NonuniformGeneratedPdfPackInfo< PdfField_T >::unpackDataCoarseToFine(
+       Direction d              = t.first;
+       CellInterval ci          = t.second;
+       uint_t size              = kernels_.redistributeSize(ci);
+-      unsigned char* bufferPtr = buffer.skip(size);
++      unsigned char* bufferPtr = buffer.skipAligned< typename PdfField_T::value_type >(size);
+       kernels_.unpackRedistribute(field, ci, bufferPtr, d);
+    }
+ }
+@@ -211,7 +211,7 @@ void walberla::lbm_generated::NonuniformGeneratedPdfPackInfo< PdfField_T >::unpa
+ 
+    CellInterval ci = getCoarseBlockCoalescenceInterval(coarseReceiver, fineSender, dir, dstField);
+    uint_t size = kernels_.size(ci, dir);
+-   unsigned char* bufferPtr = buffer.skip(size);
++   unsigned char* bufferPtr = buffer.skipAligned< typename PdfField_T::value_type >(size);
+    kernels_.unpackCoalescence(dstField, ci, bufferPtr, dir);
+ }
+ 
+@@ -257,7 +257,7 @@ void walberla::lbm_generated::NonuniformGeneratedPdfPackInfo< PdfField_T >::pack
+    CellInterval ci;
+    srcField->getGhostRegion(dir, ci, 2);
+    uint_t size = kernels_.partialCoalescenceSize(ci, dir);
+-   unsigned char* bufferPtr = buffer.forward(size);
++   unsigned char* bufferPtr = buffer.forwardAligned< typename PdfField_T::value_type >(size);
+    kernels_.packPartialCoalescence(srcField, maskField, ci, bufferPtr, dir);
+ }
+ 
+diff --git a/src/lbm_generated/communication/UniformGeneratedPdfPackInfo.h b/src/lbm_generated/communication/UniformGeneratedPdfPackInfo.h
+index 76d28617..ec2614e2 100644
+--- a/src/lbm_generated/communication/UniformGeneratedPdfPackInfo.h
++++ b/src/lbm_generated/communication/UniformGeneratedPdfPackInfo.h
+@@ -235,15 +235,16 @@ void UniformGeneratedPdfPackInfo< PdfField_T >::unpackData( IBlock * receiver, D
+    CellInterval ci;
+    field->getGhostRegion(dir, ci, ghostLayersToSend_, false);
+ 
++   // The buffer is char-aligned, but the generated kernels read it as an array of the PDF type
+    if (sendAll_)
+    {
+-      unsigned char* bufferPtr = buffer.skip(kernels_.size(ci));
++      unsigned char* bufferPtr = buffer.skipAligned< typename PdfField_T::value_type >(kernels_.size(ci));
+       kernels_.unpackAll(field, ci, bufferPtr);
+    }
+    else
+    {
+       uint_t size              = kernels_.size(ci, dir);
+-      unsigned char* bufferPtr = buffer.skip(size);
++      unsigned char* bufferPtr = buffer.skipAligned< typename PdfField_T::value_type >(size);
+       kernels_.unpackDirection(field, ci, bufferPtr, dir);
+    }
+ }
+@@ -275,14 +276,15 @@ void UniformGeneratedPdfPackInfo< PdfField_T >:: packDataImpl(const IBlock* send
+    CellInterval ci;
+    field->getSliceBeforeGhostLayer(dir, ci, ghostLayersToSend_, false);
+ 
++   // The buffer is char-aligned, but the generated kernels write it as an array of the PDF type
+    if (sendAll_)
+    {
+-      unsigned char* bufferPtr = buffer.forward(kernels_.size(ci));
++      unsigned char* bufferPtr = buffer.forwardAligned< typename PdfField_T::value_type >(kernels_.size(ci));
+       kernels_.packAll(field, ci, bufferPtr);
+    }
+    else
+    {
+-      unsigned char* bufferPtr = buffer.forward(kernels_.size(ci, dir));
++      unsigned char* bufferPtr = buffer.forwardAligned< typename PdfField_T::value_type >(kernels_.size(ci, dir));
+       kernels_.packDirection(field, ci, bufferPtr, dir);
+    }
+ }
+diff --git a/tests/core/mpi/BufferTest.cpp b/tests/core/mpi/BufferTest.cpp
+index 9c0b4e18..a46842d2 100644
+--- a/tests/core/mpi/BufferTest.cpp
++++ b/tests/core/mpi/BufferTest.cpp
+@@ -37,6 +37,7 @@
+ #include "core/mpi/SendBuffer.h"
+ 
+ #include <random>
++#include <cstdint>
+ #include <cstring>
+ #include <iostream>
+ #include <optional>
+@@ -343,6 +344,41 @@ void bufferOverwriteTest()
+ }
+ 
+ 
++/// forwardAligned/skipAligned: whatever was written before, the data of type V is aligned for V, the receiver
++/// finds it at the same place, and the data after it is read correctly
++template< typename V >
++void bufferAlignedTest()
++{
++   const uint_t n = 5;
++   for( uint_t headerBytes = 0; headerBytes < 2 * sizeof(V); ++headerBytes )
++   {
++      SendBuffer sb;
++      for( uint_t i = 0; i < headerBytes; ++i )
++         sb << uint8_c( i );
++      V * out = reinterpret_cast< V * >( sb.forwardAligned< V >( n * sizeof(V) ) );
++      WALBERLA_CHECK_EQUAL( reinterpret_cast< std::uintptr_t >( out ) % alignof(V), 0 )
++      for( uint_t i = 0; i < n; ++i )
++         out[i] = V( i + 1 );
++      sb << uint8_c( 42 );
++
++      RecvBuffer rb( sb );
++      for( uint_t i = 0; i < headerBytes; ++i )
++      {
++         uint8_t header;
++         rb >> header;
++         WALBERLA_CHECK_EQUAL( header, uint8_c( i ) )
++      }
++      const V * in = reinterpret_cast< const V * >( rb.skipAligned< V >( n * sizeof(V) ) );
++      WALBERLA_CHECK_EQUAL( reinterpret_cast< std::uintptr_t >( in ) % alignof(V), 0 )
++      for( uint_t i = 0; i < n; ++i )
++         WALBERLA_CHECK_FLOAT_EQUAL( in[i], V( i + 1 ) )
++      uint8_t tail;
++      rb >> tail;
++      WALBERLA_CHECK_EQUAL( tail, uint8_c( 42 ) )
++   }
++}
++
++
+ int main()
+ {
+    debug::enterTestMode();
+@@ -359,6 +395,9 @@ int main()
+ 
+    bufferOverwriteTest();
+ 
++   bufferAlignedTest< float >();
++   bufferAlignedTest< double >();
++
+    return 0;
+ }
+ 

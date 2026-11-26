@@ -1,0 +1,122 @@
+mpirun --bind-to core --map-by core -np 4 /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none benchmark.prm -DomainSetup.domainSize=<128,128,64> -DomainSetup.cellsPerBlock=<64,64,64> -Parameters.warmupSteps=2 -Parameters.timesteps=10
+
+================================================================================
+|       BEGIN LOGGING - Friday, 27.November 2026, 01:19:49                     |
+================================================================================
+[0][INFO    ]------(0.000 sec) C_l = 7.875
+[0]                            C_t = 0.039375
+[0]                            C_m = 595.815
+[0][INFO    ]------(0.001 sec) omega = 2
+[0][INFO    ]------(0.001 sec) nTurbines = 0
+[0][INFO    ]------(0.001 sec) Creating blockforest...
+[0][INFO    ]------(0.001 sec) SetupBlockForest created successfully:
+[0]                            - AABB: [ <0,0,0>, <128,128,64> ]
+[0]                            - initial decomposition: 2 x 2 x 1 (= forest size)
+[0]                            - periodicity: true x true x false
+[0]                            - number of blocks discarded from the initial grid: 0 (= 0 %)
+[0]                            - number of levels: 1
+[0]                            - tree ID digits: 3 (-> block ID bytes = 1)
+[0]                            - total number of blocks: 4
+[0]                            - number of processes: 4 (4 worker process(es) / 0 empty buffer process(es))
+[0]                            - buffer processes are inserted into the process network: no
+[0]                            - process ID bytes: 1
+[0]                            - blocks/memory/workload per process:
+[0]                               + blocks:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + memory:
+[0]                                  - min       = 6.23866e+07
+[0]                                  - max       = 6.23866e+07
+[0]                                  - avg       = 6.23866e+07
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + workload:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0][INFO    ]------(0.002 sec) Creating fields...
+[0][INFO    ]------(0.161 sec) Initialise domain...
+[0][INFO    ]------(0.893 sec) Initialisation done
+[0][INFO    ]------(0.893 sec) Setting up boundaries...
+[0][INFO    ]------(1.043 sec) Set up communication...
+[0][INFO    ]------(1.044 sec) Creating time loop...
+[k1:2285948] *** Process received signal ***
+[k1:2285948] Signal: Bus error (7)
+[k1:2285948] Signal code: Invalid address alignment (1)
+[k1:2285948] Failing at address: 0x14cc3e
+[k1:2285948] [ 0] linux-vdso.so.1(__vdso_rt_sigreturn+0x0)[0x3f9e08c800]
+[k1:2285948] [ 1] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x14cc3e]
+[k1:2285948] [ 2] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x6f17c]
+[k1:2285948] [ 3] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3db82]
+[k1:2285948] [ 4] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x992a4]
+[k1:2285948] [ 5] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9acce]
+[k1:2285948] [ 6] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9bc9c]
+[k1:2285948] [ 7] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3937a]
+[k1:2285948] [ 8] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0xa0100]
+[k1:2285948] [ 9] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x80810]
+[k1:2285948] [10] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2475e]
+[k1:2285948] [11] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2295f0]
+[k1:2285948] *** End of error message ***
+[k1:2285949] *** Process received signal ***
+[k1:2285949] Signal: Bus error (7)
+[k1:2285949] Signal code: Invalid address alignment (1)
+[k1:2285949] Failing at address: 0x14cc3e
+[k1:2285949] [ 0] linux-vdso.so.1(__vdso_rt_sigreturn+0x0)[0x3fa72d0800]
+[k1:2285949] [ 1] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x14cc3e]
+[k1:2285949] [ 2] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x6f17c]
+[k1:2285949] [ 3] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3db82]
+[k1:2285949] [ 4] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x992a4]
+[k1:2285949] [ 5] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9acce]
+[k1:2285949] [ 6] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9bc9c]
+[k1:2285949] [ 7] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3937a]
+[k1:2285949] [ 8] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0xa0100]
+[k1:2285949] [ 9] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x80810]
+[k1:2285949] [10] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2475e]
+[k1:2285949] [11] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2295f0]
+[k1:2285949] *** End of error message ***
+[k1:2285946] *** Process received signal ***
+[k1:2285946] Signal: Bus error (7)
+[k1:2285946] Signal code: Invalid address alignment (1)
+[k1:2285946] Failing at address: 0x14cc3e
+[k1:2285946] [ 0] linux-vdso.so.1(__vdso_rt_sigreturn+0x0)[0x3fb25da800]
+[k1:2285946] [ 1] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x14cc3e]
+[k1:2285946] [ 2] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x6f17c]
+[k1:2285946] [ 3] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3db82]
+[k1:2285946] [ 4] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x992a4]
+[k1:2285946] [ 5] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9acce]
+[k1:2285946] [ 6] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9bc9c]
+[k1:2285946] [ 7] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3937a]
+[k1:2285946] [ 8] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0xa0100]
+[k1:2285946] [ 9] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x80810]
+[k1:2285946] [10] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2475e]
+[k1:2285946] [11] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2295f0]
+[k1:2285946] *** End of error message ***
+[k1:2285947] *** Process received signal ***
+[k1:2285947] Signal: Bus error (7)
+[k1:2285947] Signal code: Invalid address alignment (1)
+[k1:2285947] Failing at address: 0x14cc3e
+[k1:2285947] [ 0] linux-vdso.so.1(__vdso_rt_sigreturn+0x0)[0x3fa03f3800]
+[k1:2285947] [ 1] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x14cc3e]
+[k1:2285947] [ 2] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x6f17c]
+[k1:2285947] [ 3] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3db82]
+[k1:2285947] [ 4] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x992a4]
+[k1:2285947] [ 5] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9acce]
+[k1:2285947] [ 6] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x9bc9c]
+[k1:2285947] [ 7] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x3937a]
+[k1:2285947] [ 8] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0xa0100]
+[k1:2285947] [ 9] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x80810]
+[k1:2285947] [10] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2475e]
+[k1:2285947] [11] /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none[0x2295f0]
+[k1:2285947] *** End of error message ***
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun noticed that process rank 1 with PID 0 on node k1 exited on signal 7 (Bus error).
+--------------------------------------------------------------------------

@@ -1,0 +1,153 @@
+\chapter{Code Generation on the Legacy Core}\label{r04:ch:codegen}
+
+A legacy application never contains its lattice Boltzmann kernels as source. A Python
+generator script describes the method, and the build runs that script to produce C++
+files. This chapter follows that path (\cref{r04:fig:codegen-flow}) and marks the one
+place where the vector instruction set is decided.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\linewidth}{!}{\input{reports/r04/figures/codegen-flow}}
+  \caption[Legacy code generation, from CMake to compiled sweeps]{Legacy code generation.
+    At configure time CMake writes a custom command per generator target; at build time
+    the command runs the generator script, which calls the waLBerla bridge packages,
+    which call \ps{}~1.4 for the kernels and Jinja2 for the C++ files around them.}
+  \label{r04:fig:codegen-flow}
+\end{figure}
+
+\section{The CMake side}\label{r04:sec:cmake}
+
+An application declares each generated library with
+\code{waLBerla_generate_target_from_python} (\file{cmake/waLBerlaHelperFunctions.cmake}).
+waLBerla-wind's benchmark app (\cref{r04:sec:wind-app}) does it once per variant:
+\begin{r04cmakecode}
+foreach( variant ${WIND_BENCHMARK_VARIANTS} )          # e.g. pull_none;aa_rvv
+    waLBerla_generate_target_from_python(
+            NAME TurbineBenchmark_cpu_uniform_${variant}_Generation
+            FILE LBMGeneration.py
+            CODEGEN_CFG ${variant}
+            OUT_FILES waLBerlaWind_SweepCollection.cpp waLBerlaWind_SweepCollection.h ... )
+    add_executable( TurbineBenchmark_cpu_uniform_${variant} main.cpp )
+    ...
+endforeach()
+\end{r04cmakecode}
+The function does three things:
+\begin{enumerate}
+  \item It collects CMake variables into a JSON string: \code{CODEGEN_CFG} and the
+    switches the script may need, such as \code{WALBERLA_DOUBLE_ACCURACY},
+    \code{WALBERLA_BUILD_WITH_OPENMP} and \code{WALBERLA_OPTIMIZE_FOR_LOCALHOST}.
+  \item It adds a custom command whose outputs are the \code{OUT_FILES} (in a folder
+    named after \code{CODEGEN_CFG}) and which runs
+    \code{python <FILE> -f <outputs> -c <json>} with
+    \code{PYTHONPATH=<walberla>/python:$ENV{PYTHONPATH}}.
+  \item It adds a static library of the generated sources, which the application links.
+\end{enumerate}
+Two details of this function matter in practice; both are pitfalls in appendix~B.
+\code{$ENV{PYTHONPATH}} is expanded when CMake \emph{configures}, so the \ps{} that the
+build uses is the one on \code{PYTHONPATH} at configure time; this is how the
+\ps{}~1.4 checkout of the submodule is used without installing it. And the custom
+command \code{DEPENDS} only on the generator script: a change to \ps{} or to the
+bridge packages does not regenerate anything.
+
+\section{The generator script}
+
+A generator script opens a \code{CodeGeneration} context
+(\file{python/pystencils_walberla/cmake_integration.py}), which parses the two
+arguments and writes the files when the \code{with} block ends:
+\begin{pycode}
+with CodeGeneration() as ctx:
+    streaming_pattern, _, instruction_set = ctx.config.partition('_')   # "aa_rvv" -> "aa", "rvv"
+    data_type = 'double' if ctx.double_accuracy else 'float32'
+    ...
+    cpu_vectorise_info = {'nontemporal': True}
+    if instruction_set != 'default':
+        cpu_vectorise_info['instruction_set'] = None if instruction_set == 'none' else instruction_set
+    generate_lbm_package(ctx, name="waLBerlaWind_", collision_rule=collision_rule, ...,
+                         cpu_vectorize_info=cpu_vectorise_info)
+\end{pycode}
+\code{ctx.config} is the \code{CODEGEN_CFG} string; it is the only channel through
+which one script can produce several variants. waLBerla's \code{UniformGridCPU}
+encodes stencil, streaming pattern and collision model in it
+(\code{d3q19_aa_srt}); our variants append the instruction set
+(\cref{r04:ch:apps}).
+
+\section{Where the instruction set is decided}\label{r04:sec:where-isa}
+
+Every kernel of the bridge packages is created with a \ps{} configuration from
+\code{config_from_context} (\file{python/pystencils_walberla/utility.py}). It merges
+what the script passed in \code{cpu_vectorize_info} with defaults:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{key} & \textbf{default}\\
+  \midrule
+  \code{instruction_set} & \code{get_vectorize_instruction_set(ctx)}: \code{None} (no
+    explicit vectors) unless waLBerla is configured with
+    \code{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON}; then the last entry of
+    \code{get_supported_instruction_sets()} of the build machine, or \code{'sse'} if
+    detection fails\\
+  \code{assume_inner_stride_one} & \code{True}\\
+  \code{assume_aligned} & \code{False}\\
+  \code{nontemporal} & \code{False}\\
+  \code{assume_sufficient_line_padding} & \code{False}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+A key the script sets wins over the default. So there are two ways to get vector code:
+the script names an instruction set, or the whole build opts in with
+\code{OPTIMIZE_FOR_LOCALHOST}, which then applies to \emph{every} kernel that does not
+name one. On the K1, detection finds \isa{rvv} (\cref{r04:sec:detect}). This project
+names the instruction set per variant and leaves \code{OPTIMIZE_FOR_LOCALHOST} off;
+\cref{r04:sec:localhost} explains why it has to be off for waLBerla-wind.
+
+\section{What the LBM package generates}
+
+\code{generate_lbm_package} (\file{python/lbmpy_walberla/walberla_lbm_package.py}) writes
+three groups of C++ classes for the module \file{src/lbm_generated}:
+\begin{description}[style=nextline]
+  \item[StorageSpecification] the PDF field's stencil and layout, and the generated
+    pack and unpack kernels for the halo exchange. For in-place patterns only the
+    directions that the next step reads are sent.
+  \item[SweepCollection] the time-step kernels: \code{streamCollide}, \code{collide},
+    \code{stream}, \code{streamOnlyNoAdvancement}, plus \code{initialise} (PDFs from
+    density and velocity) and \code{calculateMacroscopicParameters}. Only the first four
+    are vectorized; the setter and getter are generated without vectors
+    (\code{config_unoptimized} in \file{sweep_collection.py}).
+  \item[BoundaryCollection] the boundary conditions, one generated class each.
+\end{description}
+For in-place streaming every kernel exists twice, as an even and an odd step. The
+generated per-block sweep reads the parity from the PDF field and advances it:
+\begin{ccode}
+void streamCollide(IBlock * block) {                       // waLBerlaWind_SweepCollection.h
+   ...
+   uint8_t timestep = pdfs->advanceTimestep();
+   streamCollide(density, force, pdfs, velocity, omega, timestep, ghost_layers);
+}                                                          // picks the Even or Odd kernel
+\end{ccode}
+For in-place patterns the package also writes \term{block-wise} kernels,
+\code{blockStreamCollide} and \code{ghostLayerPropagation}, which process all blocks of
+a refinement level in one call through arrays of field pointers
+(\code{_data_pdfs_dp}). They are compiled into every in-place variant even when the
+application uses the per-block sweeps, as waLBerla-wind's benchmark does; this is why a
+bug in them stopped the K1 build (\cref{r04:sec:blockwise-bug}).
+
+\section{Around the kernels: the templates}
+
+The C++ code around each kernel comes from Jinja2 templates
+(\file{python/lbmpy_walberla/templates/}, \file{python/pystencils_walberla/templates/})
+and their filters (\file{python/pystencils_walberla/jinja_filters.py}). The filter
+\code{generate_call} declares a local variable for every parameter of the kernel
+function (data pointers, sizes, strides) from the waLBerla field objects, then calls
+the kernel. For a kernel over a whole field, for example:
+\begin{ccode}
+float * RESTRICT  _data_pdfs = pdfs->dataAt(-ghost_layers, -ghost_layers, -ghost_layers, 0);
+const int64_t _size_pdfs_0   = int64_t(int64_c(pdfs->xSize()) + 2*ghost_layers);
+const int64_t _stride_pdfs_1 = int64_t(pdfs->yStride());
+...
+internal_..._streamCollideEven::..._streamCollideEven(_data_density, _data_force, _data_pdfs, ...);
+\end{ccode}
+The kernel's parameter list is decided by \ps{}: it contains exactly the sizes and
+strides the kernel's code uses. The template code has to provide all of them. The
+block-wise call is the one place where the template does not ask the kernel but
+assumes which sizes it needs, and that assumption broke with vector code
+(\cref{r04:sec:blockwise-bug}).

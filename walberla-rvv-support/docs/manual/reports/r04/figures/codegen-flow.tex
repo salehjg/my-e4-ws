@@ -1,0 +1,40 @@
+% Legacy code generation: from CMake to compiled sweeps (chapter 3).
+\begin{tikzpicture}[node distance=5mm and 6mm]
+  % configure time
+  \node[r04box,text width=40mm] (cmake) {CMake configure\\[1pt]
+    \scriptsize\code{waLBerla_generate_target_from_python}\\(NAME, FILE, CODEGEN\_CFG, OUT\_FILES)};
+  \node[r04code,right=16mm of cmake,text width=52mm,align=left] (cmd) {python <script>.py\\
+    \ -f <output files>\\
+    \ -c \{"CODEGEN\_CFG": "aa\_rvv", "WALBERLA\_...": ...\}\\
+    PYTHONPATH fixed at configure time};
+  \draw[r04arrow] (cmake) -- node[r04label,above]{custom\\command} (cmd);
+
+  % build time: generator script
+  \node[r04box,below=9mm of cmake,text width=40mm] (script) {generator script\\[1pt]
+    \scriptsize\code{with CodeGeneration() as ctx:}\\\code{ctx.config} = CODEGEN\_CFG};
+  \draw[r04arrow] (cmd.south) |- ($(script.north)+(0,3mm)$) -- (script.north);
+  \node[r04label,anchor=west] at ($(cmd.south)+(1mm,-3mm)$) {build time: runs when the script changes};
+
+  \node[r04box,below=of script,text width=40mm] (bridge) {\code{lbmpy_walberla},
+    \code{pystencils_walberla}\\[1pt]\scriptsize\code{generate_lbm_package},
+    \code{generate_sweep},\\\code{config_from_context}};
+  \draw[r04arrow] (script) -- (bridge);
+
+  \node[r04box,right=16mm of bridge,text width=52mm] (ps) {\ps{}~1.4 and lbmpy~1.4\\[1pt]
+    \scriptsize collision rule $\to$ AST $\to$ \code{vectorize()} $\to$ C code\\
+    with the instruction set's templates (chapter 4)};
+  \draw[r04arrow] (bridge) -- node[r04label,above]{kernels} (ps);
+
+  \node[r04box,below=of bridge,text width=40mm] (jinja) {Jinja2 templates\\[1pt]
+    \scriptsize\file{templates/*.tmpl.h}, \file{*.tmpl.cpp}\\filters: \code{generate_call}, \dots};
+  \draw[r04arrow] (bridge) -- (jinja);
+  \draw[r04arrow] (ps.south) |- node[r04label,pos=0.75,below]{kernel C code} (jinja.east);
+
+  \node[r04box,below=of jinja,text width=40mm] (files) {generated C++ files\\[1pt]
+    \scriptsize StorageSpecification, SweepCollection,\\BoundaryCollection, \dots};
+  \draw[r04arrow] (jinja) -- (files);
+
+  \node[r04box,right=16mm of files,text width=52mm] (lib) {static library \code{<NAME>}\\[1pt]
+    \scriptsize compiled with the build's flags (\code{-march=...})\\linked into the application};
+  \draw[r04arrow] (files) -- (lib);
+\end{tikzpicture}

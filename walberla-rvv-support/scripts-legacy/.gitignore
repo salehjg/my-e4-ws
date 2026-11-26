@@ -1,0 +1,4 @@
+# The runs go to ../results-legacy/ (meant to be committed), builds to the machine's work folder
+# (experiments.MACHINES), remote.py's screen logs to 00_private_data/ (ignored by ../.gitignore).
+__pycache__/
+*.pyc

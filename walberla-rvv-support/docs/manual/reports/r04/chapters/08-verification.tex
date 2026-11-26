@@ -1,0 +1,136 @@
+\chapter{Verification and Measurement}\label{r04:ch:verification}
+
+The code is checked at three levels: single kernels under QEMU against a scalar
+reference, whole applications by a checksum of the final state, and the K1 runs
+themselves, every one of which carries its checksum.
+
+\section{Instruction sets under QEMU}\label{r04:sec:qemu}
+
+\file{tests/test_rvv_qemu.py} in the pystencils submodule (new; a simplified version of
+the 2.x test) generates small kernels with fixed-shape fields, embeds inputs and the
+kernel in a C++ program, cross-compiles it with \code{riscv64-linux-gnu-g++}, runs it
+under \code{qemu-riscv64 -cpu rv64,v=true,vlen=<V>}, and compares the outputs with the
+same kernel compiled by the host's JIT without vectors. Result: 30 tests pass.
+\begin{itemize}
+  \item \isa{rvv}, \isa{rvv_ext}, \isa{-vf}, \isa{-fma}, \isa{-vf-fma}, \isa{-pf128},
+    \isa{-m2} and \isa{-m4-vf-fma-pf128} at VLEN 128, 256 and 512, each from one
+    \code{-march=rv64gcv} binary;
+  \item \isa{-vls128} at VLEN 128 and 256; \isa{-vls256} and
+    \isa{-vls256-m2-vf-fma-pf128} at 256;
+  \item \isa{rvv_ext} without options prints exactly the code of \isa{rvv};
+  \item \isa{rvv_ext-vls256} code does not compile with \code{zvl128b}.
+\end{itemize}
+
+\section{LBM kernels under QEMU}
+
+\file{scripts/notes8/lbm_qemu_check.py} applies the same harness to real lbmpy
+kernels on fixed $13\times6\times5$ fields; the odd $x$ extent exercises the last,
+partial vector. The column is the largest difference divided by the array's largest
+value, because a per-value ratio is meaningless for velocities near zero.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.4cm}>{\raggedright\arraybackslash}p{2.1cm}@{}}
+  \toprule
+  \textbf{kernel} & \textbf{variants} & \textbf{instruction sets} & \textbf{VLEN} &
+    \textbf{max diff}\\
+  \midrule
+  D3Q19 SRT, float64 & pull, AA even, AA odd & \isa{rvv}, \isa{rvv_ext-vf-fma},
+    \isa{-vf-fma-pf128}, \isa{-vls128-vf-fma-pf128} & 128, 256 & $\leq 5.3\cdot10^{-12}$
+    (per value)\\
+  waLBerla-wind D3Q27 cumulant, float32 & pull & \isa{rvv}, \isa{rvv_ext-vf-fma-pf128},
+    \isa{-vls256-vf-fma} & 128, 256 & $2.99$, $3.07$, $3.06\cdot10^{-5}$\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{The checksum}\label{r04:sec:checksum}
+
+Both applications print, after the run, the sum of the density and the sum of
+$|\mathbf{u}|^2$ over all interior cells, reduced over all processes and printed with 17
+digits. A variant is compared with the reference variant (\code{pull_none}) at the same
+process count and number of steps. A correct variant differs by rounding only; a wrong
+kernel, remainder loop or AA even/odd step changes the sums at $10^{-3}$ or more. The
+tolerance is $10^{-6}$ relative in float32 and $10^{-10}$ in float64. The sums do not
+say \emph{where} an error is; that is what the QEMU checks do, cell by cell.
+
+\section{Application checks on x86}\label{r04:sec:app-checks}
+
+On the laptop (x86, scalar variants only) the checksums confirm that AA streaming works
+through the legacy core in both applications:
+\begin{center}\small
+\begin{tabular}{@{}llrll@{}}
+  \toprule
+  \textbf{app} & \textbf{processes, domain} & \textbf{variant} & \textbf{sum($\rho$)} &
+    \textbf{sum($|\mathbf{u}|^2$)}\\
+  \midrule
+  waLBerla-wind, float32 & 1, $64^3$ & pull & 262143.99828010798 & 757.63847218824912\\
+   & & AA & 262143.99849921465 & 757.63847086051658\\
+   & 8, $128^3$ & pull & 2097151.9898673892 & 7205.0347198385698\\
+   & & AA & 2097151.9896876812 & 7205.034717604256\\
+  \bottomrule
+\end{tabular}
+\end{center}
+Pull and AA agree to about $10^{-9}$ relative, float32 rounding. In
+\code{UniformGridCPU} (float64) they agree to $3.6\cdot10^{-16}$.
+
+\section{The benchmark scripts}\label{r04:sec:scripts}
+
+\file{scripts-legacy/} configures, builds, runs and tabulates both applications
+(\file{scripts-legacy/README.md} has the details):
+\begin{description}[style=nextline]
+  \item[\file{experiments.py}] typed definitions only: machines, builds (one CMake tree
+    each), variants and experiments. A variant is
+    \code{Variant(streaming, vectors, vlen, lmul, vf, fma, prefetch)}, e.g.\
+    \code{Variant(AA, RVV_EXT, vf=True, fma=True, prefetch=128)}.
+  \item[\file{bench.py}] runs on the machine itself: \code{setup}, \code{configure},
+    \code{build}, \code{run}, \code{all}, \code{list}, \code{table}. It is the only place
+    that turns a \code{Variant} into a name (\code{aa_rvv_ext-vf-fma-pf128}), and before
+    configuring it asks \ps{}'s \code{parse_options} whether every name means what the
+    \code{Variant} says.
+  \item[\file{remote.py}] runs on the laptop: pushes the whole git repository to the
+    board, starts \file{bench.py} detached in \code{screen}, shows its state and fetches
+    the results.
+\end{description}
+The timing protocol is that of the earlier reports: warm-up steps, then timed steps,
+every variant once per round in turn, several rounds; one process pinned with
+\code{taskset -c 2}, more with \code{mpirun --bind-to core --map-by core}; one $64^3$
+block per process. \code{all} first runs a quick check (2 + 10 steps, one round) and
+times only if every quick run succeeds and passes its checksum. Every run becomes one
+folder \file{results-legacy/<date>-<time>-<random>/} with one JSON5 file holding the
+experiment, the machine, compiler and library versions, branch, commit and uncommitted
+changes of every repository, each executable's hash and flags, every single run with
+its load average, and the summary.
+
+\section{First runs on the K1}
+
+When this report was written, the waLBerla-wind experiment had built all nine variants
+on the K1 and run its quick check. Single process, 13 time steps (2 warm-up and 11
+timed: the AppGenerator's \file{main.cpp} runs one step more than
+\code{Parameters.timesteps}), one run each, with another user's jobs keeping the load average near 4: these numbers show
+that every variant runs and is correct, but they are \emph{not} a measurement.
+\begin{center}\small
+\begin{tabular}{@{}lrl@{}}
+  \toprule
+  \textbf{variant} & \textbf{MLUP/s} & \textbf{checksum vs \texttt{pull\_none}}\\
+  \midrule
+  \code{pull_none} & 0.51 & (reference)\\
+  \code{aa_none} & 0.57 & ok, $2.8\cdot10^{-10}$\\
+  \code{pull_rvv} & 0.70 & ok, $5.4\cdot10^{-7}$\\
+  \code{aa_rvv} & 0.51 & ok, $5.4\cdot10^{-7}$\\
+  \code{aa_rvv_ext-vf} & 0.57 & ok, $5.5\cdot10^{-7}$\\
+  \code{aa_rvv_ext-fma} & 0.52 & ok, $5.4\cdot10^{-7}$\\
+  \code{aa_rvv_ext-vf-fma} & 0.62 & ok, $5.4\cdot10^{-7}$\\
+  \code{aa_rvv_ext-vf-fma-pf128} & 1.07 & ok, $5.4\cdot10^{-7}$\\
+  \code{aa_rvv_ext-vls256-vf-fma-pf128} & 0.67 & ok, $5.4\cdot10^{-7}$\\
+  \bottomrule
+\end{tabular}
+\end{center}
+Two observations to follow up in the timed runs:
+\begin{itemize}
+  \item All RVV variants differ from the scalar ones by the same amount in
+    sum($|\mathbf{u}|^2$), about $5.4\cdot10^{-7}$ relative after 13 steps, while the two
+    scalar variants agree to $3\cdot10^{-10}$ and the RVV variants among themselves to
+    about $10^{-8}$. That is inside the tolerance, but systematic. Its source is not yet
+    known.
+  \item All four-process runs failed with the bus error of \cref{r04:sec:misaligned}, so
+    the scripts did not start timing.
+\end{itemize}

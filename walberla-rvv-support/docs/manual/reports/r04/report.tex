@@ -1,0 +1,43 @@
+% =============================================================================
+%  Report r04 -- RVV on waLBerla's Legacy Core (written 2026-11-26)
+%
+%  The legacy stack (waLBerla's lbm_generated + pystencils_walberla/lbmpy_walberla
+%  code generation, pystencils 1.4, lbmpy 1.4) that waLBerla-wind is built on: how it
+%  differs from the new stack of reports 1 to 3, how pystencils 1.4 turns a kernel
+%  into RVV code with its own `rvv` instruction set, and the instruction set
+%  `rvv_ext` written for this project next to it. Sources: the branches
+%  rvv-support-legacy of this workspace and of submodules/pystencils (from
+%  release/1.4, 48474c1a), submodules/walberla (from rvv-support, 42855054) and
+%  submodules/waLBerla-wind (from main, 9d74213), uncommitted working trees as of
+%  2026-11-26; docs/notes8/ (plan and progress log); scripts-legacy/README.md.
+%
+%  Chapters and appendices are \include'd, so single chapters can be built with
+%  \includeonly in manual.tex, e.g. \includeonly{reports/r04/chapters/06-rvv-ext}.
+% =============================================================================
+\input{reports/r04/macros}
+
+\reporttitle[{How the legacy stack differs from the new one, how \ps{}~1.4 generates RVV
+  code, and the instruction set \texttt{rvv\_ext} written next to it\\[0.4em]
+  \normalsize \ps{}~1.4, lbmpy~1.4, waLBerla's legacy core and waLBerla-wind,
+  branches \texttt{rvv-support-legacy}}]
+  {RVV on waLBerla's Legacy Core}{2026-11-26}
+
+\reportpart{The Legacy Stack}
+\include{reports/r04/chapters/01-introduction}
+\include{reports/r04/chapters/02-two-stacks}
+\include{reports/r04/chapters/03-legacy-codegen}
+
+\reportpart{RVV in pystencils 1.4}
+\include{reports/r04/chapters/04-vectorizer}
+\include{reports/r04/chapters/05-upstream-rvv}
+\include{reports/r04/chapters/06-rvv-ext}
+
+\reportpart{Applications and Evidence}
+\include{reports/r04/chapters/07-applications}
+\include{reports/r04/chapters/08-verification}
+
+\reportappendix
+\include{reports/r04/appendices/a-file-map}
+\include{reports/r04/appendices/b-pitfalls}
+
+\printbibliography[heading=bibintoc]

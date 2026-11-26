@@ -1,0 +1,132 @@
+\chapter{Upstream's RVV Instruction Set}\label{r04:ch:upstream-rvv}
+
+\ps{}~1.4 contains an RVV instruction set, \isa{rvv}, written by Michael Kuron
+(\file{backends/riscv_instruction_sets.py}, helper header
+\file{include/riscv_v_helpers.h}; the ratified \code{__riscv_} intrinsic names since
+July~2025). It is untouched by this project. This chapter describes what it generates,
+because it is both the baseline of every measurement and the starting point of
+\isa{rvv_ext}.
+
+\section{The dictionary}
+
+\code{get_vector_instruction_set_riscv(data_type, 'rvv')} builds the dictionary from a
+short table of intrinsic stems (\code{'+': 'fadd_vv[0, 1]'}, \code{'loadU':
+'le32_v[0]'}, \dots), adding the \code{__riscv_v} prefix, the type suffix
+(\code{_f32m1} or \code{_f64m1}) and the active length as last argument. Everything in
+it follows from four choices:
+\begin{description}[style=nextline]
+  \item[Vector-length agnostic] The width is not a number but the C expression
+    \code{__riscv_vsetvlmax_e32m1()}: the number of lanes of the machine the code runs on.
+  \item[Active length ``elements left''] Every intrinsic gets
+    \code{vl = {loop_stop} - {loop_counter}}. Because that placeholder is in the store
+    template, the vectorizer keeps the loop whole (\cref{r04:sec:loop}): there is no
+    scalar remainder loop, the last iteration simply processes fewer elements.
+  \item[LMUL~1] Types \code{vfloat32m1_t}, \code{vfloat64m1_t}, masks \code{vbool32_t}
+    or \code{vbool64_t}: one register per vector.
+  \item[Plain intrinsics] One intrinsic per operation: \code{vfadd_vv}, \code{vfsub_vv},
+    \code{vfmul_vv}, \code{vfdiv_vv}, \code{vfsqrt_v}; unit-stride (\code{vle}/\code{vse})
+    and strided (\code{vlse}/\code{vsse}) loads and stores, masked stores; comparisons to
+    masks and \code{vmerge} for conditionals; \code{vcpop} for ``any'' and ``all''.
+    Scalars are broadcast with \code{vfmv_v_f}.
+\end{description}
+It also defines \code{'cachelineSize'} and \code{'cachelineZero'} for nontemporal stores
+(\cref{r04:sec:rvv-zicboz}).
+
+\section{What it generates}
+
+For the assignment \code{y = 0.5*x + z} on float fields, \isa{rvv} produces this
+kernel (unchanged \ps{} output, line breaks added):
+\rfourneedspace{9\baselineskip}
+\begin{ccode}
+FUNC_PREFIX void kernel(float * RESTRICT const _data_x, float * RESTRICT _data_y,
+                        float * RESTRICT const _data_z, int64_t const _size_x_0)
+{
+   for (int64_t ctr_0 = 0; ctr_0 < _size_x_0; ctr_0 += __riscv_vsetvlmax_e32m1())
+   {
+      __riscv_vse32_v_f32m1(&_data_y[ctr_0],
+         __riscv_vfadd_vv_f32m1(
+            __riscv_vfmul_vv_f32m1(__riscv_vfmv_v_f_f32m1(0.5f, _size_x_0 - ctr_0),
+                                   __riscv_vle32_v_f32m1(& _data_x[ctr_0], _size_x_0 - ctr_0),
+                                   _size_x_0 - ctr_0),
+            __riscv_vle32_v_f32m1(& _data_z[ctr_0], _size_x_0 - ctr_0),
+            _size_x_0 - ctr_0),
+         _size_x_0 - ctr_0);
+   }
+}
+\end{ccode}
+Three things to notice, because \isa{rvv_ext} changes each of them:
+\begin{itemize}
+  \item The constant 0.5 is broadcast into a vector (\code{vfmv_v_f}) inside the loop,
+    and multiplied vector by vector.
+  \item The product and the sum are two intrinsics; RVV intrinsics are opaque to the
+    compiler, so it cannot fuse them into one multiply-add.
+  \item Every intrinsic carries \code{_size_x_0 - ctr_0}, so the compiler emits
+    \code{vsetvli} with that value; nothing is constant.
+\end{itemize}
+
+\section{Properties}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{property} & \textbf{consequence}\\
+  \midrule
+  one binary for every VLEN & checked under QEMU at VLEN 128, 256 and 512 with one
+    \code{-march=rv64gcv} binary (\cref{r04:sec:qemu})\\
+  no remainder loop & no scalar code in the kernel, and no alignment assumptions\\
+  broadcast per use & 476 \code{vfmv_v_f} in the loop body of waLBerla-wind's kernel;
+    a broadcast takes 4 cycles on the X60 (measured in \file{docs/notes3})\\
+  no FMA & 761 \code{vfmul} and 614 \code{vfadd} in the same loop body\\
+  no prefetch, no fixed VLEN, no LMUL above 1 & see \cref{r04:ch:rvv-ext}\\
+  no \code{min}/\code{max} templates & no obstacle in practice: the QR model's maximum is
+    printed as a compare and a merge (\code{vmfgt}, \code{vmerge})\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The counts are from waLBerla-wind's lattice Boltzmann kernel (D3Q27 cumulant with
+Galilean and fourth-order correction, Guo forcing, QR turbulence model, float32, pull),
+which \isa{rvv} vectorizes completely in about one minute of code generation: 92 loads,
+33 stores and 12 divisions besides the products and sums above.
+
+\section{The active length and the RVV specification}\label{r04:sec:avl}
+
+The active length argument of an intrinsic is an \term{application vector length} (AVL),
+not a promise of how many elements are processed. The RVV specification~\cite{rvv-spec}
+(section ``Constraints on Setting vl'') lets the hardware choose: for
+$\text{AVL} \leq \text{VLMAX}$ it processes AVL elements, for
+$\text{AVL} \geq 2\,\text{VLMAX}$ it processes VLMAX, but for
+$\text{VLMAX} < \text{AVL} < 2\,\text{VLMAX}$ any value between
+$\lceil\text{AVL}/2\rceil$ and VLMAX is allowed. Upstream's loop always advances by
+VLMAX. On hardware that took the freedom and split the last two vectors evenly, it
+would skip elements. QEMU returns VLMAX in that range, and the QEMU checks use an odd
+row length (13 cells), so they cover it. The K1 runs so far use rows of 64 cells, a
+multiple of the lane count, so they never reach that range: whether the K1 returns
+VLMAX there is not tested. The vector-length specific option of \isa{rvv_ext} does not
+depend on it (\cref{r04:sec:ext-vls}).
+
+\section{Nontemporal stores: Zicboz}\label{r04:sec:rvv-zicboz}
+
+With \code{nontemporal}, which waLBerla-wind sets, every unit-stride store gets the
+cache-line zeroing guard of \cref{r04:sec:nontemporal}. On RVV the zeroing is the
+instruction \code{cbo.zero} of the Zicboz extension~\cite{riscv-cmo}:
+\begin{ccode}
+inline void cachelineZero(void * p) {        // include/riscv_v_helpers.h
+#ifdef __riscv_zicboz
+	__asm__ volatile("cbo.zero (%0)"::"r"(p):"memory");
+#endif
+}
+inline size_t cachelineSize() {
+#ifdef __riscv_zicboz
+	static size_t size = _cachelineSize();   // measured once by zeroing a line
+	return size;
+#else
+	return SIZE_MAX;
+#endif
+}
+\end{ccode}
+Both are compiled for Zicboz only if \code{-march} names it. Without it,
+\code{cachelineSize()} returns \code{SIZE_MAX}, the alignment test of the guard is never
+true, and the guard is dead code: one compare and branch per store. That is the state
+of all K1 builds so far, which use \code{-march=rv64gcv_zvl256b}. The K1 does implement
+Zicboz (its \code{isa} line in \file{/proc/cpuinfo} lists \code{zicboz}), so building
+with \code{-march=rv64gcv_zvl256b_zicboz} is an open experiment.

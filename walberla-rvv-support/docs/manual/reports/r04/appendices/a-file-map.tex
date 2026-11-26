@@ -1,0 +1,73 @@
+\chapter{File Map}\label{r04:app:files}
+
+Every file this work added (\emph{new}) or changed, per repository; all on branches
+\code{rvv-support-legacy}. Paths are relative to the repository.
+
+\section*{pystencils (\texttt{submodules/pystencils}, from \texttt{release/1.4})}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{file} & & \textbf{what}\\
+  \midrule
+  \file{src/pystencils/backends/riscv_ext_instruction_sets.py} & new & \isa{rvv_ext}
+    (\cref{r04:ch:rvv-ext})\\
+  \file{src/pystencils/backends/simd_instruction_sets.py} & 3 lines & import and dispatch
+    of \isa{rvv_ext}\\
+  \file{src/pystencils/include/riscv_v_ext_prefetch.h} & new & Zicbop prefetch helpers\\
+  \file{src/pystencils/include/riscv_v_ext_vls128.h}, \file{..._vls256.h} & new &
+    compile-time VLEN guards\\
+  \file{tests/test_rvv_qemu.py} & new & QEMU tests of \isa{rvv} and \isa{rvv_ext}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{waLBerla (\texttt{submodules/walberla}, from \texttt{rvv-support})}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{file} & & \textbf{what}\\
+  \midrule
+  \file{python/lbmpy_walberla/templates/LBMSweepCollection.tmpl.cpp} & 4 lines $\to$ 7 &
+    block-wise call declares every field's sizes (\cref{r04:sec:blockwise-bug})\\
+  \file{apps/benchmarks/UniformGridCPU/UniformGridCPU.py} & 3 lines & optional instruction
+    set in the config\\
+  \file{apps/benchmarks/UniformGridCPU/CMakeLists.txt} & 22 lines &
+    \code{UNIFORMGRIDCPU_EXTRA_CONFIGS}\\
+  \file{apps/benchmarks/UniformGridCPU/UniformGridCPU.cpp} & added & checksum after the
+    run\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The RISC-V CMake support (\file{cmake/compileroptions/RiscvVlen.cmake}, \code{-march} for GCC and
+Clang) comes unchanged from the 2.x work on the \code{rvv-support} branch (report~2).
+
+\section*{waLBerla-wind (\texttt{submodules/waLBerla-wind}, from \texttt{main})}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{file} & & \textbf{what}\\
+  \midrule
+  \file{apps/BenchmarkApp_cpu_uniform/} & new & the benchmark app
+    (\cref{r04:sec:wind-app}); its \file{README.md} says how it was made\\
+  \file{apps/CMakeLists.txt} & 1 line & adds the app\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{Workspace}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.4cm}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{file} & & \textbf{what}\\
+  \midrule
+  \file{docs/notes8/rvv-legacy-wind-plan-opus5.5.md} & new & the plan\\
+  \file{docs/notes8/rvv-legacy-wind-progress-opus5.5.md} & new & the progress log\\
+  \file{scripts/notes8/lbm_qemu_check.py} & new & LBM kernels under QEMU\\
+  \file{scripts-legacy/} & new & \file{bench.py}, \file{remote.py},
+    \file{experiments.py}, \file{uniform_grid_cpu.prm}, \file{README.md}\\
+  \file{results-legacy/} & new & one folder per benchmark run\\
+  \file{push.to.sh} & changed & \code{--repo}: push the whole git repository\\
+  \file{docs/manual/reports/r04/} & new & this report\\
+  \bottomrule
+\end{tabularx}
+\end{center}

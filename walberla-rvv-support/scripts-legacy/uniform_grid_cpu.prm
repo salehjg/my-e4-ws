@@ -1,0 +1,16 @@
+// UniformGridCPU (waLBerla, apps/benchmarks/UniformGridCPU) for bench.py: periodic shear flow, no boundaries.
+// bench.py sets blocks (one per process), cellsPerBlock, warmupSteps and timesteps on the command line.
+DomainSetup
+{
+    blocks        <1, 1, 1>;
+    cellsPerBlock <64, 64, 64>;
+    periodic      <1, 1, 1>;
+}
+
+Parameters
+{
+    timesteps        60;
+    warmupSteps      10;
+    timeStepStrategy noOverlap;  // communication, then the LBM sweep over the whole block, as in waLBerla-wind
+    initShearFlow    true;
+}

@@ -1,0 +1,69 @@
+\chapter{Pitfalls of the Legacy Build}\label{r04:app:pitfalls}
+
+\begin{pitfall}[The \ps{} version is fixed at configure time]
+  \code{waLBerla_generate_target_from_python} writes \code{$ENV{PYTHONPATH}} into the
+  custom command when CMake configures. Changing \code{PYTHONPATH} later has no effect
+  on an existing build tree; reconfigure with the right one
+  (\code{PYTHONPATH=<workspace>/submodules/pystencils/src}).
+\end{pitfall}
+
+\begin{pitfall}[Generated code is not regenerated when \ps{} or waLBerla's Python changes]
+  The custom command depends only on the generator script. After changing \ps{},
+  \code{lbmpy_walberla}, \code{pystencils_walberla} or a template, delete the variant's
+  generated folder in the build tree (or the whole tree). Touching the generator script
+  also works, but regenerates every variant of that script, and \ps{}'s output is not
+  byte-identical between runs (the numbering of subexpressions changes), so all of them
+  are recompiled.
+\end{pitfall}
+
+\begin{pitfall}[\texttt{WALBERLA\_OPTIMIZE\_FOR\_LOCALHOST=ON}]
+  vectorizes every kernel that names no instruction set with the machine's best one.
+  waLBerla-wind's flow driver cannot be vectorized by \ps{}~1.4, and the ``scalar''
+  variants would not be scalar. Keep it off and set \code{-march} yourself
+  (\cref{r04:sec:localhost}).
+\end{pitfall}
+
+\begin{pitfall}[Multi-process runs on RISC-V and misaligned buffers]
+  waLBerla's buffered communication hands the pack kernels unaligned buffer addresses.
+  If GCC auto-vectorizes those kernels, multi-process runs die with a bus error on the
+  K1 (\cref{r04:sec:misaligned}).
+\end{pitfall}
+
+\begin{pitfall}[Nontemporal stores without Zicboz]
+  With \code{nontemporal}, RVV kernels contain a cache-line zeroing guard per store. It
+  only does anything if \code{-march} contains \code{_zicboz}; otherwise it is a dead
+  compare and branch (\cref{r04:sec:rvv-zicboz}).
+\end{pitfall}
+
+\begin{pitfall}[\texttt{vls} code on a smaller VLEN]
+  \isa{rvv_ext-vls256} code is wrong on hardware with VLEN 128. The guard header turns
+  this into a compile error, but only if \code{-march} states the VLEN honestly
+  (\code{zvl256b} only for VLEN $\geq$ 256).
+\end{pitfall}
+
+\begin{pitfall}[Python versions]
+  \ps{}~1.4 needs SymPy $\leq$ 1.12.1 and pytest~8; lbmpy~1.4 must be installed with
+  \code{--no-deps}, or it brings a released \ps{} that shadows the submodule. PyPI has no
+  NumPy wheel for riscv64; on the K1 the venv uses the system's NumPy.
+\end{pitfall}
+
+\begin{pitfall}[Shifted-periodic inflow and in-place streaming]
+  waLBerla-wind's apps refuse in-place patterns with shifted-periodic inflow. The
+  benchmark uses periodic inflow and outflow.
+\end{pitfall}
+
+\section*{Quick reference}
+
+\begin{shcode}
+# laptop: scalar variants, to try the scripts
+python3 scripts-legacy/bench.py all wind-x86
+# K1, from the laptop
+python3 scripts-legacy/remote.py push
+python3 scripts-legacy/remote.py start setup        # once: the venv
+python3 scripts-legacy/remote.py start all wind     # configure, build, quick check, timing
+python3 scripts-legacy/remote.py status
+python3 scripts-legacy/remote.py fetch
+python3 scripts-legacy/bench.py table results-legacy/<run>
+# QEMU tests of the instruction sets (pystencils submodule, legacy venv)
+PYTHONPATH=src python -m pytest tests/test_rvv_qemu.py
+\end{shcode}

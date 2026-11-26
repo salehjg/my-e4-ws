@@ -1,0 +1,148 @@
+// One run of scripts-legacy/bench.py (README.md there). JSON5: JSON plus // comment lines; NaN marks a missing value.
+// Python: json.loads of the lines that do not start with //, or bench.load_run(<this file>).
+{
+  "format": 1,
+  "started": "2026-11-27T01:18:20+0800",
+  "finished": "2026-11-27T01:20:29+0800",
+  // what was timed (scripts-legacy/experiments.py); quick: the short check before timing
+  "experiment": {
+    "name": "wind",
+    "quick": true,
+    "cores": [1, 4],
+    "cells": 64,
+    "warmup": 2,
+    "steps": 10,
+    "rounds": 1,
+    "tolerance": 1e-06
+  },
+  // the CMake tree of the executables
+  "build": {
+    "name": "wind-f32",
+    "app": "wind",
+    "precision": 32,
+    "compiler": "gcc",
+    "folder": "/home/bananapi/saleh/legacy/builds/wind-f32"
+  },
+  // where; nothing under /sys was read (no frequency, power or temperature)
+  "machine": {
+    "name": "bananapi",
+    "host": "k1",
+    "uname": "Linux k1 6.6.36 #2.0.4.2 SMP PREEMPT Thu Dec  5 15:02:13 UTC 2024 riscv64 riscv64",
+    "cpus": 8,
+    "cxx_flags": "-march=rv64gcv_zvl256b",
+    "launch_one": ["taskset", "-c", "2"],
+    "launch_mpi": ["mpirun", "--bind-to", "core", "--map-by", "core"]
+  },
+  // versions; codegen: the venv's pystencils (the submodule's checkout) and lbmpy
+  "software": {
+    "compiler": "g++ (Bianbu 14.2.0-4ubuntu2~24.04bb1) 14.2.0",
+    "compiler_path": "/usr/bin/g++",
+    "cmake": "cmake version 3.28.3",
+    "mpi": "mpirun (Open MPI) 4.1.6",
+    "python": "Python 3.12.3",
+    "codegen": "pystencils 1.4+0.g48474c1a.dirty lbmpy 1.4"
+  },
+  // this repository and each submodule (paths from the git root): branch, commit, its date, and the uncommitted changes at that time (git status --porcelain; empty: clean)
+  "source": {
+    "walberla-rvv-support": {
+      "branch": "rvv-support-legacy",
+      "commit": "9ff8e8b1c6f24067936826f0f5b1b47c20d9d807",
+      "date": "2026-11-26T01:54:27+01:00",
+      "changes": [
+        " M walberla-rvv-support/README.md",
+        " M walberla-rvv-support/push.to.sh",
+        " M walberla-rvv-support/scripts/README.md",
+        " M walberla-rvv-support/submodules/pystencils",
+        " M walberla-rvv-support/submodules/waLBerla-wind",
+        " M walberla-rvv-support/submodules/walberla",
+        "?? walberla-rvv-support/docs/notes8/",
+        "?? walberla-rvv-support/scripts-legacy/",
+        "?? walberla-rvv-support/scripts/notes8/"
+      ]
+    },
+    "walberla-rvv-support/submodules/pystencils": {
+      "branch": "rvv-support-legacy",
+      "commit": "48474c1aac96b48b32a5a49a9edb4e38bde0f588",
+      "date": "2025-10-17T09:08:16+02:00",
+      "changes": [
+        " M src/pystencils/backends/simd_instruction_sets.py",
+        "?? src/pystencils/backends/riscv_ext_instruction_sets.py",
+        "?? src/pystencils/include/riscv_v_ext_prefetch.h",
+        "?? src/pystencils/include/riscv_v_ext_vls128.h",
+        "?? src/pystencils/include/riscv_v_ext_vls256.h",
+        "?? tests/test_rvv_qemu.py"
+      ]
+    },
+    "walberla-rvv-support/submodules/waLBerla-wind": {
+      "branch": "rvv-support-legacy",
+      "commit": "9d742130abda3430f1ae1fca74a351cecdcd9fda",
+      "date": "2026-11-23T07:13:20+01:00",
+      "changes": [" M apps/CMakeLists.txt", "?? apps/BenchmarkApp_cpu_uniform/"]
+    },
+    "walberla-rvv-support/submodules/walberla": {
+      "branch": "rvv-support-legacy",
+      "commit": "4285505487d53f3d746013277deae54af7bccab8",
+      "date": "2026-11-22T21:47:59+01:00",
+      "changes": [
+        " M apps/benchmarks/UniformGridCPU/CMakeLists.txt",
+        " M apps/benchmarks/UniformGridCPU/UniformGridCPU.cpp",
+        " M apps/benchmarks/UniformGridCPU/UniformGridCPU.py",
+        " M python/lbmpy_walberla/templates/LBMSweepCollection.tmpl.cpp"
+      ]
+    }
+  },
+  // per variant: its code generation fields and the executable that ran
+  "variants": [
+    {"label": "pull_none", "streaming": "pull", "vectors": "none", "vlen": null, "lmul": 1, "vf": false, "fma": false, "prefetch": null, "instruction_set": "none", "codegen_config": "pull_none", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_pull_none", "sha256": "56c1b1fc4488091f", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_none", "streaming": "aa", "vectors": "none", "vlen": null, "lmul": 1, "vf": false, "fma": false, "prefetch": null, "instruction_set": "none", "codegen_config": "aa_none", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_none", "sha256": "950c4ac5329acdce", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "pull_rvv", "streaming": "pull", "vectors": "rvv", "vlen": null, "lmul": 1, "vf": false, "fma": false, "prefetch": null, "instruction_set": "rvv", "codegen_config": "pull_rvv", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_pull_rvv", "sha256": "1715947e9bd61f18", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv", "streaming": "aa", "vectors": "rvv", "vlen": null, "lmul": 1, "vf": false, "fma": false, "prefetch": null, "instruction_set": "rvv", "codegen_config": "aa_rvv", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv", "sha256": "7fc26e7df3b41014", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv_ext-vf", "streaming": "aa", "vectors": "rvv_ext", "vlen": null, "lmul": 1, "vf": true, "fma": false, "prefetch": null, "instruction_set": "rvv_ext-vf", "codegen_config": "aa_rvv_ext-vf", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv_ext-vf", "sha256": "a95fea10b2d428e9", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv_ext-fma", "streaming": "aa", "vectors": "rvv_ext", "vlen": null, "lmul": 1, "vf": false, "fma": true, "prefetch": null, "instruction_set": "rvv_ext-fma", "codegen_config": "aa_rvv_ext-fma", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv_ext-fma", "sha256": "c826cdcb272e83b9", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv_ext-vf-fma", "streaming": "aa", "vectors": "rvv_ext", "vlen": null, "lmul": 1, "vf": true, "fma": true, "prefetch": null, "instruction_set": "rvv_ext-vf-fma", "codegen_config": "aa_rvv_ext-vf-fma", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv_ext-vf-fma", "sha256": "254ad08f7f7f72c2", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv_ext-vf-fma-pf128", "streaming": "aa", "vectors": "rvv_ext", "vlen": null, "lmul": 1, "vf": true, "fma": true, "prefetch": 128, "instruction_set": "rvv_ext-vf-fma-pf128", "codegen_config": "aa_rvv_ext-vf-fma-pf128", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv_ext-vf-fma-pf128", "sha256": "af60c0767fad1d30", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"},
+    {"label": "aa_rvv_ext-vls256-vf-fma-pf128", "streaming": "aa", "vectors": "rvv_ext", "vlen": 256, "lmul": 1, "vf": true, "fma": true, "prefetch": 128, "instruction_set": "rvv_ext-vls256-vf-fma-pf128", "codegen_config": "aa_rvv_ext-vls256-vf-fma-pf128", "executable": "/home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv_ext-vls256-vf-fma-pf128", "sha256": "432fd80b92b3520b", "cxx_flags": "-march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread  -O3 -DNDEBUG -std=gnu++20"}
+  ],
+  // one per run, in the order they ran: MLUP/s from waLBerla's PerformanceEvaluation, the checksum (sum of rho and of |u|^2 over the interior), the load average before the run
+  "runs": [
+    {"variant": "pull_none", "cores": 1, "round": 0, "load": 4.06, "returncode": 0, "seconds": 8.9, "mlups": 0.511228, "rho_sum": 262143.9984371066, "u2_sum": 758.2364781626129, "log": "logs/pull_none-np1-r0.log"},
+    {"variant": "aa_none", "cores": 1, "round": 0, "load": 4.05, "returncode": 0, "seconds": 8.0, "mlups": 0.569464, "rho_sum": 262143.9984715581, "u2_sum": 758.236477946934, "log": "logs/aa_none-np1-r0.log"},
+    {"variant": "pull_rvv", "cores": 1, "round": 0, "load": 4.05, "returncode": 0, "seconds": 6.9, "mlups": 0.698337, "rho_sum": 262143.99824643135, "u2_sum": 758.2360662294741, "log": "logs/pull_rvv-np1-r0.log"},
+    {"variant": "aa_rvv", "cores": 1, "round": 0, "load": 4.04, "returncode": 0, "seconds": 8.7, "mlups": 0.506428, "rho_sum": 262143.9983100891, "u2_sum": 758.2360652864907, "log": "logs/aa_rvv-np1-r0.log"},
+    {"variant": "aa_rvv_ext-vf", "cores": 1, "round": 0, "load": 4.04, "returncode": 0, "seconds": 7.9, "mlups": 0.574371, "rho_sum": 262143.99832999706, "u2_sum": 758.2360648755952, "log": "logs/aa_rvv_ext-vf-np1-r0.log"},
+    {"variant": "aa_rvv_ext-fma", "cores": 1, "round": 0, "load": 4.1, "returncode": 0, "seconds": 8.6, "mlups": 0.51924, "rho_sum": 262143.99840670824, "u2_sum": 758.2360677654993, "log": "logs/aa_rvv_ext-fma-np1-r0.log"},
+    {"variant": "aa_rvv_ext-vf-fma", "cores": 1, "round": 0, "load": 4.09, "returncode": 0, "seconds": 7.5, "mlups": 0.616718, "rho_sum": 262143.9984086752, "u2_sum": 758.2360671847089, "log": "logs/aa_rvv_ext-vf-fma-np1-r0.log"},
+    {"variant": "aa_rvv_ext-vf-fma-pf128", "cores": 1, "round": 0, "load": 4.08, "returncode": 0, "seconds": 5.2, "mlups": 1.06451, "rho_sum": 262143.9983856678, "u2_sum": 758.2360671592735, "log": "logs/aa_rvv_ext-vf-fma-pf128-np1-r0.log"},
+    {"variant": "aa_rvv_ext-vls256-vf-fma-pf128", "cores": 1, "round": 0, "load": 4.07, "returncode": 0, "seconds": 7.1, "mlups": 0.667129, "rho_sum": 262143.9984637499, "u2_sum": 758.23606648503, "log": "logs/aa_rvv_ext-vls256-vf-fma-pf128-np1-r0.log"},
+    {"variant": "pull_none", "cores": 4, "round": 0, "load": 4.14, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/pull_none-np4-r0.log"},
+    {"variant": "aa_none", "cores": 4, "round": 0, "load": 4.77, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_none-np4-r0.log"},
+    {"variant": "pull_rvv", "cores": 4, "round": 0, "load": 5.34, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/pull_rvv-np4-r0.log"},
+    {"variant": "aa_rvv", "cores": 4, "round": 0, "load": 5.88, "returncode": 135, "seconds": 5.0, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv-np4-r0.log"},
+    {"variant": "aa_rvv_ext-vf", "cores": 4, "round": 0, "load": 6.29, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv_ext-vf-np4-r0.log"},
+    {"variant": "aa_rvv_ext-fma", "cores": 4, "round": 0, "load": 6.67, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv_ext-fma-np4-r0.log"},
+    {"variant": "aa_rvv_ext-vf-fma", "cores": 4, "round": 0, "load": 7.01, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv_ext-vf-fma-np4-r0.log"},
+    {"variant": "aa_rvv_ext-vf-fma-pf128", "cores": 4, "round": 0, "load": 7.33, "returncode": 135, "seconds": 5.3, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv_ext-vf-fma-pf128-np4-r0.log"},
+    {"variant": "aa_rvv_ext-vls256-vf-fma-pf128", "cores": 4, "round": 0, "load": 7.63, "returncode": 135, "seconds": 5.1, "mlups": NaN, "rho_sum": NaN, "u2_sum": NaN, "log": "logs/aa_rvv_ext-vls256-vf-fma-pf128-np4-r0.log"}
+  ],
+  // per process count and variant: median and best MLUP/s over the rounds, speedup of the median vs pull_none, checksum vs pull_none (largest relative difference; ok if <= experiment.tolerance)
+  "summary": [
+    {"cores": 1, "variant": "pull_none", "runs": 1, "failed": 0, "median": 0.511, "best": 0.511, "speedup": 1.0, "checksum": "ok 0.0e+00"},
+    {"cores": 1, "variant": "aa_none", "runs": 1, "failed": 0, "median": 0.569, "best": 0.569, "speedup": 1.114, "checksum": "ok 2.8e-10"},
+    {"cores": 1, "variant": "pull_rvv", "runs": 1, "failed": 0, "median": 0.698, "best": 0.698, "speedup": 1.366, "checksum": "ok 5.4e-07"},
+    {"cores": 1, "variant": "aa_rvv", "runs": 1, "failed": 0, "median": 0.506, "best": 0.506, "speedup": 0.991, "checksum": "ok 5.4e-07"},
+    {"cores": 1, "variant": "aa_rvv_ext-vf", "runs": 1, "failed": 0, "median": 0.574, "best": 0.574, "speedup": 1.124, "checksum": "ok 5.5e-07"},
+    {"cores": 1, "variant": "aa_rvv_ext-fma", "runs": 1, "failed": 0, "median": 0.519, "best": 0.519, "speedup": 1.016, "checksum": "ok 5.4e-07"},
+    {"cores": 1, "variant": "aa_rvv_ext-vf-fma", "runs": 1, "failed": 0, "median": 0.617, "best": 0.617, "speedup": 1.206, "checksum": "ok 5.4e-07"},
+    {"cores": 1, "variant": "aa_rvv_ext-vf-fma-pf128", "runs": 1, "failed": 0, "median": 1.065, "best": 1.065, "speedup": 2.082, "checksum": "ok 5.4e-07"},
+    {"cores": 1, "variant": "aa_rvv_ext-vls256-vf-fma-pf128", "runs": 1, "failed": 0, "median": 0.667, "best": 0.667, "speedup": 1.305, "checksum": "ok 5.4e-07"},
+    {"cores": 4, "variant": "pull_none", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_none", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "pull_rvv", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv_ext-vf", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv_ext-fma", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv_ext-vf-fma", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv_ext-vf-fma-pf128", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"},
+    {"cores": 4, "variant": "aa_rvv_ext-vls256-vf-fma-pf128", "runs": 1, "failed": 1, "median": NaN, "best": NaN, "speedup": NaN, "checksum": "missing"}
+  ]
+}

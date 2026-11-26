@@ -1,0 +1,203 @@
+\chapter{The Applications}\label{r04:ch:apps}
+
+Two applications build RVV variants on the legacy stack: waLBerla's own
+\code{UniformGridCPU} benchmark and a new benchmark app in waLBerla-wind. Both name the
+instruction set per CMake target, so one build tree holds the scalar reference, upstream
+\isa{rvv} and every \isa{rvv_ext} variant, compiled alike. This chapter describes both,
+two bugs that only showed on the K1, and the Python environment.
+
+\section{UniformGridCPU}\label{r04:sec:ugc}
+
+\file{apps/benchmarks/UniformGridCPU} is upstream's lattice Boltzmann throughput
+benchmark of the legacy core: a periodic box with a shear flow, all six streaming
+patterns, several collision models. Its generator script reads
+\code{<stencil>_<pattern>_<collision>} from \code{ctx.config} and asks for no explicit
+vectors (\code{cpu_vec = {"instruction_set": None}}). Two additions, nothing removed:
+\begin{description}[style=nextline]
+  \item[\file{UniformGridCPU.py}, 3 lines] an optional fourth part of the config is the
+    instruction set of the LBM kernels:
+\begin{pycode}
+    # Optional fourth part: vector instruction set of the LBM kernels, e.g. rvv or rvv_ext-vf-fma
+    if len(config_tokens) > 3:
+        cpu_vec = {"instruction_set": '_'.join(config_tokens[3:])}
+\end{pycode}
+    The \code{join} keeps names that contain \code{_}, such as \isa{rvv_ext}, whole.
+  \item[\file{CMakeLists.txt}, 22 lines appended] a cache list
+    \code{UNIFORMGRIDCPU_EXTRA_CONFIGS} of such configs, one generated library and one
+    executable each, e.g.\ \code{UniformGridCPU_d3q19_aa_srt_rvv_ext-vf-fma}. The
+    reference stays upstream's own target \code{UniformGridCPU_d3q19_pull_srt}.
+  \item[\file{UniformGridCPU.cpp}] after the time loop, a checksum of the final state
+    (\cref{r04:sec:checksum}).
+\end{description}
+Upstream adds this app only with \code{WALBERLA_BUILD_WITH_PYTHON=ON}
+(\file{apps/benchmarks/CMakeLists.txt}), because it links \code{python_coupling}.
+That option downloads pybind11 and compiles everything with \code{-fPIC}; all variants
+of a tree are compiled alike, so their comparison stays fair. The app is run from a
+\file{.prm} parameter file (\file{scripts-legacy/uniform_grid_cpu.prm}) instead of
+upstream's Python setup scripts.
+
+\section{The waLBerla-wind benchmark app}\label{r04:sec:wind-app}
+
+waLBerla-wind's own applications are full wind-farm simulations with turbines, output
+and snapshots. For throughput measurements a new app,
+\file{apps/BenchmarkApp_cpu_uniform}, was made with waLBerla-wind's AppGenerator, as
+its README intends for custom setups: CPU, uniform grid, with turbine output, VTK
+output, snapshots and controllers switched off, so that the time loop holds the flow
+solver only. Then:
+\begin{itemize}
+  \item \file{LBMGeneration.py} takes the variant \code{<pattern>_<instruction set>} from
+    \code{ctx.config} (\code{pull_none}, \code{aa_rvv},
+    \code{aa_rvv_ext-vf-fma-pf128}, \dots; \code{none} means no explicit vectors) and,
+    for in-place patterns, generates the macroscopic getter as an even/odd pair, as the
+    AppGenerator does for AA. The method is waLBerla-wind's: D3Q27 cumulant, Guo
+    forcing, QR subgrid model, \code{fzyx}, float32, and \code{nontemporal} stores.
+  \item \file{CMakeLists.txt} builds one executable per entry of the cache list
+    \code{WIND_BENCHMARK_VARIANTS}.
+  \item \file{main.cpp} runs \code{Parameters.warmupSteps} untimed steps before the
+    timed ones and prints the checksum after the run.
+  \item \file{benchmark.prm} has one $64^3$ block per process, periodic inflow and
+    outflow and no turbine; shifted-periodic inflow refuses in-place patterns.
+\end{itemize}
+This gives waLBerla-wind AA streaming on the CPU without any change to waLBerla-wind's
+library: the legacy core does the even/odd bookkeeping. On x86 pull and AA agree to
+about $10^{-9}$ relative in float32 (\cref{r04:sec:app-checks}). Full AA support in
+waLBerla-wind's production apps needs one more change that the benchmark does not:
+its strain-rate writer reads the PDFs directly, which is wrong for the odd step.
+
+\section{\texttt{OPTIMIZE\_FOR\_LOCALHOST} must be off}\label{r04:sec:localhost}
+
+The first build of the benchmark app was configured with
+\code{WALBERLA_OPTIMIZE_FOR_LOCALHOST=ON} and failed in code generation:
+\begin{plaincode}
+The expression cos(windDirection) of type cos is not known yet
+\end{plaincode}
+The option makes \code{config_from_context} give every kernel that names no
+instruction set the best one of the build machine (\cref{r04:sec:where-isa}). That
+includes waLBerla-wind's flow driver, whose kernel uses \code{cos} of a wind direction,
+which \ps{}~1.4 cannot vectorize. On the K1 it would also have given every unnamed
+kernel \isa{rvv}, so even the ``scalar'' variants would not have been scalar. So all
+legacy builds here use \code{OPTIMIZE_FOR_LOCALHOST=OFF} and take the architecture
+flags from the machine instead: \code{-march=rv64gcv_zvl256b} on the K1, what waLBerla's
+CMake gives GCC there. (GCC~14.2 on the K1 rejects \code{-mtune=spacemit-x60}.)
+
+\section{Bug 1: block-wise kernels and cache-line zeroing}\label{r04:sec:blockwise-bug}
+
+The first K1 build of all nine waLBerla-wind variants stopped at \code{aa_rvv}:
+\begin{plaincode}
+waLBerlaWind_SweepCollection.cpp:5489: error: '_size_pdfs_0' was not declared in this scope
+\end{plaincode}
+(and the same for \code{_size_pdfs_1}, \code{_size_pdfs_2} and the three velocity
+sizes). The cause is in waLBerla, not in our code, and needs three things together:
+\begin{enumerate}
+  \item An in-place pattern: only then does \code{lbmpy_walberla} generate the
+    block-wise kernels (\cref{r04:ch:codegen}).
+  \item Vector code with \code{nontemporal} and an instruction set that has
+    \code{'cachelineZero'} (RVV, NEON, VSX). Then every written field's sizes are kernel
+    parameters (\code{use_all_written_field_sizes}, \cref{r04:sec:nontemporal}); here
+    \code{pdfs} and \code{velocity}.
+  \item A kernel with more than one field. The template
+    \file{python/lbmpy_walberla/templates/LBMSweepCollection.tmpl.cpp} declared the sizes
+    of the \emph{first} field only (alphabetically \code{density}), instead of asking the
+    kernel which it needs.
+\end{enumerate}
+\code{UniformGridCPU}'s block-wise kernel has only \code{pdfs}, so it was never
+affected; waLBerla-wind's has four fields. The fix declares the sizes of every field of
+the kernel. All fields of a block have the same interior size, and smaller sizes only
+make the zeroing guard stricter, so the block's sizes are correct for all of them;
+\code{[[maybe_unused]]} keeps kernels without the guard free of warnings:
+\begin{r04diffcode}
+    const int64_t _size_0 = size_0[level];
+-   int64_t _size_{{block_stream_collide['all_fields'][0].name}}_0 = size_1;
+-   int64_t _size_{{block_stream_collide['all_fields'][0].name}}_1 = size_2;
+-   int64_t _size_{{block_stream_collide['all_fields'][0].name}}_2 = size_3;
++   {#- every field's sizes: the cacheline zeroing of vectorized nontemporal stores ... #}
++   {%- for field in block_stream_collide['all_fields'] %}
++   [[maybe_unused]] int64_t _size_{{field.name}}_0 = size_1;
++   [[maybe_unused]] int64_t _size_{{field.name}}_1 = size_2;
++   [[maybe_unused]] int64_t _size_{{field.name}}_2 = size_3;
++   {%- endfor %}
+\end{r04diffcode}
+Checked on the laptop before rebuilding on the board: \code{aa_rvv},
+\code{aa_rvv_ext-vls256-vf-fma-pf128} and \code{aa_none} regenerated with the command
+CMake uses and syntax-checked with the riscv64 cross compiler and the board's flags; no
+errors and no new warnings, while the board's old file gives the 12 errors. On the
+board all nine variants then built. Because the code generation reruns only when the
+generator script changes (\cref{r04:sec:cmake}), the stale generated files of
+\code{aa_rvv} had to be removed by hand.
+
+\section{Bug 2: misaligned MPI buffers on the K1}\label{r04:sec:misaligned}
+
+With the build fixed, every single-process run of every variant passed its checksum,
+and every \emph{four}-process run died, the scalar \code{pull_none} included:
+\begin{plaincode}
+Signal: Bus error (7)
+Signal code: Invalid address alignment (1)
+\end{plaincode}
+The stack trace points at the generated pack kernel that copies PDFs into the MPI send
+buffer (\code{waLBerlaWind_StorageSpecification::PackKernels::packDirection}); the
+faulting instruction is a vector segment store, \code{vsseg3e32.v}. Under gdb, on all
+four ranks, the buffer addresses that waLBerla passes to \code{packDirection} are two
+bytes off 4-byte alignment for every second block, and the store faults at such an
+address with \code{vl} = 1. Three facts meet:
+\begin{itemize}
+  \item waLBerla's buffered communication writes a 6-byte header before each block's
+    data (a length byte and, here, one byte of block ID, then the 4-byte
+    \code{Direction} enum), safely with \code{memcpy}. The generated pack kernel then
+    writes floats through \code{reinterpret_cast<float*>(outBuffer)} (upstream template
+    \file{LbmStorageSpecification.tmpl.cpp}). C++ does not allow a misaligned
+    \code{float*}; x86 tolerates it, and so do the X60's scalar stores (6.49\,ns against
+    6.39\,ns per load and store in a test on one core).
+  \item GCC auto-vectorizes this scalar \ps{} code when \code{-march} contains the V
+    extension: the loops of the 12 edge directions (3 PDFs per cell) become
+    \code{vsseg3e32.v}, those of the 8 corners \code{vse32.v}, while the 6 faces (9 PDFs
+    per cell) stay scalar \code{fsw}. That is why the misaligned face packs pass and the
+    first edge faults.
+  \item The X60 requires element alignment for vector accesses: \code{vle32} at byte
+    offset 2 and \code{vle64} at offset 4 raise a bus error, \code{vle32} at offset 4 or
+    12 (element-aligned, not vector-aligned) works. The RVV specification allows either
+    behaviour. Linux 6.6 on the board emulates only scalar misaligned accesses (the
+    signal's address is the faulting instruction's, as its misaligned-trap path reports
+    it) and does not know the \code{riscv_hwprobe} key for vector misaligned access.
+\end{itemize}
+A 30-line program reproduces it outside waLBerla: the same loop writing into a byte
+buffer faults at offsets 2 and 6 with \code{-march=rv64gcv} (with or without
+\code{zvl256b}), runs at offsets 0 and 4, and runs at every offset with
+\code{-march=rv64gc}.
+
+Neither our changes nor the board's setup create the defect: none of our waLBerla
+commits touch the communication path, and waLBerla-wind's own applications use the same
+pack info and scheme. What exposes it is compiling with the V extension, which every RVV
+build needs. The board's GCC defaults to \code{rv64imafdc} without V, and upstream
+waLBerla's \code{OPTIMIZE_FOR_LOCALHOST} adds \code{-march=native}, which GCC~14 rejects
+on RISC-V; so an upstream build on the K1 contains no vector code and never meets the
+bug. It affects every multi-process run of a legacy waLBerla application on the K1
+built with the V extension, \code{UniformGridCPU} too.
+
+A fix for upstream waLBerla is prepared in \file{docs/bug-fix-pr/walberla-packinfo-buffer-alignment/},
+as a patch against the release v7.4 that also applies to master. Upstream had fixed the
+same problem for the pack infos generated by \code{pystencils_walberla} in 2024 and
+documented in \code{UniformPackInfo} that every implementation must align its data; the
+patch adds \code{SendBuffer::forwardAligned} and \code{RecvBuffer::skipAligned}, which do
+that with the same scheme, and uses them in the three pack infos that did not. Tested on
+upstream's own test \code{InterpolationNoSlip} on two processes: 108 misaligned accesses
+under the alignment sanitizer on x86 and a bus error on the K1 before the patch, none
+after it. The folder also holds a script that reproduces both. Whether this project's
+waLBerla branch takes the patch for the K1 runs was not decided when this was written.
+
+\section{The Python environment}\label{r04:sec:env}
+
+The legacy code generation needs its own virtual environment, \file{.venv-legacy}
+(next to the workspace, covered by the root \file{.gitignore} rule \code{.venv*/}):
+\begin{itemize}
+  \item Python 3.12, SymPy 1.12.1 (\ps{}~1.4's upper limit), NumPy, jinja2 for the
+    templates, py-cpuinfo for detection on x86, \code{lbmpy==1.4} installed without its
+    dependencies (it would otherwise pull in a released \ps{}), pytest~8 (pytest~9 cannot
+    load \ps{}~1.4's \file{conftest.py}).
+  \item \ps{} itself is not installed: \code{PYTHONPATH=submodules/pystencils/src} at
+    configure time makes the build use the submodule (\cref{r04:sec:cmake}).
+  \item On the K1: PyPI has no NumPy for riscv64, so the venv is created with
+    \code{--system-site-packages} and uses Ubuntu's NumPy 1.26.4. The root file system
+    with \file{/tmp} is almost full, so compilers and pip get \code{TMPDIR} in the work
+    folder.
+\end{itemize}
+\code{scripts-legacy/bench.py setup} creates this environment on any machine.

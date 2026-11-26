@@ -1,0 +1,79 @@
+\chapter{Introduction}\label{r04:ch:intro}
+
+Reports~1 to~3 of this collection describe RISC-V Vector (RVV) support on the
+\emph{new} waLBerla stack: \ps{}~2.x with our RVV backend, waLBerla's sweepgen code
+generator and its v8 core. This report is about the \emph{other} stack, the one
+waLBerla-wind~\cite{walberla-wind} is built on, and about how RVV code is generated
+there.
+
+\section{Why a second stack}
+
+waLBerla-wind is an extension of waLBerla~\cite{walberla} for wind energy simulations:
+lattice Boltzmann flow with turbines, wall models and a turbulence model. It uses only
+waLBerla's \term{legacy core}: the C++ module \file{src/lbm_generated} and the code
+generators \file{python/pystencils_walberla} and \file{python/lbmpy_walberla}. Those
+generators are written against \ps{}~1.x. waLBerla-wind's continuous integration pins
+\code{pystencils==1.4} and \code{lbmpy==1.4}~\cite{pystencils14,lbmpy}.
+
+None of the RVV work of reports~1 to~3 runs on this stack. Our RVV backend is part of
+\ps{}~2.x, whose internals (a typed intermediate representation, platform classes, an
+intrinsic selection pass) do not exist in 1.4, and the sweepgen applications use the v8
+core, which waLBerla-wind does not use. So getting RVV into waLBerla-wind meant working
+on the legacy stack.
+
+\ps{}~1.4 already ships an RVV instruction set of its own, \isa{rvv}, by Michael Kuron.
+The decision taken at the start of this work was:
+\begin{keyidea}[The plan in one sentence]
+  Keep upstream's \isa{rvv} exactly as it is, and add our own instruction set
+  \isa{rvv_ext} next to it: a copy of \isa{rvv} with optional extras (fixed vector
+  length, LMUL, scalar operands, fused multiply-add, software prefetch), each switched
+  on separately, so that upstream's code and every extra can be built and measured
+  side by side in the same application.
+\end{keyidea}
+
+\section{What this report covers}
+
+\begin{description}[style=nextline]
+  \item[Part~I, the legacy stack] How the legacy stack differs from the new one
+    (\cref{r04:ch:two-stacks}) and how its code generation turns a Python generator
+    script into C++ sweeps during the CMake build (\cref{r04:ch:codegen}).
+  \item[Part~II, RVV in \ps{}~1.4] How \ps{}~1.4 vectorizes a kernel
+    (\cref{r04:ch:vectorizer}), what upstream's \isa{rvv} instruction set generates
+    (\cref{r04:ch:upstream-rvv}), and what our \isa{rvv_ext} adds and how
+    (\cref{r04:ch:rvv-ext}).
+  \item[Part~III, applications and evidence] The two applications that build RVV
+    variants, waLBerla's \code{UniformGridCPU} benchmark and a new waLBerla-wind
+    benchmark app, the bug in waLBerla found on the way (\cref{r04:ch:apps}), and how
+    the code is checked and measured (\cref{r04:ch:verification}).
+\end{description}
+Appendix~A lists every file this work added or changed, appendix~B the pitfalls of the
+legacy build.
+
+\section{Versions and branches}
+
+All work is on branches named \code{rvv-support-legacy}, in this workspace and in three
+of its submodules. When this report was written (26~November~2026) none of it was
+committed yet; it describes the working trees of that day.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{repository} & \textbf{branch starts at} & \textbf{holds}\\
+  \midrule
+  workspace & \code{main}, \code{9ff8e8b} & \file{docs/notes8/} (plan, progress log),
+    \file{scripts/notes8/}, \file{scripts-legacy/}, the submodule pointers\\
+  \file{submodules/pystencils} & tag \code{release/1.4}, \code{48474c1a} & the instruction
+    set \isa{rvv_ext}, its headers and QEMU tests\\
+  \file{submodules/walberla} & \code{rvv-support}, \code{42855054} & RISC-V CMake (from the
+    2.x work), \code{UniformGridCPU} variants, one template fix\\
+  \file{submodules/waLBerla-wind} & \code{main}, \code{9d74213} & the benchmark app
+    \file{apps/BenchmarkApp_cpu_uniform}\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The pystencils submodule is the same repository as the 2.x fork of reports~1 to~3; the
+2.x work stays on its branch \code{rvv-support} (last commit \code{78afe1ff}). Tag
+\code{release/1.4} is the last 1.x release; the 2.0 rewrite was merged after it.
+
+The target machine is the Banana~Pi BPI-F3 with the SpacemiT~K1 (eight X60 cores,
+RVV~1.0, VLEN~256), as in reports~2 and~3. The K1 measurements were still running when
+this report was written; \cref{r04:ch:verification} says what has been checked so far.

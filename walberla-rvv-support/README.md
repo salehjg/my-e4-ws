@@ -3,7 +3,9 @@
 RISC-V Vector (RVV 1.0) support for pystencils and waLBerla, and the experiments behind it. The two forks are
 submodules (`submodules/pystencils`, `submodules/walberla`). `docs/` has one folder per note or presentation (plan,
 progress log, raw logs, slides); `scripts/` has the matching scripts (`scripts/README.md`). `docs/manual/` collects
-the reports (`./build.sh`), `docs/papers/` the literature.
+the reports (`./build.sh`), `docs/papers/` the literature. `scripts-legacy/` configures, builds and times the
+benchmarks of waLBerla's legacy core with pystencils 1.4 (`docs/notes8`, `scripts-legacy/README.md`; report 4
+in `docs/manual/` explains that stack).
 
 Machines:
 
@@ -16,7 +18,8 @@ Machines:
   read or set anything about frequency, power or temperature there. Reports using its data must acknowledge the
   Monte Cimone project and cite DOI 10.1007/978-3-032-07612-0_44.
 
-Helpers in this folder: `push.to.sh <machine>` (rsync of the repo), `test.on.bananapi.sh <pytest args>` (pystencils
+Helpers in this folder: `push.to.sh <machine>` (rsync of this folder; `--repo <remote folder>`: of the whole git
+repository, with its git data), `test.on.bananapi.sh <pytest args>` (pystencils
 tests on the K1), `run.on.bananapi.sh <command>` (any command on the K1, with the board venv and our pystencils).
 
 The sections follow the order of the work. Commands run on the laptop from this folder unless a comment says otherwise.

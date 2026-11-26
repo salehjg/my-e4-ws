@@ -1,0 +1,31 @@
+% pystencils 1.4: from assignments to vectorized C code (chapter 4).
+\begin{tikzpicture}[node distance=4mm and 7mm]
+  \node[r04box,text width=40mm] (asm) {SymPy assignments\\[1pt]\scriptsize on abstract fields};
+  \node[r04box,below=of asm,text width=40mm] (ast) {AST\\[1pt]\scriptsize loop nest, types,\\
+    base pointers, constants\\hoisted before the loops};
+  \node[r04box,below=of ast,text width=40mm] (omp) {blocking, OpenMP\\[1pt]\scriptsize (optional)};
+  \node[r04box,below=of omp,text width=40mm,fill=codebg] (vec) {\code{vectorize()}\\[1pt]
+    \scriptsize innermost loop: cut or keep,\\vector accesses, vector casts};
+  \node[r04box,below=of vec,text width=40mm,fill=codebg] (print) {C printer\\[1pt]
+    \scriptsize\code{VectorizedCustomSympyPrinter}};
+  \node[r04box,below=of print,text width=40mm] (c) {C function};
+  \foreach \a/\b in {asm/ast,ast/omp,omp/vec,vec/print,print/c} \draw[r04arrow] (\a) -- (\b);
+
+  % the instruction set dictionary
+  \node[r04code,right=28mm of vec,text width=64mm,align=left,yshift=-6mm] (dict) {%
+    'width': vsetvlmax\_e32m1()\\
+    '+': \_\_riscv\_vfadd\_vv\_f32m1(\{0\}, \{1\}, vl)\\
+    'loadU': \_\_riscv\_vle32\_v\_f32m1(\{0\}, vl)\\
+    'makeVecConst': \_\_riscv\_vfmv\_v\_f\_f32m1(\{0\}, vl)\\
+    'cachelineZero': cachelineZero((void*) \{0\})\\
+    \dots\\[2pt]
+    \textrm{\scriptsize with } vl = \{loop\_stop\} - \{loop\_counter\}};
+  \node[r04label,above=1mm of dict] (dictlabel) {instruction set = dictionary of C templates\\
+    \code{get_vector_instruction_set(dtype, name)}};
+  \draw[r04arrow,dashed] (dict.west) -- ++(-9mm,0) |- node[r04label,pos=0.78,above]{width,\\loop rule} (vec.east);
+  \draw[r04arrow,dashed] (dict.west) -- ++(-9mm,0) |- node[r04label,pos=0.78,above]{\code{.format}} (print.east);
+
+  \node[r04box,r04ours,below=8mm of dict,text width=64mm] (ext) {\isa{rvv} or \isa{rvv_ext-<options>}:\\
+    \scriptsize the only part that differs between the two (chapters 5 and 6)};
+  \draw[r04arrow] (ext) -- (dict);
+\end{tikzpicture}

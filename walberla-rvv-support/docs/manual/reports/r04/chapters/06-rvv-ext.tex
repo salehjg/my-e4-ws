@@ -1,0 +1,248 @@
+\chapter{Our Instruction Set: rvv\_ext}\label{r04:ch:rvv-ext}
+
+\begin{r04fork}[Ours: only on the branch \texttt{rvv-support-legacy} of the pystencils submodule]
+  \file{src/pystencils/backends/riscv_ext_instruction_sets.py} (248 lines),
+  \file{src/pystencils/include/riscv_v_ext_prefetch.h},
+  \file{riscv_v_ext_vls128.h}, \file{riscv_v_ext_vls256.h},
+  \file{tests/test_rvv_qemu.py}, and three added lines in
+  \file{src/pystencils/backends/simd_instruction_sets.py}.
+\end{r04fork}
+
+\isa{rvv_ext} is upstream's \isa{rvv} with five optional extras. This chapter explains
+the rules it follows, each option, and how the options are implemented without changing
+the vectorizer or the printer of \cref{r04:ch:vectorizer}.
+
+\section{Rules}\label{r04:sec:ext-rules}
+
+\begin{enumerate}
+  \item \textbf{Next to upstream, not instead of it.} \isa{rvv} stays byte for byte as
+    released. \isa{rvv_ext} is a new module, registered with one branch in the
+    dispatcher:
+\begin{pycode}
+    elif instruction_set in ['rvv']:
+        return get_vector_instruction_set_riscv(type_name, instruction_set)
+    elif instruction_set.startswith('rvv_ext'):                              # added
+        return get_vector_instruction_set_riscv_ext(type_name, instruction_set)  # added
+\end{pycode}
+  \item \textbf{Without options, exactly upstream's code.} \isa{rvv_ext} copies
+    upstream's dictionary builder (and imports its helper \code{get_argument_string}).
+    A test checks that both print identical kernels, so every difference measured
+    between \isa{rvv} and an \isa{rvv_ext} variant comes from the options in its name.
+  \item \textbf{Options in the name.} The options are appended to the name with
+    \code{-}, the way \ps{}~1.4 names a fixed-width SVE as \isa{sve256}. A name passes
+    unchanged through every layer that carries an instruction set: waLBerla's
+    \code{cpu_vectorize_info}, \code{CODEGEN_CFG}, CMake lists, file and target names.
+  \item \textbf{No change to the vectorizer or the printer.} Everything is done in the
+    dictionary.
+\end{enumerate}
+
+\section{Names}
+
+\code{parse_options} turns a name into options and rejects anything it does not know:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{token} & \textbf{meaning}\\
+  \midrule
+  \isa{vls128}, \isa{vls256} & vector-length specific code for VLEN 128 or 256
+    (\cref{r04:sec:ext-vls}); default: vector-length agnostic\\
+  \isa{m2}, \isa{m4} & LMUL 2 or 4 (\cref{r04:sec:ext-lmul}); default \isa{m1}\\
+  \isa{vf} & scalar operands in \code{.vf} forms (\cref{r04:sec:ext-vf-fma})\\
+  \isa{fma} & fused multiply-add (\cref{r04:sec:ext-vf-fma})\\
+  \isa{pf<N>} & software prefetch $N$ bytes ahead (\cref{r04:sec:ext-pf})\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+\begin{pycode}
+>>> parse_options('rvv_ext-vls256-vf-fma-pf128')
+{'vlen': 256, 'lmul': 1, 'vf': True, 'fma': True, 'prefetch': 128}
+>>> parse_options('rvv_ext-avx')
+ValueError: unknown option 'avx' in instruction set rvv_ext-avx
+\end{pycode}
+The order of the tokens does not matter to \code{parse_options}. The benchmark scripts
+always write them in the order of the table, and check before configuring that every
+name they generate means to \ps{} what they intend (\cref{r04:sec:scripts}).
+
+\section{\texttt{vls128}, \texttt{vls256}: fixed vector length}\label{r04:sec:ext-vls}
+
+With \isa{vls<V>} the dictionary's width is a number, $V\cdot\text{LMUL}/\text{SEW}$
+(8 floats or 4 doubles at VLEN 256 and LMUL 1), and the active length of every
+intrinsic is that same literal. The store template then has no \code{{loop_stop}}, so
+the vectorizer cuts the loop into a vector part and a scalar remainder by itself, as it
+does for AVX (\cref{r04:sec:loop}). \code{y = 0.5*x + z} becomes:
+\begin{ccode}
+for (int64_t ctr_0 = 0; ctr_0 < (int64_t)((_size_x_0) / (8)) * (8); ctr_0 += 8)
+{
+   __riscv_vse32_v_f32m1(&_data_y[ctr_0], __riscv_vfadd_vv_f32m1(__riscv_vfmul_vv_f32m1(
+      __riscv_vfmv_v_f_f32m1(0.5f, 8), __riscv_vle32_v_f32m1(& _data_x[ctr_0], 8), 8),
+      __riscv_vle32_v_f32m1(& _data_z[ctr_0], 8), 8), 8);
+}
+for (int64_t ctr_0 = (int64_t)((_size_x_0) / (8)) * (8); ctr_0 < _size_x_0; ctr_0 += 1)
+{
+   _data_y[ctr_0] = 0.5f*_data_x[ctr_0] + _data_z[ctr_0];
+}
+\end{ccode}
+The active length is now a constant, so the compiler can set \code{vl} once instead of
+per iteration, and the loop does not depend on the hardware's choice for the last two
+vectors (\cref{r04:sec:avl}). The price: the code is only correct on hardware with at
+least that VLEN. The header \file{riscv_v_ext_vls256.h}, which every such kernel
+includes, makes this a compile error rather than silent wrong results:
+\begin{ccode}
+#if !defined(__riscv_v_min_vlen) || __riscv_v_min_vlen < 256
+#error "rvv_ext-vls256 kernels need -march=rv64gcv_zvl256b (or a larger zvl)"
+#endif
+\end{ccode}
+This is the same contract as the 2.x backend (report~1, \cref{r01:ch:rvv-backend}),
+which is vector-length specific always.
+
+\section{\texttt{m2}, \texttt{m4}: register groups}\label{r04:sec:ext-lmul}
+
+With \isa{m2} or \isa{m4} every type and intrinsic suffix uses that LMUL
+(\code{vfloat32m2_t}, \code{__riscv_vfadd_vv_f32m2}, \code{__riscv_vsetvlmax_e32m2}),
+and the mask type follows the rule \code{vbool}$N$\code{_t} with $N = \text{SEW}/\text{LMUL}$
+(\code{vbool16_t} for float at \isa{m2}). One instruction then processes two or four
+registers' worth of elements, but only 16 or 8 vector registers remain. Large kernels
+spill; in 2.x LMUL above 1 was slower on the K1. The option exists for completeness and
+is tested, but no benchmark variant uses it.
+
+\section{\texttt{vf} and \texttt{fma}: decisions at print time}\label{r04:sec:ext-vf-fma}
+
+\paragraph{What they do.} \isa{vf} passes an operand that is the same in every lane as
+a scalar to the \code{.vf} form of the operation, instead of broadcasting it:
+\code{vfmul_vf(x, 0.5f, vl)} instead of \code{vfmul_vv(vfmv_v_f(0.5f, vl), x, vl)}.
+That saves the broadcast (4 cycles on the X60) and a vector register. For
+\code{c - v} and \code{c / v} the reversed forms \code{vfrsub_vf} and \code{vfrdiv_vf}
+are used. \isa{fma} turns \code{a*b + c}, \code{c - a*b} and \code{a*b - c} into one
+instruction each, \code{vfmacc}, \code{vfnmsac} and \code{vfmsac}, in the
+\code{_vv} or \code{_vf} form. A fused result is rounded once instead of twice, so
+it can differ from the unfused one in the last bit.
+
+\paragraph{How.} The printer builds every vector expression by calling \code{format} on
+a template, bottom up, with already printed operands (\cref{r04:sec:printer}). With
+\isa{vf} or \isa{fma}, the templates for \code{'makeVecConst'} and for the four
+operators are not plain strings but small \code{str} subclasses that share two tables
+(abridged):
+\begin{pycode}
+class _Splat(_Template):          # the 'makeVecConst' template
+    def format(self, *args, **kwargs):
+        printed = super().format(*args, **kwargs)
+        self.splats[printed] = args[0]          # remember: this C text broadcasts args[0]
+        return printed
+
+class _Operator(_Template):       # the '+', '-', '*', '/' templates
+    def format(self, a, b, **kwargs):
+        if 'fma' in self.forms and self.op in '+-':
+            fused = self._fused(a, b, **kwargs)     # is an operand a product we printed?
+            if fused is not None:
+                return fused
+        if 'vf' in self.forms:
+            if b in self.splats:                    # vector op scalar
+                printed = self.forms['vf'][self.op].format(a, self.splats[b], **kwargs)
+            elif a in self.splats:                  # scalar op vector: reversed form
+                printed = self.forms['vf_reversed'][self.op].format(b, self.splats[a], **kwargs)
+        ...                                         # else: the plain vv template
+        if self.op == '*':
+            self.products[printed] = factors        # remember: this C text is x*y
+        return printed
+\end{pycode}
+For \code{y = 0.5*x + z} the printer first prints the broadcast of 0.5;
+\code{_Splat} records that the C text \code{__riscv_vfmv_v_f_f32m1(0.5f, ...)} stands
+for the scalar \code{0.5f}. Then it prints the product with that text as one operand;
+\code{_Operator('*')} finds it in the splat table and prints \code{vfmul_vf(x, 0.5f)}
+instead, recording the product's factors. Then it prints the sum; \code{_Operator('+')}
+finds one operand in the product table and prints \code{vfmacc_vf(z, 0.5f, x)}. The
+broadcast and the product text are printed but end up unused, so they never reach the
+C code. The result, with the prefix \code{__riscv_}, the suffix \code{_f32m1} and the
+active length left out:
+\begin{plaincode}
+rvv:             vse32_v(&y[i], vfadd_vv(vfmul_vv(vfmv_v_f(0.5f), vle32_v(&x[i])), vle32_v(&z[i])))
+rvv_ext-vf:      vse32_v(&y[i], vfadd_vv(vfmul_vf(vle32_v(&x[i]), 0.5f), vle32_v(&z[i])))
+rvv_ext-vf-fma:  vse32_v(&y[i], vfmacc_vf(vle32_v(&z[i]), 0.5f, vle32_v(&x[i])))
+\end{plaincode}
+
+\paragraph{Why this is enough.} In \ps{}~1.4 hoisted constants stay scalar declarations
+and every use inside the loop is printed through \code{'makeVecConst'}, and the printer
+sees products as SymPy \code{Mul} terms inside an \code{Add}. So the decision is local:
+whether an operand was printed as a broadcast or as a product. No analysis of the AST is
+needed. One subtlety: when the vectorizer cuts a loop (\isa{vls}), it deep-copies the
+loop, and with it the dictionary's templates; the shared tables would then be split
+between copies. \code{_Template} therefore returns itself from \code{__copy__} and
+\code{__deepcopy__}.
+
+\section{\texttt{pf<N>}: software prefetch}\label{r04:sec:ext-pf}
+
+With \isa{pf<N>} every load and store template is wrapped in a C comma expression that
+first prefetches the address $N$ bytes ahead:
+\begin{plaincode}
+loadU:   (rvv_ext_prefetch_read({0}, N), __riscv_vle32_v_f32m1({0}, vl))
+storeU:  (rvv_ext_prefetch_write({0}, N), __riscv_vse32_v_f32m1({0}, {1}, vl))
+\end{plaincode}
+The comma operator keeps the template an expression, so the printer can use it wherever
+it used the plain load. The helpers (\file{riscv_v_ext_prefetch.h}) emit the Zicbop
+instructions \code{prefetch.r} and \code{prefetch.w}~\cite{riscv-cmo} in their raw
+encoding:
+\begin{ccode}
+inline void rvv_ext_prefetch_read(const void * p, long offset)
+{
+   __asm__ volatile("ori x0, %0, 1" : : "r"((const char *) p + offset));   // prefetch.r 0(p+offset)
+}
+inline void rvv_ext_prefetch_write(const void * p, long offset)
+{
+   __asm__ volatile("ori x0, %0, 3" : : "r"((const char *) p + offset));   // prefetch.w 0(p+offset)
+}
+\end{ccode}
+Zicbop encodes its prefetches as \code{ori} with destination \code{x0}, an instruction
+without effect, so cores without Zicbop simply execute nothing and no \code{-march} flag
+is needed. The X60 executes them as prefetches although its ISA string does not list
+Zicbop (measured in \file{docs/notes3}, where software prefetch gave \rfourx{2.0} with
+the 2.x backend). With $N = 128$ the prefetch runs two 64-byte cache lines ahead.
+
+\section{What the options do to a real kernel}
+
+Counted in the D3Q19 SRT AA odd kernel in float64 (\file{scripts/notes8/lbm_qemu_check.py}):
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{instruction set} & \textbf{arithmetic in the loop body}\\
+  \midrule
+  \isa{rvv} & 144 \code{vfmul}, 125 \code{vfadd}, 1 \code{vfdiv}, 110 broadcasts\\
+  \isa{rvv_ext-vf-fma} & 85 \code{vfmacc_vf}, 39 \code{vfadd_vv}, 36 \code{vfmul_vv},
+    23 \code{vfmul_vf}, 2 other; no broadcasts\\
+  \isa{rvv_ext-vf-fma-pf128} & the same, plus 19 read and 23 write prefetches (one per
+    load and store)\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+About 380 operations become about 185.
+
+\section{Compared with the 2.x backend}
+
+Every option exists in our 2.x backend too, but there each needed real compiler work:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  \textbf{feature} & \textbf{2.x backend} & \textbf{\isa{rvv_ext} (1.4)}\\
+  \midrule
+  fixed VLEN & always; targets \code{RISCV_RVV256} and \code{RISCV_RVV128} & option
+    \isa{vls<V>}; default vector-length agnostic\\
+  LMUL & option \code{cpu.vectorize.rvv_lmul} & option \isa{m2}, \isa{m4}\\
+  \code{.vf} operands & always on in \code{SelectIntrinsicsRvv}: hoisted constants are
+    vector symbols there, so the selector tracks which are uniform, declares scalar twins
+    and checks for reassignment (about 100 lines) & option \isa{vf}: a table lookup at
+    print time\\
+  FMA & always on: products recognized in already lowered intrinsic calls & option
+    \isa{fma}: the printer sees the SymPy product directly\\
+  prefetch & option \code{cpu.vectorize.prefetch_distance}: a pass
+    (\code{InsertPrefetches}, 118 lines) and platform hooks; one prefetch per distinct
+    access & option \isa{pf<N>}: wrapped load and store templates; one prefetch per load
+    and store\\
+  row pointers & \code{HoistRowPointers}: one base pointer per access including its $x$
+    offset & not ported; 1.4 already hoists one base pointer per field and row\\
+  \code{in_register} & constants kept in floating-point registers instead of reloaded
+    from memory & not ported\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+Row pointers and \code{in_register} gave $+2.5$\,\% together in 2.x. Whether they are
+worth porting is to be measured on the legacy code first, since 1.4 already does part
+of what row pointers do.

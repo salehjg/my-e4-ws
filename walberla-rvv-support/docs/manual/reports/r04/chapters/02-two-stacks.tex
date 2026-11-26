@@ -1,0 +1,114 @@
+\chapter{Two Stacks Side by Side}\label{r04:ch:two-stacks}
+
+waLBerla's source tree holds two complete ways of writing a lattice Boltzmann
+application with generated kernels. Report~2 (\cref{r02:sec:two-paths}) mentions the
+legacy one in passing; this chapter puts the two next to each other.
+
+\section{The two waLBerla cores}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.5cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  & \textbf{legacy core} & \textbf{new core (v8)}\\
+  \midrule
+  C++ & modules in \file{src/}: \code{core}, \code{field}, \code{blockforest},
+    \code{lbm_generated} (and the hand-written \code{lbm}) & header-only
+    \file{include/walberla/v8/}; links the legacy \code{core}, \code{stencil},
+    \code{blockforest} and \code{field} libraries\\
+  code generation & \file{python/pystencils_walberla}, \file{python/lbmpy_walberla},
+    Jinja2 templates; CMake \code{waLBerla_generate_target_from_python} & \file{sweepgen/}
+    on pystencils-sfg; CMake \code{walberla_generate_sources}\\
+  \ps{} & 1.x (the generators import \code{pystencils.astnodes},
+    \code{pystencils.backends}, \code{pystencils.typing}, which 2.x no longer has) &
+    $\geq$~2.0b1\\
+  CMake switches & \code{WALBERLA_BUILD_WITH_CODEGEN} (section ``Legacy Code Generation
+    (pystencils 1.x)'' of \file{CMakeLists.txt}) & \code{WALBERLA_ENABLE_V8CORE},
+    \code{WALBERLA_ENABLE_SWEEPGEN}\\
+  in-place streaming & pull, push, AA, EsoTwist, EsoPull, EsoPush. The even/odd counter
+    lives in the field (\code{GhostLayerField::advanceTimestep}); the in-place pack info
+    and the boundaries have even/odd variants & upstream: pull only. AA exists only on our
+    fork (report~3), with pull-only boundaries\\
+  users & waLBerla-wind; \file{apps/benchmarks/UniformGridCPU} (all six patterns) &
+    \code{SweepgenLbmCPU}, \code{SweepgenLdcCPU} (reports~2 and~3)\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+One finding shaped the whole plan: the legacy core is the \emph{more} complete one for
+in-place streaming. Our AA work on the new core (report~3, about \rfourx{1.6} over pull)
+had to build sweeps, halo exchange and boundaries for AA; on the legacy core all of
+that exists already, for six streaming patterns, and an application only has to ask
+for it (\cref{r04:sec:wind-app}).
+
+\section{\texorpdfstring{\ps{}}{pystencils} 1.4 and 2.x}\label{r04:sec:ps-versions}
+
+Both versions turn SymPy assignments on abstract fields into a C function. They differ
+in everything between the two ends:
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.5cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+  \toprule
+  & \textbf{\ps{}~1.4} & \textbf{\ps{}~2.x}\\
+  \midrule
+  intermediate form & an AST of SymPy-based nodes (\code{pystencils.astnodes}) whose
+    expressions stay SymPy expressions & a typed IR of its own (\code{Ps*} nodes), with
+    types checked and folded\\
+  hardware targets & one generic CPU code path; vector instruction sets are
+    \emph{names} (\code{'avx'}, \code{'neon'}, \code{'rvv'}, \dots) in
+    \code{cpu_vectorize_info} & a \code{Target} enum; each vector target has a
+    \term{platform} class\\
+  vector code & one printer for all instruction sets
+    (\code{VectorizedCustomSympyPrinter}) fills in C string templates; an instruction set
+    is a \emph{dictionary of templates} & an intrinsic selection pass of the platform
+    (\code{SelectIntrinsics} subclass) replaces IR vector operations by intrinsic calls\\
+  loops & the vectorizer cuts the innermost loop or, for scalable instruction sets, keeps
+    it whole (\cref{r04:sec:loop}) & generic strategy: peel, vector block loop, scalar
+    remainder\\
+  configuration & keyword dictionary \code{cpu_vectorize_info} & typed option tree
+    (\code{cpu.vectorize.*})\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+The practical consequence: none of the Python code of our 2.x RVV backend can be copied
+into 1.4. What carries over are the ideas, the C++ helper code, and the way the code is
+tested (QEMU against a scalar reference, \cref{r04:sec:qemu}).
+
+\section{What carried over from the 2.x work}\label{r04:sec:carried-over}
+
+The 2.x backend gained its speed through a series of measured changes on the K1
+(report~3). The table lists each, what it became on the legacy stack, and its gain as
+measured \emph{with the 2.x backend} on the K1 (D3Q19 SRT). These numbers are the
+motivation for \isa{rvv_ext}, not results of it.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}@{}}
+  \toprule
+  \textbf{2.x feature} & \textbf{on the legacy stack} & \textbf{2.x gain on the K1}\\
+  \midrule
+  RISC-V CMake: \code{-march=rv64gcv_zvl<V>b} & applies to legacy builds unchanged; already
+    on the walberla branch & ---\\
+  RVV code generation & upstream 1.4 \isa{rvv} (\cref{r04:ch:upstream-rvv}) & ---\\
+  AA streaming & native in the legacy core & \rfourx{1.6} over pull\\
+  software prefetch & option \isa{pf<N>} of \isa{rvv_ext} & \rfourx{2.0}\\
+  scalar (\code{.vf}) operands and FMA & options \isa{vf} and \isa{fma} & $+6$ to $+22$\,\%\\
+  fixed vector length (VLS) & options \isa{vls128}, \isa{vls256} & not measured head to
+    head; dropping VLA cost nothing\\
+  LMUL 2 and 4 & options \isa{m2}, \isa{m4} & slower\\
+  row pointers, \code{in_register} & not ported yet (1.4 already hoists one base pointer per
+    field and row) & $+2.5$\,\%\\
+  direction-split loop & not applicable: written for SRT; the cumulant collision of
+    waLBerla-wind needs all 27 PDFs at once & ---\\
+  v8 halo-exchange packing & not applicable: the legacy pack infos are generated kernels
+    of their own & ---\\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{How to tell which stack an application uses}
+
+A legacy application has a generator script that starts with
+\code{from pystencils_walberla import CodeGeneration} and is run by
+\code{waLBerla_generate_target_from_python} in its \file{CMakeLists.txt}. A new-core
+application imports \code{sweepgen} and is run by \code{walberla_generate_sources}. Both
+can exist in one build tree, but one Python environment cannot serve both: the legacy
+scripts need \ps{}~1.4 and SymPy $\leq$~1.12.1, the new ones \ps{}~2.x. This project
+therefore has a second virtual environment, \file{.venv-legacy}, next to the 2.x one
+(\cref{r04:sec:env}).
