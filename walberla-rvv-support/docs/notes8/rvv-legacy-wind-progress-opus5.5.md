@@ -11,8 +11,9 @@ All work is on the branch `rvv-support-legacy` of this repository and of the thr
   is one folder `results-legacy/<time>-<random>/` with `bench.json5`.
 - Not done yet: row pointers and `in_register` (measure first, plan §2), step 8 (monte3).
 - Step 7 (K1): all nine waLBerla-wind variants build (after the `aa_rvv` fix in walberla's template) and pass
-  the single-process quick check; multi-process runs die on misaligned MPI buffers (see the end of the log). Next:
-  the alignment fix (the user chooses), then `remote.py start all wind` again, then `all ugc` after asking.
+  the single-process quick check; multi-process runs died on misaligned MPI buffers. The alignment patch is now
+  applied to our walberla branch (uncommitted; checked on x86, 2026-11-27). Next: `remote.py push`, then
+  `remote.py start all wind` again (after asking), then `all ugc` after asking.
 
 ## 2026-11-26
 
@@ -281,3 +282,31 @@ run; `scripts/` stays as it is, it belongs to the 2.x stack).
     `/home/bananapi/saleh/legacy/upstream-pr/logs`, build trees removed).
   - `reproduce.sh` verified end to end on the laptop from a fresh clone and venv; `--quick` on the laptop and the K1.
   - Not yet decided: whether our walberla branch takes this patch for the K1 benchmark runs (the user decides).
+
+## 2026-11-27
+
+**Which ISAs crash on the misaligned buffers** (user's question). Undefined behavior on every ISA; a crash only where
+element-misaligned vector accesses trap. Checked with the pack loops of `repro/misaligned_pack.cpp` (3 floats per
+cell, 1 double per cell), GCC 16.2 and clang 23:
+- x86 SSE2, AVX2 (`x86-64`, `x86-64-v3`): only unaligned stores into the buffer (`movups`/`vmovups`), run fine at
+  offsets 0, 2, 4, 6; `-fsanitize=alignment` reports it. AVX-512 (`x86-64-v4`, `skylake-avx512`, `znver4`): only
+  unaligned stores in the assembly; not run (the laptop has no AVX-512).
+- AArch64 NEON/SVE: unaligned element accesses to Normal memory are allowed with Linux's `SCTLR_EL1.A = 0`; clang
+  emits NEON `st3` for the edge loop, also with `+sve`. Assembly only (no ARM machine or sysroot).
+- RVV 1.0: the specification lets an implementation trap; the X60 does, Linux 6.6 does not emulate it. Whether the
+  SG2044 (monte3) traps is not tested.
+
+**Alignment patch applied to walberla `rvv-support-legacy`** (user's decision; on top of the user's commit
+`fb3a0b77`, uncommitted). `git apply -C1`: one context line differs in
+`GeneratedNonUniformFieldPackInfo.impl.h` (`uint_t(1)` here, `uint_t{1}` in v7.4); same 119 added and 16 changed
+lines as the patch. x86, `build/notes8-wind-x86` reconfigured and rebuilt (1 min 49 s, no new warnings): the
+waLBerla-wind benchmark's checksums, 20 steps, are bit-identical before and after for `pull_none` and `aa_none` on 1
+and 4 processes (`<128,128,64>`).
+
+**waLBerla-wind commit redone** (the user's `50505f1` had all AppGenerator output). Unpushed, so `git reset HEAD~1`
+and a new commit `341e634` in the user's name (user's request): the turbine data files (airfoils, blade, tower,
+controllers; byte-identical copies of `GeneratedApp_cpu_uniform`'s) and the generated `input.prm` are left out,
+their link lines removed from the app's `CMakeLists.txt`, the README says why. Checked: the benchmark runs from a
+folder with only `benchmark.prm` and `windDirectionChange.wd`. New `.gitignore` with `__pycache__/` (code
+generation without `PYTHONDONTWRITEBYTECODE` writes them into the tree, step 6). Old build trees keep dangling
+symlinks to the removed files; harmless.
