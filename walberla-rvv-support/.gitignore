@@ -15,5 +15,9 @@ my-e4-ws.zip
 # push.to.sh excludes this folder too, so it never goes back to a shared machine.
 /00_private_data/
 
+# bench.py writes a run's bench.json5 as bench.json5.tmp first and renames it (save_run): a crash in between
+# leaves the .tmp. The run folders themselves (results-legacy/<time>-<random>/) are meant to be committed.
+/results-legacy/**/*.tmp
+
 # mpi_bench built by hand next to its source (scripts/notes7/mpi_bench.cpp, "Build:" line in its header)
 /scripts/notes7/mpi_bench

@@ -1,0 +1,101 @@
+mpirun --bind-to core --map-by core -np 8 /home/bananapi/saleh/legacy/builds/wind-f32/apps/BenchmarkApp_cpu_uniform/TurbineBenchmark_cpu_uniform_aa_rvv benchmark.prm -DomainSetup.domainSize=<128,128,128> -DomainSetup.cellsPerBlock=<64,64,64> -Parameters.warmupSteps=10 -Parameters.timesteps=60
+
+================================================================================
+|       BEGIN LOGGING - Saturday, 28.November 2026, 11:17:57                   |
+================================================================================
+[0][INFO    ]------(0.000 sec) C_l = 7.875
+[0]                            C_t = 0.039375
+[0]                            C_m = 595.815
+[0][INFO    ]------(0.001 sec) omega = 2
+[0][INFO    ]------(0.001 sec) nTurbines = 0
+[0][INFO    ]------(0.001 sec) Creating blockforest...
+[0][INFO    ]------(0.001 sec) SetupBlockForest created successfully:
+[0]                            - AABB: [ <0,0,0>, <128,128,128> ]
+[0]                            - initial decomposition: 2 x 2 x 2 (= forest size)
+[0]                            - periodicity: true x true x false
+[0]                            - number of blocks discarded from the initial grid: 0 (= 0 %)
+[0]                            - number of levels: 1
+[0]                            - tree ID digits: 4 (-> block ID bytes = 1)
+[0]                            - total number of blocks: 8
+[0]                            - number of processes: 8 (8 worker process(es) / 0 empty buffer process(es))
+[0]                            - buffer processes are inserted into the process network: no
+[0]                            - process ID bytes: 1
+[0]                            - blocks/memory/workload per process:
+[0]                               + blocks:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + memory:
+[0]                                  - min       = 6.23866e+07
+[0]                                  - max       = 6.23866e+07
+[0]                                  - avg       = 6.23866e+07
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0]                               + workload:
+[0]                                  - min       = 1
+[0]                                  - max       = 1
+[0]                                  - avg       = 1
+[0]                                  - stdDev    = 0
+[0]                                  - relStdDev = 0
+[0][INFO    ]------(0.002 sec) Creating fields...
+[0][INFO    ]------(0.243 sec) Initialise domain...
+[0][INFO    ]------(1.021 sec) Initialisation done
+[0][INFO    ]------(1.021 sec) Setting up boundaries...
+[0][INFO    ]------(1.168 sec) Set up communication...
+[0][INFO    ]------(1.169 sec) Creating time loop...
+[0][INFO    ]------(7.803 sec)[ 9] Estimated Remaining Time:     32s 
+[0][INFO    ]------(7.804 sec) Running timeloop...
+[0][INFO    ]-----(13.115 sec)[17] Estimated Remaining Time:     28s 
+[0][INFO    ]-----(18.208 sec)[25] Estimated Remaining Time:     22s 
+[0][INFO    ]-----(23.819 sec)[34] Estimated Remaining Time:     17s 
+[0][INFO    ]-----(29.403 sec)[43] Estimated Remaining Time:     11s 
+[0][INFO    ]-----(35.011 sec)[52] Estimated Remaining Time:      5s 
+[0][INFO    ]-----(40.737 sec)[61] Estimated Remaining Time: 1.34836e+14d -3.21049e+11s 
+[0][INFO    ]-----(45.786 sec)[69] Estimated Remaining Time: 1.34821e+14d 3.40018e+07h 25m 36s 
+[0][INFO    ]-----(46.419 sec) Timeloop timing:
+[0]                            Timer                                  |       % |          Total|        Average|          Count|            Min|            Max|       Variance|
+[0]                            --------------------------------------------------------------------------------------------------------------------------------------------------
+[0]                            Boundary Handling                      |   1.48% |           4.57|          0.009|            488|          0.001|          0.019|          0.000|
+[0]                            Calculate forces                       |   0.00% |           0.01|          0.000|            488|          0.000|          0.003|          0.000|
+[0]                            Communicate force data                 |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Communicate macroscopic turbine data   |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Evaluate density and velocity          |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Field communication                    |   9.42% |          29.07|          0.060|            488|          0.021|          0.197|          0.001|
+[0]                            LBM stability check                    |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            LBM stream-collide                     |  87.93% |         271.28|          0.556|            488|          0.534|          0.688|          0.000|
+[0]                            Remaining time logger                  |   0.00% |           0.01|          0.000|            488|          0.000|          0.001|          0.000|
+[0]                            Reset communication data               |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Rotation                               |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Setting driving force                  |   1.16% |           3.59|          0.007|            488|          0.004|          0.023|          0.000|
+[0]                            Shifted periodicity                    |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            Spread forces                          |   0.00% |           0.00|          0.000|            488|          0.000|          0.000|          0.000|
+[0]                            
+[0][RESULT  ]-----(46.423 sec) Simulation performance:
+[0]                            - processes:   8
+[0]                            - threads:     8 (threads per process = 1, threads per core = n/a *))
+[0]                            - cores:       n/a *)
+[0]                            - time steps:  61
+[0]                            - time:        38.615 sec
+[0]                            - cells:       2097152
+[0]                            - fluid cells: 2097152 (100 % of all cells)
+[0]                            - performance: 3.31286 MLUPS (million lattice cell updates per second)
+[0]                                           0.414108 MLUPS / process
+[0]                                           n/a *) MLUPS / core
+[0]                                           3.31286 MFLUPS (million fluid lattice cell updates per second)
+[0]                                           0.414108 MFLUPS / process
+[0]                                           n/a *) MFLUPS / core
+[0]                                           1.5797 time steps / second
+[0]                            - build / run information:
+[0]                               + host machine:   k1
+[0]                               + build machine:  k1
+[0]                               + git SHA1:       
+[0]                               + build type:     Release
+[0]                               + compiler flags: -O3 -DNDEBUG -march=rv64gcv_zvl256b -Wall -Wconversion -Wshadow -Wfloat-equal -Wextra -pedantic -Wno-maybe-uninitialized -Wno-array-bounds -pthread 
+[0]                            
+[0]                              *) only available if environment variable 'THREADS_PER_CORE' is set
+[0][INFO    ]-----(46.428 sec) Checksum: sum(rho) = 2097151.99027282, sum(|u|^2) = 7205.4574759762081
+================================================================================
+|         END LOGGING - Saturday, 28.November 2026, 11:18:44                   |
+================================================================================

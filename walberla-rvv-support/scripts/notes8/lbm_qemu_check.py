@@ -1,16 +1,17 @@
 """LBM kernels of pystencils 1.4 / lbmpy 1.4, vectorized for RVV, run under QEMU and compared with the host.
 
-Each kernel is generated once per instruction set (upstream `rvv` and options of our `rvv_ext`), cross-compiled
-with `riscv64-linux-gnu-g++ -static`, run under `qemu-riscv64 -cpu rv64,v=true,vlen=<N>`, and its output arrays are
-compared with the same kernel generated without vectors and run through the host JIT. The fields have fixed shapes
-(an odd x extent, so the last vector of a row is a partial one), so the kernels take only data pointers and scalars.
+Each kernel is generated once per instruction set (`rvv.lgcy`, pystencils' own `rvv`, and options of our
+`rvv.our1`), cross-compiled with `riscv64-linux-gnu-g++ -static`, run under `qemu-riscv64 -cpu
+rv64,v=true,vlen=<N>`, and its output arrays are compared with the same kernel generated without vectors and run
+through the host JIT. The fields have fixed shapes (an odd x extent, so the last vector of a row is a partial one),
+so the kernels take only data pointers and scalars.
 
 Kernels: d3q19_srt (pull, aa_even, aa_odd) and wind: waLBerla-wind's D3Q27 cumulant + Guo + QR kernel
 (apps/GeneratedApp_cpu_uniform/LBMGeneration.py), pull.
 
 Usage (laptop, from walberla-rvv-support, venv of docs/notes8):
   PYTHONPATH=submodules/pystencils/src ../.venv-legacy/bin/python scripts/notes8/lbm_qemu_check.py \
-      [--kernels d3q19_srt,wind] [--dtype float64|float32] [--isa rvv,rvv_ext-vf-fma] [--vlen 128,256]
+      [--kernels d3q19_srt,wind] [--dtype float64|float32] [--isa rvv.lgcy,rvv.our1-vf-fma] [--vlen 128,256]
 Prints one line per (kernel, instruction set, VLEN) and PASS or FAIL at the end.
 """
 
@@ -161,7 +162,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--kernels", default="d3q19_srt,wind")
     parser.add_argument("--dtype", default="float64", choices=["float64", "float32"])
-    parser.add_argument("--isa", default="rvv,rvv_ext-vf-fma,rvv_ext-vf-fma-pf128,rvv_ext-vls128-vf-fma-pf128")
+    parser.add_argument("--isa", default="rvv.lgcy,rvv.our1-vf-fma,rvv.our1-vf-fma-pf128,rvv.our1-vls128-vf-fma-pf128")
     parser.add_argument("--vlen", default="128,256")
     args = parser.parse_args()
     for tool in ("riscv64-linux-gnu-g++", "qemu-riscv64"):

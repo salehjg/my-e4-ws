@@ -179,6 +179,12 @@ Building and running both took 2 h 26 min on the board (2 parallel jobs). The sa
 to `PackKernels::packDirection` and the faulting instruction `vsseg3e32.v`, is the one found in waLBerla-wind (see
 [How it shows](#how-it-shows)).
 
+waLBerla-wind's CPU benchmark app on the same board (walberla-rvv-support, `scripts-legacy`, float32, one 64³ block
+per process, nine code generation variants, scalar and RVV): without the patch every 4-process run died with this
+bus error; with the patch applied to the fork's branch, all 81 timed runs (9 variants × 1, 4 and 8 processes × 3
+rounds, 2026-11-28) ended normally, and their checksums agree with the scalar reference at the same process
+count to rounding.
+
 ## Pull request text
 
 **Title:** Align the data of generated pack infos in communication buffers

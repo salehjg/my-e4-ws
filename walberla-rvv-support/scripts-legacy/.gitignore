@@ -1,4 +1,7 @@
-# The runs go to ../results-legacy/ (meant to be committed), builds to the machine's work folder
-# (experiments.MACHINES), remote.py's screen logs to 00_private_data/ (ignored by ../.gitignore).
+# What the scripts write, and where: timing runs to ../results-legacy/ (meant to be committed); builds, venv, pip
+# cache, animations (VTK files, frames, GIF) and job logs to the machine's work folder (experiments.MACHINES:
+# ../build/legacy/ on the laptop, ignored by ../.gitignore); remote.py fetch copies the boards' logs and animations
+# to ../00_private_data/ (ignored there too). Nothing is written into this folder except bytecode, which the
+# scripts turn off and the root .gitignore ignores anyway:
 __pycache__/
 *.pyc

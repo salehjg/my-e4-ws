@@ -8,6 +8,10 @@ Written 2026-11-26; steps 0 to 6 implemented the same day on the laptop, deviati
 latest results; waLBerla-wind listed as an open question), [`../notes/walberla-codegen-flow.md`](../notes/walberla-codegen-flow.md)
 (waLBerla's two code generation paths).
 
+Renamed 2026-11-28 (`scripts-legacy/README.md`, Names): `rvv_ext` below is now `rvv.our1` (pystencils module
+`riscv_our1_instruction_sets.py`, headers `rvv_our1_*.h`), and pystencils' own `rvv` is called `rvv.lgcy` in
+variant names.
+
 ## 1. Context
 
 waLBerla-wind (`submodules/waLBerla-wind`, the lattice Boltzmann solver for wind turbines and wind farms of Schottenhamml
@@ -171,7 +175,7 @@ The 2.x backend stays on pystencils `rvv-support`, which `main` of this reposito
 pystencils submodule holds 1.4, so 2.x builds (`SweepgenLdcCPU`, §5 b) need `main` checked out or a second checkout of
 the repository. The branches are local; the user commits and pushes.
 
-### 3.2 Our instruction set `rvv_ext` (pystencils 1.4)
+### 3.2 Our instruction set `rvv_ext` (pystencils 1.4; since 2026-11-28 `rvv.our1`, §3.7)
 
 - A copy of `backends/riscv_instruction_sets.py` as `backends/riscv_ext_instruction_sets.py`, registered as
   `rvv_ext` in `get_vector_instruction_set` (the name is open). Upstream `rvv` and its files stay byte-identical.
@@ -256,6 +260,20 @@ waLBerla kernels (`UniformGridCPU`, waLBerla-wind's cumulant kernel) are generat
 kernel at a time under QEMU; whole applications are built and run on the K1. Cross-building waLBerla and MPI for QEMU
 is possible but slow, so only if a bug cannot be reproduced at kernel level.
 
+### 3.7 Added during the work (2026-11-28)
+
+- **Names** (user: self-explanatory): every variant is `<streaming>_<backend>[-<option>...]` with the backend
+  `none`, `<isa>.lgcy` (pystencils 1.4's own: `rvv.lgcy`) or `<isa>.our<N>` (ours: `rvv.our1`, the `rvv_ext` of
+  §3.2). A new backend of ours gets the next number; a name is never reused (`scripts-legacy/README.md`, Names).
+- **Checksums**: every timed run is compared with `pull_none` at the same process count. float32 tolerance 1e-5:
+  pystencils' vector kernels, AVX as RVV, drift from its scalar kernel by about 5e-8 per step.
+- **Animations** (user): `bench.py animate` and `render`, one untimed run with VTK output, so the output's load never
+  touches a timing; waLBerla-wind's benchmark app writes VTK only when asked (`Output.VTK`), UniformGridCPU with
+  `vtkWriteFrequency`.
+- **MPI buffers**: waLBerla's generated pack infos access MPI buffers misaligned; on the K1 every multi-process run
+  dies without the alignment patch (`docs/bug-fix-pr/walberla-packinfo-buffer-alignment/`), now on our walberla
+  branch.
+
 ## 4. Implementation steps
 
 Step 1 (waLBerla-wind against our waLBerla, on x86) and steps 2 to 4 (the RVV code in pystencils, §3.6) do not
@@ -288,9 +306,17 @@ round-off after N steps.
 **Step 7, K1.** With `scripts-legacy/` (added after the plan, on the user's request; `scripts-legacy/README.md`):
 `remote.py push` (the whole git repository to `my-e4-ws-legacy`), then `remote.py start all wind` and
 `start all ugc`: build, check (quick run, checksums) and time in `screen`; results in `results-legacy/`.
+Status 2026-11-28: `all wind` done (with the alignment patch; progress log), `all ugc` not yet.
 
-**Step 8, monte3**, only after asking the user: a monte3 entry in `scripts-legacy/` (sbatch), following notes7's
-`monte3.sh`, with the milkv `openmpi-5.0.6` module.
+**Step 8, monte3**, only after asking the user. Same mechanism as the K1, in Python (`scripts-legacy/`; the user's
+design): `remote.py --machine monte3 push | start | status | fetch`, where `start` submits one slurm job
+(`sbatch --wrap "python3 scripts-legacy/bench.py --machine monte3 <args>"`, the whole peak node, 6 h) instead of a
+screen session. The login node is x86-64, so setup, configure, build and the runs all happen in that job. In the job,
+`bench.py` loads the modules `gcc-14.2.0` and `openmpi-5.0.6` (notes7: not the system's Open MPI 4.1.5) and checks
+them; the machine's data (`experiments.MACHINES["monte3"]`: VLEN 128, `-march=rv64gcv_zvl128b`, 1 to 64 processes,
+the module's `mpirun` and rpath) carry the rest. Self-contained (user): nothing from notes7 or other scripts; the
+first job prepares what is missing in `~/02_ws/legacy` (venv, numpy built once, a Python if the node had none new
+enough). Experiments `wind-vlen128` and `ugc-vlen128` (`vls128` instead of `vls256`).
 
 **Step 9, progress log** `rvv-legacy-wind-progress-opus5.5.md` and a notes8 section in the README.
 
@@ -304,6 +330,8 @@ round-off after N steps.
 - **(c) waLBerla-wind benchmark app:** pull / aa × the variants of §3.5.
 - Protocol of presentation6/notes7: 60 timed steps after 10 warm-up steps, 3 interleaved rounds, the machine state
   recorded.
+- Like for like (open, 2026-11-28): all `rvv.our1` variants are AA, while `rvv.lgcy`'s faster one is pull; a
+  `pull_rvv.our1-vf-fma-pf128` variant would separate the backend from the streaming pattern.
 - Zicboz: waLBerla-wind already asks for nontemporal stores, so with `-march=..._zicboz` upstream `rvv` emits
   `cbo.zero` (no write-allocate). This answers presentation7's question whether Zicboz helps, on the machines whose
   ISA string lists it.
@@ -329,6 +357,10 @@ round-off after N steps.
   VLMAX). Upstream's `vl = loop_stop - loop_counter` steps by VLMAX, so on such hardware it would skip elements; QEMU
   and the two boards likely always pick VLMAX. The tests should cover it, and fixed-width mode avoids it.
 - Python 3.12 on the K1 (not checked yet); sympy 1.12.1 next to the 2.x venv.
+- (2026-11-28) On the K1, `aa_rvv.our1-vls256-vf-fma-pf128` is much slower than the same variant without `vls256`
+  (wind, 1 process: 0.65 against 1.06 MLUP/s). Not investigated; the next step is to compare their assembly.
+- (2026-11-28) Why pystencils' vector kernels drift from its scalar kernel by about 5e-8 per step (float32), the same
+  with AVX and RVV: not known.
 - Ask the waLBerla developer whether `lbmpy_walberla`/`lbm_generated` will move to pystencils 2. If so, our 2.x
   backend would become usable directly and part of this rework unnecessary.
 

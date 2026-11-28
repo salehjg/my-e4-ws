@@ -1,8 +1,9 @@
 # Repo-wide rules: apply in every project folder of this repository.
 # Project-specific rules live in each project's own .gitignore.
 
-# Editors / IDEs
+# Editors / IDEs / tools
 .idea/
+.claude/settings.local.json
 
 # Python
 __pycache__/

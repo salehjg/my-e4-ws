@@ -157,3 +157,24 @@ Cimone (DOI 10.1007/978-3-032-07612-0_44).
 python3 scripts/presentation7/slide_data.py     # checks, then tables/ (default: the last fetched monte3 run)
 cd docs/presentation7 && ./build.sh && pdfpc build/slides.pdf
 ```
+
+## notes8: RVV on waLBerla's legacy core (pystencils 1.4, waLBerla-wind)
+
+`docs/notes8/rvv-legacy-wind-{plan,progress}-opus5.5.md`: waLBerla-wind runs on waLBerla's legacy core, whose code
+generation is pystencils 1.4, so the RVV work is redone there (branches `rvv-support-legacy` of this repository and
+the three submodules). pystencils 1.4's own RVV backend is called `rvv.lgcy`, ours `rvv.our1` (a copy of it plus
+options: `vls128`/`vls256`, `m2`/`m4`, `vf`, `fma`, `pf<N>`); every variant is named
+`<streaming>_<backend>[-<option>...]`, e.g. `aa_rvv.our1-vf-fma-pf128` (`scripts-legacy/README.md`, Names).
+`scripts-legacy/` builds, checks and times two apps in these variants (waLBerla-wind's `BenchmarkApp_cpu_uniform`,
+float32, and waLBerla's `UniformGridCPU`, float64) on the laptop, the K1 (screen) and monte3 (slurm), one
+`results-legacy/<time>-<random>/bench.json5` per run, and makes animations of the flows apart from the timing. It
+found misaligned MPI buffers in waLBerla's generated pack infos (bus error on the K1 with 2 or more processes; fix
+and upstream PR text in `docs/bug-fix-pr/walberla-packinfo-buffer-alignment/`).
+
+```bash
+cd submodules/pystencils && PYTHONPATH=src ../../../.venv-legacy/bin/python -m pytest -q -o addopts="" tests/test_rvv_qemu.py && cd ../..   # rvv.lgcy and rvv.our1 under QEMU at VLEN 128/256/512
+python3 scripts-legacy/remote.py push && python3 scripts-legacy/remote.py start all wind   # the K1: build, check, time (screen)
+python3 scripts-legacy/remote.py status; python3 scripts-legacy/remote.py fetch
+python3 scripts-legacy/bench.py table results-legacy/<run>                                # medians, speedups, checksums
+python3 scripts-legacy/bench.py animate wind-x86 && python3 scripts-legacy/bench.py render build/legacy/animations/<run>
+```

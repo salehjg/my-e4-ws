@@ -5,15 +5,25 @@ All work is on the branch `rvv-support-legacy` of this repository and of the thr
 
 ## Resume here
 
+- Names since 2026-11-28 (`scripts-legacy/README.md`, Names): pystencils' own `rvv` is `rvv.lgcy`, our `rvv_ext` is
+  `rvv.our1`; entries before that date use the old names.
 - Steps 0 to 6 done on the laptop: `rvv_ext` with `vls128`/`vls256`, `m2`/`m4`, `vf`, `fma`, `pf<N>`; all checked
   under QEMU, also on the LBM kernels; `UniformGridCPU` variants; waLBerla-wind benchmark app with pull and AA.
 - `scripts-legacy/` (configure, build, time, tabulate; `scripts-legacy/README.md`) works on the laptop; every run
   is one folder `results-legacy/<time>-<random>/` with `bench.json5`.
-- Not done yet: row pointers and `in_register` (measure first, plan §2), step 8 (monte3).
+- Not done yet: row pointers and `in_register` (measure first, plan §2). Step 8 (monte3): the scripts are ready
+  and tested on the laptop only (2026-11-28); nothing has run there yet (the user decides when).
 - Step 7 (K1): all nine waLBerla-wind variants build (after the `aa_rvv` fix in walberla's template) and pass
-  the single-process quick check; multi-process runs died on misaligned MPI buffers. The alignment patch is now
-  applied to our walberla branch (uncommitted; checked on x86, 2026-11-27). Next: `remote.py push`, then
-  `remote.py start all wind` again (after asking), then `all ugc` after asking.
+  the single-process quick check; multi-process runs died on misaligned MPI buffers. With the alignment patch
+  (our walberla branch, uncommitted) all 81 timed runs pass on 1/4/8 processes (2026-11-28); the RVV checksums
+  drift from the scalar one exactly as AVX's do (float32 tolerance now 1e-5). Next: `all ugc` on the K1 (ask first).
+  The next K1 build recompiles every vector variant (new names; waLBerla-wind's `main.cpp` got the VTK hook).
+- Animations: `bench.py animate <experiment>` and `render <folder>` (`animation.py`), tested on the laptop.
+- Open (2026-11-28): a `pull_rvv.our1-...` variant for a like-for-like comparison with `pull_rvv.lgcy`; why `vls256`
+  is slower than VLA on the K1; the cause of the vector-vs-scalar checksum drift. The user's decisions: `all ugc`,
+  monte3, removing `push.to.sh --repo` (unused now), several experiments in one `start` (user: wait, not done).
+- Uncommitted: the alignment patch (walberla), the names and the VTK hook (pystencils, walberla, waLBerla-wind),
+  `scripts-legacy` (incl. the new `animation.py`), the two K1 runs in `results-legacy/`, READMEs and these notes.
 
 ## 2026-11-26
 
@@ -310,3 +320,158 @@ their link lines removed from the app's `CMakeLists.txt`, the README says why. C
 folder with only `benchmark.prm` and `windDirectionChange.wd`. New `.gitignore` with `__pycache__/` (code
 generation without `PYTHONDONTWRITEBYTECODE` writes them into the tree, step 6). Old build trees keep dangling
 symlinks to the removed files; harmless.
+
+## 2026-11-28
+
+**Banana Pi set up again** (the user emptied `~/saleh`, 16 GB free): `remote.py push` (428 MB, 48 s; the board's
+copy has the same commits and uncommitted changes as the laptop, after `git checkout -- results-legacy` there:
+`push` does not send `results-legacy/`, and git there saw the committed K1 run as deleted), `remote.py start setup`
+(screen; venv as before), `remote.py start all wind` (screen `bench-all-wind`, with the alignment patch). The board's
+other load is not ours: PolyBench/C 4.2.1 (`run_polybench_k1.sh LARGE 7 3` in `/home/bananapi/PolyBenchC-4.2.1`,
+started 26 Nov 19:39 board time, one core busy), another user of the shared account.
+
+**Step 8, monte3, prepared** (user: Python, clean, the same mechanism as the K1, but with slurm; the login node is
+not RISC-V, so compiling needs a slurm job too). Nothing has run on monte3.
+- `remote.py`: `--machine bananapi|monte3`; per machine a `Remote` (pushed copy, log folder, sbatch options).
+  monte3: `start` = `sbatch --wrap "python3 scripts-legacy/bench.py --machine monte3 <args>"` with
+  `--partition=peak --nodes=1 --exclusive --ntasks-per-node=64 --mem=0 --time=06:00:00`, refused while one of our
+  `bench-` jobs is queued or running (`squeue --me`); `status` = `squeue --me` + newest log. On the login node only
+  rsync, mkdir, date, sbatch, squeue run. The K1 clock hint (`sudo date`) is only offered for screen machines.
+- `experiments.py`: `Machine` got `setup_python`, `vlen`, `modules`, `link_flags`, `pip_cache`, and `jobs=None`
+  (one per core, at most one per 2 GB, from `/proc/meminfo`). monte3: cores 1 to 64, `-march=rv64gcv_zvl128b`,
+  VLEN 128, mpirun `/opt/share/milkv/openmpi-5.0.6/bin/mpirun --bind-to core --map-by core`, modules `gcc-14.2.0`
+  then `openmpi-5.0.6`, the rpath flags notes7 found necessary. Variant lists `ANY_VLEN`, `VLEN256` (K1, unchanged),
+  `VLEN128`; experiments `wind-vlen128`, `ugc-vlen128`. (First version used notes7's Python and pip cache and
+  `push.to.sh`; replaced, see "Self-contained" below.)
+- `bench.py`: loads the machine's modules first (a bash sources the modules init, `env -0` back into the process)
+  and stops if `mpicxx` is not next to the machine's `mpirun`; `configure` refuses fixed-VLEN variants of another
+  VLEN (before the code generation) and passes `link_flags`; `setup` uses `pip_cache`; `all` runs `setup` if the
+  venv is missing; each timing run is stopped after `RUN_LIMIT` = 600 s with its whole process group (SIGTERM,
+  15 s, SIGKILL); `machine.cpus` is `len(os.sched_getaffinity(0))` instead of `os.cpu_count()` (no `/sys` read);
+  `bench.json5` keeps `modules` and `link_flags`.
+- Laptop-only dry run (scratchpad; fake modules init, fake MPI with 4 sleeping "ranks", fake app, fake `ssh`), with
+  Python 3.14 and 3.11 (the node's system Python): VLEN refusals both ways; `rvv_ext-vls128-vf-fma-pf128` and the
+  other names pass pystencils' `parse_options`; modules loaded and a missing MPI module refused; a hung run stopped
+  after 3 s (limit lowered for the test) with no process left, a normal run parsed; the exact sbatch, squeue and
+  screen commands printed. Audit: no frequency, governor, power, thermal, `/sys`; of `/proc` only `meminfo`,
+  `loadavg` (and `cpuinfo` without `--machine`, never on monte3).
+
+**Self-contained** (user: the scripts must not rely on anything that exists already or on other scripts; what is
+missing they prepare).
+- `remote.py push` does the rsync itself (`sync_repo`; `push.to.sh --repo`'s logic in Python: git lists what it
+  ignores in the repository and each submodule, `results-legacy/` protected, `.claude/`, `.perfcache`, `*.zip`
+  excluded as before since git does not ignore them) and makes the remote folder first (`mkdir -p`).
+  `../push.to.sh` is no longer used by `scripts-legacy/`.
+- `bench.py setup`: the venv's Python is the one running bench.py if it is 3.10 or newer with `ensurepip`
+  (pystencils 1.4 and lbmpy 1.4 need 3.10; monte3's node has 3.11), else Python 3.12.11 built from python.org's
+  source into `<work>/python-3.12.11`; pip's cache is `<work>/pip-cache`; `CC=gcc CXX=g++` for a numpy build from
+  source. `Machine.setup_python` and `Machine.pip_cache` removed; monte3's venv is `~/02_ws/legacy/venv`.
+- Laptop tests: `sync_repo` into a local folder (`build/push-test`, removed after): 428 MB in 3.2 s, the copy's
+  commit and `git status` equal the original's for the repository and all three submodules, no ignored files,
+  no `.claude/`, `results-legacy/`, `build/`, `00_private_data/`, venvs; a second sync (0.3 s) kept a run in the
+  copy's `results-legacy/` and deleted a stale file. The dry run of before passes again with Python 3.11.
+- Laptop test of the Python fallback (`ensurepip` made to look missing, work folder `build/python-fallback-test`,
+  removed after): `setup` downloaded Python 3.12.11 from python.org, built it into `<work>/python-3.12.11`, made
+  the venv on it and installed the packages, 97 s; the venv has ssl, sympy 1.12.1, lbmpy 1.4, pystencils from the
+  submodule.
+
+**K1 `all wind` with the alignment patch** (quick run `20261128-104228-013f7f`, timed run `20261128-104459-81179f`,
+fetched). The patch fixes the multi-process runs: all 81 timed runs (9 variants, 1/4/8 processes, 3 rounds) end
+normally; before, every 4-process run died with `Bus error` (`20261127-011820-469d71`). Medians (MLUP/s; the board
+shared with another user's PolyBench job, one core busy):
+
+| processes | `pull_none` | `aa_none` | `pull_rvv` | `aa_rvv` | `-vf-fma` | `-vf-fma-pf128` | `-vls256-vf-fma-pf128` |
+|---|---|---|---|---|---|---|---|
+| 1 | 0.51 | 0.55 | 0.71 | 0.50 | 0.62 | 1.06 | 0.65 |
+| 4 | 1.93 | 2.04 | 2.57 | 1.87 | 2.25 | 3.87 | 2.44 |
+| 8 | 3.63 | 3.73 | 4.81 | 3.33 | 3.94 | 6.55 | 4.47 |
+
+Checksums: the scalar variants agree to 2e-9; every RVV variant differs from `pull_none` by 3.3e-6 (1 process),
+3.1e-6 (4), 2.7e-6 (8) in sum(|u|²), above the then tolerance 1e-6, so the table says FAIL; the quick run (10 steps)
+had 5.4e-7, so the difference grows by about 5e-8 per step. The RVV variants agree with each other to about 1e-9.
+- Not RVV: the same kernel with pystencils' AVX (`pull_avx`, built on the laptop for this test only, then removed)
+  gives sum(|u|²) = 757.683801, the RVV result to 1e-9, while x86 scalar gives 757.686311 (K1 scalar 757.686308).
+  So pystencils' vector kernels drift from its scalar kernel the same way with AVX and with RVV.
+- Not `powf`: the scalar kernel has `powf(x, 0.5f)` where the vector kernels have a square root; `powf` differs
+  from `sqrtf` for 0.06 % of the floats in [1e-8, 10] (1 ULP, mostly up; same on the laptop and the K1), but
+  replacing it by `sqrtf` (`LD_PRELOAD` shim, x86 scalar) moves sum(|u|²) by only 5e-9.
+- Not FMA contraction: GCC fuses about 1060 multiply-adds in the scalar kernel, almost none in `pull_rvv`, about
+  1700 in `aa_rvv_ext-vf-fma`, yet `pull_rvv` and `-vf-fma` agree to 1.2e-9.
+- The vector select (`qr_r_prime > 0 ? qr_r_prime : 0`, `vmerge`/`vmfgt`) is right. Cause not found; it is in
+  pystencils' vectorization, not in the RVV backends.
+- `experiments.TOLERANCE[32]` raised from 1e-6 to 1e-5 (enough for about 200 steps; a wrong kernel differs by
+  1e-3 or more). Runs keep the tolerance they ran with, so the fetched timed run still says FAIL in `bench.py table`.
+
+**Animations** (user: an argument that makes an animation the goal instead of the speedup, since the output's load
+could disturb the timing; a separate class). `scripts-legacy/animation.py`, class `Animation`; `bench.py animate
+<experiment> [--variant] [--steps 2000] [--every 25] [--np 1]` and `bench.py render <folder>` (README, Animations).
+- Both apps write VTK themselves, so no frame images come from the apps: UniformGridCPU has upstream's
+  `Parameters.vtkWriteFrequency` (`vtk_out/vtk.pvd`); waLBerla-wind's `TurbineOutput` reads `Output.VTK` blocks,
+  which waLBerla's command-line override creates (`-Output.VTK.writeFrequency=25 -Output.VTK.fields.velocity=1`), but
+  the benchmark app's `main.cpp` never called the writer: it now adds it to the time loop only if an `Output.VTK`
+  block exists (waLBerla-wind, uncommitted; app README updated). Without one (all timing runs) the time loop is as
+  before: x86 `pull_none`, 10 + 60 steps, sum(|u|²) = 757.68631103396024 before and after, no VTK timer.
+- `animate`: configure, build only the chosen variant (`bench.build` got an optional variant list), one untimed run
+  (no warmup, no `RUN_LIMIT`) with the same command line as the timing (`bench.app_command`, split out of
+  `time_one`) plus the VTK option, in `<work>/animations/<time>-<random>/` with `animation.json`, `app.log`,
+  `vtk_out/`. `render`: in the venv (installs pyvista and matplotlib if missing; no VTK wheels for riscv64, so the
+  boards' animations are rendered on the laptop after `remote.py fetch`, which now also copies
+  `<work>/animations/`): the x-z slice through the middle, |u| for waLBerla-wind, u_x for UniformGridCPU (its shear
+  is in z: u_x = ±0.005 above/below the middle), PNG per frame and a GIF.
+- Laptop tests: `animate wind-x86` (2000 steps, 81 frames, 325 MB, 100 s) and `render` (12 s; 1.4 MB GIF): the log-law
+  profile with the initial perturbation at mid-height growing into eddies. `animate ugc-x86` (80 frames): the two
+  shear bands diffusing. `animate wind-x86 --np 4`: four blocks, one seamless 128 x 64 slice. `remote.py fetch`
+  against the Banana Pi with no animations there: fine (`--ignore-missing-args`).
+
+**Names** (user: self-explanatory, `<backend>.our<i>` / `<backend>.lgcy`, then the rest). Variant names are now
+`<streaming>_<backend>[-<option>...]` with backend `none`, `<isa>.lgcy` (pystencils 1.4's own) or `<isa>.our<N>`
+(ours): `pull_rvv.lgcy`, `aa_rvv.our1-vf-fma-pf128`. `_`, `.` and `-` each have one job (README, Names, with the
+list of backends; a new one of ours gets the next number, a name is never reused).
+- pystencils (our branch, uncommitted): `riscv_ext_instruction_sets.py` -> `riscv_our1_instruction_sets.py`
+  (`get_vector_instruction_set_riscv_our1`, `parse_options` takes `rvv.our1[-...]`), headers
+  `riscv_v_ext_{vls128,vls256,prefetch}.h` -> `rvv_our1_*.h` (C helpers `rvv_our1_prefetch_read/write`);
+  `simd_instruction_sets.py` strips `.lgcy` (so `rvv.lgcy` is pystencils' unchanged `rvv`, `avx.lgcy` its `avx`) and
+  picks `rvv.our1` by the part before the first `-`. Renamed with plain `mv` (nothing staged). Nothing else in
+  pystencils, lbmpy or pystencils_walberla compares the name; CMake uses it as a folder name and in target names,
+  which allow `.`.
+- `tests/test_rvv_qemu.py`: `rvv.lgcy` instead of `rvv` under QEMU, and `rvv.lgcy` must print exactly `rvv`'s code.
+- `scripts-legacy`: `Vectors.RVV_LGCY = "rvv.lgcy"`, `Vectors.RVV_OUR1 = "rvv.our1"`; `instruction_set()` uses the
+  member's value. Comments and examples in walberla's UniformGridCPU, waLBerla-wind's app, `scripts/notes8`.
+- Old runs keep their labels (`pull_rvv`, `aa_rvv_ext-...`). The next K1/monte3 build makes new targets (all
+  vector variants recompile, about 3 h on the K1); the old executables stay in the build trees, unused.
+
+**Backends compared** (K1, waLBerla-wind, float32, timed run `20261128-104459-81179f`; its labels are the old ones,
+here in the new names). Median MLUP/s:
+
+| variant | backend | 1 process | 4 | 8 |
+|---|---|---|---|---|
+| `pull_none` | scalar | 0.51 | 1.93 | 3.63 |
+| `aa_none` | scalar | 0.55 | 2.04 | 3.73 |
+| `pull_rvv.lgcy` | pystencils' own | 0.71 | 2.57 | 4.81 |
+| `aa_rvv.lgcy` | pystencils' own | 0.50 | 1.87 | 3.33 |
+| `aa_rvv.our1-vf` | ours | 0.57 | 2.10 | 3.73 |
+| `aa_rvv.our1-fma` | ours | 0.52 | 1.91 | 3.45 |
+| `aa_rvv.our1-vf-fma` | ours | 0.62 | 2.25 | 3.94 |
+| `aa_rvv.our1-vf-fma-pf128` | ours | 1.06 | 3.87 | 6.55 |
+| `aa_rvv.our1-vls256-vf-fma-pf128` | ours | 0.65 | 2.44 | 4.47 |
+
+- Same streaming pattern (AA): our best is 2.1x, 2.1x, 2.0x `aa_rvv.lgcy`; even `-fma` alone is a little faster.
+  `aa_rvv.lgcy` is slower than scalar `aa_none`.
+- Best against best: `aa_rvv.our1-vf-fma-pf128` is 1.5x, 1.5x, 1.4x `pull_rvv.lgcy`. Not like for like: ours are all
+  AA, and for `rvv.lgcy` pull is much faster than AA (0.71 against 0.50), so part of it may be the streaming pattern
+  (a `pull_rvv.our1-vf-fma-pf128` variant would tell).
+- Prefetch carries most of it: `-vf-fma` gains about 70 % from `-pf128`; without prefetch ours is below
+  `pull_rvv.lgcy`.
+- `vls256` (vector-length specific) is much slower than the same VLA variant (0.65 against 1.06); not investigated.
+- The board was shared with another user's PolyBench job (one core busy): indicative numbers. All RVV variants agree
+  with each other to about 1e-9 (checksums).
+
+**Documented** (user: document all this in the READMEs and the progress file).
+- `scripts-legacy/README.md`: Names (convention, list of backends, old names), vector length (VLA against `vls`, the
+  guard header, `configure`'s VLEN check), Adding a benchmark (an experiment of a known app: only `experiments.py`;
+  a new app: the places in `bench.py`; one experiment per command and one job at a time), The checksum (tolerance
+  1e-5 and why), Animations, `fetch` (runs, logs, animations).
+- `README.md` (top): a notes8 section (plan step 9). waLBerla-wind's app README: the VTK hook and the names.
+  `docs/bug-fix-pr/.../README.md`, Testing: the K1 benchmark before and after the patch.
+- The plan: §3.2 renamed, §3.7 (names, checksums, animations, MPI buffers), step 7 status, §5 like for like, §7 the
+  `vls256` slowdown and the checksum drift.
