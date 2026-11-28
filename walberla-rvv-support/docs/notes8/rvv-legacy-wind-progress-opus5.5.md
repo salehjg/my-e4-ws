@@ -15,15 +15,19 @@ All work is on the branch `rvv-support-legacy` of this repository and of the thr
   and tested on the laptop only (2026-11-28); nothing has run there yet (the user decides when).
 - Step 7 (K1): all nine waLBerla-wind variants build (after the `aa_rvv` fix in walberla's template) and pass
   the single-process quick check; multi-process runs died on misaligned MPI buffers. With the alignment patch
-  (our walberla branch, uncommitted) all 81 timed runs pass on 1/4/8 processes (2026-11-28); the RVV checksums
+  (our walberla branch, commit `1965f0de`) all 81 timed runs pass on 1/4/8 processes (2026-11-28); the RVV checksums
   drift from the scalar one exactly as AVX's do (float32 tolerance now 1e-5). Next: `all ugc` on the K1 (ask first).
   The next K1 build recompiles every vector variant (new names; waLBerla-wind's `main.cpp` got the VTK hook).
 - Animations: `bench.py animate <experiment>` and `render <folder>` (`animation.py`), tested on the laptop.
 - Open (2026-11-28): a `pull_rvv.our1-...` variant for a like-for-like comparison with `pull_rvv.lgcy`; why `vls256`
   is slower than VLA on the K1; the cause of the vector-vs-scalar checksum drift. The user's decisions: `all ugc`,
-  monte3, removing `push.to.sh --repo` (unused now), several experiments in one `start` (user: wait, not done).
-- Uncommitted: the alignment patch (walberla), the names and the VTK hook (pystencils, walberla, waLBerla-wind),
-  `scripts-legacy` (incl. the new `animation.py`), the two K1 runs in `results-legacy/`, READMEs and these notes.
+  monte3, removing `push.to.sh --repo` (unused now), several experiments in one `start` (user: wait, not done),
+  whether monte3 runs go into `results-legacy/` (committed) or stay in `00_private_data/` like notes7's raw monte3
+  logs, deleting pystencils' 2.x leftovers (`src/pystencils/{backend,codegen,flow}/`, only `.pyc`, ignored).
+- Committed on 2026-11-28 by request, as the user (no Claude trailer): walberla `1965f0de` (alignment fix),
+  `888be635` (UniformGridCPU names); waLBerla-wind `cd303fe` (VTK hook), `4e6a85b` (names). Not pushed.
+- Uncommitted: pystencils (the `rvv.our1`/`rvv.lgcy` rename), this repository (`scripts-legacy` incl. the new
+  `animation.py`, the two K1 runs in `results-legacy/`, READMEs, gitignores, these notes, the submodule pointers).
 
 ## 2026-11-26
 
@@ -475,3 +479,36 @@ here in the new names). Median MLUP/s:
   `docs/bug-fix-pr/.../README.md`, Testing: the K1 benchmark before and after the patch.
 - The plan: §3.2 renamed, §3.7 (names, checksums, animations, MPI buffers), step 7 status, §5 like for like, §7 the
   `vls256` slowdown and the checksum drift.
+
+**Backend 1 (`rvv.our1`): files, options and what has been run** (state of 2026-11-28). One backend whose
+behaviour is chosen by options in its name, `rvv.our1[-vls<N>][-m<L>][-vf][-fma][-pf<N>]`; every option set is a
+variant of it, all from the same code.
+
+| file (pystencils submodule) | role |
+|---|---|
+| `backends/riscv_our1_instruction_sets.py` (about 250 lines) | `parse_options()` reads the name; `get_vector_instruction_set_riscv_our1()` builds pystencils' instruction table for those options (`vf` and `fma` through the operator templates, no printer change) |
+| `include/rvv_our1_vls128.h`, `rvv_our1_vls256.h` | guard: the build stops unless `-march` promises that VLEN (`zvl128b`/`zvl256b`) |
+| `include/rvv_our1_prefetch.h` | `rvv_our1_prefetch_read/write` (Zicbop `prefetch.r`/`.w`, HINT encoding, no-ops without Zicbop) for `pf<N>` |
+| `backends/simd_instruction_sets.py` (upstream file, a few lines) | sends `rvv.our1...` to our module and `<isa>.lgcy` to pystencils' own |
+
+| option | values | effect |
+|---|---|---|
+| `vls128`/`vls256` | none (VLA), 128, 256 | fixed vector length instead of vector-length agnostic |
+| `m2`/`m4` | 1, 2, 4 | LMUL: each vector spans 1, 2 or 4 registers |
+| `vf` | off/on | an operand equal in every lane is passed as a scalar (`vfadd.vf`) instead of being splatted |
+| `fma` | off/on | `a*b + c`, `c - a*b`, `a*b - c` become `vfmacc`, `vfnmsac`, `vfmsac` |
+| `pf<N>` | off or a distance in bytes | prefetch N bytes ahead of every vector load and store |
+
+Without options `rvv.our1` prints exactly `rvv.lgcy`'s code (golden test), so every gain is measured against
+pystencils' own backend. The options combine freely: 3 vector-length modes × 3 LMULs × `vf` × `fma` × prefetch
+on/off are already 72 sets, more with other prefetch distances.
+
+| | variants |
+|---|---|
+| checked under QEMU (`tests/test_rvv_qemu.py`) | VLA at VLEN 128, 256, 512: no options, `vf`, `fma`, `vf-fma`, `pf128`, `m2`, `m4-vf-fma-pf128`; VLS: `vls128` (VLEN 128, 256), `vls256` (256), `vls256-m2-vf-fma-pf128` (256) |
+| benchmarked on the K1 (wind, all AA) | `vf`, `fma`, `vf-fma`, `vf-fma-pf128`, `vls256-vf-fma-pf128` |
+| set up for monte3 | the same, with `vls128` instead of `vls256` |
+| never measured | `m2`/`m4`; `pf` alone or at other distances; any `pull_` variant of ours |
+
+Not built (plan §3.2): row pointers and `in_register`. The streaming pattern (`pull`/`aa`) is not part of the
+backend; it is chosen separately and goes in front of the name (`aa_rvv.our1-vf-fma`).
